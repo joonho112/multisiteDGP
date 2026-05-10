@@ -50,12 +50,21 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          dependencies: '"all"'
+          dependencies: '"hard"'
           extra-packages: |
             any::rcmdcheck
             any::testthat
             any::knitr
             any::rmarkdown
+            any::metafor
+            any::baggr
+            any::sn
+            any::LaplacesDemon
+            any::copula
+            any::gridExtra
+            any::patchwork
+            any::deconvolveR
+            any::moments
           install-quarto: false
 
       - uses: r-lib/actions/check-r-package@v2
