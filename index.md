@@ -7,33 +7,33 @@
 You have a multisite trial to design, a meta-analysis to plan, or an estimator to stress-test. You need a defensible scenario you can take to a manuscript reviewer — citable provenance, realistic site-effect heterogeneity, plausible per-site sampling errors, and the dependence between effects and precisions that real trials exhibit. Rather than requiring you to assemble latent effects, sampling-error margins, and dependence structures from raw variance components, `multisiteDGP` allows specification through intuitive quantities — site counts, per-site sample sizes, a heterogeneity ratio, and a defensible preset.
 
 <div class="row">
-  <div class="col-md-4">
-    <div class="card mb-4 h-100">
-      <div class="card-body">
-        <h5 class="card-title">Layered DGP</h5>
-        <p class="card-text">Four generative layers — latent effects, site-size margins, precision dependence, observation draws — with eight built-in distribution shapes and a single-call front door.</p>
-        <a href="articles/a1-getting-started.html" class="btn btn-primary">Get started</a>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card mb-4 h-100">
-      <div class="card-body">
-        <h5 class="card-title">Defensible presets</h5>
-        <p class="card-text">Nine bundled scenarios — JEBS-paper, Walters-2024, Weiss-style education trials — each with a citation and a locked parameter set you can defend to a reviewer.</p>
-        <a href="articles/a2-choosing-a-preset.html" class="btn btn-primary">Choose a preset</a>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card mb-4 h-100">
-      <div class="card-body">
-        <h5 class="card-title">Diagnostics</h5>
-        <p class="card-text">Read realized heterogeneity, effect-precision correlation, and distributional fit off a diagnostics attribute — verify the design behaves as intended before committing to a long simulation run.</p>
-        <a href="articles/a3-diagnostics-in-practice.html" class="btn btn-primary">Read diagnostics</a>
-      </div>
-    </div>
-  </div>
+<div class="col-md-4">
+<div class="card mb-4 h-100">
+<div class="card-body">
+<h5 class="card-title">Layered DGP</h5>
+<p class="card-text">Four generative layers — latent effects, site-size margins, precision dependence, observation draws — with eight built-in distribution shapes and a single-call front door.</p>
+<a href="articles/a1-getting-started.html" class="btn btn-primary">Get started</a>
+</div>
+</div>
+</div>
+<div class="col-md-4">
+<div class="card mb-4 h-100">
+<div class="card-body">
+<h5 class="card-title">Defensible presets</h5>
+<p class="card-text">Nine bundled scenarios — JEBS-paper, Walters-2024, Weiss-style education trials — each with a citation and a locked parameter set you can defend to a reviewer.</p>
+<a href="articles/a2-choosing-a-preset.html" class="btn btn-primary">Choose a preset</a>
+</div>
+</div>
+</div>
+<div class="col-md-4">
+<div class="card mb-4 h-100">
+<div class="card-body">
+<h5 class="card-title">Diagnostics</h5>
+<p class="card-text">Read realized heterogeneity, effect-precision correlation, and distributional fit off a diagnostics attribute — verify the design behaves as intended before committing to a long simulation run.</p>
+<a href="articles/a3-diagnostics-in-practice.html" class="btn btn-primary">Read diagnostics</a>
+</div>
+</div>
+</div>
 </div>
 
 <div class="alert alert-info">
