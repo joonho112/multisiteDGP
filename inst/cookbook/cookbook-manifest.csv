@@ -1,0 +1,10 @@
+id,file,title,expected_marker
+R5.1,R5-1-hello-world.R,Hello-world JEBS-style workflow,COOKBOOK_RESULT R5.1 status=PASS
+R5.2,R5-2-custom-calibration.R,Custom calibration with sigma_tau and R2,COOKBOOK_RESULT R5.2 status=PASS
+R5.3,R5-3-compare-presets.R,Compare two presets side by side,COOKBOOK_RESULT R5.3 status=PASS
+R5.4,R5-4-downstream-adapters.R,Bridge to downstream adapters,COOKBOOK_RESULT R5.4 status=PASS
+R5.5,R5-5-user-g-fn.R,User g_fn callback,COOKBOOK_RESULT R5.5 status=PASS
+R5.6,R5-6-custom-dependence-fn.R,Custom dependence_fn,COOKBOOK_RESULT R5.6 status=PASS
+R5.7,R5-7-design-grid-audit.R,Design grid and scenario audit,COOKBOOK_RESULT R5.7 status=PASS
+R5.8,R5-8-reproducibility-hash.R,Canonical hash reproducibility,COOKBOOK_RESULT R5.8 status=PASS
+R5.9,R5-9-debugging-feasibility.R,Debugging feasibility diagnostics,COOKBOOK_RESULT R5.9 status=PASS

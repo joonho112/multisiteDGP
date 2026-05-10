@@ -1,0 +1,26 @@
+multisiteDGP simulation diagnostics
+------------------------------------------------------------
+A. Realized vs Intended
+   I (informativeness):         0.200  (target 0.200)  PASS  [rel=0.0%]
+   R (SE heterogeneity):        3.000  (target 3.000)  PASS  [rel=0.0%]
+   sigma_tau:                   0.251  (target 0.200)  FAIL  [rel=25.5%]
+   GM(se^2):                    0.160  (target 0.160)  PASS  [rel=0.0%]
+
+B. Dependence
+   rank_corr residual:          0.413  (target 0.000)  WARN  [delta=0.413]
+   rank_corr marginal:          0.413  (target N/A)  N/A   [residual target rows only; no finite target; status not assigned]
+   pearson_corr residual:       0.474  (target 0.000)  FAIL  [delta=0.474]
+   pearson_corr marginal:       0.474  (target N/A)  N/A   [residual target rows only; no finite target; status not assigned]
+
+C. G shape fit
+   KS distance D_J:             0.167  (target 0.000)  PASS  [p=0.808]
+   Bhattacharyya BC:            0.527  (target 1.000)  FAIL  [rel=-47.3%]
+   Q-Q residual:                0.796  (target 0.000)  N/A   [delta=0.796]
+
+D. Operational feasibility
+   mean shrinkage S:            0.205  (target N/A)  PASS  [no target]
+   avg MOE (95%):               0.795  (target N/A)  WARN  [no target]
+   feasibility_index:           6.153  (target N/A)  WARN  [no target]
+------------------------------------------------------------
+Overall: 5 PASS, 3 WARN, 3 FAIL.
+Provenance: multisiteDGP <VERSION> | paradigm=direct | seed=42 | canonical_hash=c743272c10cf35c6 | design_hash=23d5c64c78ea3137 | hash_algo=xxhash64 | R=<R> | hooks=none

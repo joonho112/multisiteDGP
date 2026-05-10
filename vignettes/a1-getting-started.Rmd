@@ -1,0 +1,358 @@
+---
+title: "A1 · Getting started — your first multisite simulation"
+author: "JoonHo Lee"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+abstract: >
+  For researchers designing or evaluating a multisite trial who need a
+  defensible synthetic dataset before real data exist. This vignette
+  walks through one preset call, one `sim_multisite()` call, and the
+  diagnostic readout that tells you whether the realized design hit
+  its targets. You leave with a 50-site simulation tibble, a
+  caterpillar and funnel plot, and a provenance string suitable for a
+  grant appendix or manuscript caption.
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    fig_caption: true
+    df_print: tibble
+vignette: >
+  %\VignetteIndexEntry{A1 Getting started}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+csl: apa.csl
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  results    = "markup",   # never "hide" for primary calls
+  comment    = "#>",
+  collapse   = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.width  = 7,
+  fig.height = 4.5,
+  fig.retina = 2,
+  dpi        = 144,
+  fig.align  = "center",
+  out.width  = "100%"
+)
+set.seed(1L)
+library(multisiteDGP)
+library(ggplot2)
+```
+
+Here is what you will produce in five minutes — a labeled view of 50
+simulated school effects, ranked from most-shrunk on the left to
+least-shrunk on the right, with each site's 95 percent interval drawn
+around its observed estimate.
+
+```{r teaser-prelude, echo = FALSE, fig.cap = "What you will produce in 5 minutes — every dot is a simulated school's effect estimate; ranked from most-shrunk to least.", fig.alt = "Caterpillar plot of 50 simulated site effects from preset_jebs_paper, with 95 percent intervals drawn around each observed estimate."}
+.dat_teaser <- sim_multisite(preset_jebs_paper(), seed = 1L)
+plot_effects(.dat_teaser, caption = FALSE) +
+  ggplot2::labs(subtitle = "preset_jebs_paper() · seed = 1L · J = 50 sites")
+```
+
+Every dot above is a single simulated school. The vertical spread is
+the heterogeneity the design encodes; the bar widths are the
+sampling-error structure; the rank order is what your downstream
+shrinkage estimator will see. The remainder of this vignette walks you
+through producing the same plot from scratch — and reading the
+diagnostics that justify trusting it.
+
+## 1. Why you are here
+
+Maya is writing a grant proposal for a multisite tutoring trial across
+roughly 50 schools, and the reviewers want to see that her power
+calculation holds up when between-site heterogeneity is around
+$\sigma_\tau = 0.20$. She does not have data yet — she needs a
+defensible synthetic dataset that mirrors the design she is proposing,
+plus a one-line provenance string she can drop in the methods
+appendix.
+
+## 2. What you will leave with
+
+- A 50-site simulated dataset with the canonical columns
+  `site_index`, `z_j`, `tau_j`, `tau_j_hat`, `se_j`, `se2_j`, `n_j`.
+- A diagnostic readout that compares realized values against the
+  design's targets and flags PASS / WARN / FAIL.
+- Two plots — a caterpillar and a funnel — that make the realized
+  heterogeneity and precision pattern legible at a glance.
+- A reproducible provenance string carrying a 16-character canonical
+  hash, suitable for a grant appendix or manuscript caption.
+
+## 3. Install and load
+
+```{r install, eval = FALSE}
+# install.packages("remotes")
+remotes::install_github("joonho112/multisiteDGP")
+```
+
+```{r load, eval = FALSE}
+library(multisiteDGP)
+library(ggplot2)
+```
+
+The setup chunk above already loaded both, with `set.seed(1L)`. Every
+primary call below also passes `seed = 1L` so your local re-run
+matches the rendered vignette exactly.
+
+## 4. Your first simulation
+
+Two calls. First, pick a *preset* — a small, defensible bundle of
+design parameters tied to a specific scientific scenario. Maya picks
+`preset_jebs_paper()` because it matches the JEBS-paper calibration
+[@lee2025improving]: $J = 50$ sites, $\sigma_\tau = 0.20$,
+mixture-shape latent effects, no induced precision–effect dependence,
+site sizes drawn around $\bar{n}_j = 40$.
+
+```{r design}
+design <- preset_jebs_paper()
+design
+```
+
+Read the printed object as four generative layers. Layer 1 (G-effects)
+sets the latent shape and the between-site SD. Layer 2 (Margin)
+controls site sizes and how their sampling variances are produced —
+this preset uses the *site-size-driven* path (Paradigm A in the
+package's underlying blueprint), where $\widehat{se}_j$ is generated
+from $n_j$ rather than supplied directly. Layer 3 (Dependence) is set
+to none. Layer 4 (Observation) adds sampling noise to the latent
+effect. The design is immutable; to change a field, call
+[`update_multisitedgp_design()`](../reference/update_multisitedgp_design.html)
+or pass an override at the
+[`multisitedgp_design()`](../reference/multisitedgp_design.html)
+constructor.
+
+Now simulate.
+
+```{r simulate}
+dat <- sim_multisite(design, seed = 1L)
+dat
+```
+
+The print method front-loads what Maya cares about: the realized
+$\sigma_\tau$ landed at 0.207 against a target of 0.200, marked PASS;
+the realized rank correlation between effects and precisions came in
+at $-0.193$ against a target of 0 (PASS within tolerance); and
+operational feasibility is flagged WARN because the implied effective
+sample size is around 13. The seven canonical columns then follow as
+a tibble.
+
+## 5. Read the output
+
+The simulation tibble carries one row per site and seven columns:
+
+- `site_index` — integer site identifier 1, 2, ..., J.
+- `z_j` — standardized residual site effect, on the unit-variance
+  scale (Layer 1).
+- `tau_j` — latent site effect on the outcome scale:
+  $\tau + \sigma_\tau z_j$.
+- `tau_j_hat` — observed site estimate (latent effect plus sampling
+  error).
+- `se_j` — sampling standard error of the site estimate.
+- `se2_j` — the corresponding sampling variance ($se_j^2$).
+- `n_j` — generated site sample size.
+
+The latent column `tau_j` is the *true* site effect Maya would recover
+with infinite data. The observed column `tau_j_hat` is what an analyst
+would actually see — it carries Layer 4 sampling noise on top of the
+latent value, with magnitude `se_j`. Sites with smaller `n_j` carry
+larger `se_j`, so noisy estimates and small samples line up the way a
+real trial would produce them. The latent and the observed estimate
+live side by side because that is the comparison every shrinkage
+estimator is trying to make [@walters2024empirical].
+
+A peek at the first few rows confirms the contract:
+
+```{r columns-peek}
+head(tibble::as_tibble(dat)[, c("site_index", "tau_j", "tau_j_hat", "se_j", "n_j")], 6)
+```
+
+Site 1 has a latent effect near $-0.116$ but the observed estimate is
+$0.652$. That wide gap, which appears across many sites, is exactly
+what makes shrinkage a non-trivial inferential problem. Site 3, with
+$n_j = 61$, has a noticeably smaller standard error than site 2, with
+$n_j = 12$ — the variation in `se_j` you see here is the
+sampling-variance heterogeneity the diagnostic table will summarize as
+$R$.
+
+## 6. Read the diagnostics
+
+`summary()` prints the full target-vs-realized diagnostic report.
+This is the table you would screenshot for a methods appendix — it
+answers whether the simulation actually delivered what the design
+promised.
+
+```{r diagnostics}
+summary(dat)
+```
+
+What to look at, in order:
+
+- **`sigma_tau` (Group A, Realized vs Intended)** — the realized
+  between-site SD. Target 0.200, realized 0.207, status PASS. This is
+  the headline number for any heterogeneity-driven power calculation.
+- **`I` (informativeness, Group A)** — 0.250. The proportion of total
+  variance that is signal rather than sampling noise; lower values
+  mean the design is dominated by noise.
+- **`R` (SE heterogeneity, Group A)** — 7.583. The ratio of largest
+  to smallest sampling variance across sites.
+- **`rank_corr residual` (Group B, Dependence)** — $-0.193$ against a
+  target of 0, PASS. A non-zero realized value at $J = 50$ is sampling
+  noise around the design target, not a violation of it.
+- **`pearson_corr residual` (Group B)** — $-0.231$, FAIL against a
+  target of 0. Rank-based diagnostics are the primary contract for the
+  site-size-driven path; the Pearson flag is informational here, not a
+  blocker. See [Diagnostics in practice](a3-diagnostics-in-practice.html)
+  for the full rubric.
+- **`feasibility_index` (Group D, Operational feasibility)** — 13.1,
+  WARN. This is the effective per-site sample size after shrinkage;
+  under 20 means partial pooling will move estimates substantially.
+  Maya flags this as expected for the design and notes it in her power
+  discussion.
+
+The Group C entries (KS distance, Bhattacharyya, Q-Q residual) print
+as N/A because the JEBS preset does not declare a target G shape to
+compare against — these become live in
+[Diagnostics in practice](a3-diagnostics-in-practice.html) and in
+[Calibrating to real data](a5-calibrating-real-data.html).
+
+## 7. Plot the results
+
+Two plots make the realized design legible — the caterpillar reads
+across sites, the funnel reads precision against effect.
+
+```{r caterpillar, fig.cap = "Caterpillar plot. Black points are observed estimates with 95 percent CI bars; the solid horizontal line marks the grand mean. Sites are sorted by absolute estimate. Vertical spread of the dots is your realized between-site heterogeneity (sigma_tau hat = 0.207); bar-width variation across sites is the sampling-error heterogeneity (R = 7.6) set by site-size variation.", fig.alt = "Caterpillar plot of 50 simulated site effects from preset_jebs_paper, ordered left-to-right by absolute estimate, with 95 percent intervals around each observed estimate."}
+plot_effects(dat, caption = FALSE) +
+  ggplot2::labs(
+    title    = "Site effects under preset_jebs_paper()",
+    subtitle = "J = 50 sites · seed = 1L · sigma_tau hat = 0.207"
+  )
+```
+
+Three things to check on the caterpillar:
+
+1. **Vertical spread of the dots.** That is your realized site-level
+   heterogeneity. Confirm it numerically against the `sigma_tau` line
+   in the diagnostic table.
+2. **Bar widths across sites.** Wide bars are small sites; narrow bars
+   are large sites. The ratio of widest to narrowest is `R = 7.6` —
+   meaningful but not pathological for site-size-driven designs.
+3. **Rank order across the x-axis.** This is exactly what an empirical
+   Bayes estimator will shrink, and the magnitude of shrinkage tracks
+   how much each site's bar narrows in your downstream analysis.
+
+```{r funnel, fig.cap = "Funnel plot. Standard error on the x-axis (smaller = more precise); observed estimate on the y-axis. Cloud width tapers as SE shrinks, the expected signature when SEs come from site sizes. Roughly symmetric scatter top-to-bottom confirms the rank-correlation target rho_S = 0 (PASS) — small-SE sites are not systematically higher- or lower-effect than large-SE sites.", fig.alt = "Funnel plot of 50 simulated site effects against their standard errors."}
+plot_funnel(dat, caption = FALSE) +
+  ggplot2::labs(
+    title    = "Precision vs. effect: funnel view",
+    subtitle = "Symmetric scatter confirms target rho_S = 0"
+  )
+```
+
+What to read off the funnel: a *biased* design would tilt the cloud —
+small-SE sites would skew toward one side of zero. This funnel is
+roughly symmetric, the visual signature of the PASS verdict on
+`rank_corr residual`. If Maya later modifies the design to induce
+precision–effect dependence (Layer 3), the cloud will tilt visibly,
+and the diagnostic flag will flip.
+
+## 8. Adapt for downstream analysis
+
+Three adapter functions hand the simulation off to specific downstream
+packages without renaming columns by hand:
+[`as_metafor()`](../reference/as_metafor.html),
+[`as_baggr()`](../reference/as_baggr.html), and
+[`as_multisitepower()`](../reference/as_multisitepower.html).
+
+```{r adapter}
+mf <- as_metafor(dat)
+head(mf, 4)
+```
+
+After `as_metafor()` the columns are `yi` (effect estimate), `vi`
+(sampling variance), and `sei` (sampling SE) — the convention
+`metafor::rma()` expects. Sibling adapters return the column
+conventions of the `baggr` and `multisitepower` packages. The recipe
+gallery at [Cookbook](a8-cookbook.html) walks each adapter end-to-end
+with a fitted model; [Adapters and downstream packages](m6-adapters-downstream.html)
+gives the formal rename contract.
+
+## 9. Provenance
+
+A defensible simulation needs a one-line fingerprint Maya can paste
+into the methods appendix. `provenance_string()` returns it.
+
+```{r provenance}
+provenance_string(dat)
+```
+
+The string carries the package version, the paradigm, the seed, the
+canonical hash of the simulation output, the design hash, the hash
+algorithm, the R version, and any active hooks. The canonical hash
+itself can be pulled directly:
+
+```{r canonical-hash}
+canonical_hash(dat)
+```
+
+If a coauthor reruns `sim_multisite(preset_jebs_paper(), seed = 1L)`
+on the same package version, that 16-character hash is the contract:
+identical hash means byte-identical simulation. A different hash flags
+a drift in the design, the seed, or the package — exactly what a
+methods reviewer wants to be sure cannot happen silently. You can
+verify this directly:
+
+```{r determinism}
+dat_repeat <- sim_multisite(design, seed = 1L)
+identical(canonical_hash(dat), canonical_hash(dat_repeat))
+```
+
+See [Reproducibility and provenance](m7-reproducibility-provenance.html)
+for how to wire the hash and provenance string into automated audit
+trails.
+
+## 10. Where to next
+
+- [Choosing a preset](a2-choosing-a-preset.html) — the nine built-in
+  presets and when each fits your design.
+- [Diagnostics in practice](a3-diagnostics-in-practice.html) — the
+  four diagnostic groups (A: scale, B: dependence, C: G-shape fit,
+  D: feasibility) and the plots that go with each.
+- [Calibrating to real data](a5-calibrating-real-data.html) — when
+  you have observed point estimates and SEs you want the simulator to
+  match.
+- [`sim_multisite()`](../reference/sim_multisite.html) — full argument
+  reference, including how to override preset fields.
+- [`preset_jebs_paper()`](../reference/preset_jebs_paper.html) — the
+  preset used here.
+
+For the methodological foundations — the formal two-stage DGP, the
+G-distribution catalog, the *site-size-driven* and *direct-precision*
+paths — start with [The two-stage DGP](m1-statistical-dgp.html) and
+proceed through M2 / M3 / M4 in order.
+
+## References
+
+The `multisiteDGP` data-generating process and the JEBS preset
+implement the design in @lee2025improving. Empirical-Bayes context
+for site-effect estimation is collected in @walters2024empirical;
+applied calibration benchmarks for the education presets are taken
+from @weiss2017howmuch.
+
+## Acknowledgments
+
+This research was supported by the Institute of Education Sciences,
+U.S. Department of Education, through Grant R305D240078 to the
+University of Alabama. The opinions expressed are those of the authors
+and do not represent views of the Institute or the U.S. Department of
+Education.
+
+## Session info
+
+```{r session-info, echo = FALSE}
+sessionInfo()
+```

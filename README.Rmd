@@ -1,12 +1,25 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file. -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.path   = "man/figures/README-",
+  out.width  = "100%",
+  fig.retina = 2,
+  dpi        = 144
+)
+set.seed(1L)
+```
 
 # multisiteDGP <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
 <!-- badges: start -->
-
-[![License:
-MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
 **Data-generating processes for multisite trial simulations**
@@ -14,21 +27,21 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 You have a multisite trial to design, a meta-analysis to plan, or an
 estimator you want to stress-test. You need a defensible scenario you
 can take to your manuscript reviewer — one with a citable provenance,
-realistic site-effect heterogeneity, plausible per-site sampling errors,
-and the option to inject the dependence between effects and precisions
-that real trials exhibit.
+realistic site-effect heterogeneity, plausible per-site sampling
+errors, and the option to inject the dependence between effects and
+precisions that real trials exhibit.
 
 `'multisiteDGP'` is the toolkit. Rather than requiring researchers to
 assemble latent effects, sampling-error margins, and dependence
 structures from raw variance components, `'multisiteDGP'` allows
 specification through intuitive quantities:
 
-- **Site counts and per-site sample sizes**: “How many sites, and how
-  large is each?”
-- **Heterogeneity ratio**: “How much do site effects vary relative to
-  within-site sampling error?”
-- **Defensible presets**: “What does a JEBS-, Walters-, or Weiss-style
-  scenario look like?”
+- **Site counts and per-site sample sizes**: "How many sites, and how
+  large is each?"
+- **Heterogeneity ratio**: "How much do site effects vary relative to
+  within-site sampling error?"
+- **Defensible presets**: "What does a JEBS-, Walters-, or Weiss-style
+  scenario look like?"
 
 These applied questions are translated into a four-layer simulation
 pipeline — latent effects, site-size margins, precision dependence,
@@ -39,7 +52,7 @@ question.
 
 ## Installation
 
-``` r
+```r
 # Install from GitHub
 # install.packages("devtools")
 devtools::install_github("joonho112/multisiteDGP")
@@ -50,7 +63,7 @@ devtools::install_github("joonho112/multisiteDGP")
 
 ## Quick start
 
-``` r
+```{r quick-start, eval = FALSE}
 library(multisiteDGP)
 
 # Verify a defensible scenario reproduces canonically.
@@ -101,7 +114,7 @@ provenance hash.
 Specify designs through site counts, per-site sample sizes, and the
 between-site heterogeneity (`sigma_tau`):
 
-``` r
+```r
 # Using a preset (recommended for most users).
 dat <- sim_multisite(preset_education_modest(), seed = 1L)
 
@@ -118,7 +131,7 @@ dat <- sim_multisite(
 Move beyond Gaussian site effects to study estimator behavior under
 realistic departures from normality:
 
-``` r
+```r
 # Skew-normal latent effects with moderate right skew.
 dat_skew <- sim_multisite(
   preset_education_modest(true_dist = "SkewN", theta_G = list(slant = 4)),
@@ -126,18 +139,18 @@ dat_skew <- sim_multisite(
 )
 ```
 
-The eight shapes — Gaussian, Student-t, skew-normal, asymmetric Laplace,
-two-component mixture, point-mass slab, user callback, and a
+The eight shapes — Gaussian, Student-t, skew-normal, asymmetric
+Laplace, two-component mixture, point-mass slab, user callback, and a
 Dirichlet-process-mixture bridge — share a standardized-residual
 convention so `sigma_tau` (between-site heterogeneity) means the same
 thing across scenarios.
 
 ### 3. Sampling-error margins and dependence structure
 
-Generate per-site standard errors from the design’s site sizes, and
+Generate per-site standard errors from the design's site sizes, and
 inject intentional dependence between site effects and precisions:
 
-``` r
+```r
 # Negative correlation between effects and precisions, via Gaussian copula.
 dat_dep <- sim_multisite(
   preset_education_modest(dependence = "copula", pearson_corr = -0.30),
@@ -163,10 +176,10 @@ run:
 
 ### 5. Adapters for downstream analysis
 
-Hand a simulated dataset directly to common multisite and meta-analysis
-packages without reshaping by hand:
+Hand a simulated dataset directly to common multisite and
+meta-analysis packages without reshaping by hand:
 
-``` r
+```r
 dat <- sim_multisite(preset_jebs_paper(), seed = 1L)
 mf  <- as_metafor(dat)                       # 'metafor' random-effects meta-analysis
 bg  <- as_baggr(dat, include_truth = TRUE)   # 'baggr' Bayesian hierarchical models
@@ -179,16 +192,16 @@ mp  <- as_multisitepower(dat)                # 'multisitepower' power calculatio
 
 - **Multisite randomized trials** where you need realistic site-level
   summary data to evaluate estimators (J = 20–200).
-- **Meta-analysis methods development** with controlled departures from
-  normality, heteroskedasticity, and effect-precision dependence.
-- **Power and design simulation** where defensible per-site sample sizes
-  and sampling-error margins matter.
+- **Meta-analysis methods development** with controlled departures
+  from normality, heteroskedasticity, and effect-precision dependence.
+- **Power and design simulation** where defensible per-site sample
+  sizes and sampling-error margins matter.
 - **Replication studies** that need a reproducible, hash-stamped
   scenario specification.
 
-For *fitting* multisite or meta-analytic models, hand the simulated data
-to `'metafor'`, `'baggr'`, or `'multisitepower'` via the adapters. The
-original Stan-based fitting code lives in `'siteBayes2'`.
+For *fitting* multisite or meta-analytic models, hand the simulated
+data to `'metafor'`, `'baggr'`, or `'multisitepower'` via the adapters.
+The original Stan-based fitting code lives in `'siteBayes2'`.
 
 ## Vignettes
 
@@ -199,7 +212,7 @@ deploys.)
 ### Applied Track
 
 | Vignette | Description |
-|----|----|
+|----------|-------------|
 | [A1 · Getting started](https://joonho112.github.io/multisiteDGP/articles/a1-getting-started.html) | Your first simulation in 5 minutes |
 | [A2 · Choosing a preset](https://joonho112.github.io/multisiteDGP/articles/a2-choosing-a-preset.html) | Walk through the nine bundled presets |
 | [A3 · Diagnostics in practice](https://joonho112.github.io/multisiteDGP/articles/a3-diagnostics-in-practice.html) | Verify your design before you simulate |
@@ -212,7 +225,7 @@ deploys.)
 ### Methodological Track
 
 | Vignette | Description |
-|----|----|
+|----------|-------------|
 | [M1 · The two-stage DGP](https://joonho112.github.io/multisiteDGP/articles/m1-statistical-dgp.html) | Mathematical framing of the four layers |
 | [M2 · G-distribution catalog](https://joonho112.github.io/multisiteDGP/articles/m2-g-distribution-catalog.html) | The eight built-in shapes, side by side |
 | [M3 · Margin and SE models](https://joonho112.github.io/multisiteDGP/articles/m3-margin-se-models.html) | Site-size-driven and direct-precision paths |
@@ -226,7 +239,7 @@ deploys.)
 
 If you use `'multisiteDGP'` in your research, please cite:
 
-``` bibtex
+```bibtex
 @Manual{multisiteDGP,
   title  = {{multisiteDGP}: Data-Generating Processes for Multisite Trial Simulations},
   author = {JoonHo Lee},
@@ -251,51 +264,54 @@ If you use `'multisiteDGP'` in your research, please cite:
 For the canonical software citation including the IES funding
 acknowledgment, run `citation("multisiteDGP")` after install — that is
 the single source of truth; the BibTeX block above is a static
-illustrative copy that may lag the installed package’s metadata.
+illustrative copy that may lag the installed package's metadata.
 
 ## Related work
 
-- **Lee et al. (2025)** — site-specific effect estimation and
-  informative priors for multisite heterogeneity. The package’s defaults
-  reproduce the JEBS paper’s reference design.
-- **Walters (2024)** — empirical Bayes methods in labor economics, with
-  a school value-added application using Boston charter and BPS schools
-  (Angrist, Hull, Pathak, & Walters, 2017). The `preset_walters_2024()`
-  preset uses the chapter’s parameters (J = 46 schools,
-  $\sigma_\tau \approx 0.197$, mean per-school sample size 240) as a
-  defensible value-added scenario.
-- **Weiss et al. (2017)** — empirical cross-site variation benchmarks
+- **Lee et al. (2025)** — site-specific effect estimation and
+  informative priors for multisite heterogeneity. The package's
+  defaults reproduce the JEBS paper's reference design.
+- **Walters (2024)** — empirical Bayes methods in labor economics,
+  with a school value-added application using Boston charter and BPS
+  schools (Angrist, Hull, Pathak, & Walters, 2017). The
+  `preset_walters_2024()` preset uses the chapter's parameters
+  (J = 46 schools, $\sigma_\tau \approx 0.197$, mean per-school
+  sample size 240) as a defensible value-added scenario.
+- **Weiss et al. (2017)** — empirical cross-site variation benchmarks
   from 16 education and training multisite randomized trials. The
-  `preset_education_*` family uses these ranges for site counts, mean
-  site sizes, and cross-site effect standard deviations.
+  `preset_education_*` family uses these ranges for site counts,
+  mean site sizes, and cross-site effect standard deviations.
 - **`'siteBayes2'`** — the companion fitting package. Use
   `'multisiteDGP'` to *generate* defensible scenarios; use
   `'siteBayes2'` to *fit* the Stan models.
 
 ## Support
 
-This research was supported by the Institute of Education Sciences, U.S.
-Department of Education, through Grant R305D240078 to the University of
-Alabama. The opinions expressed are those of the authors and do not
-represent views of the Institute or the U.S. Department of Education.
+This research was supported by the Institute of Education Sciences,
+U.S. Department of Education, through Grant R305D240078 to the
+University of Alabama. The opinions expressed are those of the
+authors and do not represent views of the Institute or the U.S.
+Department of Education.
 
 <https://ies.ed.gov/use-work/awards/improving-estimation-site-specific-effects-and-their-distribution-multisite-trials-practical-tools>
 
 ### References
 
-- Lee, J., Che, J., Rabe-Hesketh, S., Feller, A., & Miratrix, L. (2025).
-  Improving the estimation of site-specific effects and their
+* Lee, J., Che, J., Rabe-Hesketh, S., Feller, A., & Miratrix, L.
+  (2025). Improving the estimation of site-specific effects and their
   distribution in multisite trials. *Journal of Educational and
   Behavioral Statistics*, 50(5), 731–764.
-  <doi:10.3102/10769986241254286>
-- Walters, C. R. (2024). Empirical Bayes methods in labor economics.
+  doi:10.3102/10769986241254286
+* Walters, C. R. (2024). Empirical Bayes methods in labor economics.
   In C. Dustmann & T. Lemieux (Eds.), *Handbook of Labor Economics*
-  (Vol. 5, pp. 183–260). Elsevier. <doi:10.1016/bs.heslab.2024.11.001>
-- Weiss, M. J., Bloom, H. S., Verbitsky-Savitz, N., Gupta, H., Vigil, A.
-  E., & Cullinan, D. N. (2017). How much do the effects of education and
-  training programs vary across sites? Evidence from past multisite
-  randomized trials. *Journal of Research on Educational Effectiveness*,
-  10(4), 843–876. <doi:10.1080/19345747.2017.1300719>
+  (Vol. 5, pp. 183–260). Elsevier.
+  doi:10.1016/bs.heslab.2024.11.001
+* Weiss, M. J., Bloom, H. S., Verbitsky-Savitz, N., Gupta, H.,
+  Vigil, A. E., & Cullinan, D. N. (2017). How much do the effects
+  of education and training programs vary across sites? Evidence
+  from past multisite randomized trials. *Journal of Research on
+  Educational Effectiveness*, 10(4), 843–876.
+  doi:10.1080/19345747.2017.1300719
 
 ## License
 

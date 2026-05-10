@@ -1,0 +1,78 @@
+name: lint
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TZ: "UTC"
+  MULTISITEDGP_REPRODUCIBILITY_POLICY: "linux-strict-hash-cross-os-demoted"
+  MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN: "false"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::lintr
+            any::cyclocomp
+            any::testthat
+            any::knitr
+            any::rmarkdown
+          install-quarto: false
+
+      - name: Lint package
+        run: |
+          lints <- lintr::lint_package()
+          print(lints)
+          if (length(lints) > 0L) {
+            quit(status = 1L)
+          }
+        shell: Rscript {0}
+
+      - name: Enforce pure-R package boundary
+        run: |
+          forbidden_paths <- c("src", file.path("inst", "stan"))
+          existing_forbidden_paths <- forbidden_paths[dir.exists(forbidden_paths)]
+          source_files <- list.files(
+            ".",
+            pattern = "[.](stan|cpp|cc|c|f|f90)$",
+            recursive = TRUE,
+            all.files = TRUE,
+            no.. = TRUE,
+            ignore.case = TRUE
+          )
+          source_files <- source_files[!grepl("^(docs|blueprint-multisiteDGP-book|multisiteDGP-build-implementation-book)/", source_files)]
+
+          desc <- read.dcf("DESCRIPTION")
+          forbidden_fields <- intersect(c("LinkingTo", "SystemRequirements", "NeedsCompilation"), colnames(desc))
+          forbidden_deps <- intersect(
+            c("Rcpp", "RcppParallel", "RcppEigen", "BH", "rstan", "rstantools", "StanHeaders", "cmdstanr"),
+            unique(unlist(strsplit(paste(desc[, intersect(c("Imports", "Suggests", "Enhances"), colnames(desc))], collapse = ","), "[,[:space:]]+")))
+          )
+
+          problems <- c(existing_forbidden_paths, source_files, forbidden_fields, forbidden_deps)
+          if (length(problems) > 0L) {
+            stop("Pure-R boundary violation: ", paste(problems, collapse = ", "), call. = FALSE)
+          }
+        shell: Rscript {0}

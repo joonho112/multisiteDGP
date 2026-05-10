@@ -1,0 +1,480 @@
+---
+title: "A2 · Choosing a preset"
+author: "JoonHo Lee"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+abstract: >
+  For researchers who know they need a multisite or meta-analytic
+  simulation but do not yet know which preset matches their study.
+  This vignette is a scannable decision table over the nine built-in
+  presets — read down the rows, find your scenario, lift the call.
+  You leave with the preset name that fits, the source citation behind
+  it, the override pattern for adapting it to a local design, and a
+  provenance string suitable for a methods appendix.
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    fig_caption: true
+    df_print: tibble
+vignette: >
+  %\VignetteIndexEntry{A2 Choosing a preset}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+csl: apa.csl
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  results    = "markup",   # never "hide" for primary calls
+  comment    = "#>",
+  collapse   = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.width  = 7,
+  fig.height = 4.5,
+  fig.retina = 2,
+  dpi        = 144,
+  fig.align  = "center",
+  out.width  = "100%"
+)
+set.seed(1L)
+library(multisiteDGP)
+library(ggplot2)
+```
+
+## 1. The problem with picking parameters by feel
+
+A multisite simulation has roughly a dozen knobs that interact: $J$,
+$\sigma_\tau$, $\bar n_j$, the latent G shape, the dependence target,
+the engine. Pick them one at a time and the realized design rarely
+matches what you intended — the implied informativeness $I$ is too
+high, the heterogeneity ratio $R$ is too narrow, the shrinkage flag
+fires unexpectedly. A *preset* packages a defensible combination tied
+to a published reference or a documented benchmark. You start there,
+then override the one or two fields your study departs on.
+
+The package ships nine presets across two front doors. Seven are
+*site-size-driven* (sampling variance comes from generated $n_j$, used
+with [`sim_multisite()`](../reference/sim_multisite.html)); two are
+*direct-precision* (sampling variance is set through $(I, R)$, used
+with [`sim_meta()`](../reference/sim_meta.html)). The rest of this
+vignette is a table you read down to find the row that matches your
+scenario, plus the override pattern for adapting it.
+
+## 2. What a preset locks for you
+
+Every preset returns a `multisitedgp_design` with all four generative
+layers already filled in. The constructor below shows what the nine
+presets fix at the parameters that drive the headline diagnostics —
+the paradigm and engine, the site count $J$, the between-site SD
+$\sigma_\tau$, the latent G shape, the site-size mean (the
+*site-size-driven* path, Paradigm A in the package's underlying
+blueprint) or the $(I, R)$ pair (the *direct-precision* path, Paradigm
+B in the same blueprint), and the citation that anchors the choice.
+
+```{r preset-table}
+preset_objects <- list(
+  education_small        = preset_education_small(),
+  education_modest       = preset_education_modest(),
+  education_substantial  = preset_education_substantial(),
+  jebs_paper             = preset_jebs_paper(),
+  jebs_strict            = preset_jebs_strict(),
+  walters_2024           = preset_walters_2024(),
+  twin_towers            = preset_twin_towers(),
+  meta_modest            = preset_meta_modest(),
+  small_area_estimation  = preset_small_area_estimation()
+)
+
+preset_summary <- data.frame(
+  preset      = names(preset_objects),
+  paradigm    = vapply(preset_objects, `[[`, character(1), "paradigm"),
+  engine      = vapply(preset_objects, `[[`, character(1), "engine"),
+  J           = vapply(preset_objects, `[[`, integer(1),   "J"),
+  sigma_tau   = vapply(preset_objects, `[[`, numeric(1),   "sigma_tau"),
+  true_dist   = vapply(preset_objects, `[[`, character(1), "true_dist"),
+  nj_mean     = vapply(preset_objects, function(p) p$nj_mean %||% NA_real_, numeric(1)),
+  I           = vapply(preset_objects, function(p) p$I       %||% NA_real_, numeric(1)),
+  R           = vapply(preset_objects, function(p) p$R       %||% NA_real_, numeric(1)),
+  row.names   = NULL,
+  stringsAsFactors = FALSE
+)
+preset_summary
+```
+
+Read across a row as the locked design. The two direct-precision
+presets at the bottom carry the active $(I, R)$ pair that drives
+their sampling-variance distribution; their `nj_mean` field surfaces
+the constructor default and is not used at simulation time. The seven
+site-size presets above them carry the active `nj_mean` (and the
+implicit `cv`, `nj_min`, `R2` settings printed by the design object
+itself); their $(I, R)$ entries surface constructor defaults and are
+not used — realized $I$ and $R$ fall out of the site-size distribution
+and the chosen $\sigma_\tau$ at simulation time.
+
+The two engines you see — `A1_legacy` and `A2_modern` — produce
+identical numerical results on the standardized residual scale; the
+difference is internal plumbing. The two JEBS presets pin
+`A1_legacy` because the published JEBS results were generated under
+that engine and the parity check on the JEBS table requires it.
+Everything else uses `A2_modern`. See
+[Margin and SE models](m3-margin-se-models.html) for the engine
+discussion.
+
+## 3. The decision rubric
+
+Read this table down, top to bottom, until a row describes your
+study. The recommended preset is the call to lift; the locked
+parameters column is what that preset will fix for you; the source
+column is the published reference behind the calibration; the
+override column is the field most studies need to change first.
+
+| Scenario | Preset | Locked: J / sigma_tau / paradigm | Source | Most common override |
+|---|---|---|---|---|
+| Education trial, small effects (~0.05) on the standardized scale | `preset_education_small()` | J = 50 / 0.05 / site-size | @weiss2017howmuch | `J`, `nj_mean` |
+| Education trial, modest effects (~0.20) — typical RCT scale | `preset_education_modest()` | J = 50 / 0.20 / site-size | @weiss2017howmuch | `J`, `sigma_tau` |
+| Education trial, substantial effects (~0.30), large J | `preset_education_substantial()` | J = 100 / 0.30 / site-size | @weiss2017howmuch | `nj_mean` |
+| Reproduce the JEBS paper design (mixture-shape latent effects) | `preset_jebs_paper()` | J = 50 / 0.20 / site-size | @lee2025improving | (none — verbatim) |
+| JEBS strict parity grid (validation / benchmarking) | `preset_jebs_strict()` | J = 100 / 0.15 / site-size | @lee2025improving | (none — verbatim) |
+| Replicate the Walters Handbook chapter calibration | `preset_walters_2024()` | J = 46 / 0.197 / site-size; locks $R^2 = 0.4$, $\bar n_j = 240$ | @walters2024empirical | `R2` |
+| Large-J / extreme heterogeneity stress test | `preset_twin_towers()` | J = 1000 / 2.0 / site-size | Package-curated | `J` |
+| Meta-analysis warm-up (direct-precision path) | `preset_meta_modest()` | J = 50 / 0.20 / direct; locks $I = 0.30$, $R = 1.5$ | Package-curated | `I`, `R` |
+| Small-area-estimation prior calibration | `preset_small_area_estimation()` | J = 30 / 0.20 / direct; locks $I = 0.20$, $R = 3$ | Package-curated | `I`, `R` |
+
+Three reading rules.
+
+First — the *paradigm* column is the most consequential entry. If you
+plan to call `sim_multisite()`, you need a row whose paradigm is
+*site-size*. If you plan to call `sim_meta()`, you need *direct*.
+Mixing them produces an immediate front-door error (Section 7).
+
+Second — *source* tells you what published number you are inheriting.
+The three education presets share Weiss et al. (2017) as their
+sigma-tau anchor [@weiss2017howmuch]. The two JEBS presets implement
+the simulation design from @lee2025improving. `preset_walters_2024()`
+reproduces the calibration in the *Handbook of Labor Economics*,
+volume 5 chapter by @walters2024empirical. The
+remaining three presets are package-curated rather than
+paper-anchored and carry no external citation.
+
+Third — *override* is the field most studies change first. Education
+presets retain $\sigma_\tau$ but adjust $J$ to match the local sample
+of schools; the Walters preset retains $J$ and $\sigma_\tau$ but
+adjusts the covariate $R^2$. JEBS rows show no
+override because their value is reproducing the published number
+exactly — change a JEBS field and the preset name no longer applies.
+
+### A compact tree view (alternative)
+
+Readers who prefer branching to tabular logic can walk the same
+rubric as a four-question tree:
+
+```
+Q1 paradigm
+├── multisite trial -> Q2 calibration source
+│   ├── JEBS paper        -> Q3 grid
+│   │   ├── paper-grid    -> preset_jebs_paper()
+│   │   └── strict-grid   -> preset_jebs_strict()
+│   ├── Walters Handbook  -> preset_walters_2024()
+│   ├── Education applied -> Q4 effect-size scale
+│   │   ├── small  ~0.05  -> preset_education_small()
+│   │   ├── modest ~0.20  -> preset_education_modest()
+│   │   └── subst. ~0.30  -> preset_education_substantial()
+│   └── stress test       -> preset_twin_towers()
+└── meta-analysis     -> Q5 special requirements
+    ├── methods warm-up   -> preset_meta_modest()
+    └── small-area prior  -> preset_small_area_estimation()
+```
+
+If a reviewer asks why a particular preset, you trace four nodes
+through this tree and you have your answer.
+
+### When to override versus pick a different row
+
+If you find yourself overriding more than two fields, you are in a
+different row. Move to the row whose locked parameters are closest to
+your design, then override at most one or two. The presets are not
+fragile — every preset accepts named overrides through `...` — but
+their *defensibility* comes from the published anchor. Overriding the
+sigma-tau of a Weiss-anchored preset to 0.40 silently breaks the
+anchor. Pick `preset_education_substantial()` instead and tune from
+there.
+
+## 4. Override patterns
+
+Overrides are flat, named arguments forwarded to the underlying
+[`multisitedgp_design()`](../reference/multisitedgp_design.html)
+constructor. Anything you do not name is left at the preset default.
+
+```{r override-design}
+local_design <- preset_education_modest(
+  J          = 20L,
+  nj_mean    = 60,
+  sigma_tau  = 0.25
+)
+
+local_design
+```
+
+Three things to read off the printed object. The header shows $J$
+moved from the preset default 50 to 20. The Layer 1 $\sigma_\tau$
+moved from 0.20 to 0.25 — a modest tune-up to match a local pilot. In
+Layer 2 (Margin), `nj_mean` moved from 50 to 60. Every unnamed field —
+`cv = 0.5`, `nj_min = 10`, the dependence settings, the observation
+hook — survives untouched from the preset.
+
+Now simulate from the override design and check that the realized
+diagnostics still pass:
+
+```{r override-sim}
+local_dat <- sim_multisite(local_design, seed = 2027L)
+summary(local_dat)
+```
+
+The realized $\sigma_\tau$ landed at 0.273 against the target 0.250
+(WARN, $\sim 9$ percent relative drift — small-J sampling noise, not
+a design error). The dependence diagnostic on the rank scale passes
+at $-0.103$ against target zero. Operational feasibility flags WARN
+because $J = 20$ leaves the effective per-site sample size near 8 —
+expected for the small-J override.
+
+The general override rules:
+
+- **One field at a time first.** Bump $\sigma_\tau$, re-render, check
+  the diagnostics. Only move on if the realized values look right.
+- **Re-render `summary()` after every override.** A field move can
+  push a previously-passing diagnostic into WARN.
+- **Document the override in your provenance string.** The
+  [`canonical_hash()`](../reference/canonical_hash.html) and
+  [`provenance_string()`](../reference/provenance_string.html) carry
+  the override into the methods appendix automatically — you do not
+  need to spell out the field changes in prose.
+
+## 5. Visual comparison across presets
+
+A scannable table loses one piece of context: how the realized site
+effects actually look across presets. The plot below pulls three
+presets covering the heterogeneity range — small (Weiss low end),
+modest (JEBS / Weiss middle), and substantial (Weiss upper, large
+J) — and overlays their $\widehat\tau_j$ distributions on a common
+axis.
+
+```{r preset-compare-data, include = FALSE}
+.compare_presets <- function() {
+  pres <- list(
+    education_small       = preset_education_small(),
+    education_modest      = preset_education_modest(),
+    education_substantial = preset_education_substantial()
+  )
+  rows <- lapply(names(pres), function(nm) {
+    d <- sim_multisite(pres[[nm]], seed = 1L)
+    tibble::tibble(
+      preset    = nm,
+      site      = d$site_index,
+      tau_hat   = d$tau_j_hat,
+      se        = d$se_j,
+      sigma_tau = pres[[nm]]$sigma_tau
+    )
+  })
+  do.call(rbind, rows)
+}
+compare_df <- .compare_presets()
+```
+
+```{r preset-compare-plot, fig.cap = "Realized observed estimates across three Weiss-anchored presets at seed = 1L. Vertical spread widens as the preset's sigma_tau grows (0.05, 0.20, 0.30 — left to right). The fixed sigma_tau anchor of each preset is the dashed reference line. The small-effects column's cloud nearly collapses to zero because the latent SD is small relative to sampling error; the substantial column's cloud is widest, with J = 100 narrowing each site's bar and pulling the cloud closer to its dashed band.", fig.alt = "Three side-by-side strip plots of observed site effects across the three Weiss-anchored education presets, showing increasing vertical spread as sigma_tau grows."}
+ggplot2::ggplot(
+  compare_df,
+  ggplot2::aes(x = factor(preset, levels = c("education_small",
+                                             "education_modest",
+                                             "education_substantial")),
+               y = tau_hat)
+) +
+  ggplot2::geom_jitter(width = 0.18, alpha = 0.55, size = 1.4) +
+  ggplot2::geom_hline(
+    data    = unique(compare_df[, c("preset", "sigma_tau")]),
+    mapping = ggplot2::aes(yintercept = sigma_tau),
+    linetype = "dashed", color = "grey45"
+  ) +
+  ggplot2::geom_hline(
+    data    = unique(compare_df[, c("preset", "sigma_tau")]),
+    mapping = ggplot2::aes(yintercept = -sigma_tau),
+    linetype = "dashed", color = "grey45"
+  ) +
+  ggplot2::labs(
+    x        = NULL,
+    y        = expression(hat(tau)[j]),
+    title    = "Site-effect spread across three education presets",
+    subtitle = "Dashed lines mark each preset's sigma_tau target"
+  ) +
+  ggplot2::theme_minimal(base_size = 11)
+```
+
+What to read off this plot, in this order.
+
+1. **Vertical spread.** The substantial-effects column should be
+   visibly wider than the modest and small columns; that is the
+   $\sigma_\tau$ ladder you locked in by choosing one preset over
+   another.
+2. **Bar density at the dashed lines.** Roughly two-thirds of the
+   site dots should fall inside each preset's $\pm \sigma_\tau$
+   band — the empirical rule for an SD-scale parameter.
+3. **The small column collapsing.** When $\sigma_\tau = 0.05$, latent
+   variation is dominated by sampling noise; the dots scatter widely
+   relative to the dashed band. That is the calibration warning
+   `preset_education_small()` is meant to make explicit, not a bug
+   in the preset.
+
+## 6. Diagnostic per preset — funnel for `preset_jebs_paper()`
+
+The visual contract for an individual preset is its funnel plot.
+Below is the funnel for `preset_jebs_paper()` — the rank-correlation
+target is zero, so a symmetric scatter top-to-bottom is the expected
+signature. If the cloud tilts, the design has accidentally induced
+precision–effect dependence and the rank-correlation diagnostic in
+Group B will flip from PASS to FAIL.
+
+```{r jebs-funnel, fig.cap = "Funnel plot for preset_jebs_paper() at seed = 1L. Standard error on the x-axis (smaller = more precise); observed estimate on the y-axis. The cloud tapers as SE shrinks because the design generates SE from site sizes — the funnel signature of the site-size-driven path. Symmetry top-to-bottom confirms the rank-correlation target rho_S = 0 (PASS at -0.193, well within sampling tolerance for J = 50).", fig.alt = "Funnel plot for preset_jebs_paper showing the standard error on the x-axis and observed estimate on the y-axis, with roughly symmetric scatter around zero."}
+dat_jebs <- sim_multisite(preset_jebs_paper(), seed = 1L)
+plot_funnel(dat_jebs, caption = FALSE) +
+  ggplot2::labs(
+    title    = "preset_jebs_paper() — funnel diagnostic",
+    subtitle = "Symmetric cloud confirms rho_S target = 0"
+  )
+```
+
+The same visual contract applies to every site-size preset; only the
+spread and the funnel-mouth width change. For
+`preset_education_small()` the cloud is narrower vertically; for
+`preset_twin_towers()` it is enormous (J = 1000, $\sigma_\tau = 2$).
+The diagnostic question — "is the cloud symmetric around zero" —
+stays identical. See
+[Diagnostics in practice](a3-diagnostics-in-practice.html) for the
+full four-group rubric.
+
+## 7. Wrong-door checks
+
+Front doors are intentionally strict. A site-size preset belongs to
+[`sim_multisite()`](../reference/sim_multisite.html), and a
+direct-precision preset belongs to
+[`sim_meta()`](../reference/sim_meta.html). Mixing them produces a
+clean error rather than a silent miscalculation.
+
+```{r wrong-door}
+tryCatch(
+  sim_meta(preset_education_modest(), seed = 1L),
+  error = function(e) conditionMessage(e)
+)
+```
+
+Read the error: the wrapper says it requires `paradigm = "direct"`,
+notes the design carried `paradigm = "site_size"`, and points you to
+the right front door. Reverse the example and the same guard fires
+the other way.
+
+The second wrong-door check is a calibration FAIL inside a preset
+that the user picked at the wrong scale. If Maya picks
+`preset_education_small()` ($\sigma_\tau = 0.05$) for a study whose
+real heterogeneity is closer to 0.20, the simulation runs without
+error — but the diagnostics catch it.
+
+```{r small-fail-sim}
+small_dat <- sim_multisite(preset_education_small(), seed = 1L)
+summary(small_dat)
+```
+
+Read the diagnostics. The realized $\sigma_\tau$ comes in at 0.042
+against a target of 0.050 — that is a FAIL, even though the small-J
+($J = 50$) sampling noise is the dominant cause. The implied
+operational feasibility flag at the bottom (mean shrinkage, average
+MOE, feasibility index) fires a red status because the latent signal
+is small relative to sampling error. The simulation ran cleanly — it
+is the *design* that is wrong for this scenario. Switch to
+`preset_education_modest()` and the same diagnostics return to PASS
+or WARN territory at appropriate magnitudes.
+
+## 8. Defending the choice
+
+Once a preset is selected and any overrides are applied, the
+provenance string carries the choice and the seed into the methods
+appendix in one line.
+
+```{r provenance}
+chosen_dat <- sim_multisite(preset_jebs_paper(), seed = 1L)
+provenance_string(chosen_dat)
+```
+
+The string contains the package version, the paradigm, the seed, the
+canonical hash of the simulation, the design hash, the hashing
+algorithm, the R version, and any active hooks. Pasting this into a
+methods appendix gives a reviewer the exact contract: identical
+package version + identical seed + identical preset → identical
+canonical hash → byte-identical simulation. The hash itself is the
+short anchor:
+
+```{r canonical-hash}
+canonical_hash(chosen_dat)
+```
+
+Cite the source for the chosen preset in prose. For
+`preset_jebs_paper()` and `preset_jebs_strict()` cite
+@lee2025improving; for `preset_walters_2024()` cite
+@walters2024empirical; for the three education presets cite
+@weiss2017howmuch. The three remaining presets are package-curated
+and carry no external citation; describe each by role ("a stress-test
+preset for J = 1000 with extreme heterogeneity"; "a meta-analysis
+warm-up at the direct-precision front door"; "a small-area-estimation
+prior calibration") rather than naming a paper.
+
+A reviewer-ready methods-appendix line ties it all together:
+
+> Simulation generated with multisiteDGP (version 0.1.0, Lee 2025)
+> using `preset_education_modest(J = 20L, nj_mean = 60, sigma_tau =
+> 0.25)`, seed = 2027L, canonical hash 4f9399b626d1c71f.
+
+Three lines, every load-bearing claim grounded in either a citation
+or a hash.
+
+## 9. Where to next
+
+- [A1 · Getting started](a1-getting-started.html) — if you have not
+  already run a first simulation end-to-end, start there.
+- [Diagnostics in practice](a3-diagnostics-in-practice.html) — the
+  four diagnostic groups and the plots that go with each.
+- [Covariates and precision dependence](a4-covariates-precision-dependence.html)
+  — for the `R2` override on `preset_walters_2024()` and how
+  precision–effect dependence enters Layer 3.
+- [Calibrating to real data](a5-calibrating-real-data.html) — when
+  you have observed point estimates and SEs you want the simulator
+  to match.
+- [Cookbook](a8-cookbook.html) — recipe walkthroughs for downstream
+  analysis on a fitted preset.
+
+For methodology — the formal two-stage DGP, the G-distribution
+catalog, the *site-size-driven* and *direct-precision* paths — start
+with [The two-stage DGP](m1-statistical-dgp.html) and read M2 / M3 /
+M4 in order.
+
+## References
+
+The three education presets inherit their $\sigma_\tau$ ladder from
+@weiss2017howmuch. The two JEBS presets reproduce the simulation
+design in @lee2025improving. `preset_walters_2024()` is calibrated to
+the Handbook chapter @walters2024empirical. The remaining three
+presets — `preset_meta_modest()`, `preset_small_area_estimation()`,
+`preset_twin_towers()` — are package-curated and carry no published
+anchor at this writing.
+
+## Acknowledgments
+
+This research was supported by the Institute of Education Sciences,
+U.S. Department of Education, through Grant R305D240078 to the
+University of Alabama. The opinions expressed are those of the authors
+and do not represent views of the Institute or the U.S. Department of
+Education.
+
+## Session info
+
+```{r session-info, echo = FALSE}
+sessionInfo()
+```

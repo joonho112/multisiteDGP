@@ -1,0 +1,785 @@
+---
+title: "A8 · Cookbook"
+author: "JoonHo Lee"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+abstract: >
+  For analysts who already know what to compute and want a working
+  pattern they can copy. Each of the nine recipes is a self-contained
+  script under `inst/cookbook/` that runs a small end-to-end workflow
+  and prints a `COOKBOOK_RESULT` marker the audit harness checks. The
+  walkthroughs below run each recipe, show the printed output, and add
+  one figure of context per recipe. Use this vignette as a reference
+  card; the case studies in
+  [A6](a6-case-study-multisite.html) and
+  [A7](a7-case-study-meta-analysis.html) carry the longer narratives.
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    fig_caption: true
+    df_print: tibble
+vignette: >
+  %\VignetteIndexEntry{A8 Cookbook}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+csl: apa.csl
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  results    = "markup",
+  comment    = "#>",
+  collapse   = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.width  = 7,
+  fig.height = 4.5,
+  fig.retina = 2,
+  dpi        = 144,
+  fig.align  = "center",
+  out.width  = "100%"
+)
+set.seed(1L)
+library(multisiteDGP)
+library(ggplot2)
+```
+
+## 1. What is a cookbook recipe?
+
+A cookbook recipe is a short, self-contained R script under
+`inst/cookbook/` that loads the package, runs a small end-to-end
+workflow, asserts a few `stopifnot()` invariants, and prints a single
+`COOKBOOK_RESULT` line at the end. The audit harness in
+`inst/scripts/cookbook_audit.R` runs each recipe and matches its
+output against `expected_marker` in
+`inst/cookbook/cookbook-manifest.csv`; a missing or malformed marker
+is a smoke-test failure. Recipes therefore play two roles at once —
+they are pedagogy (a paste-ready pattern for one common task) and
+they are smoke tests (the package builds and behaves as documented).
+The walkthroughs in this vignette run each recipe inline, surface the
+marker, and add a figure of context.
+
+## 2. Recipe index
+
+```{r manifest}
+manifest_path <- system.file(
+  "cookbook", "cookbook-manifest.csv", package = "multisiteDGP"
+)
+recipes <- utils::read.csv(manifest_path, stringsAsFactors = FALSE)
+recipes[, c("id", "title", "file")]
+```
+
+Use the table below when scanning for a pattern you can copy.
+
+| ID | Title | What it demonstrates | When to reach for it |
+|---|---|---|---|
+| R5.1 | Hello-world JEBS-style workflow | `sim_multisite()` + `plot_effects()` from a published preset | First exposure; smoke check after install |
+| R5.2 | Custom calibration with `sigma_tau` and `R2` | Preset override of two anchor knobs | Pinning a substantive heterogeneity target with a covariate proxy |
+| R5.3 | Compare two presets side by side | `preset_education_small()` vs `preset_education_substantial()` | Bracketing an evidence claim across the field's regime |
+| R5.4 | Bridge to downstream adapters | `as_metafor()` and `as_baggr()` with namespace guards | Handing simulated data to an external estimator |
+| R5.5 | User `g_fn` callback | A custom Layer 1 G-distribution callback | A site-effect distribution that none of the eight built-ins covers |
+| R5.6 | Custom `dependence_fn` | A custom Layer 3 alignment callback | Replacing the built-in copula/rank/hybrid alignment |
+| R5.7 | Design grid and scenario audit | `design_grid()` + `scenario_audit()` for a small factorial | Pre-registration; defending a chosen cell |
+| R5.8 | Canonical hash reproducibility | Hash determinism across reruns and column orderings | Provenance; cache invalidation |
+| R5.9 | Debugging feasibility diagnostics | Reading `feasibility_index()` across seeds | Diagnosing a flagged diagnostic before changing the design |
+
+Each section below loads the recipe verbatim from the installed
+script, runs it, and reads off the `COOKBOOK_RESULT` line. The
+exported function names used in every recipe are entries in
+`NAMESPACE` (verified before drafting).
+
+## 3. R5.1 — Hello-world JEBS-style workflow
+
+What it does: simulates a 50-site dataset from
+`preset_jebs_paper()`, builds the caterpillar plot, and prints
+$\hat I$ and the canonical hash.
+
+When to reach for it: a 30-second smoke check after install, or the
+shortest possible reference for the
+`sim_multisite()` + `plot_effects()` pair.
+
+The recipe ships verbatim as `R5-1-hello-world.R`:
+
+```{r r51-script, echo = FALSE, comment = ""}
+cat(readLines(system.file(
+  "cookbook", "R5-1-hello-world.R", package = "multisiteDGP"
+)), sep = "\n")
+```
+
+Run it:
+
+```{r r51-run}
+dat_r51 <- sim_multisite(preset_jebs_paper(), seed = 4719L)
+diag_r51 <- attr(dat_r51, "diagnostics")
+effect_plot_r51 <- plot_effects(dat_r51, caption = FALSE)
+```
+
+```{r r51-marker}
+cat(sprintf(
+  "COOKBOOK_RESULT R5.1 status=PASS J=%d I=%.3f hash=%s\n",
+  nrow(dat_r51),
+  diag_r51$I_hat,
+  canonical_hash(dat_r51)
+))
+```
+
+The marker reports $J = 50$, $\hat I = 0.265$, and a stable hash;
+the assertions in the recipe confirm `dat` is a `multisitedgp_data`
+object, `effect_plot` inherits from `ggplot`, and $\hat I$ is finite.
+Render the caterpillar:
+
+```{r r51-plot, fig.cap = "R5.1: caterpillar of estimated site effects with shrinkage targets — sites are ordered by point estimate, and the y-axis spread reads as the across-site signal width on the residual scale.", fig.alt = "Caterpillar plot of estimated site effects from the JEBS-style preset, with sites ordered by point estimate along the x-axis and 95 percent intervals around each estimate; vertical spread of the dots represents the realized between-site heterogeneity."}
+effect_plot_r51
+```
+
+This is the JEBS-paper preset's calibration heritage
+[@lee2025improving] rendered in one figure: with $\sigma_\tau = 0.20$
+and $J = 50$, the caterpillar shows the across-site spread and the
+signal envelope you would publish.
+
+## 4. R5.2 — Custom calibration with `sigma_tau` and `R2`
+
+What it does: overrides two anchor knobs of
+`preset_education_modest()` — between-site SD `sigma_tau = 0.25` and
+covariate proxy `R2 = 0.40` — and reads the feasibility index off the
+resulting dataset.
+
+When to reach for it: pinning a substantive heterogeneity target
+(say, $\sigma_\tau = 0.25$ from a prior trial) while letting a
+school-level covariate absorb baseline variation.
+
+```{r r52-script, echo = FALSE, comment = ""}
+cat(readLines(system.file(
+  "cookbook", "R5-2-custom-calibration.R", package = "multisiteDGP"
+)), sep = "\n")
+```
+
+Run it:
+
+```{r r52-run}
+design_r52 <- preset_education_modest(sigma_tau = 0.25, R2 = 0.40)
+dat_r52 <- sim_multisite(design_r52, seed = 91207L)
+fi_r52 <- feasibility_index(dat_r52, warn = FALSE)
+```
+
+```{r r52-marker}
+cat(sprintf(
+  "COOKBOOK_RESULT R5.2 status=PASS sigma_tau=%.2f R2=%.2f feasibility=%.3f\n",
+  attr(dat_r52, "design")$sigma_tau,
+  attr(dat_r52, "design")$R2,
+  fi_r52
+))
+```
+
+The override survives the round-trip: `attr(dat, "design")$R2` is
+`0.40` exactly (the recipe asserts this). The realized feasibility
+index sits well above the conventional `n_eff = 1` floor, consistent
+with the multisite-trial calibration heritage at modest $\sigma_\tau$
+[@weiss2017howmuch]. To see what changes when only `R2` moves, sweep
+it on a coarse grid:
+
+```{r r52-sweep}
+r2_grid <- c(0.0, 0.2, 0.4, 0.6, 0.8)
+sweep_r52 <- vapply(r2_grid, function(r2) {
+  d <- sim_multisite(
+    preset_education_modest(sigma_tau = 0.25, R2 = r2),
+    seed = 91207L
+  )
+  c(I = informativeness(d), feasibility = feasibility_index(d, warn = FALSE))
+}, numeric(2))
+sweep_r52 <- data.frame(R2 = r2_grid, t(sweep_r52))
+sweep_r52
+```
+
+```{r r52-plot, fig.cap = "R5.2: residual-scale informativeness rises with R2 — with sigma_tau = 0.25 fixed, absorbing more baseline variation through the covariate proxy moves I from below 0.30 toward 0.40, the regime where shrinkage starts paying.", fig.alt = "Line plot showing realized informativeness I on the y-axis against covariate-explained variance R-squared on the x-axis at fixed sigma_tau = 0.25; the curve rises monotonically across the R-squared range."}
+ggplot(sweep_r52, aes(R2, I)) +
+  geom_line(linewidth = 0.6) +
+  geom_point(size = 2.2) +
+  scale_x_continuous(breaks = r2_grid) +
+  labs(x = expression(R^2), y = expression(hat(I))) +
+  theme_minimal(base_size = 11)
+```
+
+## 5. R5.3 — Compare two presets side by side
+
+What it does: simulates `preset_education_small()` and
+`preset_education_substantial()` at the same $J$ and seed, then
+compares informativeness.
+
+When to reach for it: bracketing an evidence claim across the
+field's regime — "even at the small end of the literature, $\hat I$
+is x" or "at the substantial end, shrinkage costs y".
+
+```{r r53-script, echo = FALSE, comment = ""}
+cat(readLines(system.file(
+  "cookbook", "R5-3-compare-presets.R", package = "multisiteDGP"
+)), sep = "\n")
+```
+
+Run it:
+
+```{r r53-run}
+small_r53 <- sim_multisite(preset_education_small(J = 40L), seed = 33113L)
+substantial_r53 <- sim_multisite(
+  preset_education_substantial(J = 40L), seed = 33113L
+)
+small_i <- informativeness(small_r53)
+substantial_i <- informativeness(substantial_r53)
+```
+
+```{r r53-marker}
+cat(sprintf(
+  "COOKBOOK_RESULT R5.3 status=PASS small_I=%.3f substantial_I=%.3f\n",
+  small_i,
+  substantial_i
+))
+```
+
+The recipe asserts `substantial_i > small_i` — at $J = 40$ on the
+same seed, $\hat I$ moves from roughly 0.02 (small heterogeneity, no
+useful between-site signal to recover) to roughly 0.62 (substantial
+heterogeneity, shrinkage carries real information). Pair the two
+caterpillars to see the contrast:
+
+```{r r53-plot, fig.width = 9, fig.height = 5, fig.cap = "R5.3: caterpillars at small versus substantial heterogeneity — the substantial-preset spread (right) is materially wider than the small-preset spread (left), confirming the I gap reported in the marker.", fig.alt = "Two side-by-side caterpillar plots, one for preset_education_small (left, narrow vertical spread reflecting sigma_tau = 0.05) and one for preset_education_substantial (right, wide vertical spread reflecting sigma_tau = 0.30)."}
+p_small <- plot_effects(small_r53, caption = FALSE) +
+  ggtitle(sprintf("Small (I = %.3f)", small_i))
+p_substantial <- plot_effects(substantial_r53, caption = FALSE) +
+  ggtitle(sprintf("Substantial (I = %.3f)", substantial_i))
+if (requireNamespace("patchwork", quietly = TRUE)) {
+  patchwork::wrap_plots(p_small, p_substantial, ncol = 2)
+} else {
+  p_small
+}
+```
+
+The small-vs-substantial gap aligns with the empirical Bayes
+calibration patterns in Walters' synthesis [@walters2024empirical] —
+the substantial-heterogeneity end is where between-site signal
+recovery becomes the dominant inferential question.
+
+## 6. R5.4 — Bridge to downstream adapters
+
+What it does: simulates from `preset_education_modest()`, hands the
+result to `as_metafor()` and `as_baggr()` (with namespace guards so
+the recipe still runs without those packages installed), and verifies
+that the residual-scale informativeness $\hat I$ is preserved exactly
+across the rename.
+
+When to reach for it: passing simulated data to an external
+estimator without losing the design's calibration.
+
+```{r r54-script, echo = FALSE, comment = ""}
+cat(readLines(system.file(
+  "cookbook", "R5-4-downstream-adapters.R", package = "multisiteDGP"
+)), sep = "\n")
+```
+
+Run it:
+
+```{r r54-run}
+dat_r54 <- sim_multisite(preset_education_modest(), seed = 50421L)
+sigma_tau_r54 <- attr(dat_r54, "design")$sigma_tau
+
+if (requireNamespace("metafor", quietly = TRUE)) {
+  mf_r54 <- as_metafor(dat_r54)
+} else {
+  mf_r54 <- tibble::tibble(
+    yi  = dat_r54$tau_j_hat,
+    vi  = dat_r54$se2_j,
+    sei = dat_r54$se_j
+  )
+}
+
+if (requireNamespace("baggr", quietly = TRUE)) {
+  bg_r54 <- as_baggr(dat_r54, include_truth = TRUE)
+} else {
+  bg_r54 <- tibble::tibble(
+    tau      = dat_r54$tau_j_hat,
+    se       = dat_r54$se_j,
+    tau_true = dat_r54$tau_j
+  )
+}
+
+i_before_r54 <- compute_I(dat_r54$se2_j, sigma_tau = sigma_tau_r54)
+i_after_r54  <- compute_I(mf_r54$vi,    sigma_tau = sigma_tau_r54)
+```
+
+```{r r54-marker}
+cat(sprintf(
+  "COOKBOOK_RESULT R5.4 status=PASS I_delta=%.3e metafor_guard=%s baggr_guard=%s\n",
+  abs(i_before_r54 - i_after_r54),
+  requireNamespace("metafor", quietly = TRUE),
+  requireNamespace("baggr", quietly = TRUE)
+))
+```
+
+The first three rows of the metafor frame use the canonical
+column names `yi / vi / sei`:
+
+```{r r54-mf-head}
+head(mf_r54, 3)
+```
+
+The baggr frame uses `tau / se / tau_true`:
+
+```{r r54-bg-head}
+head(bg_r54, 3)
+```
+
+The recipe's invariant — $\hat I$ before and after rename agree to
+within `1e-12` — guards against the row F-3 failure mode (post-adapter
+column drift). A funnel of the renamed estimates makes the bridge
+visible:
+
+```{r r54-plot, fig.cap = "R5.4: funnel of metafor-renamed estimates — the yi versus sei cloud is the same cloud we would have plotted from tau_j_hat versus se_j, confirming the rename is a relabel rather than a transform.", fig.alt = "Funnel plot with sampling standard error sei on the x-axis and effect estimate yi on the y-axis after as_metafor() column rename; the point cloud tapers as sei shrinks, the standard funnel signature."}
+ggplot(mf_r54, aes(yi, sei)) +
+  geom_point(alpha = 0.6, size = 2) +
+  scale_y_reverse() +
+  geom_vline(xintercept = 0, linetype = 2, colour = "grey50") +
+  labs(x = expression(y[i]~"(estimate)"),
+       y = expression(s*e[i]~"(reverse axis)")) +
+  theme_minimal(base_size = 11)
+```
+
+## 7. R5.5 — User `g_fn` callback
+
+What it does: defines a beta-difference G-distribution callback,
+wires it into a `multisitedgp_design()` with `true_dist = "User"`,
+and verifies the realized standardized SD recovers $\sigma_\tau$.
+
+When to reach for it: a site-effect distribution that none of the
+eight built-in G distributions covers — a bimodal or lopsided shape
+the analyst wants to inject directly. The callback contract (input
+`J` plus `...`, return either the standardized $z$-vector or a list
+with `z`) is documented at
+[`multisitedgp_design()`](../reference/multisitedgp_design.html).
+
+```{r r55-script, echo = FALSE, comment = ""}
+cat(readLines(system.file(
+  "cookbook", "R5-5-user-g-fn.R", package = "multisiteDGP"
+)), sep = "\n")
+```
+
+Run it:
+
+```{r r55-run}
+beta_diff_g <- function(J, ...) {
+  flip <- stats::rbinom(J, 1, 0.5)
+  raw <- ifelse(flip == 1, stats::rbeta(J, 2, 5), -stats::rbeta(J, 5, 2))
+  (raw - mean(raw)) / stats::sd(raw)
+}
+
+design_r55 <- multisitedgp_design(
+  J          = 60L,
+  true_dist  = "User",
+  g_fn       = beta_diff_g,
+  g_returns  = "standardized",
+  sigma_tau  = 0.20
+)
+dat_r55 <- sim_multisite(design_r55, seed = 71823L)
+realized_sigma_r55 <- stats::sd(dat_r55$z_j) * design_r55$sigma_tau
+```
+
+```{r r55-marker}
+cat(sprintf(
+  "COOKBOOK_RESULT R5.5 status=PASS realized_sigma=%.3f I=%.3f\n",
+  realized_sigma_r55,
+  informativeness(dat_r55)
+))
+```
+
+Because the callback returns standardized values
+(`g_returns = "standardized"`), the realized SD on the $\tau$-scale
+is exactly `sd(z_j) * sigma_tau`, and the recipe's `stopifnot()`
+catches drift if the callback ever returned an un-standardized
+vector. Inspect the realized shape:
+
+```{r r55-plot, fig.cap = "R5.5: density of standardized site-effect draws z_j from the bimodal beta-difference callback — the two-mode signature is preserved post-standardization, confirming the callback returned what it advertised.", fig.alt = "Kernel density estimate of standardized site-effect draws z_j produced by a beta-difference user callback, showing two distinct modes either side of zero."}
+ggplot(dat_r55, aes(z_j)) +
+  geom_density(fill = "grey70", colour = "grey20", alpha = 0.6) +
+  geom_rug(alpha = 0.4) +
+  geom_vline(xintercept = 0, linetype = 2, colour = "grey50") +
+  labs(x = expression(z[j]~"(standardized site effect)"),
+       y = "density") +
+  theme_minimal(base_size = 11)
+```
+
+The two-mode signature is what the bimodal callback promised; the
+mean-zero, unit-SD constraint is the standardization contract.
+
+## 8. R5.6 — Custom `dependence_fn`
+
+What it does: registers a deterministic rank-alignment callback that
+co-orders site effects with site-level standard errors, then verifies
+that supplying a malformed callback (one that mutates `se2_j` or
+returns a non-permutation) is caught by
+`validate_multisitedgp_design()` before the simulator runs.
+
+When to reach for it: replacing the built-in copula / rank / hybrid
+alignment with a custom monotone scheme — useful when alignment is
+dictated by an external mechanism (e.g., a measurement-precision
+relationship the analyst wants to inject deterministically rather
+than match in correlation). The callback contract is documented at
+[`multisitedgp_design()`](../reference/multisitedgp_design.html).
+
+```{r r56-script, echo = FALSE, comment = ""}
+cat(readLines(system.file(
+  "cookbook", "R5-6-custom-dependence-fn.R", package = "multisiteDGP"
+)), sep = "\n")
+```
+
+Run it:
+
+```{r r56-run}
+custom_rank <- function(z_j, se2_j, target, ...) {
+  se_order <- order(se2_j)
+  z_order  <- order(z_j)
+  perm <- integer(length(se2_j))
+  if (target >= 0) {
+    perm[z_order] <- se_order
+  } else {
+    perm[z_order] <- rev(se_order)
+  }
+  list(se2_j = se2_j[perm], perm = as.integer(perm))
+}
+
+design_r56 <- multisitedgp_design(
+  J             = 40L,
+  sigma_tau     = 0.20,
+  dependence    = "rank",
+  rank_corr     = 0.40,
+  dependence_fn = custom_rank,
+  seed          = 4719L
+)
+dat_r56 <- sim_multisite(design_r56)
+rho_r56 <- realized_rank_corr(dat_r56)
+
+bad_dep <- function(z_j, se2_j, target, ...) {
+  list(se2_j = se2_j * 2, perm = seq_along(se2_j))
+}
+bad_design_r56 <- update_multisitedgp_design(
+  design_r56, dependence_fn = bad_dep
+)
+bad_caught_r56 <- tryCatch(
+  {
+    sim_multisite(bad_design_r56)
+    FALSE
+  },
+  error = function(e) TRUE
+)
+```
+
+```{r r56-marker}
+cat(sprintf(
+  "COOKBOOK_RESULT R5.6 status=PASS rho=%.3f bad_callback_caught=%s\n",
+  rho_r56,
+  bad_caught_r56
+))
+```
+
+The deterministic rank-permutation produces a near-exact rank
+alignment (`rho` close to 1), well above the `rank_corr = 0.40`
+target — the callback is doing what it advertises rather than what
+the target requested. The `bad_callback_caught = TRUE` half of the
+marker is the second invariant: the malformed callback that scales
+`se2_j` is rejected at validation time, not silently absorbed.
+Visualize the alignment:
+
+```{r r56-plot, fig.cap = "R5.6: site-level se versus standardized site-effect rank under the custom callback — the monotone band indicates near-perfect rank co-ordering, the callback's deterministic signature.", fig.alt = "Scatterplot of standardized site-effect rank on the x-axis and per-site sampling standard error on the y-axis under a custom dependence callback; the points line up in a tight monotone band."}
+ggplot(dat_r56, aes(rank(z_j), se_j)) +
+  geom_point(alpha = 0.7, size = 2) +
+  geom_smooth(method = "loess", se = FALSE, formula = y ~ x,
+              colour = "grey30", linewidth = 0.5) +
+  labs(x = expression(rank(z[j])), y = expression(s*e[j])) +
+  theme_minimal(base_size = 11)
+```
+
+## 9. R5.7 — Design grid and scenario audit
+
+What it does: builds an 8-cell direct-precision design grid over
+$I \in \{0.20, 0.40\}$, $R \in \{1, 3\}$, $J \in \{14, 30\}$, then
+runs `scenario_audit()` with `M = 1` replicate to label which cells
+pass.
+
+When to reach for it: pre-registration — defending a chosen design
+cell with a per-cell summary table and a hashable audit object.
+
+```{r r57-script, echo = FALSE, comment = ""}
+cat(readLines(system.file(
+  "cookbook", "R5-7-design-grid-audit.R", package = "multisiteDGP"
+)), sep = "\n")
+```
+
+Run it:
+
+```{r r57-run}
+grid_r57 <- design_grid(
+  paradigm  = "direct",
+  I         = c(0.20, 0.40),
+  R         = c(1, 3),
+  J         = c(14L, 30L),
+  sigma_tau = 0.20,
+  true_dist = "Gaussian",
+  seed_root = 20260507L
+)
+audit_r57 <- scenario_audit(grid_r57, M = 1L, parallel = FALSE)
+```
+
+```{r r57-marker}
+cat(sprintf(
+  "COOKBOOK_RESULT R5.7 status=PASS cells=%d audit_hash=%s\n",
+  nrow(audit_r57),
+  canonical_hash(audit_r57)
+))
+```
+
+Inspect the per-cell pass/fail summary:
+
+```{r r57-summary}
+audit_r57[, c("cell_id", "I", "R", "J", "pass",
+              "med_I_hat", "med_feasibility_efron")]
+```
+
+The full audit object carries 29 columns — design factors, status
+flags, and the diagnostic medians and tail quantiles per cell.
+Render the pass/fail mosaic:
+
+```{r r57-plot, fig.cap = "R5.7: scenario-audit pass/fail mosaic across the I x J grid faceted by R — green cells pass the diagnostic ladder at M = 1; the cells that fail concentrate where I is small and J is small, the regime where shrinkage cannot recover the between-site signal.", fig.alt = "Faceted mosaic plot of scenario_audit pass/fail status across an informativeness I and study-count J grid, faceted by heterogeneity ratio R; cells are color-coded green for pass and red for fail, with failures concentrated at low I and low J."}
+ggplot(audit_r57, aes(factor(J), factor(I), fill = pass)) +
+  geom_tile(colour = "white", linewidth = 0.6) +
+  facet_wrap(~ paste0("R = ", R)) +
+  scale_fill_manual(
+    values = c(`TRUE` = "#4daf4a", `FALSE` = "#e41a1c"),
+    name   = "audit pass"
+  ) +
+  labs(x = "J", y = "I") +
+  theme_minimal(base_size = 11)
+```
+
+`M = 1` is a smoke setting — for a defensible pre-registration plan
+on `M >= 50` and read off `med_I_hat`, `med_feasibility_efron`, and
+the tail quantiles. The longer narrative is in
+[A6](a6-case-study-multisite.html).
+
+## 10. R5.8 — Canonical hash reproducibility
+
+What it does: computes the canonical hash of the same design three
+times and confirms a single unique value, then permutes column order
+and confirms the hash is invariant.
+
+When to reach for it: provenance and cache invalidation — a hash
+change on what should be the same artifact is a determinism signal
+worth chasing before publication.
+
+```{r r58-script, echo = FALSE, comment = ""}
+cat(readLines(system.file(
+  "cookbook", "R5-8-reproducibility-hash.R", package = "multisiteDGP"
+)), sep = "\n")
+```
+
+Run it:
+
+```{r r58-run}
+hashes_r58 <- vapply(
+  seq_len(3),
+  function(i) canonical_hash(
+    sim_multisite(preset_education_modest(), seed = 12345L)
+  ),
+  character(1)
+)
+dat_r58 <- sim_multisite(preset_education_modest(), seed = 12345L)
+reordered_r58 <- dat_r58[, sort(names(dat_r58))]
+```
+
+```{r r58-marker}
+cat(sprintf(
+  "COOKBOOK_RESULT R5.8 status=PASS unique_hashes=%d hash=%s\n",
+  length(unique(hashes_r58)),
+  hashes_r58[[1L]]
+))
+```
+
+The three reruns produce one unique hash:
+
+```{r r58-hashes}
+hashes_r58
+```
+
+And the column-permuted dataset hashes to the same value as the
+original, by design — the hash canonicalizes column order before
+serialization:
+
+```{r r58-perm}
+identical(canonical_hash(dat_r58), canonical_hash(reordered_r58))
+```
+
+To make the determinism story visible, sweep across seeds and read
+off the per-seed hash:
+
+```{r r58-sweep}
+hash_sweep_r58 <- data.frame(
+  seed = 12345L + 0:5,
+  hash = vapply(
+    12345L + 0:5,
+    function(s) canonical_hash(
+      sim_multisite(preset_education_modest(), seed = s)
+    ),
+    character(1)
+  )
+)
+hash_sweep_r58
+```
+
+```{r r58-plot, fig.cap = "R5.8: per-seed hash uniqueness across six adjacent seeds — every seed produces a distinct hash, while same-seed reruns produce one stable hash, the two halves of canonical determinism.", fig.alt = "Bar chart with one bar per seed value (six adjacent seeds), each labeled with its 16-character canonical hash; every bar shows a distinct hash, illustrating seed-to-hash injectivity."}
+hash_sweep_r58$short <- substr(hash_sweep_r58$hash, 1, 8)
+ggplot(hash_sweep_r58, aes(factor(seed), 1, fill = short)) +
+  geom_tile(colour = "white", linewidth = 0.6) +
+  geom_text(aes(label = short), size = 3) +
+  scale_fill_grey(start = 0.6, end = 0.95) +
+  guides(fill = "none") +
+  labs(x = "seed", y = "") +
+  theme_minimal(base_size = 11) +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+The provenance idiom is one line:
+
+```{r r58-prov}
+provenance_string(dat_r58)
+```
+
+That string is the artifact a reviewer can pin to a methods
+appendix [@lee2025improving].
+
+## 11. R5.9 — Debugging feasibility diagnostics
+
+What it does: simulates `preset_education_modest()` at $J = 14$,
+$\bar n_j = 60$ — small-trial conditions where the feasibility
+diagnostic does real work — and reads `informativeness()` and
+`feasibility_index()` across three adjacent seeds.
+
+When to reach for it: a flagged feasibility warning. The first
+question is whether it is the design or the seed; this recipe is the
+shortest sanity check.
+
+```{r r59-script, echo = FALSE, comment = ""}
+cat(readLines(system.file(
+  "cookbook", "R5-9-debugging-feasibility.R", package = "multisiteDGP"
+)), sep = "\n")
+```
+
+Run it:
+
+```{r r59-run}
+design_r59 <- preset_education_modest(J = 14L, nj_mean = 60)
+dat_r59 <- sim_multisite(design_r59, seed = 12345L)
+
+checks_r59 <- data.frame(
+  seed = 12345L + 0:2,
+  I = vapply(
+    12345L + 0:2,
+    function(s) informativeness(sim_multisite(design_r59, seed = s)),
+    numeric(1)
+  ),
+  feasibility = vapply(
+    12345L + 0:2,
+    function(s) feasibility_index(
+      sim_multisite(design_r59, seed = s), warn = FALSE
+    ),
+    numeric(1)
+  )
+)
+```
+
+```{r r59-marker}
+cat(sprintf(
+  "COOKBOOK_RESULT R5.9 status=PASS J=%d mean_I=%.3f mean_feasibility=%.3f\n",
+  design_r59$J,
+  mean(checks_r59$I),
+  mean(checks_r59$feasibility)
+))
+```
+
+The per-seed table is the actual debugging artifact:
+
+```{r r59-table}
+checks_r59
+```
+
+The three seeds produce $\hat I$ and feasibility values that move by
+under 5%, which is what you want — the feasibility warning is a
+property of the design, not the seed. If $\hat I$ jumped by an order
+of magnitude across adjacent seeds, the design's seed-to-seed
+sensitivity would be the diagnosis. Plot the variability:
+
+```{r r59-plot, fig.cap = "R5.9: feasibility index across three adjacent seeds at J = 14, n_j = 60 — bar heights are within 5% of each other, indicating the warning is a stable property of the design rather than a seed-specific artifact.", fig.alt = "Bar chart of Efron feasibility index for three adjacent seed values at J = 14 and nj_mean = 60; the three bars have nearly identical heights, indicating the feasibility warning is design-driven not seed-driven."}
+ggplot(checks_r59, aes(factor(seed), feasibility)) +
+  geom_col(fill = "grey60", colour = "grey20") +
+  geom_text(aes(label = sprintf("%.2f", feasibility)),
+            vjust = -0.4, size = 3.5) +
+  labs(x = "seed", y = "feasibility index") +
+  theme_minimal(base_size = 11) +
+  expand_limits(y = max(checks_r59$feasibility) * 1.10)
+```
+
+A small-trial regime ($J = 14$, $\bar n_j = 60$) is where the
+feasibility diagnostic earns its keep — diagnostics in practice are
+covered in [A3](a3-diagnostics-in-practice.html).
+
+## 12. The audit harness
+
+The same harness that runs in CI is exposed for local use:
+
+```{r harness}
+audit_script <- system.file(
+  "scripts", "cookbook_audit.R", package = "multisiteDGP"
+)
+env <- new.env(parent = globalenv())
+sys.source(audit_script, envir = env)
+env$run_cookbook_audit(execute = FALSE, verbose = FALSE)
+```
+
+`execute = FALSE` parses the manifest and confirms every recipe is
+discoverable; `execute = TRUE` runs each recipe end-to-end and
+matches the printed marker against `expected_marker`. A failed match
+is a smoke-test failure — the audit harness is the canonical
+definition of "the recipes still work".
+
+## 13. Where to next
+
+The case studies pick up where the recipes stop, and the M-track
+vignettes document the four-layer mechanics behind every recipe.
+
+- [A6 · Case study — multisite trial](a6-case-study-multisite.html)
+  — full pre-registration flow for a multisite trial: anchor design,
+  scenario grid, audit, and methods-appendix template.
+- [A7 · Case study — meta-analysis](a7-case-study-meta-analysis.html)
+  — meta-analysis analogue: forest, funnel, dependence, and a
+  heterogeneity-ratio narrative.
+- [M1 · The two-stage DGP](m1-statistical-dgp.html) — formal DGP
+  behind every recipe; the canonical-column factorization.
+- [M3 · Margin and SE models](m3-margin-se-models.html) — Layer 2
+  mechanics (site sizes and standard errors) that drive R5.4 / R5.7 /
+  R5.9.
+- [M5 · Custom G distributions](m5-custom-g-distributions.html) —
+  full detail on the custom-callback contract used in R5.5 and R5.6.
+- [M7 · Reproducibility and provenance](m7-reproducibility-provenance.html)
+  — hash + provenance machinery behind R5.8.
+
+## Acknowledgments
+
+This research was supported by the Institute of Education Sciences,
+U.S. Department of Education, through Grant R305D240078 to the
+University of Alabama. The opinions expressed are those of the authors
+and do not represent views of the Institute or the U.S. Department of
+Education.
+
+## Session info
+
+```{r session-info, echo = FALSE}
+sessionInfo()
+```

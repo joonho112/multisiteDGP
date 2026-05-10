@@ -1,0 +1,67 @@
+Package: multisiteDGP
+Title: Data-Generating Processes for Multisite Trial Simulations
+Version: 0.1.1
+Authors@R:
+    person("JoonHo", "Lee", , "jlee296@ua.edu", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0006-4019-8703"))
+Description: Design defensible multisite trial simulations from
+    summary-level building blocks. 'multisiteDGP' generates latent
+    site effects under a catalog of eight distribution shapes (Gaussian,
+    Student-t, skew-normal, asymmetric Laplace, two-component mixture,
+    point-mass slab, user callback, and a Dirichlet-process-mixture
+    bridge), calibrated sampling-error margins, intentional dependence
+    between effects and precisions, and observed site estimates in a
+    single call. Researchers express scenarios through intuitive
+    quantities -- heterogeneity ratio, site counts, defensible presets
+    -- rather than abstract variance components. Bundled diagnostics,
+    presets calibrated to the JEBS, Walters, and Weiss literature, and
+    adapters for 'metafor', 'baggr', and 'multisitepower' connect
+    results to downstream analysis. Methods follow Lee, Che, Rabe-Hesketh,
+    Feller, and Miratrix (2025) <doi:10.3102/10769986241254286>.
+    Supported by IES through Grant R305D240078 to the University of
+    Alabama.
+License: MIT + file LICENSE
+URL: https://joonho112.github.io/multisiteDGP/, https://github.com/joonho112/multisiteDGP
+BugReports: https://github.com/joonho112/multisiteDGP/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    stats,
+    tibble,
+    dplyr (>= 1.0.0),
+    tidyr (>= 1.2.0),
+    withr (>= 2.5.0),
+    cli (>= 3.6.0),
+    rlang (>= 1.1.0),
+    nleqslv,
+    ggplot2 (>= 3.4.0),
+    digest (>= 0.6.30),
+    RColorBrewer,
+    viridisLite
+Suggests:
+    sn,
+    LaplacesDemon,
+    copula,
+    metafor,
+    baggr,
+    multisitepower,
+    deconvolveR,
+    furrr,
+    yaml,
+    arrow,
+    moments,
+    hedgehog,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    covr,
+    gridExtra,
+    patchwork
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Config/Needs/documentation: roxygen2
+Config/Needs/website: pkgdown
+Config/Needs/lint: lintr, cyclocomp

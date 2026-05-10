@@ -1,0 +1,460 @@
+---
+title: "M6 · Adapters and downstream packages"
+author: "JoonHo Lee"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+abstract: >
+  For analysts who simulate with multisiteDGP and then fit, plot, or
+  power-analyze with a downstream package — `metafor`, `baggr`, or
+  `multisitepower`. Adapters strip the package's S3 class and rename
+  the canonical effect, SE, and site columns to the target ecosystem's
+  convention; numerical values are not transformed. You leave with the
+  formal contract, the three built-in rename maps, the round-trip
+  invariant, the reserved-name guard, and acceptance criteria for
+  adding a fourth adapter.
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    fig_caption: true
+    df_print: tibble
+vignette: >
+  %\VignetteIndexEntry{M6 Adapters and downstream packages}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+csl: apa.csl
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  results    = "markup",
+  comment    = "#>",
+  collapse   = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.width  = 7,
+  fig.height = 4.5,
+  fig.retina = 2,
+  dpi        = 144,
+  fig.align  = "center",
+  out.width  = "100%"
+)
+set.seed(1L)
+library(multisiteDGP)
+library(ggplot2)
+```
+
+## 1. The adapter contract
+
+A `multisitedgp_data` object carries seven canonical columns
+(`site_index`, `z_j`, `tau_j`, `tau_j_hat`, `se_j`, `se2_j`, `n_j`),
+an S3 class, and design / provenance attributes. None of the names
+match the conventions analysis packages fit with: `metafor::rma()`
+reads `yi`, `vi`; `baggr::baggr()` reads `tau`, `se`; `multisitepower`
+reads `site`, `estimate`, `se`, `n`.
+
+The adapter contract is two clauses, both load-bearing. First, an
+adapter strips the `multisitedgp_data` class so the result is a plain
+`tbl_df` and the downstream package's S3 dispatch is not surprised.
+Second, an adapter renames the canonical columns to the target
+ecosystem's convention but does **not** alter numerical values: every
+renamed column is bit-for-bit identical to its source. The
+factorization $y_j = \tau_j + e_j$,
+$e_j \sim \mathcal{N}(0, \sigma_j^2)$ [@lee2025improving] is preserved
+on disk. Two corollaries follow: the round-trip invariant (Section 3)
+holds by construction; reserved-name collisions are unrecoverable —
+the adapter errors rather than overwrite a user covariate named `yi`.
+
+## 2. The three built-in adapters
+
+The package ships three adapters, each named for its target. All
+three follow the same pattern: a generic; a `.multisitedgp_data`
+method that runs the soft-dep guard, the reserved-name check, and the
+rename; a `.default` method that errors with the class of the
+offending input. Implementations live in `R/adapters.R` lines 80-218.
+
+A 50-site simulation from `preset_education_modest()` is the shared
+input for all three sections below.
+
+```{r data}
+dat <- sim_multisite(preset_education_modest(), seed = 1L)
+print(dat, n = 4)
+```
+
+### 2.1  `as_metafor()` — meta-analysis fitting
+
+Use `as_metafor()` when the next step is `metafor::rma()`,
+`metafor::escalc()`, or any of the `metafor` plotting / influence
+helpers. The rename map is
+
+| canonical column   | metafor column |
+|--------------------|----------------|
+| `tau_j_hat`        | `yi`           |
+| `se2_j`            | `vi`           |
+| `se_j`             | `sei`          |
+
+Three-column output: effect, sampling variance, standard error.
+
+```{r as-metafor}
+mf <- as_metafor(dat)
+print(mf, n = 4)
+class(mf)
+```
+
+The class line confirms the strip — `mf` is a plain `tbl_df`. Pass
+to `metafor::rma()` directly:
+
+```{r metafor-rma, eval = requireNamespace("metafor", quietly = TRUE)}
+metafor::rma(yi = yi, vi = vi, data = mf, method = "REML")
+```
+
+The empirical-Bayes shrinkage `metafor::rma()` produces takes the
+adapted `yi` / `vi` as inputs — the precision-driven posterior is
+the analysis target [@walters2024empirical].
+
+### 2.2  `as_baggr()` — Bayesian aggregation with optional truth
+
+Use `as_baggr()` when the next step is `baggr::baggr()` or its
+diagnostic plots. The rename map is two columns by default and three
+with `include_truth = TRUE`:
+
+| canonical column   | baggr column | when included     |
+|--------------------|--------------|-------------------|
+| `tau_j_hat`        | `tau`        | always            |
+| `se_j`             | `se`         | always            |
+| `tau_j`            | `tau_true`   | `include_truth`   |
+
+`include_truth = TRUE` exposes the latent true effects $\tau_j$ as a
+separate column. `baggr` itself does not consume `tau_true` — the
+column is for diagnostic comparison of `baggr`'s posterior against the
+simulation truth, e.g., posterior-mean coverage of true effects. It
+is never an input to fitting.
+
+```{r as-baggr}
+bg <- as_baggr(dat)
+print(bg, n = 4)
+
+bg_truth <- as_baggr(dat, include_truth = TRUE)
+print(bg_truth, n = 4)
+```
+
+When the simulation is the inferential target — sampling-design
+research, calibration of an applied trial — set `include_truth = TRUE`.
+When the simulation stands in for an opaque real dataset, the default
+`include_truth = FALSE` matches what `baggr` would see in production.
+
+### 2.3  `as_multisitepower()` — empirical-Bayes power
+
+Use `as_multisitepower()` when the next step is the empirical-Bayes
+power surface in the `multisitepower` package. The rename map is
+
+| canonical column   | multisitepower column | when included           |
+|--------------------|-----------------------|-------------------------|
+| `site_index`       | `site`                | always                  |
+| `tau_j_hat`        | `estimate`            | always                  |
+| `se_j`             | `se`                  | always                  |
+| `n_j`              | `n`                   | when any `n_j` non-`NA` |
+
+The `n` column is conditional. Direct-precision designs leave `n_j`
+all-`NA` because per-site sample size is not part of the precision
+specification; the adapter omits `n` rather than emit all-`NA`.
+Site-size paradigm designs (the default in
+`preset_education_modest()`) include `n`.
+
+`multisitepower` is a soft `Suggests` dependency and may not be
+installed on a given machine. The chunk below is guarded; when the
+package is absent, the adapter raises a classed soft-dependency error
+that the chunk traps and prints, exercising the guard from Section 5.
+
+```{r as-multisitepower}
+if (requireNamespace("multisitepower", quietly = TRUE)) {
+  mp <- as_multisitepower(dat)
+  print(mp, n = 4)
+} else {
+  err <- tryCatch(as_multisitepower(dat), error = conditionMessage)
+  cat(err, sep = "\n")
+}
+```
+
+When `multisitepower` is installed, the four-column tibble feeds
+straight into the package's power surface.
+
+## 3. Round-trip invariant
+
+The adapter contract's "no numerical change" clause is the round-trip
+invariant. Every renamed column is bit-for-bit identical to the
+canonical column it came from — `identical()` returns `TRUE`, not just
+`all.equal()` within tolerance. The check is what makes the adapter a
+relabeling rather than a transformation.
+
+```{r round-trip-identity}
+data.frame(
+  metafor_yi_eq_tau_j_hat   = identical(mf$yi,        dat$tau_j_hat),
+  metafor_vi_eq_se2_j       = identical(mf$vi,        dat$se2_j),
+  metafor_sei_eq_se_j       = identical(mf$sei,       dat$se_j),
+  baggr_tau_eq_tau_j_hat    = identical(bg$tau,       dat$tau_j_hat),
+  baggr_se_eq_se_j          = identical(bg$se,        dat$se_j),
+  baggr_tau_true_eq_tau_j   = identical(bg_truth$tau_true, dat$tau_j)
+)
+```
+
+All six entries return `TRUE` — stronger than `all.equal()` tolerance,
+because the adapter is an attribute-strip plus a rename, not a
+transform, so floating-point representation is unchanged.
+
+The figure below illustrates the invariant on the `metafor` rename:
+each `(yi, tau_j_hat)` pair lands exactly on the unit line, and the
+`(vi, se2_j)` and `(sei, se_j)` pairs do the same.
+
+```{r plot-round-trip, fig.height = 4.5, fig.cap = "Round-trip identity for as_metafor on a 50-site simulation. Each panel plots a metafor column against its canonical multisitedgp source; all 50 points lie exactly on the unit line, confirming the adapter is a relabeling. Key read: read off any horizontal deviation from the diagonal as a contract violation — there should be none.", fig.alt = "Three side-by-side scatter plots of metafor columns yi, vi, sei against canonical multisitedgp columns tau_j_hat, se2_j, se_j; in each panel all points fall on the y = x diagonal."}
+rt <- tibble::tibble(
+  rename     = rep(c("yi vs tau_j_hat", "vi vs se2_j", "sei vs se_j"), each = 50),
+  canonical  = c(dat$tau_j_hat, dat$se2_j, dat$se_j),
+  adapted    = c(mf$yi,         mf$vi,     mf$sei)
+)
+ggplot(rt, aes(x = canonical, y = adapted)) +
+  geom_abline(slope = 1, intercept = 0, colour = "grey60", linewidth = 0.5) +
+  geom_point(colour = "#1B4965", alpha = 0.85, size = 1.6) +
+  facet_wrap(~ rename, scales = "free", nrow = 1) +
+  labs(
+    x        = "canonical multisitedgp column",
+    y        = "as_metafor() column",
+    title    = "Round-trip identity for as_metafor()",
+    subtitle = "Every point on the y = x line; the rename preserves values exactly."
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+The same picture holds for `as_baggr()` and `as_multisitepower()` —
+the rename map differs, but the invariant does not.
+
+## 4. Reserved-name protection
+
+Each adapter reserves the column names it produces. If a user-supplied
+design carries a covariate whose name collides with a reserved name,
+the adapter aborts before the rename — silently overwriting the
+covariate would corrupt the analysis. The reserved sets are
+small enough to fit in a table:
+
+| adapter             | reserved input names                              |
+|---------------------|---------------------------------------------------|
+| `as_metafor()`      | `yi`, `vi`, `sei`                                 |
+| `as_baggr()`        | `tau`, `se` (plus `tau_true` if `include_truth`)  |
+| `as_multisitepower()` | `site`, `estimate`, `se`, `n`                   |
+
+The check fires only on user-supplied covariate columns, not on the
+seven canonical columns the adapter is renaming from. The check
+constants live as `.RESERVED_METAFOR`, `.RESERVED_BAGGR`, and
+`.RESERVED_MULTISITEPOWER` at the top of `R/adapters.R`.
+
+A demonstration: build a 20-site design that carries a covariate
+named `yi`, the metafor effect column. The adapter aborts with a
+three-line message — the violation, the offending reserved set, and
+the fix.
+
+```{r reserved-collision-metafor}
+covariates <- data.frame(yi = as.numeric(scale(seq_len(20L))))
+collision <- sim_multisite(
+  multisitedgp_design(
+    J        = 20L,
+    formula  = ~ yi,
+    beta     = 0.10,
+    data     = covariates
+  ),
+  seed = 1L
+)
+err_mf <- tryCatch(as_metafor(collision), error = conditionMessage)
+cat(err_mf, sep = "\n")
+```
+
+The same machinery fires for `as_baggr()` on a covariate named `tau`:
+
+```{r reserved-collision-baggr}
+covariates2 <- data.frame(tau = stats::rnorm(20L))
+collision2 <- sim_multisite(
+  multisitedgp_design(
+    J        = 20L,
+    formula  = ~ tau,
+    beta     = 0.10,
+    data     = covariates2
+  ),
+  seed = 1L
+)
+err_bg <- tryCatch(as_baggr(collision2), error = conditionMessage)
+cat(err_bg, sep = "\n")
+```
+
+The fix the message points to: rename the covariate before adapting,
+or use `tibble::as_tibble()` for a plain tibble without renames.
+
+A non-colliding covariate threads through cleanly. Below we add two —
+`school_type` (factor) and `urbanicity` (numeric) — and confirm both
+land in the adapted tibble alongside the renamed canonical columns.
+
+```{r covariate-passthrough}
+cv <- data.frame(
+  school_type = factor(rep(c("A", "B"), 25L)),
+  urbanicity  = stats::rnorm(50L)
+)
+dat_cv <- sim_multisite(
+  multisitedgp_design(
+    J        = 50L,
+    formula  = ~ school_type + urbanicity,
+    beta     = c(0.05, 0.02),
+    data     = cv
+  ),
+  seed = 1L
+)
+mf_cv <- as_metafor(dat_cv)
+print(mf_cv, n = 4)
+```
+
+The output has five columns: the three-column metafor rename, then
+the two pass-through covariates in original order. Internally,
+`setdiff(names(x), .canonical_data_columns())` selects the carry-through
+set (`R/adapters.R` line 167) — any non-canonical column qualifies.
+
+## 5. Soft-dependency guard
+
+`metafor`, `baggr`, and `multisitepower` are listed in `Suggests`,
+not `Imports` — none is required to use `multisiteDGP` itself, only
+to use the matching adapter. Each adapter calls
+`requireNamespace("target", quietly = TRUE)` through the internal
+`.require_soft_dependency()` helper and aborts with a three-line
+error when the target package is missing:
+
+| line  | content                                                   |
+|-------|-----------------------------------------------------------|
+| 1     | `Package "<pkg>" is required for "<adapter>()".`          |
+| 2     | `<pkg> is a multisiteDGP Suggests dependency …`           |
+| 3     | `Use install.packages("<pkg>") and try again.`            |
+
+The exact message body for `multisitepower` (commonly absent on a
+fresh CRAN check environment) is the chunk output of Section 2.3. The
+guard fires *before* the reserved-name check.
+
+The `.default` method of each adapter handles the wrong-class case —
+calling `as_metafor()` on a list, a data frame, or any object that is
+not a `multisitedgp_data` aborts with a parallel three-line message.
+
+```{r default-dispatch}
+err_default <- tryCatch(
+  as_metafor(list(yi = 1, vi = 1)),
+  error = conditionMessage
+)
+cat(err_default, sep = "\n")
+```
+
+The first line names the adapter and the violated input class, the
+second prints the actual class of the offending object, and the third
+gives the canonical fix — call `sim_multisite()` or `sim_meta()` first.
+
+## 6. Acceptance criteria for a new adapter
+
+The package ships three adapters because three downstream ecosystems
+are the common applied case. A fourth adapter — say `as_metaSEM()` or
+`as_robumeta()` — is straightforward to add, but only if it satisfies
+the six checks below. The list is the maintainer's checklist; it
+doubles as the test fixture the new adapter's PR should ship with.
+
+**(C1) Input contract.** The adapter is an S3 generic with a
+`.multisitedgp_data` method and a `.default` method. The
+`.multisitedgp_data` method takes a `multisitedgp_data` object; the
+`.default` method errors with the offending object's class. No
+adapter consumes a raw `data.frame` or a list — the input is always
+the simulator's output.
+
+**(C2) Output rename map.** The adapter's docstring includes the
+canonical-to-target rename map as a three-column or four-column
+table, and the same map appears as a unit-test fixture asserting
+`identical(out$<target_col>, x$<canonical_col>)` for each row of the
+map. Conditional columns (e.g., `n` only when `n_j` non-`NA`) are
+documented as such; the unit test exercises both the present and
+absent branches. The output is a plain `tbl_df` — no
+`multisitedgp_data` class survives.
+
+**(C3) Soft-dependency guard.** The target package is added to
+`DESCRIPTION` `Suggests`, never `Imports`. The adapter's first
+substantive line is a `.require_soft_dependency("<pkg>", "<adapter>")`
+call. The guard's error path is exercised in the test suite by a
+`mockery::stub()` that returns `FALSE` from `requireNamespace()`, or
+by skipping the adapter test when the package is unavailable
+(`testthat::skip_if_not_installed()`).
+
+**(C4) Reserved-name protection.** Every column the adapter's rename
+map produces appears in a top-level `.RESERVED_<adapter>` constant.
+The `.multisitedgp_data` method calls
+`.check_adapter_reserved_names(x, reserved = .RESERVED_<adapter>, adapter = "<name>")`
+*after* the soft-dep guard and *before* the rename. The unit test
+confirms the abort fires with the reserved-set listed in the message.
+
+**(C5) Round-trip invariant.** A unit test confirms `identical()`
+between every renamed column and its canonical source on a fixture
+simulation. Floating-point tolerance (`all.equal()`) is not adequate
+— the contract is bit-for-bit identity, so the test must be the
+strict `identical()` form. A `testthat::expect_identical()` call per
+column is the conventional shape.
+
+**(C6) Covariate pass-through.** A unit test threads a covariate
+through `sim_multisite()` (or `sim_meta()`) and confirms it appears
+in the adapted tibble after the renamed canonical columns, in
+original order. The pass-through is automatic via
+`.bind_adapter_covariates()` if (C1)-(C5) are satisfied; the test
+just confirms the helper still binds them.
+
+A fourth adapter shipping all six fixtures is what makes the addition
+non-disruptive. The internal helper machinery
+(`.require_soft_dependency()`, `.check_adapter_reserved_names()`,
+`.bind_adapter_covariates()`) is generic; the rename body is rarely
+longer than the 7-line `.as_metafor_rename()` function.
+
+## 7. Where to next
+
+Adapters are the boundary between simulation design and downstream
+analysis — a contract that lets the analysis script read like an
+analysis script (`metafor::rma(yi = yi, vi = vi)`) instead of like a
+data-rewiring script. The contract is small enough to memorize: strip
+the class, rename to the target convention, do not touch the values.
+The round trip is bit-for-bit; the reserved-name check is the cost of
+the no-overwrite guarantee; the soft-dep guard is the cost of keeping
+`metafor` / `baggr` / `multisitepower` out of `Imports`.
+
+- [A1 · Getting started](a1-getting-started.html) — first encounter
+  with the `as_metafor()` adapter end-to-end.
+- [A6 · Case study — multisite trial](a6-case-study-multisite.html)
+  and [A7 · Case study — meta-analysis](a7-case-study-meta-analysis.html)
+  — full analyses that consume the adapters.
+- [M1 · The two-stage DGP](m1-statistical-dgp.html) — the
+  canonical-column factorization the rename relabels.
+- [M3 · Margin and SE models](m3-margin-se-models.html) — paradigm
+  context for the front doors that adapters consume.
+- [M7 · Reproducibility and provenance](m7-reproducibility-provenance.html)
+  — hash invariance under adapter calls.
+- Reference pages:
+  [`as_metafor()`](../reference/as_metafor.html),
+  [`as_baggr()`](../reference/as_baggr.html),
+  [`as_multisitepower()`](../reference/as_multisitepower.html).
+
+## References
+
+The factorization $y_j = \tau_j + e_j$ with
+$e_j \sim \mathcal{N}(0, \sigma_j^2)$ that the canonical columns
+encode is from @lee2025improving. The empirical-Bayes shrinkage
+target that `metafor::rma()` produces under the adapted `(yi, vi)`
+inputs is the analysis goal in @walters2024empirical.
+
+## Acknowledgments
+
+This research was supported by the Institute of Education Sciences,
+U.S. Department of Education, through Grant R305D240078 to the
+University of Alabama. The opinions expressed are those of the authors
+and do not represent views of the Institute or the U.S. Department of
+Education.
+
+## Session info
+
+```{r session-info, echo = FALSE}
+sessionInfo()
+```

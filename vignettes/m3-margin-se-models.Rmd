@@ -1,0 +1,617 @@
+---
+title: "M3 · Margin and SE models — site-size and direct-precision paths"
+author: "JoonHo Lee"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+abstract: >
+  For methodologists choosing between a multisite-trial design (where
+  per-site sample sizes determine sampling precision) and a
+  meta-analytic design (where reported standard errors are the design
+  surface), this vignette derives the two precision margins
+  `multisiteDGP` exposes, contrasts the two front doors `sim_multisite()`
+  and `sim_meta()`, demonstrates that the package enforces
+  paradigm-strict dispatch by erroring on cross-door arguments, and
+  shows the realized SE distribution under each path. You leave with
+  the mapping rule for picking a path, two diagnostic plots
+  (kappa-over-n overlay and (I, R)-implied target overlay), and the
+  identifiability statement that lets the two paths be reasoned about
+  independently.
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    fig_caption: true
+    df_print: tibble
+vignette: >
+  %\VignetteIndexEntry{M3 Margin and SE models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+csl: apa.csl
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  results    = "markup",
+  comment    = "#>",
+  collapse   = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.width  = 7,
+  fig.height = 4.5,
+  fig.retina = 2,
+  dpi        = 144,
+  fig.align  = "center",
+  out.width  = "100%"
+)
+set.seed(1L)
+library(multisiteDGP)
+library(ggplot2)
+```
+
+## 1. Why two paradigms
+
+Multisite trials and meta-analyses describe the same downstream
+quantity — a per-unit estimate $\hat\tau_j$ paired with a reported
+sampling standard error $\widehat{se}_j$ — but they hand the analyst a
+different design surface. A multisite-trial design arrives
+as a list of per-site sample sizes $n_j$: the trialist negotiated a
+target enrolment with each site, the protocol fixed an allocation
+share $p$ between treatment and control, and the per-site sampling
+variance follows from $n_j$ via the closed-form
+$\widehat{se}_j^{\,2} = \kappa / n_j$ derived in
+[M1: The two-stage DGP](m1-statistical-dgp.html). A meta-analytic
+design, by contrast, arrives as a list of reported
+$(\hat\tau_j, \widehat{se}_j)$ pairs: studies in the corpus reported
+their effect sizes and standard errors directly, and the underlying
+per-study sample sizes are heterogeneous, sometimes unrecoverable, and
+in any case not the natural design knob a methodologist turns when
+asking "what happens to my estimator when the precision spread widens?"
+
+`multisiteDGP` exposes both surfaces as separate front doors. The
+*site-size-driven* path (Paradigm A in the blueprint) takes per-site
+sample sizes — distributed via a truncated Gamma — and derives
+sampling variances. The *direct-precision* path (Paradigm B in the
+blueprint) takes informativeness and heterogeneity targets directly
+and constructs the SE marginal to match. Both paths route the same
+Layer 1 latent-effect generator, the same Layer 3 precision-dependence
+machinery, and the same Layer 4 observation draw; the only difference
+is Layer 2 — the SE-margin generator. Keeping the two paths separated
+at the front door — rather than rolling them into a single dispatcher
+— is what makes simulation provenance auditable: a reader can tell at
+a glance which design surface the simulation lives on, and the
+package errors on cross-door arguments before any compute happens.
+
+## 2. Paradigm A — site-size-driven
+
+### 2.1 The formal model
+
+Under the *site-size-driven* path, the per-site sampling variance is
+the deterministic ratio of a configuration-derived constant $\kappa$
+and the per-site sample size $n_j$:
+
+$$
+\widehat{se}_j^{\,2} \;=\; \frac{\kappa}{n_j},
+\qquad
+\kappa \;=\; \left(\frac{1}{p} + \frac{1}{1 - p}\right)(1 - R^2)\, s_Y^2.
+$$
+
+The closed form for $\kappa$ comes from the
+balanced-randomization Neyman variance: $p$ is the treatment-allocation
+share, $R^2$ is the share of outcome variance explained by site-level
+covariates (zero in the absence of covariates), and $s_Y^2$ is the
+residual outcome variance on the response scale. At the package
+defaults ($p = 0.5$, $R^2 = 0$, $s_Y^2 = 1$), $\kappa = 4$ exactly. The
+per-site sample sizes are drawn from a truncated Gamma marginal with
+user-supplied conditional mean $\bar n_j$, conditional CV
+$\mathrm{CV}$, and lower truncation $n_{j,\min}$:
+
+$$
+n_j \;\stackrel{\text{i.i.d.}}{\sim}\; \mathrm{TruncGamma}\bigl(\bar n_j,\, \mathrm{CV};\, n_{j,\min}\bigr).
+$$
+
+A two-line check confirms $\kappa$ at the defaults and the closed form
+under non-zero $R^2$:
+
+```{r kappa-defaults}
+compute_kappa(p = 0.5, R2 = 0,   var_outcome = 1)
+compute_kappa(p = 0.5, R2 = 0.4, var_outcome = 1)
+```
+
+The first call returns 4 (the JEBS default); the second returns
+$4 \cdot (1 - 0.4) = 2.4$ — covariate adjustment shrinks $\kappa$
+multiplicatively. Section 5 returns to this with a kappa-rate overlay
+on a real simulation.
+
+### 2.2 Two engines for the site-size margin
+
+The truncated-Gamma marginal is implemented by two engines that hit
+two different invariants. Engine A1 (`A1_legacy`,
+`legacy_jebs_censor_round`) reproduces the JEBS paper's published
+numerical results bit-for-bit: the engine matches the JEBS appendix's
+exact RNG call sequence — `rgamma(J)` for site sizes, lower-censoring
+at $n_{j,\min}$ via `pmax`, integer rounding, then a row-shuffle inside
+`dplyr::slice_sample(prop = 1)` — and the canonical hash of its output
+under the published preset matches @lee2025improving's appendix
+output byte-for-byte. Engine A2 (`A2_modern`, `trunc_gamma_moment`)
+solves the truncated-Gamma moment equations numerically so that the
+*conditional* mean and CV given $n_j \ge n_{j,\min}$ exactly match the
+user-supplied $\bar n_j$ and $\mathrm{CV}$. Engine A1's
+censor-and-round procedure shifts those conditional moments away from
+the user inputs; Engine A2 keeps them on target. Both engines deliver
+the same closed-form $\widehat{se}_j^{\,2} = \kappa/n_j$ identity at
+the *standardized residual* scale — the package's testable invariant
+T1b — and both feed the same downstream Layer 3 / Layer 4 machinery.
+
+The choice is mechanical:
+
+- Pick `engine = "A1_legacy"` when the explicit goal is to reproduce
+  @lee2025improving's published numerical results bit-for-bit (testable
+  invariant T1a). The presets [`preset_jebs_paper()`](../reference/preset_jebs_paper.html)
+  and [`preset_jebs_strict()`](../reference/preset_jebs_strict.html) wire
+  this engine in by default.
+- Pick `engine = "A2_modern"` (the package default) for any new
+  simulation. The conditional-moment match makes the user's
+  $(\bar n_j, \mathrm{CV})$ inputs faithful to the realized site-size
+  distribution, which is the contract a methodologist running power
+  studies, calibration sweeps, or sensitivity analyses needs.
+
+### 2.3 The front door
+
+The unified entry point for the *site-size-driven* path is
+[`sim_multisite()`](../reference/sim_multisite.html). Either pass a
+fully-constructed `multisitedgp_design` with `paradigm = "site_size"`,
+or hand the wrapper flat arguments and the package builds the design
+inline:
+
+```{r paradigm-A-flat}
+dat_A <- sim_multisite(preset_education_modest(), seed = 1L)
+dat_A
+```
+
+The print method's diagnostic block reports the realized
+informativeness `I` near 0.30, the realized heterogeneity ratio `R`
+above 10, and the kappa-rate identity $\widehat{se}_j^{\,2} \cdot n_j =
+\kappa = 4$ holding by construction:
+
+```{r paradigm-A-kappa-rate}
+range(dat_A$se2_j * dat_A$n_j)
+unique(round(dat_A$se2_j * dat_A$n_j, 8))
+```
+
+The `range()` check returns `(4, 4)` and the `unique()` check returns
+the single value 4 — the kappa-rate identity holds for every site, the
+testable invariant T3 in [M1 §7](m1-statistical-dgp.html). The
+realized informativeness reads back via either the diagnostics
+attribute or the standalone helper:
+
+```{r paradigm-A-I}
+attr(dat_A, "diagnostics")$I_hat
+compute_I(dat_A$se2_j, sigma_tau = 0.20)
+```
+
+Both calls return the same value (0.303) — the diagnostic block stores
+the result of a [`compute_I()`](../reference/compute_I.html) call on
+the realized sampling variances, and the standalone helper recomputes
+it from the same vector. The realized $I$ falls below the design
+intent slightly because the kappa-over-$n_j$ marginal carries Jensen
+gap from the $n_j$ heterogeneity (CV = 0.5).
+
+### 2.4 When to pick this path
+
+The *site-size-driven* path fits the design surface when (a) the study
+specifies per-site sample sizes — so $\bar n_j$, $\mathrm{CV}$, and
+$n_{j,\min}$ are quantities you can defend on substantive grounds —
+and (b) the precision heterogeneity that emerges from the site-size
+distribution is itself part of the simulation question. Power
+calculations for actual multisite trials, calibration sweeps against
+realized sample-size distributions in the
+@weiss2017howmuch education-trial benchmarks, and any
+JEBS-paper reproduction
+[@lee2025improving] all fit here. The path's stochasticity — the
+realized $(I, R)$ are *consequences* of the $(\bar n_j, \mathrm{CV})$
+draws, not exact inputs — is the feature, not the bug: it makes the
+simulation faithful to the trial specification rather than to a
+post-hoc precision target.
+
+The Layer 2 generator is exposed individually as
+[`gen_site_sizes()`](../reference/gen_site_sizes.html) for users
+composing the four layers manually.
+
+## 3. Paradigm B — direct-precision
+
+### 3.1 The formal model
+
+Under the *direct-precision* path, the user supplies the two precision
+diagnostics directly: the mean informativeness scalar $I$ and the
+heterogeneity ratio $R$. The Layer 2 generator back-calculates a
+deterministic SE marginal that hits both targets exactly. The
+informativeness identity from
+[@lee2025improving]'s Equation (4) implies that the geometric mean of
+$\widehat{se}_j^{\,2}$ is determined by $\sigma_\tau$ and $I$:
+
+$$
+\mathrm{GM}\bigl(\widehat{se}_j^{\,2}\bigr) \;=\; \sigma_\tau^{\,2} \cdot \frac{1 - I}{I}.
+$$
+
+The heterogeneity ratio fixes the spread around the geometric mean.
+The package's grid construction places the $J$ values log-evenly over
+the interval $[\mathrm{GM} \cdot R^{-1/2}, \mathrm{GM} \cdot R^{1/2}]$:
+
+$$
+\widehat{se}_j^{\,2} \;=\; \mathrm{GM} \cdot R^{(j-1)/(J-1) - 1/2},
+\qquad j = 1, \ldots, J.
+$$
+
+The construction is the Yu-Zhang-style log-even spacing
+(@yu2005three's quantile parameterization in spirit, applied here to
+the SE marginal rather than the latent-effect shape). The endpoint
+arithmetic guarantees that the multiset's geometric mean is
+$\mathrm{GM}$ exactly and its max-over-min ratio is $R$ exactly. The
+construction is deterministic: no randomness enters the SE marginal
+itself, only the optional `shuffle = TRUE` permutation of the grid
+values across sites. The site-size column $n_j$ is `NA_integer_` —
+this path discards the per-site sample size entirely.
+
+### 3.2 The front door
+
+The unified entry point for the *direct-precision* path is
+[`sim_meta()`](../reference/sim_meta.html). The minimal call passes
+flat $(J, I, R, \sigma_\tau)$ arguments and lets the wrapper build the
+direct-paradigm design inline:
+
+```{r paradigm-B-flat}
+dat_B <- sim_meta(J = 50L, I = 0.30, R = 2, sigma_tau = 0.20, seed = 1L)
+dat_B
+```
+
+The print method's diagnostic block confirms the (I, R) targets are
+hit *exactly*: `I: target = 0.300, realized = 0.300, PASS` and
+`R: target = 2.000, realized = 2.000, PASS`. The `n_j` column is `NA`
+across all 50 rows — the *direct-precision* path has no site-size
+margin to populate.
+
+The exactness is verifiable via the diagnostics attribute, which
+under this path adds `target_I`, `target_R`, `I_error`, `R_error`,
+`I_exact`, and `R_exact` slots:
+
+```{r paradigm-B-exact}
+diag_B <- attr(dat_B, "diagnostics")
+c(I_hat = diag_B$I_hat, target_I = diag_B$target_I,
+  I_error = diag_B$I_error, I_exact = diag_B$I_exact)
+c(R_hat = diag_B$R_hat, target_R = diag_B$target_R,
+  R_error = diag_B$R_error, R_exact = diag_B$R_exact)
+```
+
+Both error slots are zero, both exactness flags are `TRUE`. The
+underlying Layer 2 generator is exposed individually as
+[`gen_se_direct()`](../reference/gen_se_direct.html) for manual
+composition.
+
+### 3.3 When to pick this path
+
+The *direct-precision* path fits the design surface when (a) the study
+specifies (or the methodologist controls) the precision diagnostics
+themselves rather than a sample-size distribution — meta-analyses
+where the corpus reports $(\hat\tau_j, \widehat{se}_j)$ without
+recoverable $n_j$, Fay-Herriot small-area estimation problems, or
+methods-comparison studies that need to fix informativeness exactly
+across cells of a sweep — and (b) the methodologist wants the realized
+$(I, R)$ to match the targets bit-for-bit, not stochastically. The
+deterministic-grid construction is the feature: when comparing a
+shrinkage estimator across $I \in \{0.10, 0.30, 0.50, 0.80\}$, the
+*direct-precision* path lets the methodologist hold the precision-side
+design constant and isolate estimator behavior, free from the
+sample-size noise the *site-size-driven* path introduces by design.
+
+Two presets wire the *direct-precision* path in by default:
+[`preset_meta_modest()`](../reference/preset_meta_modest.html) for
+modest meta-analytic informativeness and
+[`preset_small_area_estimation()`](../reference/preset_small_area_estimation.html)
+for the wider precision spread typical of small-area surveys. The
+canonical applied walkthrough is
+[A7: Case study — meta-analysis](a7-case-study-meta-analysis.html).
+
+## 4. The two paradigms as a contract table
+
+The four-column contract below is the operational summary: which
+formal model each path fixes at Layer 2, when to reach for it, and
+which front door to call. Cross-door arguments are rejected by both
+wrappers (Section 6 demonstrates).
+
+| Paradigm | Formal model (Layer 2 SE margin) | When to pick | Front door / preset family |
+|----|----|----|----|
+| Site-size-driven (Paradigm A) | $\widehat{se}_j^{\,2} = \kappa / n_j$ with $\kappa = (1/p + 1/(1-p))(1 - R^2) s_Y^2$ and $n_j \sim \mathrm{TruncGamma}(\bar n_j, \mathrm{CV}; n_{j,\min})$ | Per-site sample sizes are part of the design surface; precision heterogeneity is a *consequence* of the site-size distribution. | [`sim_multisite()`](../reference/sim_multisite.html); [`preset_jebs_paper()`](../reference/preset_jebs_paper.html), [`preset_jebs_strict()`](../reference/preset_jebs_strict.html), [`preset_education_modest()`](../reference/preset_education_modest.html), [`preset_education_substantial()`](../reference/preset_education_substantial.html), [`preset_education_small()`](../reference/preset_education_small.html), [`preset_walters_2024()`](../reference/preset_walters_2024.html), [`preset_twin_towers()`](../reference/preset_twin_towers.html) |
+| Direct-precision (Paradigm B) | $\widehat{se}_j^{\,2} = \mathrm{GM} \cdot R^{(j-1)/(J-1) - 1/2}$ with $\mathrm{GM} = \sigma_\tau^{\,2}(1 - I)/I$, $n_j = \mathtt{NA\_integer\_}$ | Precision diagnostics $(I, R)$ are part of the design surface; per-site sample sizes are absent or incidental. | [`sim_meta()`](../reference/sim_meta.html); [`preset_meta_modest()`](../reference/preset_meta_modest.html), [`preset_small_area_estimation()`](../reference/preset_small_area_estimation.html) |
+
+The two paths are *isomorphic at the level of the realized
+$\widehat{se}_j^{\,2}$ vector* — once Layer 2 has populated `se2_j`,
+Layer 3 and Layer 4 see the same input and run identically. This is
+what makes the contrast a front-door distinction rather than a
+downstream one: the design surface differs, but the simulation
+pipeline downstream of Layer 2 is shared.
+
+## 5. The realized SE distribution under each paradigm
+
+The two plots below are diagnostic, not decorative: each one shows
+the realized SE marginal under one path and overlays the formal-model
+target the path was supposed to hit. Read each plot for whether the
+realized distribution lands on the target overlay.
+
+### 5.1 Plot 1 — Paradigm A realized SE distribution
+
+Under the *site-size-driven* path with `preset_education_modest()`,
+the SE marginal inherits the right-skew of the truncated-Gamma site-
+size marginal: small-$n_j$ sites correspond to large-$\widehat{se}_j$
+sites. The overlay shows the deterministic curve $\kappa/n_j$ at
+$\kappa = 4$ across the realized $n_j$ range — every realized point
+sits exactly on the curve, not approximately, because the kappa-rate
+identity is deterministic at the package's testable invariant T3.
+
+```{r plot-A-build, results = "hide"}
+set.seed(1L)
+dat_A <- sim_multisite(preset_education_modest(), seed = 1L)
+kappa_A <- compute_kappa(p = 0.5, R2 = 0, var_outcome = 1)
+df_A <- tibble::tibble(
+  n_j   = dat_A$n_j,
+  se2_j = dat_A$se2_j
+)
+n_grid <- seq(min(df_A$n_j), max(df_A$n_j), length.out = 200)
+df_curve <- tibble::tibble(
+  n_j      = n_grid,
+  se2_curve = kappa_A / n_grid
+)
+```
+
+```{r plot-A, fig.height = 5.6, fig.cap = "Paradigm A realized se squared values from preset_education_modest at J = 50 (filled dots) sit exactly on the kappa-over-n curve (solid line, kappa = 4). The histogram on the upper margin shows the right-skewed se squared distribution that emerges from the truncated-Gamma site-size marginal. Confirms the kappa-rate identity (T3) and the right-skew shape consequence of n_j heterogeneity at CV = 0.5.", fig.alt = "Two-panel composite figure showing a histogram of se squared values on top and a scatter of se squared against n_j with a kappa-over-n curve overlaid below. Realized points sit exactly on the curve."}
+p_top <- ggplot(df_A, aes(x = se2_j)) +
+  geom_histogram(bins = 18, fill = "#1B4965", colour = "white", alpha = 0.85) +
+  labs(x = NULL, y = "count") +
+  theme_minimal(base_size = 9) +
+  theme(panel.grid.minor = element_blank(),
+        axis.text.x = element_blank(), axis.ticks.x = element_blank())
+
+p_bottom <- ggplot(df_A, aes(x = n_j, y = se2_j)) +
+  geom_line(data = df_curve, aes(x = n_j, y = se2_curve),
+            colour = "grey40", linewidth = 0.6) +
+  geom_point(alpha = 0.85, size = 2, colour = "#1B4965") +
+  labs(
+    x = expression(n[j]~"  (per-site sample size)"),
+    y = expression(widehat(se)[j]^{2}~"  (sampling variance)")
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+
+# Compose without depending on patchwork (soft dep).
+gridExtra::grid.arrange(
+  p_top,
+  p_bottom,
+  ncol = 1, heights = c(1, 4)
+)
+```
+
+The single curve in the lower panel is the closed-form
+$\widehat{se}_j^{\,2} = \kappa/n_j$ at $\kappa = 4$. Every realized
+point sits on the curve to floating-point precision (not
+approximately) because the kappa-rate identity is deterministic at
+Layer 2 — there is no Layer-2 noise on top of the closed form. The
+upper-panel histogram is the marginal of $\widehat{se}_j^{\,2}$
+realized at $J = 50$: the right tail at large
+$\widehat{se}_j^{\,2}$ comes from the small-$n_j$ tail of the
+truncated-Gamma site-size marginal, and the bulk near
+$\widehat{se}_j^{\,2} \approx 0.07$ comes from the centre of mass at
+$n_j \approx 50$. The kappa-over-$n$ curve and the realized
+distribution carry exactly the same information — the right-skew is
+the sole consequence of the truncated-Gamma right-skew.
+
+### 5.2 Plot 2 — Paradigm B realized SE distribution
+
+Under the *direct-precision* path with $J = 50$, $I = 0.30$, $R = 2$,
+$\sigma_\tau = 0.20$, the SE marginal is the deterministic log-even
+grid. The overlay shows the implied geometric mean
+$\mathrm{GM} = \sigma_\tau^{\,2}(1 - I)/I = 0.0933$ as a vertical line
+and the implied min/max boundaries $\mathrm{GM} \cdot R^{\pm 1/2}$ as
+two further vertical lines. Every realized $\widehat{se}_j^{\,2}$
+falls inside the $[\mathrm{GM}/\sqrt{R}, \mathrm{GM}\sqrt{R}]$
+interval, the multiset's geometric mean lands on the central line,
+and the multiset's max-over-min ratio equals $R$ exactly.
+
+```{r plot-B-build, results = "hide"}
+set.seed(1L)
+dat_B <- sim_meta(J = 50L, I = 0.30, R = 2, sigma_tau = 0.20, seed = 1L)
+sigma_tau_B <- 0.20
+I_B <- 0.30
+R_B <- 2
+GM_target <- sigma_tau_B^2 * (1 - I_B) / I_B
+df_B <- tibble::tibble(se2_j = dat_B$se2_j)
+GM_realized <- exp(mean(log(df_B$se2_j)))
+range_B <- range(df_B$se2_j)
+```
+
+```{r plot-B-summary}
+GM_target
+GM_realized
+range_B
+range_B[2] / range_B[1]
+```
+
+The realized geometric mean equals the target $0.0933$ to floating-
+point precision; the realized range $[0.0660, 0.1320]$ lands on
+$[\mathrm{GM}/\sqrt{2}, \mathrm{GM}\sqrt{2}]$ exactly; the
+max-over-min ratio is 2, the requested $R$.
+
+```{r plot-B, fig.cap = "Paradigm B realized se squared values from sim_meta(J = 50, I = 0.30, R = 2, sigma_tau = 0.20) (histogram). Vertical solid line: implied geometric mean GM = sigma_tau squared times (1 - I) over I = 0.0933. Dashed lines: GM divided by square root of R and GM times square root of R, the implied min and max. Confirms the deterministic grid hits the (I, R)-implied target exactly: every realized point lies inside the bracket, GM is on the solid line, and max over min equals 2.", fig.alt = "Histogram of se squared values from a Paradigm B simulation. A vertical line marks the geometric mean target; two dashed vertical lines mark the implied min and max. Histogram bars span exactly between the dashed lines."}
+ggplot(df_B, aes(x = se2_j)) +
+  geom_histogram(bins = 18, fill = "#62929E", colour = "white", alpha = 0.85) +
+  geom_vline(xintercept = GM_target, colour = "#1B4965",
+             linewidth = 0.7) +
+  geom_vline(xintercept = GM_target / sqrt(R_B), linetype = "dashed",
+             colour = "grey40") +
+  geom_vline(xintercept = GM_target * sqrt(R_B), linetype = "dashed",
+             colour = "grey40") +
+  annotate("text", x = GM_target, y = Inf, vjust = 1.4,
+           label = "GM target", colour = "#1B4965", size = 3.2) +
+  annotate("text", x = GM_target / sqrt(R_B), y = Inf, vjust = 1.4,
+           label = "GM / sqrt(R)", colour = "grey30", size = 3.0) +
+  annotate("text", x = GM_target * sqrt(R_B), y = Inf, vjust = 1.4,
+           label = "GM * sqrt(R)", colour = "grey30", size = 3.0) +
+  labs(
+    x        = expression(widehat(se)[j]^{2}~"  (sampling variance)"),
+    y        = "count",
+    title    = "Paradigm B — direct-precision SE marginal at J = 50",
+    subtitle = "I = 0.30, R = 2, sigma_tau = 0.20  ->  GM = 0.0933, range = [0.0660, 0.1320]"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+```
+
+Three things to read off the figure. First, the histogram is bounded
+exactly by the two dashed vertical lines — the $J = 50$ realized
+$\widehat{se}_j^{\,2}$ values fall inside
+$[\mathrm{GM}/\sqrt{R}, \mathrm{GM}\sqrt{R}]$ by construction, with
+the endpoints attained at $j = 1$ and $j = J$. Second, the histogram's
+shape is approximately uniform on the log scale (the design choice was
+*log-even* spacing) — the visible mild non-uniformity in linear bins
+reflects the log-to-linear stretch, not a design failure. Third, the
+solid central line at $\mathrm{GM} = 0.0933$ sits exactly at the
+geometric centre of the multiset.
+
+The contrast between the two plots is exactly the contrast between
+the two paradigms: the *site-size-driven* path produces an SE
+distribution whose shape is a *consequence* of the site-size choice
+(right-skewed, with a long tail from small-$n_j$ sites); the
+*direct-precision* path produces an SE distribution whose shape is
+*specified* (a log-even grid bounded by the (I, R) target).
+
+## 6. Identifiability and switching
+
+The two paradigms share the same Layer 2 *output* signature —
+`se2_j`, `se_j`, and an `n_j` column populated under Paradigm A and
+`NA_integer_` under Paradigm B — but their *input* signatures are
+disjoint. Paradigm A consumes $(\bar n_j, \mathrm{CV}, n_{j,\min}, p,
+R^2, s_Y^2, \mathrm{engine})$; Paradigm B consumes $(I, R, \mathrm{shuffle},
+\mathrm{se\_fn}, \mathrm{se\_args})$. The package keeps the two
+input vocabularies separated at the front door: handing
+`sim_meta()` a Paradigm A argument or `sim_multisite()` a Paradigm B
+argument is rejected with a coherence error before any compute
+happens.
+
+```{r wrong-door-meta, error = TRUE}
+sim_meta(J = 50L, nj_mean = 80, cv = 0.5, sigma_tau = 0.20, seed = 1L)
+```
+
+The error message names the wrong-door arguments (`nj_mean`, `cv`)
+and points to the correct front door (`sim_multisite()`). The same
+coherence check runs on the sister wrapper:
+
+```{r wrong-door-multisite, error = TRUE}
+sim_multisite(J = 50L, I = 0.30, R = 2, sigma_tau = 0.20, seed = 1L)
+```
+
+Again, the wrong-door arguments (`I`, `R`) are named and the
+caller is redirected to `sim_meta()`. The construction-time check is
+deliberate: cross-paradigm dispatch is strict by design, so the
+provenance attribute on a returned object always reflects exactly
+one paradigm and never an implicit mix. A simulation labelled
+`paradigm = "site_size"` in the diagnostics block was generated by
+the *site-size-driven* Layer 2 generator, not by Paradigm B with
+post-hoc relabelling.
+
+The same paradigm-strict contract holds at the
+[`multisitedgp_design()`](../reference/multisitedgp_design.html)
+level. Constructing a design with `paradigm = "site_size"` and then
+handing it to `sim_meta()` — or constructing a design with
+`paradigm = "direct"` and handing it to `sim_multisite()` — is also
+rejected. The wrapper checks `design$paradigm` against its own
+locked paradigm at entry. Below, an explicit Paradigm A design is
+forced through `sim_meta()`:
+
+```{r wrong-door-design, error = TRUE}
+des_A <- multisitedgp_design(
+  paradigm = "site_size",
+  J        = 50L,
+  sigma_tau = 0.20,
+  nj_mean  = 50,
+  cv       = 0.50,
+  nj_min   = 10L
+)
+sim_meta(des_A, seed = 1L)
+```
+
+The error message names the design's paradigm (`"site_size"`) and
+points to the correct sister wrapper. The package never silently
+re-labels a design; it always errors and lets the caller decide.
+
+Why this matters. A simulation pipeline that conflates the two
+paradigms — for example, by dispatching on a flag and silently
+swapping the Layer 2 generator — would let provenance drift on
+re-run: the same code path could yield different `attr(x,
+"diagnostics")$paradigm` values depending on argument order. The
+paradigm-strict front door rules that drift out at construction time.
+This is the operational form of the M1 §4 four-layer factorization:
+Layer 2 is the only differentiating layer between the two paths, so
+keeping the two front doors disjoint is the cleanest place to draw
+the line.
+
+The single point where the two paths *can* be reasoned about jointly
+is the realized informativeness scalar $I$. Under Paradigm A,
+$I$ is a *consequence* of $(\bar n_j, \mathrm{CV})$ via the Jensen
+gap on $\kappa/n_j$; under Paradigm B, $I$ is an *input*. The
+helper [`compute_I()`](../reference/compute_I.html) reads the
+realized $I$ from any `se2_j` vector regardless of which path
+generated it:
+
+```{r compute-I-cross-paradigm}
+compute_I(dat_A$se2_j, sigma_tau = 0.20)
+compute_I(dat_B$se2_j, sigma_tau = 0.20)
+```
+
+The Paradigm A simulation lands at $I \approx 0.303$ and the Paradigm
+B simulation at exactly $0.300$ — the diagnostic helper itself is
+paradigm-blind, but the simulations it reads are paradigm-strict at
+the front door.
+
+## 7. Where to next
+
+- [A1: Getting started](a1-getting-started.html) — applied
+  walkthrough of the *site-size-driven* path from preset to
+  diagnostics.
+- [A6: Case study — multisite trial](a6-case-study-multisite.html) —
+  full Paradigm A workflow including precision dependence and
+  shrinkage diagnostics.
+- [A7: Case study — meta-analysis](a7-case-study-meta-analysis.html) —
+  full Paradigm B workflow, including handoff to `metafor` via
+  [`as_metafor()`](../reference/as_metafor.html).
+- [M1: The two-stage DGP](m1-statistical-dgp.html) — the formal
+  factorization; this vignette zoomed in on Layer 2 and how the two
+  Layer-2 generators differ.
+- [M4: Precision dependence theory](m4-precision-dependence-theory.html)
+  — the rank, copula, and hybrid alignment methods that sit on top of
+  Layer 2 in both paradigms.
+
+## References
+
+The site-size-driven path's $\kappa$ closed form and Engine A1's
+bit-identical reproducibility contract come from
+@lee2025improving. The empirical-Bayes context for treating reported
+sampling standard errors as known — relevant to both paths but
+especially to the direct-precision path's plug-in of
+$(\hat\tau_j, \widehat{se}_j)$ pairs from a meta-analytic corpus —
+is collected in @walters2024empirical. The education-trial
+calibration heritage that motivates the
+[`preset_education_modest()`](../reference/preset_education_modest.html)
+and sister Paradigm A presets is from @weiss2017howmuch.
+
+## Acknowledgments
+
+This research was supported by the Institute of Education Sciences,
+U.S. Department of Education, through Grant R305D240078 to the
+University of Alabama. The opinions expressed are those of the authors
+and do not represent views of the Institute or the U.S. Department of
+Education.
+
+## Session info
+
+```{r session-info, echo = FALSE}
+sessionInfo()
+```

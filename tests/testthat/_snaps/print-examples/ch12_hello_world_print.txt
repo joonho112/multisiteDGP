@@ -1,0 +1,19 @@
+# A multisitedgp_data: 50 sites, paradigm = "site_size"
+# Realized vs intended:
+#   I: realized=0.331 (no target)
+#   R: realized=6.429 (no target)
+#   sigma_tau: target=0.200, realized=0.229, WARN
+#   rho_S: target=0.000, realized=0.160, PASS
+#   rho_S_marg: realized=0.160 (no target)
+#   Feasibility: WARN (n_eff=16.848)
+# A tibble: 50 x 7
+  site_index    z_j   tau_j tau_j_hat  se_j  se2_j   n_j
+       <int>  <dbl>   <dbl>     <dbl> <dbl>  <dbl> <int>
+1          1 -1.74  -0.349     -0.551 0.228 0.0519    77
+2          2  0.736  0.147      0.109 0.272 0.0741    54
+3          3 -1.05  -0.211     -0.115 0.246 0.0606    66
+4          4 -0.421 -0.0842     0.240 0.320 0.103     39
+5          5 -0.156 -0.0312     0.179 0.359 0.129     31
+6          6  0.379  0.0758    -0.165 0.316 0.1       40
+# i 44 more rows
+# Use summary(df) for the full diagnostic report.

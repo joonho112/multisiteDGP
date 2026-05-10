@@ -1,0 +1,43 @@
+## CITATION file for the multisiteDGP R package.
+## See `?utils::citation` and `tools::checkRdaFiles` for format details.
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "{multisiteDGP}: Data-Generating Processes for Multisite Trial Simulations",
+  author   = person("JoonHo", "Lee"),
+  year     = format(Sys.Date(), "%Y"),
+  note     = paste0(
+    "R package version ", utils::packageVersion("multisiteDGP"), ". ",
+    "This research was supported by the Institute of Education Sciences, ",
+    "U.S. Department of Education, through Grant R305D240078 to the ",
+    "University of Alabama. The opinions expressed are those of the ",
+    "authors and do not represent views of the Institute or the U.S. ",
+    "Department of Education."
+  ),
+  url      = "https://joonho112.github.io/multisiteDGP/"
+)
+
+bibentry(
+  bibtype  = "Article",
+  title    = "Improving the estimation of site-specific effects and their distribution in multisite trials",
+  author   = c(
+    person("JoonHo",   "Lee"),
+    person("Jonathan", "Che"),
+    person("Sophia",   "Rabe-Hesketh"),
+    person("Avi",      "Feller"),
+    person("Luke",     "Miratrix")
+  ),
+  journal  = "Journal of Educational and Behavioral Statistics",
+  year     = "2025",
+  volume   = "50",
+  number   = "5",
+  pages    = "731--764",
+  doi      = "10.3102/10769986241254286",
+  textVersion = paste(
+    "Lee, J., Che, J., Rabe-Hesketh, S., Feller, A., & Miratrix, L.",
+    "(2025). Improving the estimation of site-specific effects and",
+    "their distribution in multisite trials.",
+    "Journal of Educational and Behavioral Statistics, 50(5), 731-764.",
+    "doi:10.3102/10769986241254286"
+  )
+)

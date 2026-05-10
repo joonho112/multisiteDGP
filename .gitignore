@@ -1,0 +1,34 @@
+# R / RStudio
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# macOS
+.DS_Store
+
+# R CMD check / build artifacts
+*.Rcheck/
+..Rcheck/
+*.tar.gz
+PACKAGES
+PACKAGES.gz
+PACKAGES.rds
+Rplots.pdf
+
+# pkgdown built site (deployed to gh-pages branch separately)
+/docs/
+
+# rmarkdown / knitr generated artifacts
+*_files/
+README.html
+vignettes/*.html
+vignettes/*_files/
+
+# Quarto
+/_book/
+/.quarto/
+
+# IDE / linter caches
+.lintr-cache/

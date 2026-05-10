@@ -1,0 +1,32 @@
+<multisitedgp_design>
+Paradigm: site_size    Engine: A2_modern    Framing: superpopulation
+J: 50    Seed: NULL (active RNG)    Lifecycle: experimental
+
+[ Layer 1: G-effects ]
+  true_dist:  Gaussian
+  tau:        0
+  sigma_tau:  0.2
+  formula:    NULL
+  beta:       NULL
+  g_fn:       NULL
+
+[ Layer 2: Margin (Paradigm A) ]
+  nj_mean:    50
+  cv:         0.5
+  nj_min:     10
+  p:          0.5
+  R2:         0
+  var_outcome: 1
+
+[ Layer 3: Dependence ]
+  method:        none
+  rank_corr:     0
+  pearson_corr:  0
+  hybrid_init:   copula
+  hybrid_polish: hill_climb
+  dependence_fn: NULL
+
+[ Layer 4: Observation ]
+  obs_fn: NULL
+
+Use sim_multisite(design) or sim_meta(design) to simulate.

@@ -1,0 +1,94 @@
+name: pr-commands
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+concurrency:
+  group: pr-commands-${{ github.event.issue.number }}-${{ github.event.comment.id }}
+  cancel-in-progress: false
+
+env:
+  _R_CHECK_FORCE_SUGGESTS_: "false"
+  NOT_CRAN: "true"
+  TZ: "UTC"
+  MULTISITEDGP_REPRODUCIBILITY_POLICY: "linux-strict-hash-cross-os-demoted"
+  MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN: "false"
+
+jobs:
+  document-check:
+    if: >-
+      ${{
+        github.event.issue.pull_request &&
+        contains(github.event.comment.body, '/document') &&
+        contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+      }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::roxygen2
+            any::testthat
+            any::knitr
+            any::rmarkdown
+          install-quarto: false
+
+      - name: Verify roxygen output is current
+        run: |
+          before <- system("git status --short", intern = TRUE)
+          roxygen2::roxygenise()
+          after <- system("git status --short", intern = TRUE)
+          if (length(after) > length(before) || !identical(before, after)) {
+            writeLines(after)
+            stop("Roxygen output is not current. Run devtools::document() locally.", call. = FALSE)
+          }
+        shell: Rscript {0}
+
+  style-check:
+    if: >-
+      ${{
+        github.event.issue.pull_request &&
+        contains(github.event.comment.body, '/style') &&
+        contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+      }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: any::lintr
+          install-quarto: false
+
+      - name: Run lintr
+        run: |
+          lints <- lintr::lint_package()
+          print(lints)
+          if (length(lints) > 0L) {
+            quit(status = 1L)
+          }
+        shell: Rscript {0}

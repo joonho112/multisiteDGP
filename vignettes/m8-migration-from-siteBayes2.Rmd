@@ -1,0 +1,453 @@
+---
+title: "M8 · Migration from siteBayes2"
+author: "JoonHo Lee"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+abstract: >
+  For users of the internal `siteBayes2` package who need to migrate
+  scripts to multisiteDGP. The new package keeps the data-generating
+  process and drops the Stan-based fitting, so the migration is mostly
+  a rename map plus a removal list. You leave with eight worked
+  before/after patterns, a function rename table, an explicit
+  deprecated-functions table that points to downstream Bayesian
+  packages, and the boundary check confirming `siteBayes2` exports
+  are absent from the multisiteDGP namespace.
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    fig_caption: true
+    df_print: tibble
+vignette: >
+  %\VignetteIndexEntry{M8 Migration from siteBayes2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+csl: apa.csl
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  results    = "markup",
+  comment    = "#>",
+  collapse   = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.width  = 7,
+  fig.height = 4.5,
+  fig.retina = 2,
+  dpi        = 144,
+  fig.align  = "center",
+  out.width  = "100%"
+)
+set.seed(1L)
+library(multisiteDGP)
+library(ggplot2)
+```
+
+## 1. Scope of the migration
+
+multisiteDGP carries forward the data-generating process from
+`siteBayes2` and leaves Bayesian fitting to downstream packages. Two
+practical consequences for an existing script:
+
+- **Renamed surface.** `sim_multisite_data()`, `gen_priorG()`,
+  `sim_sitesize_withinvar()`, `sim_observed_effects()`,
+  `get_shrinkage_factor()` and friends become
+  [`sim_multisite()`](../reference/sim_multisite.html),
+  [`gen_effects()`](../reference/gen_effects.html),
+  [`gen_site_sizes()`](../reference/gen_site_sizes.html),
+  [`align_rank_corr()`](../reference/align_rank_corr.html) plus
+  [`gen_observations()`](../reference/gen_observations.html), and
+  [`mean_shrinkage()`](../reference/mean_shrinkage.html) — same idea,
+  cleaner separation across the four generative layers
+  [@lee2025improving].
+- **Removed surface.** `fit_rubin_normal()`, `lm_stan()`,
+  `data_prep_rubin_normal()` and the `inst/stan/` model objects do
+  not move. multisiteDGP installs without a C++ compiler. Fit with
+  `metafor`, `baggr`, or `rstan` directly via the adapters in
+  [M6: Adapters and downstream packages](m6-adapters-downstream.html).
+
+Sections 2 and 3 give the rename and removal tables. Sections 4
+through 11 walk through eight before/after patterns (MV1–MV8) — each
+runs as printed. Sections 12 and 13 cover the boundary check and
+where to read next.
+
+## 2. Function rename map
+
+The canonical translation from `siteBayes2` to multisiteDGP. Every
+target name in the right column appears in NAMESPACE; verify with
+`grep '^export' multisiteDGP-R-package/NAMESPACE`.
+
+| siteBayes2                     | multisiteDGP                                                                               | Notes                                                                                |
+|--------------------------------|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `sim_multisite_data()`         | [`sim_multisite()`](../reference/sim_multisite.html)                                       | Front door; refactored into the four-layer pipeline                                  |
+| `gen_priorG()`                 | [`gen_effects()`](../reference/gen_effects.html)                                           | Layer 1; selects from eight built-in $G$ shapes                                      |
+| `gen_priorG2()`                | [`gen_effects()`](../reference/gen_effects.html) with `formula`, `beta`, `data`            | Same function; covariate-aware path is an argument set, not a separate function       |
+| `sim_sitesize_withinvar()`     | [`gen_site_sizes()`](../reference/gen_site_sizes.html)                                     | Layer 2; engine choice replaces the implicit JEBS algorithm                          |
+| `sim_observed_effects()`       | [`align_rank_corr()`](../reference/align_rank_corr.html) + [`gen_observations()`](../reference/gen_observations.html) | Layer 3 (dependence) and Layer 4 (observation) are now explicit       |
+| `get_shrinkage_factor()`       | [`mean_shrinkage()`](../reference/mean_shrinkage.html)                                     | Vectorized over `nj_mean`; returns the mean-shrinkage scalar diagnostic              |
+| `precision_dependence = TRUE`  | [`sim_multisite()`](../reference/sim_multisite.html) with `dependence = "rank"` and `rank_corr` | Three named injection methods replace the boolean flag                            |
+| `precision_dependence = FALSE` | [`sim_multisite()`](../reference/sim_multisite.html) with `dependence = "none"` (default)  | Same intent: precision and effect are sampled independently                          |
+
+## 3. Deprecated functions — no equivalent in multisiteDGP
+
+The Stan-based fitting surface is intentionally absent. There is no
+shim and no compatibility layer in multisiteDGP itself; downstream
+packages are the destination.
+
+| siteBayes2                   | Where to go now                                                                              | Why removed                                                                          |
+|------------------------------|----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `fit_rubin_normal()`         | `metafor::rma()` after [`as_metafor()`](../reference/as_metafor.html); `baggr::baggr()` after [`as_baggr()`](../reference/as_baggr.html) | Frequentist and Bayesian random-effects fitting are first-class in `metafor`/`baggr` |
+| `lm_stan()`                  | `rstanarm::stan_lm()`, `brms::brm()`                                                         | General-purpose Bayesian linear regression belongs in a general-purpose package      |
+| `data_prep_rubin_normal()`   | [`as_metafor()`](../reference/as_metafor.html), [`as_baggr()`](../reference/as_baggr.html)   | The adapter renames effect, SE, and site columns to the target convention            |
+| `prior_rubin_normal()`       | `baggr::baggr()` argument `prior_hypermean`, `prior_hypersd`                                 | Prior elicitation is the fitting package's responsibility                            |
+| `inst/stan/`, `src/`         | `rstan::stan_model()`, `cmdstanr::cmdstan_model()` (user-managed)                            | multisiteDGP installs without a C++ compiler; no compiled artifacts ship             |
+| `pp_check_rubin_normal()`    | `bayesplot::pp_check()`, `posterior::summarise_draws()`                                      | Posterior diagnostics belong with the posterior, not the DGP                         |
+| `loo_rubin_normal()`         | `loo::loo()` on the fit object                                                               | Model comparison is downstream of fitting                                            |
+
+The split makes both packages smaller. multisiteDGP is pure R and
+ships only the four generative layers plus diagnostics; whichever
+Bayesian engine fits best for a project lives in that engine's
+package, not in a vendor lock-in wrapper [@walters2024empirical].
+
+## 4. MV1 — front door
+
+The monolithic `sim_multisite_data()` call with many flat arguments
+becomes either a preset piped into `sim_multisite()` or a direct call
+with the same flat arguments.
+
+Before (`siteBayes2`):
+
+```{r mv1-before, eval = FALSE}
+library(siteBayes2)
+
+df_old <- sim_multisite_data(
+  true_dist            = "Mixture",
+  J                    = 50,
+  sigma_tau            = 0.20,
+  delta                = 5,
+  eps                  = 0.3,
+  ups                  = 2,
+  nj_mean              = 40,
+  cv                   = 0.50,
+  nj_min               = 5,
+  precision_dependence = FALSE,
+  set_seed             = TRUE
+)
+```
+
+After (multisiteDGP — preset path):
+
+```{r mv1-after}
+dat <- preset_jebs_paper() |>
+  sim_multisite(seed = 123L)
+print(dat, n = 3)
+```
+
+The print method displays realized vs. intended diagnostics
+(informativeness $I$, heterogeneity ratio $R$, residual heterogeneity
+$\sigma_\tau$, rank correlation $\rho_S$). [`preset_jebs_paper()`](../reference/preset_jebs_paper.html)
+is the JEBS replication preset; the [`sim_multisite()`](../reference/sim_multisite.html)
+front door applies it through the four layers.
+
+## 5. MV2 — flat JEBS-style arguments
+
+When the script needs the arguments visible (e.g. for a sweep), pass
+them directly to [`sim_multisite()`](../reference/sim_multisite.html).
+The mixture parameters now live inside `theta_G`; everything else is
+a named argument with the original meaning.
+
+```{r mv2-flat}
+flat_dat <- sim_multisite(
+  J         = 50L,
+  true_dist = "Mixture",
+  theta_G   = list(delta = 5, eps = 0.3, ups = 2),
+  sigma_tau = 0.20,
+  nj_mean   = 40,
+  cv        = 0.50,
+  nj_min    = 5L,
+  engine    = "A1_legacy",
+  dependence = "none",
+  seed      = 123L
+)
+head(tibble::as_tibble(flat_dat)[, c("site_index", "z_j", "tau_j", "tau_j_hat", "se2_j")], 3)
+```
+
+`engine = "A1_legacy"` reproduces the original `siteBayes2`
+site-size algorithm (truncated-and-rounded gamma); the default
+`engine = "A2_modern"` uses moment-matched truncated gamma — both
+hit the same `(nj_mean, cv)` target, but the legacy engine matches
+JEBS Table 3 row-for-row [@lee2025improving]. See
+[M2: G-distribution catalog](m2-g-distribution-catalog.html) for the
+$G$-shape parameter convention `theta_G` enforces.
+
+## 6. MV3 — covariate-aware and custom $G$
+
+`gen_priorG()` and `gen_priorG2()` collapse to a single
+[`gen_effects()`](../reference/gen_effects.html). The covariate-aware
+path is an argument set (`formula`, `beta`, `data`), not a separate
+function.
+
+```{r mv3-effects}
+x <- data.frame(X1 = as.numeric(scale(seq_len(30L))))
+effects <- gen_effects(
+  J         = 30L,
+  true_dist = "Gaussian",
+  sigma_tau = 0.15,
+  formula   = ~ X1,
+  beta      = 0.30,
+  data      = x
+)
+head(effects, 3)
+```
+
+For a non-built-in $G$, switch to `true_dist = "User"` and pass
+`g_fn`. The callback returns standardized residuals by default;
+multisiteDGP audits and rescales them.
+
+```{r mv3-user}
+my_g <- function(J, ...) {
+  z <- stats::rt(J, df = 5)
+  (z - mean(z)) / stats::sd(z)
+}
+custom_dat <- sim_multisite(
+  multisitedgp_design(
+    J         = 40L,
+    true_dist = "User",
+    g_fn      = my_g,
+    g_returns = "standardized"
+  ),
+  seed = 44L
+)
+informativeness(custom_dat)
+```
+
+The full custom-$G$ contract — including the `g_returns = "raw"`
+escape hatch — is in
+[M5: Custom G distributions](m5-custom-g-distributions.html). The
+eight built-in shapes are catalogued in
+[M2: G-distribution catalog](m2-g-distribution-catalog.html), which
+includes the `gen_priorG` rename map under each shape.
+
+## 7. MV4 — split dependence and observation
+
+`sim_observed_effects()` used to combine dependence alignment and
+observation sampling. multisiteDGP keeps those layers separate so
+each can be inspected, customized, or audited.
+
+```{r mv4-layers}
+effects   <- gen_effects_gaussian(J = 20L, sigma_tau = 0.20)
+margins   <- gen_site_sizes(effects, J = 20L, nj_mean = 50, cv = 0.30)
+dependent <- align_rank_corr(margins, rank_corr = 0.30, max_iter = 2000L)
+observed  <- gen_observations(dependent)
+
+stats::cor(observed$z_j, observed$se2_j, method = "spearman")
+head(observed, 3)
+```
+
+Most users should still call [`sim_multisite()`](../reference/sim_multisite.html);
+the layered calls are useful when migrating custom internals or when
+swapping a single layer (e.g. a copula dependence injection in place
+of rank-corr alignment).
+
+## 8. MV5 — Stan fitting moves downstream
+
+multisiteDGP does not ship Stan models, Rcpp code, or Bayesian
+fitting wrappers. The package installs without a C++ compiler.
+
+Before (`siteBayes2`):
+
+```{r mv5-before, eval = FALSE}
+library(siteBayes2)
+fit_old <- fit_rubin_normal(
+  df          = sites,
+  tau_hat_col = "tau_j_hat",
+  se2_col     = "se2_j",
+  iter        = 2000,
+  chains      = 4
+)
+```
+
+After (multisiteDGP — adapter to `metafor`):
+
+```{r mv5-after}
+fit_dat <- sim_multisite(J = 30L, seed = 1L)
+
+if (requireNamespace("metafor", quietly = TRUE)) {
+  meta_dat <- as_metafor(fit_dat)
+  fit_meta <- metafor::rma(yi = meta_dat$yi, vi = meta_dat$vi, method = "REML")
+  print(fit_meta)
+} else {
+  message("Install metafor for the random-effects fit: install.packages('metafor')")
+}
+```
+
+The adapter renames the canonical columns to `metafor`'s
+`(yi, vi, sei)` convention without touching the numerical values.
+The full contract is in
+[M6: Adapters and downstream packages](m6-adapters-downstream.html).
+
+## 9. MV6 — `baggr` path
+
+Bayesian random-effects fitting through `baggr` follows the same
+pattern: adapt, then fit. `include_truth = TRUE` keeps `tau_j` as
+`tau_true` so post-fit recovery checks are one column away.
+
+```{r mv6-baggr}
+if (requireNamespace("baggr", quietly = TRUE)) {
+  bg <- as_baggr(fit_dat, include_truth = TRUE)
+  head(bg, 3)
+} else {
+  message("Install baggr for the Bayesian random-effects fit: install.packages('baggr')")
+}
+```
+
+[`as_baggr()`](../reference/as_baggr.html) renames to
+`(tau, se, tau_true)`. The fit call itself is `baggr::baggr(bg)` —
+multisiteDGP does not wrap it.
+
+## 10. MV7 — shrinkage helper
+
+`get_shrinkage_factor()` is replaced by
+[`mean_shrinkage()`](../reference/mean_shrinkage.html), now vectorized
+over `nj_mean`.
+
+```{r mv7-shrinkage}
+mean_shrinkage(
+  nj_mean   = c(20, 50, 100),
+  sigma_tau = 0.15,
+  varY      = 1,
+  p         = 0.5,
+  R2        = 0.20
+)
+```
+
+The three values are the mean shrinkage factors at $\bar n_j = 20, 50,
+100$. Larger sites see stronger shrinkage toward the global mean.
+The diagnostic also has a `multisitedgp_data` method that reads
+`varY` and `p` from the design's provenance.
+
+## 11. MV8 — no legacy exports in multisiteDGP
+
+multisiteDGP intentionally does not export `siteBayes2` names. That
+keeps the new package small, pure-R, and DGP-only. If a script needs
+backwards compatibility, the place for that is a thin
+`siteBayes2`-compatibility patch package that imports multisiteDGP
+and issues deprecation warnings — not multisiteDGP itself.
+
+```{r mv8-no-shims}
+legacy_names <- c(
+  "sim_multisite_data",
+  "gen_priorG",
+  "gen_priorG2",
+  "sim_sitesize_withinvar",
+  "sim_observed_effects",
+  "get_shrinkage_factor"
+)
+legacy_names %in% getNamespaceExports("multisiteDGP")
+```
+
+All six return `FALSE`, confirming the boundary.
+
+## 12. Realized-design check on a migrated script
+
+A migrated script should be checked the same way an originally-written
+multisiteDGP script is — by reading the realized-vs.-intended
+diagnostic block and the funnel plot. The two together confirm that
+the new pipeline reproduces the design intent of the old call.
+
+```{r migrated-summary}
+migrated <- preset_jebs_paper() |> sim_multisite(seed = 123L)
+summary(migrated)
+```
+
+```{r migrated-funnel, fig.cap = "Funnel plot of the migrated JEBS-preset simulation. Each point is a site; horizontal axis is the site SE, vertical axis is the observed estimate `tau_j_hat`. The funnel widens with SE as expected under the canonical factorization $y_j = \\tau_j + e_j,\\, e_j \\sim \\mathcal{N}(0,\\sigma_j^2)$. No high-precision sites cluster at extreme estimates and no low-precision sites cluster near zero, confirming the migrated pipeline preserves the precision-effect independence target $\\rho_S = 0$.", fig.alt = "Funnel plot with site SE on the x-axis and observed effect on the y-axis. Points fan out symmetrically as SE grows."}
+plot_funnel(migrated)
+```
+
+The diagnostic block reports realized $\sigma_\tau = 0.199$ against
+the target $0.200$ (PASS) and realized $\rho_S = 0.130$ against the
+target $0.000$ (PASS within tolerance). The funnel plot is the visual
+companion: symmetric scatter widening with SE confirms the
+precision-effect independence the JEBS preset targets.
+
+## 13. Three points where the new API diverges, not just renames
+
+Most patterns above are pure renames. Three are not.
+
+- **Layer separation (MV4).** `sim_observed_effects()` mixed
+  dependence injection and observation sampling. multisiteDGP
+  separates them into [`align_rank_corr()`](../reference/align_rank_corr.html)
+  / [`align_copula_corr()`](../reference/align_copula_corr.html) /
+  [`align_hybrid_corr()`](../reference/align_hybrid_corr.html) (Layer 3)
+  and [`gen_observations()`](../reference/gen_observations.html) (Layer 4).
+  Three precision-injection methods replace the boolean
+  `precision_dependence`. The full contract — including which method
+  hits the rank-correlation target most efficiently at given $J$ — is
+  in [M4: Precision dependence — three injection methods](m4-precision-dependence-theory.html).
+- **Two front doors, two paradigms (MV2 and MV5).** `siteBayes2`
+  treated direct-precision designs as a flag. multisiteDGP separates
+  them into two front doors:
+  [`sim_multisite()`](../reference/sim_multisite.html) for the
+  *site-size-driven* path (`paradigm = "site_size"` — sample sizes
+  $n_j$ produce SEs $\sigma_j^2 = \kappa / n_j$) and
+  [`sim_meta()`](../reference/sim_meta.html) for the
+  *direct-precision* path (`paradigm = "direct"` — informativeness
+  $I$ and heterogeneity ratio $R$ produce SEs directly via a
+  geometric grid). The construction-time check redirects mismatches
+  at design time. See
+  [M3: Margin and SE models](m3-margin-se-models.html) for the
+  formal statement.
+- **`g_fn` standardization audit (MV3).** `siteBayes2`'s custom $G$
+  hook accepted any callback. multisiteDGP audits the callback's
+  output against `g_returns = "standardized"` (default) or `"raw"` and
+  rescales to the requested `sigma_tau`; the audit can be turned off
+  for development work via `audit_g = FALSE`. See
+  [M5: Custom G distributions](m5-custom-g-distributions.html).
+
+## 14. Where to next
+
+For an end-to-end migrated workflow:
+
+- [A1: Getting started](a1-getting-started.html) — the basic four-step
+  pipeline, the same pipeline a migrated script ends up running.
+- [A2: Choosing a preset](a2-choosing-a-preset.html) — the eight
+  presets cover the JEBS replication, two meta-analytic profiles, and
+  small-area estimation; most migrated scripts can replace a flat
+  argument list with a preset call.
+
+For the methodological mapping behind the renames:
+
+- [M2: G-distribution catalog](m2-g-distribution-catalog.html) — the
+  eight built-in $G$ shapes and the `gen_priorG` → `gen_effects`
+  parameter map per shape.
+- [M3: Margin and SE models](m3-margin-se-models.html) — the
+  site-size-driven and direct-precision paths,
+  [`sim_multisite()`](../reference/sim_multisite.html) vs.
+  [`sim_meta()`](../reference/sim_meta.html), and why the two are
+  separated rather than flagged.
+- [M4: Precision dependence — three injection methods](m4-precision-dependence-theory.html) —
+  the rank, copula, and hybrid alternatives that replace
+  `precision_dependence = TRUE/FALSE`.
+
+## References
+
+The two-stage data-generating process and the canonical factorization
+$y_j = \tau_j + e_j$ that the renamed function set implements is from
+@lee2025improving. The empirical-Bayes shrinkage target the migrated
+adapter pipeline produces is the analysis goal in @walters2024empirical.
+
+## Acknowledgments
+
+This research was supported by the Institute of Education Sciences,
+U.S. Department of Education, through Grant R305D240078 to the
+University of Alabama. The opinions expressed are those of the authors
+and do not represent views of the Institute or the U.S. Department of
+Education.
+
+## Session info
+
+```{r session-info, echo = FALSE}
+sessionInfo()
+```

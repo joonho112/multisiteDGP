@@ -1,0 +1,266 @@
+url: https://joonho112.github.io/multisiteDGP/
+
+development:
+  mode: unreleased
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#1B4965"
+  opengraph:
+    image:
+      src: man/figures/logo.png
+      alt: "multisiteDGP hex sticker"
+
+authors:
+  JoonHo Lee:
+    href: https://github.com/joonho112
+
+home:
+  title: "multisiteDGP — Data-generating processes for multisite trial simulations"
+  description: |
+    A pure-R toolkit for simulating layered multisite trial and
+    meta-analysis summary-data generating processes. Build defensible
+    site-effect distributions, calibrated standard-error margins,
+    intentional precision dependence, and observation draws — all in
+    a transparent four-layer pipeline with diagnostics, presets, and
+    adapters for downstream meta-analysis packages.
+
+    This research was supported by the Institute of Education Sciences,
+    U.S. Department of Education, through Grant R305D240078 to the
+    University of Alabama. The opinions expressed are those of the
+    authors and do not represent views of the Institute or the U.S.
+    Department of Education.
+  links:
+  - text: "Get started in 5 minutes"
+    href: articles/a1-getting-started.html
+  - text: "Choose a preset"
+    href: articles/a2-choosing-a-preset.html
+  - text: "Read diagnostics"
+    href: articles/a3-diagnostics-in-practice.html
+  - text: "Theory: the two-stage DGP"
+    href: articles/m1-statistical-dgp.html
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    intro:
+      text: Get started
+      href: articles/a1-getting-started.html
+    articles:
+      text: Vignettes
+      menu:
+      - text: '--- Applied Track ---'
+      - text: A1 · Getting started
+        href: articles/a1-getting-started.html
+      - text: A2 · Choosing a preset
+        href: articles/a2-choosing-a-preset.html
+      - text: A3 · Diagnostics in practice
+        href: articles/a3-diagnostics-in-practice.html
+      - text: A4 · Covariates and precision dependence
+        href: articles/a4-covariates-precision-dependence.html
+      - text: A5 · Calibrating to real data
+        href: articles/a5-calibrating-real-data.html
+      - text: A6 · Case study — multisite trial
+        href: articles/a6-case-study-multisite.html
+      - text: A7 · Case study — meta-analysis
+        href: articles/a7-case-study-meta-analysis.html
+      - text: A8 · Cookbook
+        href: articles/a8-cookbook.html
+      - text: '--- Methodological Track ---'
+      - text: M1 · The two-stage DGP — formal specification
+        href: articles/m1-statistical-dgp.html
+      - text: M2 · G-distribution catalog and standardization
+        href: articles/m2-g-distribution-catalog.html
+      - text: M3 · Margin and SE models — site-size and direct-precision paths
+        href: articles/m3-margin-se-models.html
+      - text: M4 · Precision dependence — three injection methods
+        href: articles/m4-precision-dependence-theory.html
+      - text: M5 · Custom G distributions
+        href: articles/m5-custom-g-distributions.html
+      - text: M6 · Adapters and downstream packages
+        href: articles/m6-adapters-downstream.html
+      - text: M7 · Reproducibility and provenance
+        href: articles/m7-reproducibility-provenance.html
+      - text: M8 · Migration from siteBayes2
+        href: articles/m8-migration-from-siteBayes2.html
+    github:
+      icon: fab fa-github
+      href: https://github.com/joonho112/multisiteDGP
+      aria-label: GitHub
+
+articles:
+- title: Applied Track
+  desc: >
+    Workflow-oriented guides for designing a multisite simulation,
+    choosing a preset, reading diagnostics, calibrating to real data,
+    and writing case-study reports.
+  navbar: ~
+  contents:
+  - a1-getting-started
+  - a2-choosing-a-preset
+  - a3-diagnostics-in-practice
+  - a4-covariates-precision-dependence
+  - a5-calibrating-real-data
+  - a6-case-study-multisite
+  - a7-case-study-meta-analysis
+  - a8-cookbook
+- title: Methodological Track
+  desc: >
+    Theory and specification — the formal data-generating process,
+    the eight-shape G-distribution catalog with unit-variance
+    standardization, site-size-driven and direct-precision margin / SE
+    models, three precision-dependence injection methods, custom-G
+    extensibility, downstream adapters, the reproducibility apparatus,
+    and migration from siteBayes2.
+  navbar: ~
+  contents:
+  - m1-statistical-dgp
+  - m2-g-distribution-catalog
+  - m3-margin-se-models
+  - m4-precision-dependence-theory
+  - m5-custom-g-distributions
+  - m6-adapters-downstream
+  - m7-reproducibility-provenance
+  - m8-migration-from-siteBayes2
+
+reference:
+- title: Package
+  contents:
+  - multisiteDGP-package
+
+- title: Front doors
+  desc: >
+    User-facing simulation entry points. Use `sim_multisite()` when
+    you can specify site sizes; use `sim_meta()` when you can specify
+    information-scale targets directly.
+  contents:
+  - sim_multisite
+  - sim_meta
+  - design_grid
+
+- title: Design objects and data classes
+  desc: >
+    Immutable design records, validators, predicates, and data
+    coercion. Construct a design once with `multisitedgp_design()`
+    when you want to reuse it across multiple simulation calls or a
+    `design_grid()` sweep.
+  contents:
+  - multisitedgp_design
+  - validate_multisitedgp_design
+  - update_multisitedgp_design
+  - is_multisitedgp_design
+  - is_multisitedgp_data
+  - as_tibble.multisitedgp_data
+  - print.multisitedgp_data
+  - summary.multisitedgp_data
+
+- title: Effect distributions
+  desc: >
+    Generate the latent site-level effects \eqn{\tau_j} at the heart
+    of a multisite simulation. Eight built-in shapes — Gaussian,
+    Student-t, skew normal, asymmetric Laplace, two-component
+    mixture, point-mass slab, user callback, and a Dirichlet-process-
+    mixture bridge — share a unit-variance convention so heterogeneity
+    targets mean the same thing across shapes.
+  contents:
+  - gen_effects
+  - gen_effects_gaussian
+  - gen_effects_studentt
+  - gen_effects_skewn
+  - gen_effects_ald
+  - gen_effects_mixture
+  - gen_effects_pmslab
+  - gen_effects_user
+  - gen_effects_dpm
+
+- title: Site sizes and standard errors
+  desc: >
+    Set how precisely each site is measured. Choose the
+    site-size-driven model (sample sizes plus within-site variance)
+    or the direct-precision model (information-scale targets).
+  contents:
+  - gen_site_sizes
+  - gen_se_direct
+
+- title: Precision dependence
+  desc: >
+    Inject intentional dependence between latent effects and
+    site-level precision. Three injection methods — rank hill-climb,
+    Gaussian copula, and a hybrid scheme — hit a target effect-precision
+    correlation without distorting either margin.
+  contents:
+  - align_rank_corr
+  - align_copula_corr
+  - align_hybrid_corr
+
+- title: Observations
+  desc: >
+    Observed site-level estimates from latent effects and precision —
+    the final layer of the data-generating process.
+  contents:
+  - gen_observations
+
+- title: Diagnostics
+  desc: >
+    Scenario feasibility, dependence verification, distributional fit,
+    and shrinkage diagnostics — the four-question rubric for verifying
+    a design behaves as intended before you commit to a long
+    simulation run.
+  contents:
+  - compute_kappa
+  - compute_I
+  - compute_shrinkage
+  - informativeness
+  - mean_shrinkage
+  - feasibility_index
+  - default_thresholds
+  - heterogeneity_ratio
+  - realized_rank_corr
+  - realized_rank_corr_marginal
+  - bhattacharyya_coef
+  - ks_distance
+  - scenario_audit
+
+- title: Presets
+  desc: >
+    Defensible starting designs for common multisite and meta-analysis
+    questions. Each preset locks defensible parameter values and cites
+    its source paper so a reviewer can defend the choice.
+  contents:
+  - presets
+
+- title: Output adapters
+  desc: >
+    Coercions for downstream analysis packages — `'metafor'`,
+    `'baggr'`, `'multisitepower'` — and tidy workflows.
+  contents:
+  - adapters
+
+- title: Visualization
+  desc: >
+    Caterpillar / forest, funnel, and dependence-scatter plots
+    for diagnosing a simulation.
+  contents:
+  - plots
+
+- title: Reproducibility
+  desc: >
+    Stable hashes and provenance strings for simulation artifacts, so
+    you can rerun and audit results months later.
+  contents:
+  - canonical_hash
+  - provenance_string
+
+redirects:
+  - ['articles/v1-getting-started.html', 'articles/a1-getting-started.html']
+  - ['articles/v2-choosing-a-preset.html', 'articles/a2-choosing-a-preset.html']
+  - ['articles/v3-diagnostics-in-practice.html', 'articles/a3-diagnostics-in-practice.html']
+  - ['articles/v4-covariates-precision-dependence.html', 'articles/a4-covariates-precision-dependence.html']
+  - ['articles/v7-calibrating-real-data.html', 'articles/a5-calibrating-real-data.html']
+  - ['articles/cookbook.html', 'articles/a8-cookbook.html']
+  - ['articles/v5-custom-g-distributions.html', 'articles/m5-custom-g-distributions.html']
+  - ['articles/v6-adapters-downstream.html', 'articles/m6-adapters-downstream.html']
+  - ['articles/migration-from-siteBayes2.html', 'articles/m8-migration-from-siteBayes2.html']

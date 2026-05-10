@@ -1,0 +1,67 @@
+name: R-CMD-check
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r-cmd-check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  _R_CHECK_FORCE_SUGGESTS_: "false"
+  NOT_CRAN: "true"
+  TZ: "UTC"
+  R_KEEP_PKG_SOURCE: "yes"
+  MULTISITEDGP_RUN_SLOW: "true"
+  MULTISITEDGP_RUN_PROPERTY: "false"
+  MULTISITEDGP_RUN_VALIDATION: "false"
+  MULTISITEDGP_REPRODUCIBILITY_POLICY: "linux-strict-hash-cross-os-demoted"
+  MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN: "false"
+
+jobs:
+  R-CMD-check:
+    name: ${{ matrix.config.id }}
+    runs-on: ${{ matrix.config.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: ubuntu-latest, r: "release", id: "linux-release"}
+          - {os: ubuntu-latest, r: "devel", id: "linux-devel"}
+          - {os: ubuntu-latest, r: "oldrel-1", id: "linux-oldrel"}
+          - {os: macos-latest, r: "release", id: "macos-release"}
+          - {os: windows-latest, r: "release", id: "windows-release"}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::rcmdcheck
+            any::testthat
+            any::knitr
+            any::rmarkdown
+          install-quarto: false
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual")'
+          build_args: '"--no-manual"'
+          error-on: '"warning"'
+          upload-results: "always"
+          upload-snapshots: "always"

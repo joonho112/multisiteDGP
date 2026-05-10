@@ -1,0 +1,80 @@
+name: extended-tests
+
+on:
+  schedule:
+    - cron: "37 8 * * 1"
+  workflow_dispatch:
+    inputs:
+      run_validation_smoke:
+        description: "Run the Phase 9 V0 validation smoke job"
+        required: false
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: extended-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  _R_CHECK_FORCE_SUGGESTS_: "false"
+  NOT_CRAN: "true"
+  TZ: "UTC"
+  MULTISITEDGP_RUN_SLOW: "true"
+  MULTISITEDGP_RUN_PROPERTY: "true"
+  MULTISITEDGP_RUN_VALIDATION: "false"
+  MULTISITEDGP_REPRODUCIBILITY_POLICY: "linux-strict-hash-cross-os-demoted"
+  MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN: "false"
+
+jobs:
+  extended-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "release"
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::testthat
+            any::knitr
+            any::rmarkdown
+            any::sn
+            any::LaplacesDemon
+            any::moments
+          install-quarto: false
+
+      - name: Install package
+        run: R CMD INSTALL .
+        shell: bash
+
+      - name: Run slow and property tests
+        run: testthat::test_local(".", reporter = "summary")
+        shell: Rscript {0}
+
+      - name: Run validation smoke
+        if: ${{ github.event_name == 'schedule' || inputs.run_validation_smoke == 'true' }}
+        env:
+          MULTISITEDGP_VALIDATION_RUN_ID: ci-v0-smoke
+          MULTISITEDGP_VALIDATION_MODE: smoke
+          MULTISITEDGP_VALIDATION_REPS: "3"
+          MULTISITEDGP_VALIDATION_OVERWRITE: "true"
+        run: Rscript tools/validation/jobs/run-v0-smoke-validation.R
+        shell: bash
+
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: extended-validation-generated
+          path: tools/validation/generated
+          if-no-files-found: ignore
+          retention-days: 30
