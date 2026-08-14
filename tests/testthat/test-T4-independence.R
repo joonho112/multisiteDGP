@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T4 dependence none empirical Spearman stays within permutation envelope", {
-  skip_if_not_slow()
 
   J <- 200L
   M <- default_m_replications

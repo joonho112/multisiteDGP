@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T10 nj_min truncation and multi-rep mean hold in wrapper output", {
-  skip_if_not_slow()
 
   M <- default_m_replications
   seeds <- t_invariant_seed_stream(M, 821001L)

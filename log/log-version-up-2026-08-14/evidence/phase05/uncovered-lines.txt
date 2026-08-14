@@ -1,0 +1,75 @@
+미커버 라인 총: 139 
+
+=== 파일별 미커버 ===
+
+          R/diagnostics-core.R           R/layer2-engine-a2.R 
+                            22                             17 
+            R/scenario_audit.R  R/class-multisitedgp_design.R 
+                            15                             14 
+     R/utils-reproducibility.R      R/layer1-effects-common.R 
+                            12                              9 
+                     R/plots.R    R/class-multisitedgp_data.R 
+                             8                              7 
+        R/layer2-diagnostics.R       R/layer2-gen_se_direct.R 
+                             5                              5 
+    R/layer3-align_rank_corr.R      R/wrapper-sim_multisite.R 
+                             4                              3 
+               R/design_grid.R  R/layer1-gen_effects_pmslab.R 
+                             2                              2 
+   R/layer1-gen_effects_user.R         R/layer1-gen_effects.R 
+                             2                              2 
+  R/layer3-align_copula_corr.R   R/layer3-dependence-custom.R 
+                             2                              2 
+          R/wrapper-sim_meta.R     R/layer1-gen_effects_ald.R 
+                             2                              1 
+R/layer1-gen_effects_mixture.R   R/layer1-gen_effects_skewn.R 
+                             1                              1 
+   R/layer4-gen_observations.R 
+                             1 
+
+──── R/layer2-engine-a2.R — 미커버 17 라인 ────
+    14 | .abort_arg(
+    61 | .abort_arg(
+    69 | .abort_arg(
+    77 | .abort_arg(
+    84 | return(list(
+   107 | .abort_solver(
+   142 | .abort_arg(
+   179 | .abort_arg(
+   188 | .abort_solver(
+   196 | .abort_solver(
+   207 | .abort_solver(
+   218 | log_survival <- .trunc_gamma_log_survival(alpha, beta, n_min)
+   224 | return(NaN)
+   246 | return(c(mean = .Machine$double.xmax, sd = .Machine$double.xmax))
+   277 | return(.failed_trunc_gamma_fit(message = conditionMessage(fit), start_id = start_id))
+   296 | list(
+   337 | .abort_arg(
+
+──── R/scenario_audit.R — 미커버 15 라인 ────
+    92 | .require_soft_dependency("furrr", "scenario_audit")
+    93 | return(furrr::future_map_dfr(cell_ids, audit_one))
+   107 | .abort_arg(
+   114 | .abort_arg(
+   146 | .abort_arg(
+   153 | .abort_arg(
+   181 | .abort_arg(
+   193 | .abort_arg(
+   248 | return(rep(NA_integer_, M))
+   273 | return(sim_meta(design))
+   278 | return(sim_multisite(design))
+   367 | reasons <- c(reasons, sprintf("feasibility:q05<%.3f", thresholds$feasibility_min))
+   370 | reasons <- c(reasons, sprintf("R:q95>%.3f", thresholds$R_max))
+   373 | reasons <- c(reasons, sprintf("bhattacharyya:q05<%.3f", thresholds$bhattacharyya_min))
+   376 | reasons <- c(reasons, sprintf("ks:q95>%.3f", thresholds$ks_max))
+
+──── R/layer1-effects-common.R — 미커버 9 라인 ────
+    75 | .abort_arg(
+    96 | .abort_arg(
+   114 | .abort_arg(
+   157 | .abort_arg(
+   175 | .abort_arg(
+   193 | .abort_arg(
+   207 | .abort_arg(
+   220 | out <- beta
+   250 | 0

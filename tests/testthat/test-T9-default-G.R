@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T9 default true_dist is Gaussian under Shapiro binomial gate", {
-  skip_if_not_slow()
 
   M <- default_m_replications
   seeds <- t_invariant_seed_stream(M, 820901L)

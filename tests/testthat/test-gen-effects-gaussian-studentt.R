@@ -102,7 +102,6 @@ test_that("Student-t generator validates nu and warns for non-finite kurtosis", 
 })
 
 test_that("Gaussian and Student-t large-sample z_j moments match standardization contract", {
-  skip_if_not_slow()
 
   gaussian <- withr::with_seed(104L, gen_effects_gaussian(J = 100000L))
 

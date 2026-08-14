@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T14a legacy raw mixture variance equals 7.15", {
-  skip_if_not_slow()
 
   for (seed in c(42L, 1L, 2024L)) {
     raw <- .legacy_mixture_raw_draw(
@@ -16,7 +15,6 @@ test_that("T14a legacy raw mixture variance equals 7.15", {
 })
 
 test_that("T14b standardized Mixture output has unit variance", {
-  skip_if_not_slow()
 
   for (seed in c(42L, 1L, 2024L)) {
     out <- withr::with_seed(seed, gen_effects(

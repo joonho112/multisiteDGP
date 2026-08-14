@@ -1,0 +1,256 @@
+---
+title: "Phase 5 — 테스트 스위트 재구축 (부분 완료)"
+subtitle: "게이트 29건 제거로 skip 30 → 1, 커버리지 90.89% → 92.22% · 3개 Step 잔여"
+author: "Claude Opus 5"
+date: "2026-08-14"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+::: {.callout-important title="부분 완료 — PI 확인 필요"}
+Phase 5 는 **6 Step 중 3 개를 완료**하고 멈췄다. 두 가지 이유다.
+
+1. **Step 5.3 (snapshot 안정화)은 Phase 4 에 종속**되어 있고 Phase 4 는 D-019(Linux 부재)로 막혀 있다
+2. 자율 실행 구간이 끝나가 나머지 2 Step 을 온전히 수행할 시간이 부족했다
+
+또한 이 Phase 는 **D3 의 권고안을 잠정 적용**해 실행했다. PI 승인 전이므로, D3 가 기각되면 커밋 하나를 되돌리면 된다 (`git revert`).
+:::
+
+## 요약
+
+테스트 게이트 29 건을 축소 없이 전부 제거해 기본 `devtools::test()` 의 skip 을 **30 → 1** 로 줄였다. 남은 1 건은 T1a 이며 D1 결정에 종속된다 — D1 이 O2 또는 O4 로 확정되면 **skip 0** 이 된다.
+
+성공 기준 **G3(skip ≤ 3)이 충족**됐고, 스위트 실행 시간은 110.7 초로 예산 3 분 안에 들어온다.
+
+부수적으로 두 가지를 발견했다. **`hedgehog` 는 선언만 되고 아무 테스트도 쓰지 않는 유령 의존성**이었다 (Ch.1 U-3 확정 해소). 그리고 engine A2 의 커버리지 작업 중 **조건수 경고의 임계값이 실제 실패 경계와 어긋난다**는 새 결함을 찾았다 (D-022).
+
+커버리지는 **90.89% → 92.22%**, `layer2-engine-a2.R` 은 **84.8% → 95.5%** 로 올랐다.
+
+## Step 실행 기록
+
+D3 권고에 따라 계획서의 8 Step 이 6 Step 으로 재구성됐다.
+
+| Step | 제목 | 상태 | 비고 |
+|---|---|---|---|
+| 5.1 | 게이트 29 건 전부 제거 | **done** | 계획서 원안(1 차 제거)에서 전체 제거로 확대 |
+| ~~5.2~~ | ~~slow 비용 절감 ① 표준화 계약~~ | **삭제** | D3 — 축소 불필요 |
+| ~~5.3~~ | ~~slow 비용 절감 ② 분포 검정~~ | **삭제** | D3 — 축소 불필요 |
+| 5.2 | property 테스트 정리 | **done** | `hedgehog` 가 미사용임을 확인하고 제거 |
+| 5.3 | snapshot 테스트 안정화 | **blocked** | Phase 4 Step 4.5 종속 → D-019 |
+| 5.4 | 커버리지 보강 ① | **done** | engine A2 오류 분기 |
+| 5.5 | 커버리지 보강 ② | **미착수** | |
+| 5.6 | 회귀 테스트 + 게이트 최종 정리 | **부분** | 게이트 정리는 완료, 회귀 테스트는 미착수 |
+
+## 산출물
+
+### 변경된 파일
+
+| 파일 | 변경 |
+|---|---|
+| `tests/testthat/helper-skip-policy.R` | **재작성** — helper 4 개 제거, `skip_if_not_linux_strict_hash()` 만 남김 + 정책 근거 주석 |
+| `tests/testthat/test-T{10,11,13,14,15,16,17,1b,4,9}-*.R` | `skip_if_not_slow()` 호출 제거 (11 건) |
+| `tests/testthat/test-gen-effects-{gaussian-studentt,mixture,pmslab-user-dpm,skewn-ald}.R` | 동일 (6 건) |
+| `tests/testthat/test-property-core-invariants.R` | `skip_if_not_property()` 호출 제거 (12 건) |
+| **`tests/testthat/test-layer2-engine-a2-edges.R`** | **신규** — 23 test_that, 56 assertion |
+| `DESCRIPTION` | `hedgehog` 를 Suggests 에서 제거 |
+| `log/.../defect-ledger.csv` | D-021 · D-022 추가 (20 → 22 행) |
+
+### 증거
+
+| 경로 | 내용 |
+|---|---|
+| `evidence/phase05/test-after-gate-removal.txt` | Step 5.1 직후 스위트 실행 |
+| `evidence/phase05/test-final.txt` | Phase 5 종료 시점 스위트 실행 |
+| `evidence/phase05/uncovered-lines.csv` / `.txt` | 미커버 139 라인 전수 + 파일별 |
+| `evidence/phase05/coverage-after.txt` | 커버리지 재측정 |
+
+## 근거와 실행 결과
+
+### Step 5.1 — 게이트 제거
+
+29 건을 제거했다.
+
+| 파일 | 제거 |
+|---|--:|
+| `test-property-core-invariants.R` | 12 |
+| `test-T14-mixture-ups.R`, `test-gen-effects-mixture.R`, `test-gen-effects-skewn-ald.R` | 각 2 |
+| 나머지 11 개 파일 | 각 1 |
+
+`helper-skip-policy.R` 에서 helper 4 개를 제거했다 — `skip_if_not_slow`, `skip_if_not_property` (사용처가 사라짐), `skip_if_not_validation`, `skip_if_api_missing` (원래부터 0 회 사용, 원장 D-016). 다른 곳에서 참조하지 않음을 `grep` 으로 확인했다.
+
+**결과:**
+
+| | 전 (Phase 1 베이스라인) | 후 |
+|---|--:|--:|
+| skip | **30** | **1** |
+| 실패 | 0 | **0** |
+| 실행 시간 | 18.1 s | **110.7 s** |
+| 예산 (3 분) | — | **여유 69 s** |
+
+남은 skip 1 건은 T1a 뿐이다.
+
+```
+1. T1a Engine A1 Mixture matches JEBS appendix golden fixtures
+   - Reason: Strict canonical_hash equality is Linux x86_64/amd64 baseline only.
+```
+
+**게이트를 걷어냈는데 실패가 하나도 나오지 않았다.** 숨어 있던 29 건이 전부 통과한다 — Phase 2 의 "통계 커널은 건강하다" 는 판정과 정합한다.
+
+### Step 5.2 — property 테스트와 `hedgehog`
+
+`hedgehog` 는 `DESCRIPTION` Suggests 에 선언되어 있으나 **`tests/` 와 `R/` 어디에서도 참조하지 않는다.**
+
+property 테스트는 자체 생성기를 쓴다.
+
+```r
+property_site_cases <- function(n = 24L) {
+  withr::with_seed(840003L, {
+    data.frame(J = sample(...), nj_mean = sample(...), cv = sample(...), ...)
+  })
+}
+```
+
+시드 고정 무작위 표본 24 케이스 — 재현 가능한 property 검증이며 설계 자체는 타당하다. 다만 `hedgehog` 는 도입 검토만 하고 남은 잔재다.
+
+::: {.callout-note title="Ch.1 U-3 확정 해소"}
+Ch.1 은 "`hedgehog` 없이 property 테스트가 통과한 경로" 를 미확인 사항으로 남겼다. 답은 **애초에 쓰지 않았기 때문**이다. Phase 1 에서 `hedgehog` 를 설치한 것은 불필요한 작업이었고, 설치 전후 결과가 같았던 것도 이것으로 설명된다.
+:::
+
+`DESCRIPTION` Suggests 에서 제거했다 (원장 D-021).
+
+### Step 5.4 — 커버리지 보강 ①: engine A2
+
+Phase 1 이 `layer2-engine-a2.R` 을 최저 커버리지(84.8%, 미커버 17 줄)로 식별했고, Phase 2 가 그 미커버 라인이 **전부 fail-fast 분기와 수치 경계**임을 확인했다. 즉 "실패해야 할 때 실패하는지" 가 검증되지 않은 상태였다.
+
+`test-layer2-engine-a2-edges.R` 을 신설했다 (23 test_that).
+
+| 영역 | 검증 내용 |
+|---|---|
+| 인자 검증 | `n_bar ≤ n_min`, `cv < 0`, `tol ≤ 0`, `max_starts < 1`, `max_iter < 1` |
+| `cv = 0` 결정론 경로 | `alpha = beta = Inf`, `residual = c(0,0)`, `message = "deterministic"`, 사이트 크기가 전부 `n_bar` |
+| **실현 불가능 영역** | Phase 2 가 실측한 셀 3 개에서 abort 확인 |
+| **실현 가능 경계 안쪽** | 인접 셀 3 개에서 성공 + 잔차 < 1e-6 확인 — 실패가 무차별적이지 않음을 검증 |
+| `trunc_gamma_moments` | `n_min < 1`, `alpha ≤ 0`, `beta ≤ 0` |
+| `rtrunc_gamma` | `n_min < 1`, 상단 꼬리 언더플로우, 하한 준수 |
+| 내부 수치 헬퍼 | `.trunc_gamma_raw_moment` 의 survival 자체 계산과 NaN 반환, `.trunc_gamma_residual` 의 sentinel 반환, `.failed_trunc_gamma_fit` |
+| 조건수 경고 | 아래 D-022 |
+
+**커버리지 변화:**
+
+| | 전 | 후 |
+|---|--:|--:|
+| 전체 | 90.89 % | **92.22 %** |
+| `R/layer2-engine-a2.R` | 84.8 % (미커버 17) | **95.5 %** (미커버 5) |
+
+### 새 결함 D-022 — 조건수 경고 임계값이 실패 경계와 어긋난다
+
+engine A2 의 조건수 경고를 테스트하다 발견했다.
+
+```r
+.warn_trunc_gamma_conditioning <- function(n_bar, cv, n_min) {
+  if (cv < 1e-3) {
+    cli::cli_warn(c(
+      "!" = "Engine A2 received a very small positive `cv`.",
+      "i" = "The truncated-Gamma solution is mathematically allowed but may be numerically delicate."
+    ))
+  }
+  ...
+```
+
+`n_bar = 100, n_min = 5` 에서 `cv` 격자를 훑은 결과:
+
+| `cv` | 경고 | 결과 |
+|---|:--:|---|
+| 1e-5 · 1e-4 · 5e-4 · 9e-4 | **있음** | **실패** |
+| **1e-3 · 2e-3** | **없음** | **실패** |
+| 5e-3 · 1e-2 | 없음 | 성공 |
+
+두 가지가 어긋난다.
+
+1. **경고 문구가 사실과 다르다.** "mathematically allowed but may be numerically delicate" 라고 하지만, 경고가 나는 구간은 **전부 실패한다.** "delicate" 가 아니라 "불가능" 이다
+2. **경고 범위가 실패 범위를 덮지 못한다.** 실제 실패 경계는 `cv ≈ 0.005` 인데 경고는 `cv < 1e-3` 에서만 나온다. `cv = 0.002` 를 넘긴 사용자는 **아무 경고 없이 hard abort** 를 만난다
+
+D-011(StudentT 작은 `nu` 경고가 계통 편의를 잡음으로 오도)과 같은 성격이다 — 경고가 실제 동작을 정확히 서술하지 않는다. Phase 7 에서 함께 처리한다.
+
+신설 테스트는 **v0.2.0 시점의 실제 동작을 고정**한다. D-022 를 수정하면 이 테스트도 함께 갱신해야 하며, 그 사실을 테스트 파일 주석에 남겼다.
+
+## 결정 사항
+
+**D3 권고안을 PI 승인 전에 잠정 적용했다.** 근거는 세 가지다. ① 근거가 실측(+94.6 초)으로 확고하다 ② 커밋 하나를 되돌리면 원복된다 ③ 자율 실행 구간에 진행 가능한 최대 가치 작업이었다. **PI 가 D3 를 기각하면 `git revert` 한다.**
+
+**게이트를 축소 없이 전부 제거했다.** 계획서는 표본 크기 축소를 전제했으나 실측이 불필요함을 보였다.
+
+**Step 5.3(snapshot)을 건너뛰었다.** Phase 4 Step 4.5 가 snapshot 아티팩트를 Linux 에서 재생성해야 테스트 코드 안정화가 의미를 갖는다. Phase 4 가 막혀 있으므로 순서를 지켰다.
+
+**`hedgehog` 를 제거했다.** 되돌릴 수 있고, 사용처가 없음을 `grep` 으로 확인했다.
+
+## 원장 변경
+
+| ID | 요약 | 이전 | 이후 |
+|---|---|---|---|
+| D-003 | 기본 테스트가 불변량 30 건 skip | open | **fixed** (skip 30 → 1) |
+| D-015 | `layer2-engine-a2.R` 커버리지 84.8 % | open | **fixed** (95.5 %) |
+| D-016 | 미사용 skip helper 2 개 | open | **fixed** |
+| **D-021** | `hedgehog` 유령 의존성 | — | **신규 → fixed** |
+| **D-022** | A2 조건수 경고 임계값 불일치 | — | **신규, open** (phase07) |
+
+원장 22 행 (P0 9 · P1 6 · P2 7).
+
+::: {.callout-note}
+D-003 을 `fixed` 로 표시하되 **T1a 1 건이 남아 있다.** 성공 기준 G3 은 "skip ≤ 3, 각각 문서화된 사유" 이므로 충족이지만, D1 결정에 따라 0 으로 내려갈 수 있다.
+:::
+
+## 미해결 및 이월
+
+| 항목 | 상태 | 어디로 |
+|---|---|---|
+| Step 5.3 snapshot 안정화 | **blocked** | Phase 4 (D-019 해소 후) |
+| Step 5.5 커버리지 보강 ② | 미착수 | Phase 5 재개 시 |
+| Step 5.6 회귀 테스트 | 부분 | Phase 5 재개 시 |
+| 남은 미커버 라인 | 139 → 약 127 | `diagnostics-core.R` 22 · `scenario_audit.R` 15 · `class-multisitedgp_design.R` 14 · `utils-reproducibility.R` 12 가 상위 |
+| 플레이키 검증 (2 회 연속 실행) | 미수행 | Phase 5 재개 시 |
+| 확장 스위트 재정의 | 미수행 | Phase 5 재개 시 → Phase 6 이 소비 |
+
+**확장 스위트 재정의가 특히 중요하다.** 게이트가 사라져 `extended-tests` workflow 가 기본 스위트와 같은 것을 돌리게 됐다. Phase 6 이 이 workflow 를 손보기 전에 존재 이유를 다시 정해야 한다.
+
+## 다음 Phase 진입 조건
+
+계획서 Ch.9 의 Phase 5 종료 조건 대조.
+
+| # | 조건 | 결과 |
+|---|---|---|
+| 1 | 기본 skip ≤ 3, 각각 사유 문서화 | **충족** — skip 1 (T1a), 사유는 재현성 정책 |
+| 2 | T13–T17, T1b, T4, T9, T10, T11, P01–P12 가 기본 스위트에서 실행 | **충족** |
+| 3 | 축소한 테스트가 mutation 검사 통과 | **해당 없음** — 축소하지 않음 |
+| 4 | 커버리지가 베이스라인 이상 | **충족** — 90.89 % → 92.22 % |
+| 5 | P0/P1 각 행에 회귀 테스트 | **미충족** — Step 5.6 미착수 |
+| 6 | 기본 스위트가 시간 예산 안 | **충족** — 110.7 s / 180 s |
+| 7 | 2 회 연속 실행 결과 동일 | **미확인** |
+| 8 | `helper-skip-policy.R` 에 미사용 helper 없음 | **충족** |
+
+**판정: Phase 5 미완료.** 조건 5 · 7 이 남았고 Step 5.3 은 Phase 4 에 막혀 있다.
+
+Phase 6(CI)은 Phase 4 · 5 · 7 이 **모두** 끝나야 시작할 수 있으므로, 현재로서는 Phase 6 진입이 두 겹으로 막혀 있다 (Phase 4 는 D-019, Phase 5 는 잔여 Step).
+
+## 자율 실행 구간 종료 시점의 상태
+
+| 항목 | 값 |
+|---|---|
+| 완료 Phase | 1 · 2 · 3 |
+| 부분 완료 | **5 (3/6 Step)** |
+| 막힌 Phase | 4 (D-019), 6 (4·5·7 종속) |
+| 커밋 | 10 건, 전부 로컬 |
+| 브랜치 | `upgrade/phase-05-test-suite` |
+| 로그 | `002` ~ `005` (qmd + html) |
+| 결함 원장 | 22 행 — P0 9(2 해소) · P1 6 · P2 7 |
+| **패키지 코드 변경** | `DESCRIPTION` 1 줄 (`hedgehog` 제거)뿐 — `R/` 는 손대지 않음 |
+| 대기 | **PI 결정 5 건 (게이트 G-B)** |

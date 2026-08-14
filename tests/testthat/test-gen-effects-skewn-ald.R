@@ -42,7 +42,6 @@ test_that("ALD generator returns canonical schema and preserves decomposition", 
 })
 
 test_that("SkewN standardization and skewness sign match T16", {
-  skip_if_not_slow()
   testthat::skip_if_not_installed("sn")
   testthat::skip_if_not_installed("moments")
 
@@ -63,7 +62,6 @@ test_that("SkewN standardization and skewness sign match T16", {
 })
 
 test_that("ALD standardization matches T13 with Yu-Zhang parameter conversion", {
-  skip_if_not_slow()
   testthat::skip_if_not_installed("LaplacesDemon")
 
   for (rho in c(0.25, 0.5, 0.7)) {

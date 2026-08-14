@@ -1,23 +1,15 @@
-skip_if_not_slow <- function() {
-  testthat::skip_if_not(
-    identical(Sys.getenv("MULTISITEDGP_RUN_SLOW"), "true"),
-    "Set MULTISITEDGP_RUN_SLOW=true to run slow multisiteDGP tests."
-  )
-}
-
-skip_if_not_validation <- function() {
-  testthat::skip_if_not(
-    identical(Sys.getenv("MULTISITEDGP_RUN_VALIDATION"), "true"),
-    "Set MULTISITEDGP_RUN_VALIDATION=true to run validation experiments."
-  )
-}
-
-skip_if_not_property <- function() {
-  testthat::skip_if_not(
-    identical(Sys.getenv("MULTISITEDGP_RUN_PROPERTY"), "true"),
-    "Set MULTISITEDGP_RUN_PROPERTY=true to run multisiteDGP property tests."
-  )
-}
+# 테스트 게이트 정책 (v0.2.0, 결정 D3)
+#
+# v0.1.x 는 slow / property 테스트를 환경변수 뒤에 숨겼다. 그 결과 기본
+# `devtools::test()` 가 통계 불변량 30 건을 skip 한 채 green 을 보고했다.
+#
+# 실측 결과 게이트를 전부 켜는 비용은 +94.6 초(18.1 s -> 112.7 s)뿐이었다.
+# 따라서 v0.2.0 은 표본 크기나 격자를 줄이지 않고 게이트를 제거했다.
+# 근거: log/log-version-up-2026-08-14/decisions/D3-test-gate-policy.md
+#
+# 남은 게이트는 둘뿐이다.
+#   - skip_if_not_installed()          soft dependency guard (testthat 기본 제공)
+#   - skip_if_not_linux_strict_hash()  아래. 재현성 계약(D1)에 종속된다.
 
 skip_if_not_linux_strict_hash <- function() {
   platform <- tolower(R.version$platform)
@@ -25,12 +17,5 @@ skip_if_not_linux_strict_hash <- function() {
     identical(tolower(Sys.info()[["sysname"]]), "linux") &&
       grepl("x86_64|amd64", platform),
     "Strict canonical_hash equality is Linux x86_64/amd64 baseline only."
-  )
-}
-
-skip_if_api_missing <- function(name) {
-  testthat::skip_if_not(
-    exists(name, envir = asNamespace("multisiteDGP"), mode = "function", inherits = FALSE),
-    sprintf("multisiteDGP::%s() has not been implemented yet.", name)
   )
 }

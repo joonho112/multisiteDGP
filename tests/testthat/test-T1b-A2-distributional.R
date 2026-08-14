@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T1b Engine A2 Gaussian distribution clears KS binomial gate", {
-  skip_if_not_slow()
 
   M <- default_m_replications
   seeds <- t_invariant_seed_stream(M, 820102L)

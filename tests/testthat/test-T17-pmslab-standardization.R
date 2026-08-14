@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T17 PMSlab standardization and point-mass fraction hold", {
-  skip_if_not_slow()
 
   for (pi0_value in c(0.2, 0.5, 0.8)) {
     for (slab_shape in c("Gaussian", "Laplace")) {

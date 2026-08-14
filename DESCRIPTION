@@ -50,7 +50,6 @@ Suggests:
     yaml,
     arrow,
     moments,
-    hedgehog,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,

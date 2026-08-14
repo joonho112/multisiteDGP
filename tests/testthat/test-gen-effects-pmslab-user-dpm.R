@@ -31,7 +31,6 @@ test_that("PMSlab generator returns schema and preserves decomposition", {
 })
 
 test_that("T17 PMSlab standardization and zero mass match contract", {
-  skip_if_not_slow()
 
   for (pi0_value in c(0.2, 0.5, 0.8)) {
     for (slab_shape in c("Gaussian", "Laplace")) {

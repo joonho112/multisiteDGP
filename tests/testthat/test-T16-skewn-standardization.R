@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T16 Skew-Normal standardization and skewness sign hold", {
-  skip_if_not_slow()
   testthat::skip_if_not_installed("sn")
   testthat::skip_if_not_installed("moments")
 

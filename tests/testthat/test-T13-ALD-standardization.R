@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T13 ALD standardization matches Yu-Zhang moment contract", {
-  skip_if_not_slow()
   testthat::skip_if_not_installed("LaplacesDemon")
 
   for (rho in c(0.25, 0.5, 0.7)) {
