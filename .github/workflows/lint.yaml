@@ -16,7 +16,7 @@ concurrency:
 
 env:
   TZ: "UTC"
-  MULTISITEDGP_REPRODUCIBILITY_POLICY: "linux-strict-hash-cross-os-demoted"
+  MULTISITEDGP_REPRODUCIBILITY_POLICY: "portable-hash-v3"
   MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN: "false"
 
 jobs:

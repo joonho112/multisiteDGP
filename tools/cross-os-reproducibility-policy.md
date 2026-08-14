@@ -1,138 +1,166 @@
-# Cross-OS Reproducibility Policy
+# Reproducibility Policy
 
-Status: Phase 11 Step 11.4 internal v0.1 release policy for multisiteDGP 0.1.0.
+Status: multisiteDGP 0.2.0. Supersedes the v0.1 policy in full — see [What
+changed in v0.2.0](#what-changed-in-v020) for why the old structure is gone.
 
-## Scope
+## The contract
 
-This policy defines what multisiteDGP promises across operating systems for
-generated data, canonical hashes, golden fixtures, print snapshots, and CI.
+**The same design and the same seed produce the same data, on any platform,
+bit for bit — and therefore the same `canonical_hash()`.**
 
-The policy is intentionally narrower than "all operating systems produce the
-same bytes." multisiteDGP promises stable simulation contracts, not byte-level
-identity across every BLAS, compiler, CPU, and R runtime combination.
+That is the whole promise. There is no platform hierarchy, no authoritative
+operating system, and no per-OS exemption. A hash you record on your laptop is
+a hash a reviewer can reproduce on theirs.
 
-## Definitions
+Two things follow from it.
 
-Same-machine reproducibility means that the same package version, same R
-runtime, same machine, same design, and same seed produce the same
-`canonical_hash()` across repeated runs.
+- **`canonical_hash()` is a portable identity.** Quote it in a manuscript, a
+  log, or an issue and it means the same thing everywhere.
+- **A hash mismatch is a real difference.** It means the design, the seed, the
+  package version or the data genuinely differ. It is never platform noise.
 
-Linux strict hash means that Ubuntu Linux is the canonical strict baseline for
-golden fixture hashes and print-example hash regeneration.
+## What is covered
 
-Distributional parity means that macOS and Windows must pass statistical,
-shape, diagnostic, and same-machine reproducibility tests, but do not need to
-match the Linux byte-level `canonical_hash()` for JEBS strict golden fixtures.
+`canonical_hash()` covers the simulated data columns, the column names, and a
+manifest that carries the package version, the paradigm, `design_hash`, the
+schema version and the names of any user callbacks.
 
-## Policy
+**Data columns are hashed exactly, with no rounding.** Each is platform stable
+for a specific reason:
 
-1. Linux is the strict cross-run hash baseline.
+| Column | Why it is stable |
+|---|---|
+| `n_j` | rounded to an integer before it leaves Layer 2 |
+| `z_j`, `tau_j` | drawn from R's own RNG, which is identical across platforms |
+| `se_j`, `se2_j`, `tau_j_hat` | IEEE arithmetic on the above |
+| `site_index` | integer |
 
-   T1a JEBS golden fixture hash equality is enforced only on Linux. In CI this
-   applies to the Ubuntu matrix cells. Locally, `skip_if_not_linux_strict_hash()`
-   prevents macOS and Windows from treating Linux golden hashes as byte-level
-   expectations.
+## What is deliberately excluded
 
-2. macOS and Windows are demoted from strict cross-OS hash equality.
+**Derived diagnostics** — `I_hat`, `R_hat`, `rho_S_*`, `rho_P_*`,
+`sigma_tau_*`. They are computed with `cor()`, `sd()` and `mean()`, whose
+floating-point accumulation order varies by platform. The drift is visible even
+on a single machine: for a covariate-free design `rho_P_marginal` and
+`rho_P_residual` are mathematically identical yet differ in their last digits.
 
-   macOS and Windows still run R CMD check and the normal test suite. They must
-   pass same-machine reproducibility, distributional checks, examples, vignettes,
-   and adapter tests. They are not expected to reproduce Linux `canonical_hash()`
-   strings for T1a golden fixture data.
+Excluding them costs nothing. They are functions of the hashed data and the
+hashed design, so they add no provenance the hash does not already carry — only
+noise.
 
-3. Same-machine reproducibility is required on every OS.
-
-   T20 remains active across OSes. Given the same local runtime and seed,
-   repeated `sim_multisite()` calls must return identical `canonical_hash()`
-   values and preserve caller RNG state when a seed is supplied.
-
-4. T1b-style distributional parity is the cross-OS substitute.
-
-   For macOS and Windows, acceptance rests on distributional tests such as T1b,
-   shape diagnostics, and validation summaries rather than byte-identical Linux
-   fixture hashes.
-
-5. Authoritative golden and print-example regeneration is Linux-only.
-
-   Generated print examples contain `canonical_hash` and `design_hash` values.
-   Authoritative regeneration belongs on Linux x86-64. A non-Linux user may set
-   `MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN=true` for exploratory local
-   regeneration, but non-Linux hash-only diffs should not be committed.
-
-   Current v0.1 golden fixture note: the checked-in Step 8.1 manifest records
-   local macOS/aarch64 provenance (`generated_platform =
-   aarch64-apple-darwin20`) for the nine bootstrap fixture files. The intended
-   strict `canonical_hash()` baseline remains Ubuntu Linux x86_64/amd64. The
-   first GitHub Actions artifact pass must either confirm that the checked-in
-   hashes are identical on Linux or regenerate and commit Linux-baseline
-   fixtures and manifest metadata from Linux x86_64/amd64. Non-Linux local
-   regeneration is exploratory only and must not be committed as authoritative.
-
-6. `canonical_hash()` is stable by schema, not by hiding numeric drift.
-
-   The hash schema removes known avoidable drift from column order, row names,
-   attribute order, callback function bodies, callback environments, and
-   non-allowlisted diagnostics. It does not mask true numeric differences.
-
-## CI Rules
-
-Required R CMD check matrix:
-
-- `linux-release`: strict hash baseline plus full check suite.
-- `linux-devel`: forward-compatibility with Linux strict hash tests active.
-- `linux-oldrel`: backward-compatibility with Linux strict hash tests active.
-- `macos-release`: full package checks with T1a strict hash skipped.
-- `windows-release`: full package checks with T1a strict hash skipped.
-
-Required environment posture:
-
-- `_R_CHECK_FORCE_SUGGESTS_=false`
-- `MULTISITEDGP_REPRODUCIBILITY_POLICY=linux-strict-hash-cross-os-demoted`
-- `MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN=false`
-
-Extended validation:
-
-- V08 records local repeated-run canonical hash evidence.
-- A true Linux/macOS/Windows cross-machine validation matrix is external to the
-  local validation jobs until release infrastructure runs on GitHub Actions.
-
-## Release-Blocking Failures
-
-These are release-blocking:
-
-- T1a strict golden hash fails on Linux.
-- T20 same-machine reproducibility fails on any OS.
-- Caller RNG state is mutated by seed-supplied wrapper calls.
-- T1b distributional parity fails on required CI cells.
-- A non-Linux print/golden hash regeneration is committed as authoritative.
-- `canonical_hash()` schema changes without a documented major-version
-  reproducibility decision.
-
-These are not release-blocking by themselves:
-
-- macOS or Windows `canonical_hash()` differs from Linux for T1a golden fixture
-  data.
-- A local Darwin V08 validation run reports `cross_os_matrix_status =
-  "not_run_in_local_phase9_job"`.
-
-## Developer Commands
-
-Local same-machine reproducibility smoke:
+A caller who wants one pinned deliberately can still ask:
 
 ```r
-dat1 <- sim_multisite(preset_education_modest(), seed = 12345L)
-dat2 <- sim_multisite(preset_education_modest(), seed = 12345L)
-stopifnot(identical(canonical_hash(dat1), canonical_hash(dat2)))
+canonical_hash(dat, diagnostics_to_include = "I_hat")
 ```
 
-Linux strict T1a check:
+**Function bodies and environments.** Callbacks (`g_fn`, `se_fn`,
+`dependence_fn`) are recorded by presence and hook name, not by body. Two runs
+that pass different closures with the same role hash the same; the manifest
+records that a hook was present.
+
+## What this rests on
+
+The contract holds because every hashed column is platform stable. **Adding a
+libm-dependent quantity to a data column would break it**, and the symptom
+would be a cross-platform hash mismatch that looks like the v0.1 problem all
+over again. Weigh that before introducing one.
+
+Engine A2's truncated-Gamma solver is the case that made this concrete. It
+calls `nleqslv` with `ftol = 1e-12`, so its solution is pinned only to about
+1e-12 relative — five starting points land roughly 5,000 ULP apart and all
+satisfy the tolerance. Two guards keep that out of the data:
+
+- the solution is quantised to `.TRUNC_GAMMA_SOLUTION_DIGITS` significant
+  digits before anything downstream sees it, and start selection compares
+  residual norms at a coarser precision so libm differences cannot reorder
+  near-ties;
+- `n_j` is an integer, which absorbs what is left.
+
+## Verification precision, not just verification
+
+Engine A2's post-solve check compares a scaled residual against a tolerance.
+Below a certain conditioning that comparison measures floating-point noise
+rather than fit quality, and the verdict becomes platform dependent — the same
+design passed on macOS and aborted on Linux.
+
+The tolerance is therefore derived, not fixed:
+
+```
+tol_effective = max(tol, noise_floor(alpha, cv))
+```
+
+where the floor comes from the two cancellations in the moment evaluation —
+`lgamma(alpha + k) - lgamma(alpha)` and `sd^2 = E[X^2] - E[X]^2` — and was
+calibrated against a measured `(n_bar, cv, n_min)` grid. `solve_trunc_gamma()`
+returns `tol_effective` so the decision is inspectable.
+
+When the floor exceeds a relative error of `1e-3` on the realized site-size SD,
+the fit is accepted but a warning says so and quotes the number. The design
+still runs; the user is told its SD is only checkable to that level.
+
+## Same-machine reproducibility
+
+Unchanged and still required. Given the same package version, R runtime,
+machine, design and seed, repeated calls return identical
+`canonical_hash()` values, and a seed-supplied wrapper call leaves the
+caller's `.Random.seed` untouched. Invariant T20 covers this on every OS.
+
+## CI
+
+Required `R CMD check` matrix, all treated identically:
+
+- `linux-release`, `linux-devel`, `linux-oldrel`
+- `macos-release`
+- `windows-release`
+
+Required environment:
+
+```
+_R_CHECK_FORCE_SUGGESTS_=false
+MULTISITEDGP_REPRODUCIBILITY_POLICY=portable-hash-v3
+```
+
+`extended-tests` runs weekly on a schedule and opens a GitHub issue when it
+fails, so a red scheduled run cannot pass unnoticed. GitHub disables scheduled
+workflows after 60 days of repository inactivity; the same job reports that it
+ran, so a silent stop is visible too.
+
+## Regenerating fixtures
+
+Any platform. Golden fixtures, print examples and the JEBS manifest produce the
+same bytes everywhere, so there is no authoritative machine and no
+`ALLOW_NON_LINUX_*` gate on correctness. The environment variables remain as a
+speed bump against accidental regeneration, not as a platform claim.
 
 ```sh
-MULTISITEDGP_RUN_SLOW=true Rscript -e 'devtools::test(filter = "T1a|T20|T1b")'
+Rscript tests/data-raw/generate_golden_fixtures.R
+Rscript tests/data-raw/generate_print_examples.R
+Rscript tools/jebs-golden-fixtures/generate-jebs-golden-fixtures.R
 ```
 
-Non-Linux policy check:
+Regenerate only when a change is *meant* to move the data, and say why in the
+commit. A fixture diff that nobody intended is a regression, not a refresh.
 
-```sh
-Rscript -e 'devtools::test(filter = "cross-os-reproducibility-policy")'
-```
+## Release-blocking failures
+
+- `canonical_hash()` differs across the CI matrix for the same design and seed.
+- Same-machine reproducibility fails on any OS.
+- A seed-supplied wrapper call mutates the caller's RNG state.
+- Golden fixtures change without a stated reason.
+- The hash schema changes without a documented decision and a `NEWS.md` entry.
+
+## What changed in v0.2.0 {#what-changed-in-v020}
+
+The v0.1 policy named Ubuntu Linux the strict baseline and demoted macOS and
+Windows from hash equality. That structure existed because the hash could not
+be made portable — and it did not work. The checked-in fixtures were generated
+on macOS while the policy named Linux authoritative, so the two contradicted
+each other, `test-golden.R` compared `.rds` files byte-for-byte with no
+platform gate at all, and the weekly `extended-tests` run failed for ten
+consecutive weeks.
+
+The v0.1 diagnosis was that the drift could not be removed. It was half right:
+the data was already portable, and only the derived diagnostics were not.
+Dropping them from the hash (schema v3) made the contract achievable, and the
+platform hierarchy became unnecessary. See defect ledger rows D-002, D-007,
+D-022 and D-024 in `log/log-version-up-2026-08-14/`.
