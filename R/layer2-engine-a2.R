@@ -112,20 +112,30 @@ solve_trunc_gamma <- function(
   }
 
   best <- verified[[which.min(vapply(verified, `[[`, numeric(1), "residual_norm"))]]
-  tol_effective <- max(tol, .trunc_gamma_residual_floor(best$alpha, cv))
+  noise_floor <- .trunc_gamma_residual_floor(best$alpha, cv)
+  tol_effective <- max(tol, noise_floor)
   if (any(abs(best$residual) > tol_effective)) {
-    .abort_solver(
-      "Engine A2 truncated-Gamma post-solve verification failed.",
+    # The floor is only named when it is what governs. It is derived from the
+    # solver's own `alpha`, so printing it unconditionally would put a
+    # platform-dependent number into the error snapshot — reintroducing the
+    # problem the adaptive tolerance exists to remove.
+    detail <- if (noise_floor > tol) {
       sprintf(
-        # Rounded on purpose. Full-precision doubles in a message make the
-        # error snapshot platform dependent, which is the very problem the
-        # adaptive tolerance exists to remove.
-        "Maximum scaled residual was %s against an effective tolerance of %s (requested %s, evaluation noise floor %s).",
+        "Maximum scaled residual was %s against a tolerance of %s, widened from %s by the moment-evaluation noise floor.",
         format(max(abs(best$residual)), digits = 3),
         format(tol_effective, digits = 3),
-        format(tol, digits = 3),
-        format(.trunc_gamma_residual_floor(best$alpha, cv), digits = 3)
-      ),
+        format(tol, digits = 3)
+      )
+    } else {
+      sprintf(
+        "Maximum scaled residual was %s with tolerance %s.",
+        format(max(abs(best$residual)), digits = 3),
+        format(tol_effective, digits = 3)
+      )
+    }
+    .abort_solver(
+      "Engine A2 truncated-Gamma post-solve verification failed.",
+      detail,
       "Try a less extreme site-size design or increase `tol` slightly."
     )
   }
