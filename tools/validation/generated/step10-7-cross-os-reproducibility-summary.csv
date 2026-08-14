@@ -1,0 +1,2 @@
+"step","policy_tools","policy_installed","canonical_hash_docs_updated","strict_helper_linux_x86_64","ci_policy_env","yaml_parse","lint_status","targeted_tests","r_cmd_check_status","pkgdown_check","remaining_cross_os_artifact_gap"
+"10.7",TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,"pass","PASS 176 / SKIP 2 expected local macOS gates","OK","pass","GitHub Actions matrix not executed locally; release audit should collect CI artifacts"

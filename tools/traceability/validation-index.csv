@@ -1,0 +1,14 @@
+id,experiment,priority,owner_phase,owner_step,blueprint_ref,status,unresolved_conflict
+V0,Hello-world default calibration,P0,Phase 9,Step 9.2,ch19 sec19.1,full-pass-targeted-resolution,V0 plus V01-V12 makes 13 experiments; aggregate calibration gate supersedes historical per-rep blocker
+V01,Covariate dependence joint construction across G shapes,P0,Phase 9,Step 9.2,ch19 sec19.1,full-pass-targeted-resolution,PSD witness excluded until E24 v2 reactivation; marginal Spearman reporting-only under v1 residual contract
+V02,JEBS bit-identical regression full grid,P0,Phase 9,Step 9.2,ch19 sec19.1,full-pass-targeted-resolution,uses preset_jebs_strict not preset_jebs_paper; grid-level seed stability supersedes per-cell range gate
+V03,Walters 2024 Boston VAM regression,P0,Phase 9,Step 9.3,ch19 sec19.1,full-pass-targeted-resolution,Walters sparse motif deferred to v1.1; shrinkage-implied oracle consistency gate supersedes literal RMSE ratio
+V04,Engine A2 multi-start solver convergence,P0,Phase 9,Step 9.3,ch19 sec19.1,full-pass-targeted-resolution,A2 feasible-region gate supersedes historical high-CV/high-n_min blocker
+V05,Decision C enforcement,P0,Phase 9,Step 9.3,ch19 sec19.1,full-pass,none
+V06,8 G shape standardization large sample,P1,Phase 9,Step 9.4,ch19 sec19.1,full-pass-targeted-resolution,DPM v1 stub skipped; StudentT nu<4 uses documented heavy-tail tolerance
+V07,Paradigm B exact I and R recovery,P1,Phase 9,Step 9.4,ch19 sec19.1,full-pass,none
+V08,Engine A2 reproducibility cross-machine,P1,Phase 9,Step 9.4,ch19 sec19.1,full-pass-local-cross-os-not-run,Q14 OS policy means Linux strict and macOS Windows demoted; GitHub Actions artifacts still needed
+V09,Hill-climb boundary convergence,P1,Phase 9,Step 9.4,ch19 sec19.1,targeted-pass-resolution,rho=0 targeted defect fixed; broader boundary performance remains future hardening
+V10,Visual diagnostic plots,P2,Phase 9,Step 9.5,ch19 sec19.1,full-pass-automated-manual-review-pending,manual visual inspection remains non-blocking release review item
+V11,scenario_audit 1500-cell baseline,P2,Phase 9,Step 9.5,ch19 sec19.1,full-pass-targeted-resolution,replication owned by scenario_audit not design_grid; public pass rate reporting-only pending preregistered operational mix
+V12,preset_jebs_paper Lee figure regression,P2,Phase 9,Step 9.5,ch19 sec19.1,full-pass-targeted-resolution,pattern-level visual not bit-identical; exact Lee Figure/lme4 target deferred pending repo-controlled reference

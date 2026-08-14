@@ -1,0 +1,91 @@
+── Installing package multisiteDGP into temporary library ──────────────────────
+── Building pkgdown site for package multisiteDGP ──────────────────────────────
+Reading from: /Users/joonholee/Documents/IES Multisite Trial
+Project/multisiteDGP-R-package
+Writing to: /Users/joonholee/Documents/IES Multisite Trial
+Project/multisiteDGP-R-package/docs
+── Sitrep ──────────────────────────────────────────────────────────────────────
+✔ URLs ok.
+✔ Favicons ok.
+✔ Open graph metadata ok.
+✔ Articles metadata ok.
+✔ Reference metadata ok.
+── Initialising site ───────────────────────────────────────────────────────────
+── Building home ───────────────────────────────────────────────────────────────
+Reading 'DESCRIPTION'
+Writing `404.html`
+── Building function reference ─────────────────────────────────────────────────
+Reading man/adapters.Rd
+Reading man/align_copula_corr.Rd
+Reading man/align_hybrid_corr.Rd
+Reading man/align_rank_corr.Rd
+Reading man/as_tibble.multisitedgp_data.Rd
+Reading man/bhattacharyya_coef.Rd
+Reading man/canonical_hash.Rd
+Reading man/compute_I.Rd
+Reading man/compute_kappa.Rd
+Reading man/compute_shrinkage.Rd
+Reading man/default_thresholds.Rd
+Reading man/design_grid.Rd
+Reading man/feasibility_index.Rd
+Reading man/gen_effects.Rd
+Reading man/gen_effects_ald.Rd
+Reading man/gen_effects_dpm.Rd
+Reading man/gen_effects_gaussian.Rd
+Reading man/gen_effects_mixture.Rd
+Reading man/gen_effects_pmslab.Rd
+Reading man/gen_effects_skewn.Rd
+Reading man/gen_effects_studentt.Rd
+Reading man/gen_effects_user.Rd
+Reading man/gen_observations.Rd
+Reading man/gen_se_direct.Rd
+Reading man/gen_site_sizes.Rd
+Reading man/heterogeneity_ratio.Rd
+Reading man/informativeness.Rd
+Reading man/is_multisitedgp_data.Rd
+Reading man/is_multisitedgp_design.Rd
+Reading man/ks_distance.Rd
+Reading man/mean_shrinkage.Rd
+Reading man/multisiteDGP-package.Rd
+Writing `reference/multisiteDGP-package.html`
+Reading man/multisitedgp_design.Rd
+Reading man/plots.Rd
+Writing `reference/plots.html`
+Reading man/presets.Rd
+Reading man/print.multisitedgp_data.Rd
+Reading man/provenance_string.Rd
+Reading man/realized_rank_corr.Rd
+Reading man/realized_rank_corr_marginal.Rd
+Reading man/scenario_audit.Rd
+Reading man/sim_meta.Rd
+Reading man/sim_multisite.Rd
+Reading man/summary.multisitedgp_data.Rd
+Reading man/update_multisitedgp_design.Rd
+Reading man/validate_multisitedgp_design.Rd
+── Building articles ───────────────────────────────────────────────────────────
+Reading vignettes/cookbook.Rmd
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+Reading vignettes/migration-from-siteBayes2.Rmd
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+Reading vignettes/v1-getting-started.Rmd
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+Reading vignettes/v2-choosing-a-preset.Rmd
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+Reading vignettes/v3-diagnostics-in-practice.Rmd
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+Reading vignettes/v4-covariates-precision-dependence.Rmd
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+Reading vignettes/v5-custom-g-distributions.Rmd
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+Reading vignettes/v6-adapters-downstream.Rmd
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+Reading vignettes/v7-calibrating-real-data.Rmd
+[WARNING] Deprecated: --highlight-style. Use --syntax-highlighting instead.
+── Building news ───────────────────────────────────────────────────────────────
+── Building sitemap ────────────────────────────────────────────────────────────
+── Building docs for llms ──────────────────────────────────────────────────────
+── Building redirects ──────────────────────────────────────────────────────────
+── Building search index ───────────────────────────────────────────────────────
+── Checking for problems ───────────────────────────────────────────────────────
+── Finished building pkgdown site for package multisiteDGP ─────────────────────
+── Finished building pkgdown site for package multisiteDGP ─────────────────────

@@ -1,0 +1,10 @@
+id,function,paradigm,front_door,owner_phase,owner_step,blueprint_ref,status,unresolved_conflict
+P01,preset_education_small,A,sim_multisite,Phase 7,Step 7.1,ch13 sec13.2.1,implemented,ch13 parameter values authoritative over stale ch10 summary
+P02,preset_education_modest,A,sim_multisite,Phase 7,Step 7.1,ch13 sec13.2.2,implemented,flagship default and V0 calibration
+P03,preset_education_substantial,A,sim_multisite,Phase 7,Step 7.1,ch13 sec13.2.3,implemented,ch13 parameter values authoritative over stale ch10 summary and persona refined Priya or Chen primary
+P04,preset_jebs_paper,A,sim_multisite,Phase 7,Step 7.1,ch13 sec13.3.1,implemented,UX sigma_tau 0.20 not strict paper mid
+P05,preset_jebs_strict,A,sim_multisite,Phase 7,Step 7.1,ch13 sec13.3.1a,implemented,T1a and V02 strict paper anchor
+P06,preset_walters_2024,A,sim_multisite,Phase 7,Step 7.2,ch13 sec13.3.2,implemented,Gaussian v1 and sparse motif deferred
+P07,preset_twin_towers,A,sim_multisite,Phase 7,Step 7.2,ch13 sec13.3.3,implemented,Q13 A vs B reversal cost noted
+P08,preset_meta_modest,B,sim_meta,Phase 7,Step 7.2,ch13 sec13.4.1,implemented,none
+P09,preset_small_area_estimation,B,sim_meta,Phase 7,Step 7.2,ch13 sec13.4.2,implemented,none

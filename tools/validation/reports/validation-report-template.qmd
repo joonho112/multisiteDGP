@@ -1,0 +1,87 @@
+---
+title: "multisiteDGP Validation Report"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+## Run Metadata
+
+| Field | Value |
+|---|---|
+| Report date |  |
+| Package root |  |
+| Plan manifest | `tools/validation/validation-plan-manifest.csv` |
+| Run manifest | `tools/validation/generated/validation-run-manifest.csv` |
+| Platform |  |
+| R version |  |
+
+## Executive Status
+
+| Priority | Experiments | Pass | Warn | Fail | Deferred |
+|---|---:|---:|---:|---:|---:|
+| P0 | 6 |  |  |  |  |
+| P1 | 4 |  |  |  |  |
+| P2 | 3 |  |  |  |  |
+
+## Release Blocker Register
+
+| ID | Priority | Status | Evidence | Decision |
+|---|---|---|---|---|
+| V0 | P0 |  |  |  |
+| V01 | P0 |  |  |  |
+| V02 | P0 |  |  |  |
+| V03 | P0 |  |  |  |
+| V04 | P0 |  |  |  |
+| V05 | P0 |  |  |  |
+
+## Agent Ledger
+
+| Agent | Role | Scope | Agreement | Disagreement | Resolution |
+|---|---|---|---|---|---|
+|  |  |  |  |  |  |
+
+## Experiment Evidence
+
+Each experiment entry should record run id, seed root, result file, summary
+file, acceptance rule, outcome, and remediation.
+
+### V0 - Hello-world Default Calibration
+
+### V01 - Covariate Dependence Joint Construction Across G Shapes
+
+### V02 - JEBS Bit-Identical Regression Full Grid
+
+### V03 - Walters 2024 Boston VAM Regression
+
+### V04 - Engine A2 Multi-Start Solver Convergence
+
+### V05 - Decision C Reject Enforcement
+
+### V06 - 8 G Shape Standardization Large Sample
+
+### V07 - Paradigm B Exact I And R Recovery
+
+### V08 - Engine A2 Reproducibility Cross-Machine
+
+### V09 - Hill-Climb Boundary Convergence
+
+### V10 - Visual Diagnostic Plots
+
+### V11 - Scenario Audit Baseline
+
+### V12 - Preset JEBS Paper Lee Figure Regression
+
+## Known Limits And Deferrals
+
+- The Phase 9 inventory is treated as 13 experiments: V0 plus V01-V12.
+- DPM is a v1 stub and must be recorded as an explicit skip where applicable.
+- macOS evidence is local evidence only for V08; Linux remains the strict
+  canonical hash baseline.
+
+## Appendix - Manifest Snapshot

@@ -1,0 +1,539 @@
+=======================================================================
+multisiteDGP — Vignette frontmatter & chunk-options template
+Step 7.1 deliverable. Reference file, NOT a vignette.
+Last updated: 2026-05-09
+=======================================================================
+
+This file is read by the executing agent (Claude or human) before
+drafting any of the 16 vignettes (A1-A8, M1-M8). It is self-contained:
+do not require re-reading 02-style-guide.md, 05-roxygen-template.md, or
+the master plan to draft a vignette. Where rules are pulled from those
+sources, the source citation is given inline.
+
+Sections:
+  1. Quick reference checklist (read first, every time)
+  2. YAML frontmatter (ready to copy-paste)
+  3. Setup chunk (ready to copy-paste)
+  4. Footer chunk (ready to copy-paste)
+  5. Failure-mode guard list (do not repeat prior failures)
+  6. Operational tips (rendering, cross-linking, length budgets)
+  7. Open questions / annotations (synthesis residue)
+
+
+-----------------------------------------------------------------------
+1. QUICK REFERENCE CHECKLIST
+-----------------------------------------------------------------------
+
+Before drafting any vignette, confirm each of the following.
+
+[ ]  Frontmatter author = "JoonHo Lee" (single token, no role suffix,
+     no grant ID, no email, no ORCID).
+
+[ ]  Setup chunk uses echo = TRUE, results = "markup". Primary calls
+     (sim_multisite, sim_meta, presets, adapters, scenario_audit, any
+     diagnostic) show their printed output in the next visible chunk.
+     NEVER assign-and-hide a primary call.
+
+[ ]  Helper-only chunks may use include = FALSE; primary calls never do.
+
+[ ]  Plot count meets the per-vignette minimum (table below). Captions
+     state what to read off the plot, not what the plot is.
+
+       Vignette  Min plots  Notes
+       A1        2          caterpillar + funnel
+       A2        2          preset comparison + diagnostic per preset
+       A3        4          one per diagnostic group A / B / C / D
+       A4        2          residual-scale + marginal-scale scatter
+       A5        2          calibration before/after, target overlay
+       A6        4          funnel + caterpillar + dependence + summary
+       A7        4          forest + funnel + dependence + heterogeneity
+       A8        1 per recipe walkthrough
+       M1        2          (per plan Ch.11)
+       M2        8          (per-shape density or QQ)
+       M3        2
+       M4        3          contrast the three injection methods
+       M5        2
+       M6        1
+       M7        1
+       M8        1
+
+[ ]  Cross-link forms used correctly:
+       Vignette -> function:    [`sim_multisite()`](../reference/sim_multisite.html)
+       Vignette -> vignette:    [Choosing a preset](a2-choosing-a-preset.html)
+       (Reference page -> vignette is the roxygen \href{} form, not used here.)
+
+[ ]  Citations: only entries from references.bib (the 5 PI-confirmed
+     entries). For anything else, use the inline marker:
+       [CITATION TBD - PI to confirm: <author> <year> on <topic>]
+     and add the item to a punch list at the end of the draft.
+
+[ ]  Vignette slug used verbatim from the locked map:
+       a1-getting-started
+       a2-choosing-a-preset
+       a3-diagnostics-in-practice
+       a4-covariates-precision-dependence
+       a5-calibrating-real-data
+       a6-case-study-multisite
+       a7-case-study-meta-analysis
+       a8-cookbook
+       m1-statistical-dgp
+       m2-g-distribution-catalog
+       m3-margin-se-models
+       m4-precision-dependence-theory
+       m5-custom-g-distributions
+       m6-adapters-downstream
+       m7-reproducibility-provenance
+       m8-migration-from-siteBayes2
+     Note: A3 is "diagnostics-in-practice", NOT "diagnostic-grid"
+     (synthesis caught this fabrication in Phase 6 Step 6.4).
+
+[ ]  Prohibited phrases avoided. Top 8 worst offenders to scan for:
+       1. "Paradigm A" / "Paradigm B" (bare)              -> "site-size-driven" / "direct-precision",
+                                                              gloss on first use only
+       2. "Layer 1-4 pipeline"                            -> "the four generative layers"
+       3. "dispatches to"                                 -> "selects from" / describe behavior
+       4. "catalog Layer 1 routes"                        -> "the eight built-in G distributions"
+       5. "v1" / "v0.1 release candidate" / "Gate E"      -> drop (internal jargon)
+       6. "P0 blocker" / "validation blocker"             -> drop or describe issue
+       7. "V0-V12"                                        -> use vignette pkgdown slug
+       8. "Joon Ho" (with space)                          -> "JoonHo" everywhere
+     Plus: "joonholee" -> "joonho112" (GitHub username).
+
+[ ]  IES Form 1 paragraph appears verbatim in the footer chunk of every
+     vignette (see Section 4 below). M7 vignette acknowledgments is its
+     dedicated home in vignette space; the same paragraph appears in
+     every footer.
+
+[ ]  set.seed(1L) in the setup chunk; primary calls also pass seed = 1L
+     where the function accepts a seed argument (sim_multisite,
+     sim_meta). The deterministic hash for
+     sim_multisite(preset_jebs_paper(), seed = 1L) is
+     c52e75f276d82836 - use as a smoke check.
+
+
+-----------------------------------------------------------------------
+2. YAML FRONTMATTER  (ready to copy-paste)
+-----------------------------------------------------------------------
+
+Copy the block below. Replace the title slot (and only the title slot)
+per the slug map. Vignette IndexEntry uses bare title (no middle dot,
+no em-dash) so CRAN's regex check is happy.
+
+---
+title: "A1 · Getting started — your first multisite simulation"
+author: "JoonHo Lee"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+abstract: >
+  One-paragraph orientation: who this vignette is for, what
+  workflow it walks through, what artifact you leave with.
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    fig_caption: true
+    df_print: tibble
+vignette: >
+  %\VignetteIndexEntry{A1 Getting started}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+csl: apa.csl
+---
+
+ABSTRACT GUIDANCE
+- One paragraph (3-5 sentences). Orients the reader, no padding.
+- Audience first: "Researchers designing or evaluating a multisite
+  trial..." or "Methodologists who need to..."
+- Workflow second: name the 2-4 functions/steps they will run.
+- Artifact third: the deliverable they leave with (a design object, a
+  diagnostics readout, a calibrated configuration, a plot).
+- Do not restate the title. Do not preview section headings.
+- Do NOT use "this vignette will..." or "in this vignette we..." -
+  these are heading-restating openers (style guide §3 anti-pattern 2).
+
+TITLE PATTERN  (per slug map; verbatim title strings)
+  A1   "A1 · Getting started — your first multisite simulation"
+  A2   "A2 · Choosing a preset"
+  A3   "A3 · Diagnostics in practice"
+  A4   "A4 · Covariates and precision dependence"
+  A5   "A5 · Calibrating to real data"
+  A6   "A6 · Case study — multisite trial"
+  A7   "A7 · Case study — meta-analysis"
+  A8   "A8 · Cookbook"
+  M1   "M1 · The two-stage DGP — formal specification"
+  M2   "M2 · G-distribution catalog and standardization"
+  M3   "M3 · Margin and SE models — site-size and direct-precision paths"
+  M4   "M4 · Precision dependence — three injection methods"
+  M5   "M5 · Custom G distributions"
+  M6   "M6 · Adapters and downstream packages"
+  M7   "M7 · Reproducibility and provenance"
+  M8   "M8 · Migration from siteBayes2"
+
+VIGNETTEINDEXENTRY PATTERN  (no middle dot, no em-dash)
+  %\VignetteIndexEntry{A1 Getting started}
+  %\VignetteIndexEntry{A2 Choosing a preset}
+  %\VignetteIndexEntry{A3 Diagnostics in practice}
+  %\VignetteIndexEntry{A4 Covariates and precision dependence}
+  %\VignetteIndexEntry{A5 Calibrating to real data}
+  %\VignetteIndexEntry{A6 Case study multisite trial}
+  %\VignetteIndexEntry{A7 Case study meta-analysis}
+  %\VignetteIndexEntry{A8 Cookbook}
+  %\VignetteIndexEntry{M1 The two-stage DGP}
+  %\VignetteIndexEntry{M2 G-distribution catalog and standardization}
+  %\VignetteIndexEntry{M3 Margin and SE models}
+  %\VignetteIndexEntry{M4 Precision dependence}
+  %\VignetteIndexEntry{M5 Custom G distributions}
+  %\VignetteIndexEntry{M6 Adapters and downstream packages}
+  %\VignetteIndexEntry{M7 Reproducibility and provenance}
+  %\VignetteIndexEntry{M8 Migration from siteBayes2}
+
+
+-----------------------------------------------------------------------
+3. SETUP CHUNK  (ready to copy-paste)
+-----------------------------------------------------------------------
+
+This is the FIRST chunk of every vignette. include = FALSE on this
+chunk is correct (no output is interesting). On every subsequent
+primary-call chunk, include = FALSE is forbidden.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  results    = "markup",   # never "hide" for primary calls
+  comment    = "#>",
+  collapse   = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.width  = 7,
+  fig.height = 4.5,
+  fig.retina = 2,
+  dpi        = 144,
+  fig.align  = "center",
+  out.width  = "100%"
+)
+set.seed(1L)
+library(multisiteDGP)
+library(ggplot2)
+```
+
+NOTES ON OPTIONS
+- echo = TRUE          ensures the reader sees the call.
+- results = "markup"   ensures the reader sees the result. Suppressing
+                       this is the single most-flagged failure mode in
+                       the audit (rows M-5, M-7, M-8, M-9).
+- comment = "#>"       prefixes printed output (DPprior convention).
+- collapse = TRUE      collapses code+output into a single block.
+- fig.retina = 2       crisp plots on hidpi displays.
+- out.width = "100%"   plots fill the article column.
+- set.seed(1L)         determinism. The hash for
+                       sim_multisite(preset_jebs_paper(), seed = 1L)
+                       is c52e75f276d82836 - use as a smoke check.
+- library(multisiteDGP), library(ggplot2): load both up front. If a
+  vignette needs a soft dep (metafor, baggr, multisitepower), load it
+  inside a \dontrun-style guarded chunk - do NOT add it to the setup.
+
+HELPER VS PRIMARY CHUNKS
+- Helper-only chunks (e.g., constructing a fake calibration target,
+  building an annotation tibble for ggplot) MAY use include = FALSE.
+- Primary calls (any user-facing function from NAMESPACE: sim_multisite,
+  sim_meta, presets, scenario_audit, compute_I, compute_kappa,
+  compute_shrinkage, informativeness, mean_shrinkage,
+  feasibility_index, heterogeneity_ratio, realized_rank_corr,
+  realized_rank_corr_marginal, bhattacharyya_coef, ks_distance,
+  default_thresholds, plot_effects, plot_funnel, plot_dependence,
+  as_metafor, as_baggr, as_multisitepower, canonical_hash,
+  provenance_string, design_grid, multisitedgp_design,
+  validate_multisitedgp_design, gen_*) MUST show output.
+
+
+-----------------------------------------------------------------------
+4. FOOTER CHUNK  (ready to copy-paste)
+-----------------------------------------------------------------------
+
+Append verbatim to the END of every vignette, after the "Where to next"
+or equivalent closing prose section. Two markdown headings + IES
+paragraph + sessionInfo chunk.
+
+The IES paragraph is Form 1 (verbatim from style guide §6.2 / handoff
+§5.3). It must NOT be paraphrased. Phase 10 Step 10.4 greps for
+R305D240078 across the package; drift is caught there.
+
+----- BEGIN FOOTER -----
+
+## Acknowledgments
+
+This research was supported by the Institute of Education Sciences,
+U.S. Department of Education, through Grant R305D240078 to the
+University of Alabama. The opinions expressed are those of the authors
+and do not represent views of the Institute or the U.S. Department of
+Education.
+
+## Session info
+
+```{r session-info, echo = FALSE}
+sessionInfo()
+```
+
+----- END FOOTER -----
+
+NOTES
+- The IES paragraph wraps near 76 columns for source readability;
+  rmarkdown collapses whitespace when rendering. Do not insert hard
+  line breaks at narrower widths.
+- echo = FALSE on the sessionInfo chunk: the reader cares about the
+  output, not the call.
+- The H2-level headings are intentional - rmarkdown::html_vignette TOC
+  picks them up as terminal entries.
+- M7 (Reproducibility and provenance) is the dedicated home in
+  vignette space for the Form 1 paragraph - but the paragraph still
+  appears in this footer for every vignette. The M7 body discusses why
+  and how; the footer is uniform.
+
+
+-----------------------------------------------------------------------
+5. FAILURE-MODE GUARD LIST
+-----------------------------------------------------------------------
+
+Eight failure modes documented in prior phases (handoff §8). For each:
+description, then mitigation.
+
+5.1  Citation hallucination
+     Walters JEP fabrication (Round 1), 3-of-3 sim_meta JEBS
+     hallucinations (Phase 5 Step 5.3), Weiss 2014 mis-attribution
+     (Round 1).
+     -> Only cite from references.bib. For anything else, mark
+        [CITATION TBD - PI to confirm: ...] in the prose. Do not retype
+        an entry from memory; copy it verbatim.
+
+5.2  Function-name fabrication
+     Real export is gen_effects_pmslab, not gen_effects_pointmassslab
+     (Step 5.4). presets$balanced_small does not exist (Step 5.2).
+     -> Every function call in a vignette must use a name listed in
+        NAMESPACE. The 53 exports + 28 S3 methods are the source of
+        truth. Run `grep '^export' multisiteDGP-R-package/NAMESPACE`
+        to confirm any name before using it.
+
+5.3  Vignette slug invention
+     D1 in Step 6.4 wrote vignette("a3-diagnostic-grid") - real slug
+     is a3-diagnostics-in-practice. Synthesis caught.
+     -> Use the 16-slug map in §1 of this template verbatim. Do not
+        compose plausible-sounding alternatives.
+
+5.4  Prohibited-phrase drift
+     "Paradigm A" bare, "Layer 1-4 pipeline", "dispatches to",
+     "catalog Layer 1 routes", "v1", "Gate E", etc.
+     -> Scan with the script in handoff §9.3. First use of "Paradigm A"
+        must be glossed: "the *site-size-driven* path (Paradigm A in
+        the blueprint)".
+
+5.5  Assign-and-hide chunks
+     Audit row M-9 (cookbook.Rmd) and rows M-5/M-7/M-8 (v2/v5/v6) all
+     fail by suppressing output for primary calls. The reader cannot
+     see what the function returns.
+     -> include = FALSE only on helper chunks. Every primary call
+        renders its tibble or scalar in the next visible block.
+
+5.6  Decorative-only plots
+     A plot whose caption explains what the plot IS (e.g., "Histogram
+     of per-site sampling variances") rather than what to read off it.
+     -> Caption template: "<observation> <axis or region of plot>,
+        confirming/contradicting <design target or hypothesis>."
+        Example: "Tail mass concentrates above se^2 = 0.5, confirming
+        the R = 4 heterogeneity target."
+
+5.7  Forgetting to set seed = 1L
+     Determinism breaks; the published vignette and the reader's local
+     re-run diverge.
+     -> set.seed(1L) in setup chunk AND seed = 1L on every call that
+        accepts a seed argument (sim_multisite, sim_meta, gen_effects,
+        gen_observations, etc.). The hash
+        sim_multisite(preset_jebs_paper(), seed = 1L) ->
+        c52e75f276d82836 is a determinism smoke check.
+
+5.8  Stale post-adapter column names
+     F-3 in Phase 6 caught examples that, after as_metafor(dat),
+     referenced dat$tau_j_hat instead of yi/vi/sei. The example would
+     not run.
+     -> After as_metafor() use yi / vi / sei. After as_baggr() and
+        as_multisitepower() check the actual rename function in
+        R/adapters.R lines 130-165 before referencing columns.
+
+
+-----------------------------------------------------------------------
+6. OPERATIONAL TIPS
+-----------------------------------------------------------------------
+
+6.1  Rendering a vignette
+
+  cd "/Users/joonholee/Documents/IES Multisite Trial Project/multisiteDGP-R-package"
+  Rscript -e 'rmarkdown::render("vignettes/a1-getting-started.Rmd")'
+
+  Output: vignettes/a1-getting-started.html. Open in browser; check
+  that every primary chunk shows output, every plot has a meaningful
+  caption, and the footer renders the IES paragraph + sessionInfo.
+
+  DO NOT run pkgdown::build_site() during Phase 7. _pkgdown.yml lists
+  all 16 aN/mN slugs; the site build fails until M-track vignettes
+  also exist (Phase 8). Render individual vignettes only.
+
+
+6.2  Verifying chunk output before knit
+
+  cd "/Users/joonholee/Documents/IES Multisite Trial Project/multisiteDGP-R-package"
+  Rscript -e '
+    pkgload::load_all(".", quiet = TRUE)
+    set.seed(1L)
+    dat <- sim_multisite(preset_education_modest(), seed = 1L)
+    print(dat)
+    cat("hash:", canonical_hash(dat), "\n")
+  '
+
+  Use this pattern for any code chunk you are unsure of. The actual
+  printed output is what gets pasted into the vignette; never
+  hand-write expected output (memory file
+  feedback_quickstart_must_match_actual_output.md).
+
+
+6.3  Cross-linking forms (canonical, frozen)
+
+  Vignette -> reference page (a function):
+    [`sim_multisite()`](../reference/sim_multisite.html)
+    [`compute_I()`](../reference/compute_I.html)
+
+  Vignette -> sibling vignette:
+    [Choosing a preset](a2-choosing-a-preset.html)
+    [Diagnostics in practice](a3-diagnostics-in-practice.html)
+
+  Reference page -> vignette  (NOT used in vignette source - this is
+  the roxygen-only \href{} form, listed only for completeness):
+    \href{../articles/a1-getting-started.html}{A1 \enc{·}{.} Getting started}
+
+  Notes on linking:
+  - The sibling-vignette form does NOT prefix `../articles/` - in
+    vignette source, sibling articles resolve relative to the current
+    vignette.
+  - The reference-page form DOES prefix `../reference/` because
+    pkgdown stages vignettes in `articles/` and reference pages in
+    `reference/`.
+  - For external papers, use markdown link form with the DOI URL:
+    [Lee et al. (2025)](https://doi.org/10.3102/10769986241254286)
+    (Bibliographic citation handled separately via @key in the prose
+    plus references.bib.)
+
+
+6.4  Length budget per vignette  (per master plan Ch.10 / Ch.11)
+
+  A1   250-500 lines
+  A2   300-550 lines
+  A3   350-600 lines
+  A4   300-500 lines
+  A5   300-500 lines
+  A6   400-700 lines
+  A7   400-700 lines
+  A8   500-850 lines  (each recipe walkthrough ~100-150 lines)
+  M1   400-700 lines  (plan §8.1 says 600-1000)
+  M2   500-850 lines
+  M3   350-600 lines
+  M4   400-650 lines
+  M5   300-500 lines
+  M6   250-450 lines
+  M7   300-500 lines
+  M8   250-450 lines
+
+  These are line counts in the .Rmd source (including code chunks and
+  blank lines). DPprior Applied Track vignettes range 250-850 lines;
+  use that as the upper sanity check. If a vignette overshoots
+  dramatically, tighten with the concision rule (style guide §3).
+
+
+6.5  Determinism smoke check (run before declaring a vignette done)
+
+  cd "/Users/joonholee/Documents/IES Multisite Trial Project/multisiteDGP-R-package"
+  Rscript -e '
+    pkgload::load_all(".", quiet = TRUE)
+    dat <- sim_multisite(preset_jebs_paper(), seed = 1L)
+    h <- canonical_hash(dat)
+    stopifnot(h == "c52e75f276d82836")
+    cat("hash OK\n")
+  '
+
+  If the hash does not match, the package state has drifted from the
+  Phase 6 closeout state - flag to PI before continuing. The hash is
+  also documented in memory file
+  feedback_quickstart_must_match_actual_output.md.
+
+
+6.6  Prohibited-phrase scan (run after drafting)
+
+  cd "/Users/joonholee/Documents/IES Multisite Trial Project/multisiteDGP-R-package"
+  for term in "Paradigm A" "Paradigm B" "Layer 1-4 pipeline" "Gate E" \
+              "P0 blocker" "validation blocker" "v0.1 release candidate" \
+              "evidence aggregation" "policy extrapolation" \
+              "Journal of Economic Perspectives" "defendable" \
+              "Joon Ho" "joonholee" "dispatches to"; do
+    grep -ln "$term" vignettes/aN-slug.Rmd 2>/dev/null && echo "  HIT: $term"
+  done
+
+  Replace `aN-slug.Rmd` with the file you just wrote. Zero hits = pass.
+
+
+-----------------------------------------------------------------------
+7. OPEN QUESTIONS / ANNOTATIONS  (synthesis residue from Step 7.1)
+-----------------------------------------------------------------------
+
+Notes for the synthesis pass and downstream Steps. NOT template
+content.
+
+7.1  comment = "#>" and collapse = TRUE in setup
+     Plan §Step 7.1's verbatim setup chunk omits both; style guide §4
+     ("Default setup chunk") includes both. This template includes
+     both, on the reasoning that the style guide is the operational
+     authority for vignette chunk options and that the inclusion is
+     additive rather than contradictory. DPprior quick-start.Rmd uses
+     the same pair. Confirmed by both drafters in Step 7.1.
+
+7.2  df_print: tibble
+     Plan §Step 7.1 specifies df_print: tibble. rmarkdown::html_vignette
+     honors df_print: default | kable | tibble | paged. tibble invokes
+     tibble::print.tbl_df(). multisitedgp_data has a custom print()
+     method (R/class-multisitedgp_data.R), but tibble subclassing means
+     df_print: tibble produces consistent narrow-display behavior.
+     No action - flagged for PI awareness if any vignette's primary
+     output looks unexpectedly truncated.
+
+7.3  apa.csl produced separately
+     The apa.csl file at vignettes/apa.csl is fetched verbatim from the
+     official Citation Style Language repository
+     (https://github.com/citation-style-language/styles, file: apa.csl,
+     "APA Style 7th edition" by Brenton M. Wiernik et al., CC-BY-SA 3.0).
+     It is not produced by drafting agents. To refresh:
+       curl -sSL https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl \
+            -o vignettes/apa.csl
+
+7.4  Title bullet middle-dot in VignetteIndexEntry
+     The IndexEntry strips the bullet (·) and em-dash (—). The visible
+     title in the vignette body keeps both. CRAN's vignette-index
+     scanner tokenizes on these characters; bare ASCII for the
+     IndexEntry avoids the regex hit.
+
+7.5  Author byline
+     Plan §Step 7.1 and style guide §7 both specify bare "JoonHo Lee".
+     No role suffix, no grant ID, no ORCID in the byline. ORCID lives
+     in DESCRIPTION Authors@R, not the vignette frontmatter.
+
+7.6  M-track length budgets are estimates
+     The M-track ranges in §6.4 are conservative estimates derived from
+     the per-vignette plan content. If a Step 8.x agent finds the
+     content naturally exceeds these, reasonable overshoot is allowed
+     - flag in the Step log for PI confirmation.
+
+7.7  pkgdown::build_site() is intentionally deferred
+     Until both Phase 7 and Phase 8 vignettes exist, the site build
+     will fail because _pkgdown.yml lists all 16 aN/mN slugs in
+     articles: contents:. Render individual vignettes only via
+     rmarkdown::render() during Phase 7-8.
+
+
+=======================================================================
+END OF TEMPLATE
+=======================================================================

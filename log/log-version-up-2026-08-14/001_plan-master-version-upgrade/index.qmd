@@ -1,0 +1,106 @@
+---
+title: "Preface"
+---
+
+## 이 책은 무엇인가
+
+이 책은 `multisiteDGP` R package 를 **v0.1.1 → v0.2.0** 으로 끌어올리는 **master plan** 이다. 작업 전체를 11 개의 선형 **Phase** 와 각 Phase 안의 **Step** (하나당 AI agent 가 한 세션에 소화할 수 있는 ≤ ~20 분 분량) 으로 분해하고, 각 Step 의 목표 · 산출물 · 소요 시간 · 의존 관계를 명시한다. 실행 규약, 로그 규약, 인수 기준도 함께 잠근다.
+
+작성일은 **2026-08-14**, 작성 주체는 `Claude Opus 5` planning agent 이며, 근거는 다음 다섯 가지다.
+
+- package source 전수 (`R/` 35 파일 10,287 줄, `tests/` 71 파일 7,836 줄, `vignettes/` 16 편, `DESCRIPTION`, `NAMESPACE`, `NEWS.md`)
+- **실측 진단** — 로컬 테스트 스위트 2 회 실행 (기본 / slow+property 게이트 on), `R CMD check --as-cran` 1 회 실행
+- **원격 CI 포렌식** — `joonho112/multisiteDGP` GitHub Actions 실행 이력 15 건, extended-tests 실패 로그 전문
+- 기존 설계 문서 — `blueprint-multisiteDGP-book/` 25 장, `multisiteDGP-build-implementation-book/` (127 로그), `documentation-updates/` (99 로그)
+- 미해결 항목 원장 — `documentation-updates/working/06-final-punch-list.md`, blueprint ch.24 roadmap, ch.25 open questions
+
+## 왜 지금 이 작업인가
+
+PI 의 문제 인식은 "IES annual report 마감에 쫓겨 급하게 만든 package 라 문제가 많다" 였다. 진단 결과 그 인식은 **절반만** 맞다.
+
+**나쁜 소식이 아니었던 부분.** package 의 *코드* 와 *문서 표면* 은 생각보다 견고하다. 2026-05 의 10-Phase 문서 오버홀이 roxygen 53 exports · vignette 16 편 · pkgdown 사이트를 이미 public-release 수준으로 올려놓았고, slow / property 게이트를 켜고 돌린 전체 테스트 스위트는 로컬에서 **T1a 하나만 skip 되고 전부 통과**한다. `R CMD check --as-cran` 도 로컬에서 0 error / 0 warning 이다.
+
+**진짜 나쁜 소식.** 문제는 코드가 아니라 **package 를 둘러싼 공학 기반(engineering substrate)** 이 무너져 있다는 것이다.
+
+1. **로컬 작업본이 git repository 가 아니다.** `.git` 이 없다. 원격 `joonho112/multisiteDGP` 는 PUBLIC 으로 살아 있고 마지막 push 는 2026-05-10 이다. 즉 지금 PI 의 디스크에 있는 것과 세상에 공개된 것 사이에 **3 개월의 미확인 격차** 가 있고, 어느 쪽이 최신인지 확인할 수단이 없다.
+2. **CI 가 3 개월째 전부 red 다.** 마지막 push 시점의 `R-CMD-check`, `lint`, `test-coverage` 가 모두 실패했고, 주간 스케줄로 도는 `extended-tests` 는 2026-05-11 부터 2026-07-13 까지 **10 주 연속 실패**했다. 성공한 workflow 는 `pkgdown-deploy` 하나뿐이다. 그래서 공개 사이트만 멀쩡해 보인다.
+3. **로컬 green 이 green 이 아니다.** 기본 `devtools::test()` 는 **30 개 테스트를 skip** 한다. 표준화 계약(T13–T17), property invariant(P01–P12), 분포 검정(T1b, T4, T9) 이 전부 환경 변수 뒤에 숨어 있다. 개발자가 평소에 보는 "💅 Your tests are beautiful 💅" 는 통계적 정확성을 거의 검증하지 않은 상태의 green 이다.
+4. **재현성 계약이 문서와 아티팩트 사이에서 모순된다.** `tools/cross-os-reproducibility-policy.md` 는 Linux x86_64 를 authoritative baseline 으로 규정하는데, 실제 체크인된 golden fixture 9 개와 print-example snapshot 은 macOS/aarch64 에서 생성됐다. 이 모순이 extended-tests 10 주 연속 실패의 **직접 원인**이다.
+5. **광고와 구현이 어긋난다.** `DESCRIPTION` 은 "eight distribution shapes ... and a Dirichlet-process-mixture bridge" 를 광고하지만 `true_dist = "DPM"` 은 호출 즉시 hard abort 하는 stub 이다. `target_marginal_rho` 인자도 존재하지만 E23 으로 abort 한다.
+
+이 다섯 가지는 전부 "코드를 더 쓰면 해결되는" 문제가 아니라 **계약 · 기반 · 정직성** 의 문제다. v0.2.0 을 *신뢰성 릴리스(reliability release)* 로 규정하는 이유가 여기 있다.
+
+## 이 책이 아닌 것
+
+- **산출물 자체가 아니다.** 이 책은 v0.2.0 을 만드는 playbook 이지, v0.2.0 의 코드 · 문서 · fixture 가 아니다.
+- **기능 추가 로드맵이 아니다.** blueprint ch.24 의 v1.x / v2.0 feature roadmap (`as_lme4()`, `as_brms()`, Student-t copula, vector-valued effects 등) 은 이 계획의 범위 밖이다. v0.2.0 은 **기존 표면을 믿을 수 있게 만드는** 릴리스다. 예외는 이미 광고된 표면의 갭(DPM, marginal target)뿐이며, 그것도 "구현" 과 "정직하게 축소" 중 어느 쪽을 택할지는 Phase 3 에서 PI 가 결정한다.
+- **문서 오버홀이 아니다.** 2026-05 오버홀로 만들어진 문서 표면은 그대로 둔다. Phase 9 는 v0.2.0 에서 실제로 바뀐 동작만 문서에 반영하는 **델타 동기화**다.
+
+## 누가 어느 장을 읽는가
+
+| 독자 | 정독 | 훑기 |
+|---|---|---|
+| **PI (이 계획 검토)** | Preface · [Ch.1 현재 상태 감사](01-current-state-audit.qmd) · [Ch.2 목표와 범위](02-goals-and-scope.qmd) · Phase 장 (Ch.5–15) · [Ch.16 인수 기준](16-acceptance-criteria.qmd) | 실행 규약 · 부록 |
+| **Phase 를 실행하는 agent** | 해당 Phase 장 · [Ch.3 실행 규약](03-operating-model.qmd) · [Ch.4 로그 규약](04-log-protocol.qmd) · [부록 A 결함 원장](appendix-a-defect-ledger.qmd) | 다른 Phase |
+| **외부 리뷰어 (Phase 10)** | 리뷰 패킷 · Ch.2 · 리뷰 대상 아티팩트 | 계획 내부 |
+| **6 개월 후의 PI** | [Ch.1](01-current-state-audit.qmd) · [부록 B 증거](appendix-b-evidence.qmd) · 각 Phase 종료 로그 | 나머지 |
+
+## Phase / Step 구조 요약
+
+**11 Phase, 67 Step.** Phase 3 와 Phase 10 은 PI / 외부 리뷰 게이트이며, 통과 없이 다음 Phase 로 진행하지 않는다.
+
+| Phase | 제목 | Step | 개수 | 누적 시간 | 게이트 |
+|------:|---|---|---:|---|:---:|
+| 1 | 작업 기반 복구 | 1.1 – 1.5 | 5 | ~85 분 | |
+| 2 | 결함 인벤토리 감사 | 2.1 – 2.9 | 9 | ~175 분 | |
+| 3 | v0.2.0 범위 결정 | 3.1 – 3.5 | 5 | ~90 분 | **PI** |
+| 4 | 재현성 계약 재구축 | 4.1 – 4.7 | 7 | ~135 분 | |
+| 5 | 테스트 스위트 재구축 | 5.1 – 5.8 | 8 | ~150 분 | |
+| 6 | CI 복구 | 6.1 – 6.6 | 6 | ~110 분 | |
+| 7 | 기능 결함 수정 | 7.1 – 7.7 | 7 | ~135 분 | |
+| 8 | 통계 검증 재실행 | 8.1 – 8.5 | 5 | ~100 분 | |
+| 9 | 문서 델타 동기화 | 9.1 – 9.5 | 5 | ~90 분 | |
+| 10 | 외부 리뷰 게이트 | 10.1 – 10.5 | 5 | ~95 분 | **외부** |
+| 11 | v0.2.0 릴리스 | 11.1 – 11.5 | 5 | ~85 분 | |
+| | **합계** | | **67** | **~21 시간** | |
+
+누적 시간은 agent 실행 시간만 계산한 것이며, PI 검토 대기 · CI 실행 대기 · 외부 리뷰 왕복은 포함하지 않는다. 실제 달력 시간은 CI 매트릭스 왕복(Phase 4 · 6 · 11)과 외부 리뷰 왕복(Phase 10)이 지배한다.
+
+## Phase 의존 그래프
+
+```
+Phase 1 (기반 복구)
+   │
+   ▼
+Phase 2 (결함 감사) ──────────┐
+   │                          │
+   ▼                          │
+Phase 3 (범위 결정 · PI 게이트)│
+   │                          │
+   ├──────────┬───────────┐   │
+   ▼          ▼           ▼   │
+Phase 4    Phase 5    Phase 7 │   ← 4/5/7 은 원장(부록 A)을 공유하되
+(재현성)   (테스트)   (결함수정)│      서로 독립 진행 가능
+   │          │           │   │
+   └────┬─────┴───────────┘   │
+        ▼                     │
+    Phase 6 (CI 복구) ◄───────┘
+        │
+        ▼
+    Phase 8 (통계 재검증)
+        │
+        ▼
+    Phase 9 (문서 델타)
+        │
+        ▼
+    Phase 10 (외부 리뷰 · 게이트)
+        │
+        ▼
+    Phase 11 (릴리스)
+```
+
+Phase 4 · 5 · 7 은 병렬 가능하지만, **Phase 6 (CI 복구) 은 세 Phase 가 모두 끝난 뒤** 여야 한다. CI 를 green 으로 만드는 것이 목표인데 아직 고치는 중인 코드를 대상으로 하면 노이즈만 생긴다.
+
+## 이 계획을 승인한 뒤
+
+PI 가 이 책을 검토하고 승인하면 **Step 1.1** 부터 실행한다. Phase 3 (Step 3.5) 에서 한 번 더 PI 승인이 필요하다 — 재현성 계약 재설계안과 광고-구현 갭 처리 방침은 되돌리기 비싼 결정이므로 agent 가 단독으로 정하지 않는다.

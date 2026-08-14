@@ -1,0 +1,9 @@
+"run_id","experiment_id","mode","cell_id","J","target_rho","cell_type","rows","completed","failed","pass_rate","required_pass_rate","mean_abs_error","max_abs_error","converged_rate","warning_rate","gate_pass"
+"step9-4-v09-subset","V09","subset","J100_rho-0.7",100,-0.7,"core",3,3,0,1,0.95,2.4506206761199e-05,4.92047470971313e-05,1,0,TRUE
+"step9-4-v09-subset","V09","subset","J100_rho-0.95",100,-0.95,"boundary_largeJ",3,3,0,1,0.9,2.79011043687142e-05,5.10043798257476e-05,1,0,TRUE
+"step9-4-v09-subset","V09","subset","J100_rho0",100,0,"core",3,3,0,0,0.95,0.0693763105401314,0.0895472242200282,0,0,FALSE
+"step9-4-v09-subset","V09","subset","J100_rho0.7",100,0.7,"core",3,3,0,1,0.95,8.9617631063077e-05,0.000131125256508047,1,0,TRUE
+"step9-4-v09-subset","V09","subset","J100_rho0.95",100,0.95,"boundary_largeJ",3,3,0,1,0.9,6.04560042047897e-05,6.99075906188673e-05,1,0,TRUE
+"step9-4-v09-subset","V09","subset","J50_rho-0.7",50,-0.7,"core",3,3,0,1,0.95,0.000311426896963692,0.000446677351272906,1,0,TRUE
+"step9-4-v09-subset","V09","subset","J50_rho0",50,0,"core",3,3,0,0,0.95,0.149534260915614,0.206921403027198,0,0,FALSE
+"step9-4-v09-subset","V09","subset","J50_rho0.7",50,0.7,"core",3,3,0,1,0.95,0.000345825121078317,0.000477881327355822,1,0,TRUE

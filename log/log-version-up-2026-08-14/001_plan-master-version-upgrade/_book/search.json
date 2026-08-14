@@ -1,0 +1,2029 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "multisiteDGP Version Upgrade — Master Plan",
+    "section": "",
+    "text": "0.1 이 책은 무엇인가\n이 책은 multisiteDGP R package 를 v0.1.1 → v0.2.0 으로 끌어올리는 master plan 이다. 작업 전체를 11 개의 선형 Phase 와 각 Phase 안의 Step (하나당 AI agent 가 한 세션에 소화할 수 있는 ≤ ~20 분 분량) 으로 분해하고, 각 Step 의 목표 · 산출물 · 소요 시간 · 의존 관계를 명시한다. 실행 규약, 로그 규약, 인수 기준도 함께 잠근다.\n작성일은 2026-08-14, 작성 주체는 Claude Opus 5 planning agent 이며, 근거는 다음 다섯 가지다.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#이-책은-무엇인가",
+    "href": "index.html#이-책은-무엇인가",
+    "title": "multisiteDGP Version Upgrade — Master Plan",
+    "section": "",
+    "text": "package source 전수 (R/ 35 파일 10,287 줄, tests/ 71 파일 7,836 줄, vignettes/ 16 편, DESCRIPTION, NAMESPACE, NEWS.md)\n실측 진단 — 로컬 테스트 스위트 2 회 실행 (기본 / slow+property 게이트 on), R CMD check --as-cran 1 회 실행\n원격 CI 포렌식 — joonho112/multisiteDGP GitHub Actions 실행 이력 15 건, extended-tests 실패 로그 전문\n기존 설계 문서 — blueprint-multisiteDGP-book/ 25 장, multisiteDGP-build-implementation-book/ (127 로그), documentation-updates/ (99 로그)\n미해결 항목 원장 — documentation-updates/working/06-final-punch-list.md, blueprint ch.24 roadmap, ch.25 open questions",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#왜-지금-이-작업인가",
+    "href": "index.html#왜-지금-이-작업인가",
+    "title": "multisiteDGP Version Upgrade — Master Plan",
+    "section": "0.2 왜 지금 이 작업인가",
+    "text": "0.2 왜 지금 이 작업인가\nPI 의 문제 인식은 “IES annual report 마감에 쫓겨 급하게 만든 package 라 문제가 많다” 였다. 진단 결과 그 인식은 절반만 맞다.\n나쁜 소식이 아니었던 부분. package 의 코드 와 문서 표면 은 생각보다 견고하다. 2026-05 의 10-Phase 문서 오버홀이 roxygen 53 exports · vignette 16 편 · pkgdown 사이트를 이미 public-release 수준으로 올려놓았고, slow / property 게이트를 켜고 돌린 전체 테스트 스위트는 로컬에서 T1a 하나만 skip 되고 전부 통과한다. R CMD check --as-cran 도 로컬에서 0 error / 0 warning 이다.\n진짜 나쁜 소식. 문제는 코드가 아니라 package 를 둘러싼 공학 기반(engineering substrate) 이 무너져 있다는 것이다.\n\n로컬 작업본이 git repository 가 아니다. .git 이 없다. 원격 joonho112/multisiteDGP 는 PUBLIC 으로 살아 있고 마지막 push 는 2026-05-10 이다. 즉 지금 PI 의 디스크에 있는 것과 세상에 공개된 것 사이에 3 개월의 미확인 격차 가 있고, 어느 쪽이 최신인지 확인할 수단이 없다.\nCI 가 3 개월째 전부 red 다. 마지막 push 시점의 R-CMD-check, lint, test-coverage 가 모두 실패했고, 주간 스케줄로 도는 extended-tests 는 2026-05-11 부터 2026-07-13 까지 10 주 연속 실패했다. 성공한 workflow 는 pkgdown-deploy 하나뿐이다. 그래서 공개 사이트만 멀쩡해 보인다.\n로컬 green 이 green 이 아니다. 기본 devtools::test() 는 30 개 테스트를 skip 한다. 표준화 계약(T13–T17), property invariant(P01–P12), 분포 검정(T1b, T4, T9) 이 전부 환경 변수 뒤에 숨어 있다. 개발자가 평소에 보는 “💅 Your tests are beautiful 💅” 는 통계적 정확성을 거의 검증하지 않은 상태의 green 이다.\n재현성 계약이 문서와 아티팩트 사이에서 모순된다. tools/cross-os-reproducibility-policy.md 는 Linux x86_64 를 authoritative baseline 으로 규정하는데, 실제 체크인된 golden fixture 9 개와 print-example snapshot 은 macOS/aarch64 에서 생성됐다. 이 모순이 extended-tests 10 주 연속 실패의 직접 원인이다.\n광고와 구현이 어긋난다. DESCRIPTION 은 “eight distribution shapes … and a Dirichlet-process-mixture bridge” 를 광고하지만 true_dist = \"DPM\" 은 호출 즉시 hard abort 하는 stub 이다. target_marginal_rho 인자도 존재하지만 E23 으로 abort 한다.\n\n이 다섯 가지는 전부 “코드를 더 쓰면 해결되는” 문제가 아니라 계약 · 기반 · 정직성 의 문제다. v0.2.0 을 신뢰성 릴리스(reliability release) 로 규정하는 이유가 여기 있다.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#이-책이-아닌-것",
+    "href": "index.html#이-책이-아닌-것",
+    "title": "multisiteDGP Version Upgrade — Master Plan",
+    "section": "0.3 이 책이 아닌 것",
+    "text": "0.3 이 책이 아닌 것\n\n산출물 자체가 아니다. 이 책은 v0.2.0 을 만드는 playbook 이지, v0.2.0 의 코드 · 문서 · fixture 가 아니다.\n기능 추가 로드맵이 아니다. blueprint ch.24 의 v1.x / v2.0 feature roadmap (as_lme4(), as_brms(), Student-t copula, vector-valued effects 등) 은 이 계획의 범위 밖이다. v0.2.0 은 기존 표면을 믿을 수 있게 만드는 릴리스다. 예외는 이미 광고된 표면의 갭(DPM, marginal target)뿐이며, 그것도 “구현” 과 “정직하게 축소” 중 어느 쪽을 택할지는 Phase 3 에서 PI 가 결정한다.\n문서 오버홀이 아니다. 2026-05 오버홀로 만들어진 문서 표면은 그대로 둔다. Phase 9 는 v0.2.0 에서 실제로 바뀐 동작만 문서에 반영하는 델타 동기화다.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#누가-어느-장을-읽는가",
+    "href": "index.html#누가-어느-장을-읽는가",
+    "title": "multisiteDGP Version Upgrade — Master Plan",
+    "section": "0.4 누가 어느 장을 읽는가",
+    "text": "0.4 누가 어느 장을 읽는가\n\n\n\n독자\n정독\n훑기\n\n\n\n\nPI (이 계획 검토)\nPreface · Ch.1 현재 상태 감사 · Ch.2 목표와 범위 · Phase 장 (Ch.5–15) · Ch.16 인수 기준\n실행 규약 · 부록\n\n\nPhase 를 실행하는 agent\n해당 Phase 장 · Ch.3 실행 규약 · Ch.4 로그 규약 · 부록 A 결함 원장\n다른 Phase\n\n\n외부 리뷰어 (Phase 10)\n리뷰 패킷 · Ch.2 · 리뷰 대상 아티팩트\n계획 내부\n\n\n6 개월 후의 PI\nCh.1 · 부록 B 증거 · 각 Phase 종료 로그\n나머지",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#phase-step-구조-요약",
+    "href": "index.html#phase-step-구조-요약",
+    "title": "multisiteDGP Version Upgrade — Master Plan",
+    "section": "0.5 Phase / Step 구조 요약",
+    "text": "0.5 Phase / Step 구조 요약\n11 Phase, 67 Step. Phase 3 와 Phase 10 은 PI / 외부 리뷰 게이트이며, 통과 없이 다음 Phase 로 진행하지 않는다.\n\n\n\nPhase\n제목\nStep\n개수\n누적 시간\n게이트\n\n\n\n\n1\n작업 기반 복구\n1.1 – 1.5\n5\n~85 분\n\n\n\n2\n결함 인벤토리 감사\n2.1 – 2.9\n9\n~175 분\n\n\n\n3\nv0.2.0 범위 결정\n3.1 – 3.5\n5\n~90 분\nPI\n\n\n4\n재현성 계약 재구축\n4.1 – 4.7\n7\n~135 분\n\n\n\n5\n테스트 스위트 재구축\n5.1 – 5.8\n8\n~150 분\n\n\n\n6\nCI 복구\n6.1 – 6.6\n6\n~110 분\n\n\n\n7\n기능 결함 수정\n7.1 – 7.7\n7\n~135 분\n\n\n\n8\n통계 검증 재실행\n8.1 – 8.5\n5\n~100 분\n\n\n\n9\n문서 델타 동기화\n9.1 – 9.5\n5\n~90 분\n\n\n\n10\n외부 리뷰 게이트\n10.1 – 10.5\n5\n~95 분\n외부\n\n\n11\nv0.2.0 릴리스\n11.1 – 11.5\n5\n~85 분\n\n\n\n\n합계\n\n67\n~21 시간\n\n\n\n\n누적 시간은 agent 실행 시간만 계산한 것이며, PI 검토 대기 · CI 실행 대기 · 외부 리뷰 왕복은 포함하지 않는다. 실제 달력 시간은 CI 매트릭스 왕복(Phase 4 · 6 · 11)과 외부 리뷰 왕복(Phase 10)이 지배한다.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#phase-의존-그래프",
+    "href": "index.html#phase-의존-그래프",
+    "title": "multisiteDGP Version Upgrade — Master Plan",
+    "section": "0.6 Phase 의존 그래프",
+    "text": "0.6 Phase 의존 그래프\nPhase 1 (기반 복구)\n   │\n   ▼\nPhase 2 (결함 감사) ──────────┐\n   │                          │\n   ▼                          │\nPhase 3 (범위 결정 · PI 게이트)│\n   │                          │\n   ├──────────┬───────────┐   │\n   ▼          ▼           ▼   │\nPhase 4    Phase 5    Phase 7 │   ← 4/5/7 은 원장(부록 A)을 공유하되\n(재현성)   (테스트)   (결함수정)│      서로 독립 진행 가능\n   │          │           │   │\n   └────┬─────┴───────────┘   │\n        ▼                     │\n    Phase 6 (CI 복구) ◄───────┘\n        │\n        ▼\n    Phase 8 (통계 재검증)\n        │\n        ▼\n    Phase 9 (문서 델타)\n        │\n        ▼\n    Phase 10 (외부 리뷰 · 게이트)\n        │\n        ▼\n    Phase 11 (릴리스)\nPhase 4 · 5 · 7 은 병렬 가능하지만, Phase 6 (CI 복구) 은 세 Phase 가 모두 끝난 뒤 여야 한다. CI 를 green 으로 만드는 것이 목표인데 아직 고치는 중인 코드를 대상으로 하면 노이즈만 생긴다.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#이-계획을-승인한-뒤",
+    "href": "index.html#이-계획을-승인한-뒤",
+    "title": "multisiteDGP Version Upgrade — Master Plan",
+    "section": "0.7 이 계획을 승인한 뒤",
+    "text": "0.7 이 계획을 승인한 뒤\nPI 가 이 책을 검토하고 승인하면 Step 1.1 부터 실행한다. Phase 3 (Step 3.5) 에서 한 번 더 PI 승인이 필요하다 — 재현성 계약 재설계안과 광고-구현 갭 처리 방침은 되돌리기 비싼 결정이므로 agent 가 단독으로 정하지 않는다.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Preface</span>"
+    ]
+  },
+  {
+    "objectID": "01-current-state-audit.html",
+    "href": "01-current-state-audit.html",
+    "title": "2  현재 상태 감사",
+    "section": "",
+    "text": "2.1 감사 방법\n이 장은 2026-08-14 에 실측한 package 상태다. 추측이나 기억이 아니라 실행 결과와 원격 CI 로그에서 나온 것만 적는다. 원자료는 부록 B 에 있다.\nPhase 2 는 이 장을 출발점으로 삼되 그대로 믿지 않는다. 이 감사는 planning agent 가 한 세션에 훑은 결과이므로, Phase 2 가 각 영역을 체계적으로 재감사해 부록 A 결함 원장 을 확정한다.\nR 4.6.0 (2026-04-24), aarch64-apple-darwin, Quarto 1.9.37.",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>현재 상태 감사</span>"
+    ]
+  },
+  {
+    "objectID": "01-current-state-audit.html#감사-방법",
+    "href": "01-current-state-audit.html#감사-방법",
+    "title": "2  현재 상태 감사",
+    "section": "",
+    "text": "방법\n실행 내용\n\n\n\n\n정적 읽기\nDESCRIPTION, NAMESPACE, NEWS.md, R/ 35 파일 목록, tests/ 71 파일 목록, tools/ 정책 문서, _pkgdown.yml, inst/CITATION\n\n\n로컬 테스트 실행 ①\ndevtools::load_all() + testthat::test_local() — 기본 환경\n\n\n로컬 테스트 실행 ②\n동일하되 MULTISITEDGP_RUN_SLOW=true MULTISITEDGP_RUN_PROPERTY=true\n\n\n로컬 check\ndevtools::check(vignettes = FALSE, args = c(\"--no-manual\", \"--as-cran\"))\n\n\n의존성 조사\ninstalled.packages() 대조 (Imports 13 + Suggests 18)\n\n\n원격 CI 포렌식\ngh run list 15 건 + gh run view --log-failed (extended-tests 2026-07-13)\n\n\n저장소 상태\ngit rev-parse, gh repo view",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>현재 상태 감사</span>"
+    ]
+  },
+  {
+    "objectID": "01-current-state-audit.html#a.-공학-기반-심각",
+    "href": "01-current-state-audit.html#a.-공학-기반-심각",
+    "title": "2  현재 상태 감사",
+    "section": "2.2 A. 공학 기반 — 심각",
+    "text": "2.2 A. 공학 기반 — 심각\n\n2.2.1 A-1. 로컬 작업본이 git repository 가 아니다\n$ git rev-parse --is-inside-work-tree\nfatal: not a git repository (or any of the parent directories): .git\n상위 디렉터리에도 없다. 그런데 원격은 살아 있다.\n$ gh repo view joonho112/multisiteDGP --json name,visibility,pushedAt\n{\"name\":\"multisiteDGP\",\"pushedAt\":\"2026-05-10T04:41:33Z\",\"visibility\":\"PUBLIC\"}\n함의. ① 2026-05-10 이후 로컬에서 무엇이 바뀌었는지 알 방법이 없다. ② 로컬과 원격 중 어느 쪽이 최신인지 모른다. ③ 이후 모든 수정 작업이 diff · 브랜치 · PR 없이 진행되면 되돌릴 수 없다. ④ .github/workflows/ 6 개, .pre-commit-config.yaml, CONTRIBUTING.md 가 전부 무의미하다.\n이것이 Phase 1 이 존재하는 이유이며, 다른 어떤 작업보다 먼저다.\n\n\n2.2.2 A-2. CI 가 2026-05-10 이후 계속 red\ngh run list --repo joonho112/multisiteDGP --limit 15 결과 요약:\n\n\n\n\n\n\n\n\n\nworkflow\ntrigger\n최근 결과\n비고\n\n\n\n\nR-CMD-check\npush (2026-05-10)\nfailure (34m3s)\n로그 만료(HTTP 410)\n\n\nlint\npush (2026-05-10)\nfailure (1m58s)\n로그 만료\n\n\ntest-coverage\npush (2026-05-10)\nfailure (2m44s)\n로그 만료\n\n\nextended-tests\nschedule (주간)\nfailure ×10 연속\n2026-05-11 ~ 2026-07-13, 로그 확보\n\n\npkgdown-deploy\npush (2026-05-10)\nsuccess (4m43s)\n유일한 green\n\n\n\n릴리스 태그 0 건, 이슈 0 건.\n함의. 공개 pkgdown 사이트만 성공해서 밖에서 보기에는 건강해 보인다. 실제로는 품질 게이트 4 개 중 4 개가 3 개월간 꺼져 있었다. 2026-05-10 push 세 workflow 의 로그는 GitHub 보존 기간(90 일)이 지나 만료됐으므로, Phase 2 는 재현으로 원인을 규명해야 한다 (로그 조회가 아니라 로컬 Linux 컨테이너 또는 CI 재실행).\n\n\n2.2.3 A-3. 저장소 위생\n빌드 산출물과 빈 디렉터리가 작업 디렉터리에 방치되어 있다.\n\n\n\n\n\n\n\n항목\n상태\n\n\n\n\n..Rcheck/\n존재 — 다른 경로(IES Multisite Trial Project, 00_ 접두사 없음)에서 실행된 잔재. DESCRIPTION Author/Maintainer 누락 ERROR 기록\n\n\nmultisiteDGP.Rcheck/\n존재\n\n\nmultisiteDGP_0.0.0.9000.tar.gz, multisiteDGP_0.1.0.tar.gz\n존재 (각 ~420 KB)\n\n\nblueprint-multisiteDGP-book-v1.0-20260507.zip\n존재 (41 MB)\n\n\nLibrary/, Outputs/\n빈 디렉터리\n\n\n.DS_Store\n존재\n\n\n설치된 multisiteDGP\n0.0.0.9000 — 소스는 0.1.1 (stale install)\n\n\n\n..Rcheck/00check.log 의 Required fields missing or empty: 'Author' 'Maintainer' 는 source directory 를 직접 check 해서 나온 것이며 Authors@R 은 정상이다. 실제 결함이 아니라 오래된 잔재가 만든 가짜 신호이므로, 이런 잔재는 제거해야 이후 진단이 오염되지 않는다.",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>현재 상태 감사</span>"
+    ]
+  },
+  {
+    "objectID": "01-current-state-audit.html#b.-재현성-계약-심각",
+    "href": "01-current-state-audit.html#b.-재현성-계약-심각",
+    "title": "2  현재 상태 감사",
+    "section": "2.3 B. 재현성 계약 — 심각",
+    "text": "2.3 B. 재현성 계약 — 심각\n\n2.3.1 B-1. Linux CI 에서 canonical_hash 만 불일치\nextended-tests (2026-07-13) 실패 로그 발췌:\n── 5. Failure ('test-snapshot-print.R:87:5'): summary.multisitedgp_data snapshot\n       feasibility_index:          14.431  (target N/A)  WARN  [no target]\n    Overall: 3 PASS, 3 WARN, 2 FAIL.\n-   Provenance: ... seed=12345 | canonical_hash=128c43fb9cfc4416 | design_hash=db50cfd4e1659537 | ...\n+   Provenance: ... seed=12345 | canonical_hash=7b960a5122df9c88 | design_hash=db50cfd4e1659537 | ...\n세 가지를 동시에 읽어야 한다.\n\n출력 수치는 전부 동일하다 — feasibility_index 14.431, PASS/WARN/FAIL 카운트, 진단 라인 모두 일치.\ndesign_hash 는 동일하다 (db50cfd4e1659537) — design 객체 직렬화는 플랫폼 중립이다.\ncanonical_hash 만 다르다 — 생성된 데이터 가 표시 정밀도까지는 같지만 비트 수준에서 다르다.\n\n즉 문제는 “Linux 에서 다른 값이 나온다” 가 아니라 “부동소수점 최하위 비트가 다른데 해시 계약이 그것을 흡수하지 못한다” 이다. R 의 RNG 자체는 플랫폼 간 동일하므로, 드리프트 원인은 libm 차이(macOS Apple libm vs glibc), nleqslv solver 반복, sn package 내부 계산, 또는 long-double 누산 중 하나로 좁혀진다. Phase 4 Step 4.1 이 이를 특정한다.\n실패한 snapshot 은 최소 10 건 (testthat 이 10 건에서 절단) — test-snapshot-print.R 7 건, test-generated-print-examples-step8-6.R 2 건 이상.\n\n\n2.3.2 B-2. 정책 문서와 체크인된 아티팩트가 모순\ntools/cross-os-reproducibility-policy.md 는 이렇게 규정한다.\n\nLinux is the strict cross-run hash baseline. … Authoritative golden and print-example regeneration is Linux-only.\n\n그리고 같은 문서가 스스로 모순을 자백한다.\n\nCurrent v0.1 golden fixture note: the checked-in Step 8.1 manifest records local macOS/aarch64 provenance (generated_platform = aarch64-apple-darwin20) for the nine bootstrap fixture files.\n\n정책은 Linux 를 authoritative 로 규정하는데 실제 체크인된 것은 macOS 산출물이다. 이것이 B-1 실패의 직접 원인이다. NEWS.md 의 “Known limitations” 에도 “The Linux x86_64 baseline is pending the first continuous-integration run” 으로 적혀 있으나, 그 CI 실행이 10 주 연속 실패하면서 3 개월간 방치됐다.\n\n\n2.3.3 B-3. 로컬에서는 이 문제가 보이지 않는다\nskip_if_not_linux_strict_hash() 가 macOS/Windows 에서 T1a 를 항상 skip 시킨다. slow + property 게이트를 전부 켜고 돌려도 로컬에서 skip 되는 유일한 테스트가 T1a 다. 즉 PI 의 개발 머신에서는 이 계약이 검증되는 일이 영원히 없다.",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>현재 상태 감사</span>"
+    ]
+  },
+  {
+    "objectID": "01-current-state-audit.html#c.-테스트-스위트-무결성-심각",
+    "href": "01-current-state-audit.html#c.-테스트-스위트-무결성-심각",
+    "title": "2  현재 상태 감사",
+    "section": "2.4 C. 테스트 스위트 무결성 — 심각",
+    "text": "2.4 C. 테스트 스위트 무결성 — 심각\n\n2.4.1 C-1. 기본 실행이 30 개를 skip 한다\n$ Rscript -e 'devtools::load_all(\".\"); testthat::test_local(\".\")'\n══ Skipped ═══════════════════════════════════════════════════\n[30 건]\n══ DONE ══════════════════════════════════════════════════════\n💅 Your tests are beautiful 💅\nskip 사유별 분포:\n\n\n\n\n\n\n\n\n사유\n건수\n숨겨진 내용\n\n\n\n\nMULTISITEDGP_RUN_SLOW\n22\n표준화 계약 T13(ALD) · T14(Mixture) · T15(Student-t) · T16(SkewN) · T17(PMSlab), 분포 검정 T1b · T4 · T9, JEBS I-grid T11, truncation T10\n\n\nMULTISITEDGP_RUN_PROPERTY\n12 중 대부분\nP01–P12 core invariant (단위분산, 평균 0, se2 양수, 순열 보존, Spearman 달성, 열 타입, informativeness 구간, covariate-off 동치, A2 비트동일성, preset 유효성)\n\n\nLinux strict hash\n1\nT1a JEBS golden fixture 비트 동일성\n\n\n\ntests/testthat/helper-skip-policy.R 에 skip_if_not_validation(), skip_if_api_missing() 도 정의되어 있다.\n함의. 이 package 의 과학적 주장 — “여덟 개 분포 shape 가 단위분산 규약을 공유하므로 heterogeneity ratio 목표가 shape 를 가로질러 같은 의미를 갖는다” — 를 검증하는 테스트가 전부 기본 실행에서 빠져 있다. 개발자가 매일 보는 green 은 배관(plumbing) 만 검증한 green 이다.\n\n\n2.4.2 C-2. 게이트를 켜면 로컬에서는 통과한다\n$ MULTISITEDGP_RUN_SLOW=true MULTISITEDGP_RUN_PROPERTY=true Rscript -e '...test_local(\".\")'\n══ Skipped ═══════════════════════════════════════════════════\n1. T1a Engine A1 Mixture matches JEBS appendix golden fixtures\n   - Reason: Strict canonical_hash equality is Linux x86_64/amd64 baseline only.\n══ DONE ══════════════════════════════════════════════════════\n💅 Your tests are beautiful 💅\n좋은 소식이다. 통계 커널 자체는 건강하다. 문제는 코드가 아니라 게이트 정책 이다. 켜기만 하면 되는데 아무도 켜지 않는 구조로 되어 있다.\n이 사실이 v0.2.0 의 성격을 결정한다 — 커널 재작성이 아니라 계약과 게이트의 재설계.\n\n\n2.4.3 C-3. Suggests 3 개가 로컬에 없다\n\n\n\n\n\n\n\n\npackage\n역할\n없을 때 결과\n\n\n\n\ncopula\nalign_copula_corr() Gaussian copula 경로\ncopula 의존 테스트 부분 검증 또는 skip\n\n\nmultisitepower\nas_multisitepower() adapter\nadapter 테스트 skip (CRAN 미배포 — 문서화된 예외)\n\n\nhedgehog\nproperty-based 테스트\nP01–P12 의 생성기 기반 검증 축소\n\n\n\nhedgehog 부재는 특히 문제다. C-2 에서 property 테스트가 “통과” 했지만, hedgehog 없이 어떤 경로로 통과했는지 Phase 2 Step 2.2 가 확인해야 한다.",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>현재 상태 감사</span>"
+    ]
+  },
+  {
+    "objectID": "01-current-state-audit.html#d.-광고와-구현의-갭-중간",
+    "href": "01-current-state-audit.html#d.-광고와-구현의-갭-중간",
+    "title": "2  현재 상태 감사",
+    "section": "2.5 D. 광고와 구현의 갭 — 중간",
+    "text": "2.5 D. 광고와 구현의 갭 — 중간\nDESCRIPTION 은 이렇게 광고한다.\n\ngenerates latent site effects under a catalog of eight distribution shapes (Gaussian, Student-t, skew-normal, asymmetric Laplace, two-component mixture, point-mass slab, user callback, and a Dirichlet-process-mixture bridge)\n\n실제 코드:\n\n\n\n\n\n\n\n\n위치\n코드\n실제 동작\n\n\n\n\nR/layer1-gen_effects_dpm.R:127\n\"`true_dist = \\\"DPM\\\"` is not implemented in multisiteDGP v1.\"\n호출 시 hard abort (E22)\n\n\nR/layer1-gen_effects.R:191\n\"`upstream` is reserved and is not implemented yet.\"\n인자 존재, 미구현\n\n\nR/class-multisitedgp_design.R:77\ntarget_marginal_rho — “not implemented in the current release”\nE23 hard abort\n\n\nR/diagnostics-core.R\nGroup C resolver\nSkewN target 미지원 (punch list P1-1)\n\n\n\n“stub-not-silent” 정책 (blueprint ch.05 §8) 자체는 옳다 — 조용히 틀린 값을 주는 것보다 낫다. 문제는 DESCRIPTION 이 그것을 여덟 번째 shape 로 세고 있다는 것이다. NEWS.md 도 8 개 분포를 나열하며 gen_effects_dpm() 을 포함한다.\n이건 코드 버그가 아니라 정직성 결함이다. 처리 방향은 두 갈래이며 (구현 vs 광고 축소) Phase 3 에서 PI 가 정한다.",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>현재 상태 감사</span>"
+    ]
+  },
+  {
+    "objectID": "01-current-state-audit.html#e.-잘-되어-있는-것-건드리지-않는다",
+    "href": "01-current-state-audit.html#e.-잘-되어-있는-것-건드리지-않는다",
+    "title": "2  현재 상태 감사",
+    "section": "2.6 E. 잘 되어 있는 것 — 건드리지 않는다",
+    "text": "2.6 E. 잘 되어 있는 것 — 건드리지 않는다\n과잉 수정을 막기 위해 명시한다.\n\n\n\n\n\n\n\n\n영역\n상태\n근거\n\n\n\n\nroxygen 문서 표면\n양호\n53 exports + 28 S3 method 전부 canonical template 적용 (2026-05 Phase 5)\n\n\nvignette\n양호\nApplied A1–A8 + Methodological M1–M8 총 16 편, 50 plots, fig.alt 완비\n\n\npkgdown 사이트\n양호\n유일하게 green 인 CI, 사이트 배포 정상\n\n\n로컬 R CMD check\n양호\n0 error / 0 warning / 2 note (--as-cran, vignette 제외)\n\n\n타입드 에러 계층\n양호\nmultisitedgp_error base + 6 subclass, E01–E30 카탈로그\n\n\ntraceability ledger\n양호\ntools/traceability/ CSV 8 종 (api / decision / docs / error / fixture / invariant / preset / validation)\n\n\n설계 문서\n우수\nblueprint 25 장 + implementation book 127 로그 + documentation-updates 99 로그\n\n\n통계 커널\n건강\nslow + property 게이트 on 상태에서 전부 통과 (C-2)",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>현재 상태 감사</span>"
+    ]
+  },
+  {
+    "objectID": "01-current-state-audit.html#f.-미확인-phase-2-가-규명할-것",
+    "href": "01-current-state-audit.html#f.-미확인-phase-2-가-규명할-것",
+    "title": "2  현재 상태 감사",
+    "section": "2.7 F. 미확인 — Phase 2 가 규명할 것",
+    "text": "2.7 F. 미확인 — Phase 2 가 규명할 것\n이 감사가 답하지 못한 것들. Phase 2 Step 배정과 1:1 대응한다.\n\n\n\n\n\n\n\n\n#\n미확인 사항\n담당\n\n\n\n\nU-1\n2026-05-10 R-CMD-check / lint / test-coverage 실패의 실제 원인 (로그 만료)\nStep 2.1\n\n\nU-2\n로컬 작업본과 원격 main 의 실제 차이\nStep 1.1\n\n\nU-3\nhedgehog 없이 property 테스트가 통과한 경로\nStep 2.2\n\n\nU-4\ncanonical_hash 플랫폼 드리프트의 정확한 발생 지점\nStep 2.3\n\n\nU-5\n현재 테스트 커버리지 수치와 커버리지 공백 파일\nStep 2.2\n\n\nU-6\nR CMD check NOTE 2 건의 정체 (vignette 포함 full check 필요)\nStep 2.1\n\n\nU-7\nLayer 1–4 수치 정확성의 미검증 경계 (solver 실패 영역, 극단 파라미터)\nStep 2.5 · 2.6\n\n\nU-8\nvignette knit 시간 및 성능 회귀 여부 (punch list P0-2 미완)\nStep 2.8\n\n\nU-9\ndocumentation-updates punch list P0-1~P0-7 의 실제 완료 여부\nStep 2.4",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>현재 상태 감사</span>"
+    ]
+  },
+  {
+    "objectID": "01-current-state-audit.html#한-줄-요약",
+    "href": "01-current-state-audit.html#한-줄-요약",
+    "title": "2  현재 상태 감사",
+    "section": "2.8 한 줄 요약",
+    "text": "2.8 한 줄 요약\n\n\n\n\n\n\nImportant진단 요약\n\n\n\nmultisiteDGP 의 통계 커널과 문서는 건강하다. 무너진 것은 그것을 지탱하는 공학 기반 — 버전 관리 부재, 3 개월 red CI, 30 개가 숨겨진 테스트 게이트, 정책과 어긋난 재현성 아티팩트, 광고와 어긋난 API 표면. v0.2.0 은 새 기능을 더하는 릴리스가 아니라 기존 표면을 믿을 수 있게 만드는 릴리스다.",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>현재 상태 감사</span>"
+    ]
+  },
+  {
+    "objectID": "02-goals-and-scope.html",
+    "href": "02-goals-and-scope.html",
+    "title": "3  목표와 범위",
+    "section": "",
+    "text": "3.1 v0.2.0 의 성격\n신뢰성 릴리스 (reliability release). 새 기능을 추가하지 않고, 이미 존재하는 표면을 믿을 수 있게 만든다. 사용자에게 주는 약속은 하나다 — “이 package 가 광고하는 것은 전부 실제로 동작하며, 그것이 세 플랫폼에서 자동으로 검증된다.”\n버전 번호를 0.2.0 으로 잡는 근거:",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>목표와 범위</span>"
+    ]
+  },
+  {
+    "objectID": "02-goals-and-scope.html#v0.2.0-의-성격",
+    "href": "02-goals-and-scope.html#v0.2.0-의-성격",
+    "title": "3  목표와 범위",
+    "section": "",
+    "text": "semver 상 0.1.1 → 0.2.0 은 minor bump. 동작 변경(재현성 계약, 게이트 정책)이 있으므로 patch 로는 부족하다.\n1.0.0 은 blueprint ch.10 의 60 개 API surface row 를 experimental → stable 로 승격하는 릴리스여야 하며(open question Q8), 그 승격은 실사용 cycle 을 거친 뒤다. v0.2.0 은 그 선행 조건을 만드는 릴리스다.\n최종 번호는 Phase 3 Step 3.4 에서 확정한다. 재현성 계약 재설계가 hash schema 를 바꾸면 cross-os-reproducibility-policy.md 의 “canonical_hash schema changes without a documented major-version reproducibility decision” 조항이 걸리므로, 그 경우 0.2.0 대신 다른 번호를 택할 수 있다.",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>목표와 범위</span>"
+    ]
+  },
+  {
+    "objectID": "02-goals-and-scope.html#성공-기준-7-개",
+    "href": "02-goals-and-scope.html#성공-기준-7-개",
+    "title": "3  목표와 범위",
+    "section": "3.2 성공 기준 (7 개)",
+    "text": "3.2 성공 기준 (7 개)\nPhase 11 종료 시 아래 7 개가 전부 참이어야 v0.2.0 을 릴리스한다. Ch.16 이 각 항목의 검증 방법을 명시한다.\n\n\n\n\n\n\n\n\n\n#\n기준\n현재 (2026-08-14)\n목표\n\n\n\n\nG1\n로컬 작업본이 git 하에 있고 원격 main 과 동기화\ngit repo 아님\n동기화 + 브랜치 전략 문서화\n\n\nG2\nCI 5-cell 매트릭스 + 보조 workflow 전부 green\n4/5 red, 3 개월 방치\n전부 green, 연속 3 회\n\n\nG3\n기본 devtools::test() 가 통계 불변량을 실제로 검증\n30 skip\nskip ≤ 3, 각각 문서화된 사유\n\n\nG4\n재현성 계약이 정의대로 동작 (아티팩트가 정책과 일치)\n정책 Linux / 아티팩트 macOS\n일치 + T1a 가 CI 에서 실제 실행\n\n\nG5\n광고 표면 == 구현 표면\nDPM · marginal target · upstream 갭\n갭 0, 또는 광고에서 제거\n\n\nG6\nR CMD check --as-cran 0E / 0W, NOTE 는 문서화된 것만\n0E/0W/2N (vignette 제외)\n3 OS 전부, vignette 포함\n\n\nG7\n릴리스 아티팩트 완비\n태그 0 건\nv0.2.0 태그 + NEWS + pkgdown + 재현 가능한 tarball",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>목표와 범위</span>"
+    ]
+  },
+  {
+    "objectID": "02-goals-and-scope.html#범위에-포함-in-scope",
+    "href": "02-goals-and-scope.html#범위에-포함-in-scope",
+    "title": "3  목표와 범위",
+    "section": "3.3 범위에 포함 (in scope)",
+    "text": "3.3 범위에 포함 (in scope)\n\n버전 관리 복구 — git 재연결, 브랜치 전략, 이후 모든 변경의 diff 추적\n결함 감사 — 증거 기반 결함 원장 구축 및 P0/P1/P2 트리아지\n재현성 계약 재설계 및 재구축 — hash schema, golden fixture, snapshot, 정책 문서\n테스트 게이트 재설계 — skip 정책 폐기 또는 대체, slow 테스트 비용 절감, 커버리지 보강\nCI 복구 — 5 workflow 전부 green\n광고-구현 갭 해소 — DPM, marginal target, upstream, SkewN audit resolver\nPhase 2 가 P0/P1 로 분류한 결함 — 사전에 목록을 확정할 수 없으므로 Phase 7 이 원장을 소비한다\n통계 검증 재실행 — V0–V12 validation experiment 를 Linux 포함 재실행\n문서 델타 동기화 — v0.2.0 에서 실제로 바뀐 것만\n저장소 위생 — 빌드 산출물 정리, .Rbuildignore 점검",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>목표와 범위</span>"
+    ]
+  },
+  {
+    "objectID": "02-goals-and-scope.html#범위에서-제외-out-of-scope",
+    "href": "02-goals-and-scope.html#범위에서-제외-out-of-scope",
+    "title": "3  목표와 범위",
+    "section": "3.4 범위에서 제외 (out of scope)",
+    "text": "3.4 범위에서 제외 (out of scope)\n명시적으로 하지 않는다. 유혹이 생기면 이 표를 본다.\n\n\n\n\n\n\n\n\n제외 항목\n이유\n어디로\n\n\n\n\nblueprint ch.24 v1.x 기능 (as_lme4(), as_brms(), design_grid() 확장, reverse adapter, preset_walters_2024_sparse())\n신뢰성 릴리스에 기능 추가를 섞지 않는다\nv0.3.0+\n\n\nblueprint ch.24 v2.0 후보 (Student-t copula, vector-valued effects, meta-analysis native front door, SAE adapter, Shiny, siteBayes2.bayes)\n아키텍처 변경 — 별도 RFC 필요\nv2.0\n\n\n문서 표면 전면 재작성\n2026-05 오버홀 결과가 양호\n—\n\n\n새 vignette 추가\n위와 동일\n—\n\n\nCRAN 제출\n별도 릴리스 사이클\nv1.0.0\n\n\nexperimental → stable lifecycle 승격\n실사용 cycle 선행 필요 (open question Q8)\nv1.0.0\n\n\nblueprint 의 미해결 open question Q9–Q14 중 서술적 항목 (F-number namespace collision, persona drift)\n문서 내부 정합성 — 사용자 영향 없음\n별도 정리\n\n\n성능 최적화\n회귀가 발견되지 않는 한\n발견 시 원장에 등재",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>목표와 범위</span>"
+    ]
+  },
+  {
+    "objectID": "02-goals-and-scope.html#지도-원칙-7-개",
+    "href": "02-goals-and-scope.html#지도-원칙-7-개",
+    "title": "3  목표와 범위",
+    "section": "3.5 지도 원칙 (7 개)",
+    "text": "3.5 지도 원칙 (7 개)\n실행 중 판단이 갈릴 때 적용하는 우선순위다.\n\n증거 우선. 결함은 재현 절차와 함께 원장에 등재된 뒤에만 수정한다. “고쳐두면 좋을 것 같아서” 하는 수정은 하지 않는다.\n정직 &gt; 완결. 구현되지 않은 기능은 광고에서 빼는 것이 급하게 구현하는 것보다 낫다. stub-not-silent 정책을 DESCRIPTION 수준까지 확장한다.\n게이트는 켜져 있어야 게이트다. 환경 변수 뒤에 숨은 테스트는 검증이 아니다. 비싸면 비용을 줄이지, 끄지 않는다.\n기존 설계 결정을 존중한다. blueprint 25 장은 PI 가 승인한 설계다. 뒤집으려면 명시적 RFC 와 PI 승인이 필요하며, 그 자리는 Phase 3 뿐이다.\n수치 동작을 조용히 바꾸지 않는다. 통계 커널 변경은 golden fixture 와 validation experiment 를 동반해야 한다. JEBS 논문 재현성이 걸려 있다.\n한 Step 은 한 세션. ≤ ~20 분, 하나의 파일 집합, 하나의 검증 가능한 산출물. 넘치면 Step 을 쪼갠다.\n되돌릴 수 있게. Phase 1 이후 모든 변경은 브랜치 위에서, 커밋 단위로. Phase 4 의 fixture 재생성처럼 되돌리기 비싼 작업은 이전 아티팩트를 보존한다.",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>목표와 범위</span>"
+    ]
+  },
+  {
+    "objectID": "02-goals-and-scope.html#반-목표-anti-goals",
+    "href": "02-goals-and-scope.html#반-목표-anti-goals",
+    "title": "3  목표와 범위",
+    "section": "3.6 반-목표 (anti-goals)",
+    "text": "3.6 반-목표 (anti-goals)\n이 계획이 실패하는 방식을 미리 적어둔다. 실행 중 아래 징후가 보이면 멈추고 재검토한다.\n\n감사 마비. Phase 2 가 결함을 계속 발견하며 끝나지 않는다. → Step 2.9 에서 원장을 닫는다. 이후 발견분은 v0.3 백로그로 보낸다.\n범위 확산. “이왕 만지는 김에” 로 기능이 붙는다. → 위 제외 표가 근거다.\nCI 두더지잡기. 원인을 모른 채 workflow YAML 만 계속 고친다. → Phase 6 는 Phase 2 Step 2.1 의 원인 규명 없이는 시작하지 않는다.\nfixture 세탁. Linux 에서 실패하니 snapshot_accept() 로 덮는다. → 이는 재현성 계약을 포기하는 것이다. Phase 4 Step 4.1 의 드리프트 원인 규명 없이 fixture 를 재생성하지 않는다.\n문서 재작성 재발. Phase 9 가 3 번째 문서 오버홀이 된다. → Phase 9 는 델타만 만진다.",
+    "crumbs": [
+      "진단",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>목표와 범위</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html",
+    "href": "03-operating-model.html",
+    "title": "4  실행 규약",
+    "section": "",
+    "text": "4.1 Step 의 정의\nStep 은 하나의 AI agent 세션에서 완결되는 최소 작업 단위다. 다음 다섯 가지를 전부 만족해야 Step 이다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#step-의-정의",
+    "href": "03-operating-model.html#step-의-정의",
+    "title": "4  실행 규약",
+    "section": "",
+    "text": "≤ ~20 분 — agent 실행 시간 기준. 넘으면 쪼갠다.\n단일 관심사 — 하나의 파일 집합, 하나의 결함 군, 하나의 산출물 종류.\n검증 가능한 산출물 — 파일이 생기거나 바뀌거나, 실행 결과가 기록된다. “검토했다” 는 산출물이 아니다.\n명시적 의존 — 어떤 Step 이 먼저 끝나야 하는지 적혀 있다.\n명시적 완료 조건 — “무엇이 참이면 끝인가” 가 적혀 있다.\n\n\n\n\n\n\n\nWarningStep 이 부풀 때\n\n\n\n실행 중 Step 이 20 분을 넘길 것 같으면 끝까지 밀지 말고 멈춘다. 세션이 과부하되면 컨텍스트가 요약되면서 정확도가 떨어지고, multi-agent 로 나갈 때 성능이 나오지 않는다. 대신 ① 여기까지의 산출물을 저장하고, ② Phase 로그에 “Step N.M 이 N.Ma / N.Mb 로 분할됨” 을 기록하고, ③ 다음 세션에서 이어간다. Step 분할은 계획 실패가 아니라 정상 운영이다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#실행-모드",
+    "href": "03-operating-model.html#실행-모드",
+    "title": "4  실행 규약",
+    "section": "4.2 실행 모드",
+    "text": "4.2 실행 모드\n각 Step 은 세 모드 중 하나로 표시된다.\n\n\n\n\n\n\n\n\n모드\n언제\n방식\n\n\n\n\n단일\n대부분의 실행 작업 — 코드 수정, fixture 재생성, 문서 갱신\nagent 1 개가 순차 실행\n\n\n병렬 감사\n넓은 표면을 훑어야 하고 결과가 서로 독립일 때 (Phase 2 대부분)\n독립 영역에 agent 를 나눠 던지고 각자 결과를 원장 행으로 반환\n\n\n다중 관점\n설계 판단이 갈릴 수 있고 한 관점의 사각이 치명적일 때 (Phase 3 옵션 비교, Phase 4 hash schema 설계)\n서로 다른 프레이밍의 초안 2–3 개 → 합성\n\n\n\n병렬 감사와 다중 관점은 PI 가 명시적으로 허용했을 때만 쓴다. 기본은 단일 모드다. 병렬 실행은 토큰 비용이 크고, 결과 합성이 또 하나의 Step 이 된다는 점을 계산에 넣는다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#step-실행-프로토콜",
+    "href": "03-operating-model.html#step-실행-프로토콜",
+    "title": "4  실행 규약",
+    "section": "4.3 Step 실행 프로토콜",
+    "text": "4.3 Step 실행 프로토콜\n모든 Step 이 동일한 6 단계를 따른다.\n1. 읽기      해당 Phase 장의 Step 절 + Ch.4 로그 규약 + 부록 A 원장의 관련 행\n2. 확인      선행 Step 의 산출물이 실제로 존재하는지 확인 (없으면 중단하고 보고)\n3. 실행      작업 수행\n4. 검증      완료 조건을 실제로 실행해서 확인 (테스트 실행, 파일 존재, diff 확인)\n5. 기록      원장 갱신 + 작업 노트를 Phase 로그 초안에 누적\n6. 커밋      단일 논리 커밋. 메시지에 Step 번호 포함 (예: \"test(step5.1): replace skip gates\")\n4 단계를 건너뛰지 않는다. “고쳤으니 됐겠지” 로 다음 Step 에 가면 Phase 종료 시점에 누적된 오류가 한꺼번에 터진다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#버전-관리-규약",
+    "href": "03-operating-model.html#버전-관리-규약",
+    "title": "4  실행 규약",
+    "section": "4.4 버전 관리 규약",
+    "text": "4.4 버전 관리 규약\nPhase 1 Step 1.2 에서 확정하되, 기본 방침은 다음과 같다.\n\n작업 브랜치. main 에 직접 커밋하지 않는다. Phase 단위 브랜치 upgrade/phase-NN-&lt;slug&gt; 를 쓴다.\n커밋 단위. Step 하나 = 커밋 하나가 원칙. Step 안에서 논리적으로 분리되면 여러 개도 허용.\n커밋 메시지. Conventional Commits + Step 번호.\nfix(step7.3): drop DPM from advertised shape catalog\n\nDESCRIPTION and NEWS listed DPM as the eighth shape while\ngen_effects_dpm() aborts with E22. Ledger row D-014.\nPhase 병합. Phase 종료 로그 작성 후 main 으로 병합. 원격 push 로 CI 를 태운다.\n되돌리기. Phase 4 의 fixture 재생성처럼 되돌리기 비싼 작업은 이전 아티팩트를 log/log-version-up-2026-08-14/artifacts/pre-phase04/ 에 보존한다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#결함-원장-규약",
+    "href": "03-operating-model.html#결함-원장-규약",
+    "title": "4  실행 규약",
+    "section": "4.5 결함 원장 규약",
+    "text": "4.5 결함 원장 규약\n부록 A 가 스키마를 정의한다. 실제 원장은 다음 경로의 CSV 다.\nlog/log-version-up-2026-08-14/defect-ledger.csv\n원칙:\n\nPhase 2 가 원장을 채우고 Step 2.9 에서 닫는다. 이후 Phase 는 원장을 소비한다.\n이후 Phase 에서 새 결함이 발견되면 원장에 추가하되 status = deferred-v0.3 이 기본이다. P0 로 올리려면 릴리스를 막을 만한 근거가 있어야 한다.\n모든 수정 커밋 메시지는 원장 ID 를 인용한다.\nPhase 7 종료 시 P0 전건이 fixed 또는 wont-fix (근거 포함) 여야 한다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#세션-관리",
+    "href": "03-operating-model.html#세션-관리",
+    "title": "4  실행 규약",
+    "section": "4.6 세션 관리",
+    "text": "4.6 세션 관리\n\n한 세션 = 한 Step 이 기본. 짧은 Step 2–3 개를 묶는 것은 허용하되, 파일 집합이 겹치지 않을 때만.\n컨텍스트 오염 방지. 감사 Step (Phase 2) 은 읽기 위주라 컨텍스트를 크게 먹는다. 감사 Step 과 수정 Step 을 같은 세션에 섞지 않는다.\n핸드오프. 세션을 넘길 때는 ① 완료한 Step, ② 진행 중이던 Step 의 중단 지점, ③ 다음 Step 번호를 Phase 로그 초안에 적는다.\n긴 실행. R CMD check, 전체 테스트, validation experiment 는 백그라운드로 돌리고 그 사이 다른 일을 한다. 결과를 기다리며 세션을 놀리지 않는다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#phase-종료-프로토콜",
+    "href": "03-operating-model.html#phase-종료-프로토콜",
+    "title": "4  실행 규약",
+    "section": "4.7 Phase 종료 프로토콜",
+    "text": "4.7 Phase 종료 프로토콜\nPhase 의 마지막 Step 이 끝나면 항상 다음을 수행한다.\n\nPhase 게이트 검증 — 해당 Phase 장의 “Phase 종료 조건” 을 실제로 실행해 확인\nPhase 로그 작성 — Ch.4 로그 규약 에 따라 qmd 작성 후 html 렌더\n원장 갱신 — 이 Phase 에서 처리된 행의 status 갱신\n브랜치 병합 + push — CI 실행\n다음 Phase 진입 판단 — 게이트 Phase (3, 10) 는 승인 대기",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#pi-게이트",
+    "href": "03-operating-model.html#pi-게이트",
+    "title": "4  실행 규약",
+    "section": "4.8 PI 게이트",
+    "text": "4.8 PI 게이트\n두 곳에서 실행이 멈추고 PI 승인을 기다린다.\n\n\n\n\n\n\n\n\n게이트\n위치\n승인 대상\n\n\n\n\nG-A\n이 계획서\nPhase / Step 구조, 범위, 버전 목표\n\n\nG-B\nPhase 3 Step 3.5\n재현성 계약 재설계안, 광고-구현 갭 처리 방침, 테스트 게이트 정책, 최종 버전 번호\n\n\n\nG-B 없이 Phase 4 로 진입하지 않는다. hash schema 변경과 광고 축소는 되돌리기 비싸고 사용자 영향이 있는 결정이므로 agent 가 단독으로 정하지 않는다.\nPhase 10 은 외부 리뷰 게이트다. 리뷰어(GPT Codex 또는 별도 Claude 세션) 는 리뷰 패킷만 받고 계획 내부는 보지 않는다 — 계획의 프레이밍이 리뷰를 오염시키지 않게 하기 위해서다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#작업-디렉터리-지도",
+    "href": "03-operating-model.html#작업-디렉터리-지도",
+    "title": "4  실행 규약",
+    "section": "4.9 작업 디렉터리 지도",
+    "text": "4.9 작업 디렉터리 지도\nmultisiteDGP-R-package/\n├─ R/  tests/  man/  vignettes/  inst/  tools/   ← package 본체 (수정 대상)\n├─ .github/workflows/                            ← CI (Phase 6 대상)\n├─ blueprint-multisiteDGP-book/                  ← 설계 근거 (읽기 전용)\n├─ multisiteDGP-build-implementation-book/       ← 구현 이력 (읽기 전용)\n├─ documentation-updates/                        ← 문서 오버홀 이력 (읽기 전용)\n└─ log/log-version-up-2026-08-14/                ← 이번 작업 공간\n   ├─ 001_plan-master-version-upgrade/           ← 이 책\n   ├─ 002_phase01-*.qmd/.html … 012_phase11-*    ← Phase 종료 로그\n   ├─ defect-ledger.csv                          ← 결함 원장 (Phase 2 산출)\n   ├─ decisions/                                 ← Phase 3 결정 문서\n   ├─ evidence/                                  ← 감사 원자료 (CI 로그, 테스트 출력 등)\n   └─ artifacts/                                 ← 되돌리기용 보존 아티팩트\n읽기 전용으로 표시된 세 book 은 수정하지 않는다. 이들은 과거 작업의 감사 추적이며, 현재와 어긋나는 부분이 있어도 그것은 결함이 아니라 이력이다. 현재 상태를 반영해야 하는 것은 tools/traceability/ 의 ledger CSV 이며 Phase 9 Step 9.5 가 담당한다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "03-operating-model.html#도구-사용",
+    "href": "03-operating-model.html#도구-사용",
+    "title": "4  실행 규약",
+    "section": "4.10 도구 사용",
+    "text": "4.10 도구 사용\n\n\n\n\n\n\n\n작업\n도구\n\n\n\n\npackage 로드\ndevtools::load_all(\".\") — 설치본(0.0.0.9000)이 stale 하므로 library() 금지\n\n\n테스트\ntestthat::test_local(\".\") 또는 devtools::test(filter = \"...\")\n\n\ncheck\ndevtools::check() — 기본은 --as-cran, Phase 11 은 vignette 포함\n\n\n문서 재생성\ndevtools::document() — roxygen 수정 시 필수\n\n\n사이트\npkgdown::build_site()\n\n\nlint\nlintr::lint_package() — 설정은 .lintr\n\n\n커버리지\ncovr::package_coverage()\n\n\nCI 조회\ngh run list, gh run view --log-failed\n\n\n로그 렌더\nquarto render &lt;file&gt;.qmd --to html",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>실행 규약</span>"
+    ]
+  },
+  {
+    "objectID": "04-log-protocol.html",
+    "href": "04-log-protocol.html",
+    "title": "5  로그 규약",
+    "section": "",
+    "text": "5.1 로그 폴더\n이번 작업의 모든 로그는 다음 폴더에 쌓인다.\n2026-08-14 기준 이 폴더는 비어 있었다. 따라서 순번은 001 부터 시작한다. (상위 log/ 폴더의 draft-A-architecture.md 등은 번호 체계가 없는 2026-05 이전 산출물이며 이번 순번과 무관하다.)",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>로그 규약</span>"
+    ]
+  },
+  {
+    "objectID": "04-log-protocol.html#로그-폴더",
+    "href": "04-log-protocol.html#로그-폴더",
+    "title": "5  로그 규약",
+    "section": "",
+    "text": "multisiteDGP-R-package/log/log-version-up-2026-08-14/",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>로그 규약</span>"
+    ]
+  },
+  {
+    "objectID": "04-log-protocol.html#순번-규칙",
+    "href": "04-log-protocol.html#순번-규칙",
+    "title": "5  로그 규약",
+    "section": "5.2 순번 규칙",
+    "text": "5.2 순번 규칙\n\n3 자리 zero-padded 정수, 폴더 전체에서 단조 증가.\n001 은 이 계획서(Quarto Book 폴더)가 점유한다.\n002 부터 Phase 종료 로그가 순서대로 가져간다.\n번호는 파일을 만드는 시점에 폴더 안의 최대 번호 + 1 로 정한다. 아래 표의 번호는 ad-hoc 로그가 하나도 없을 때의 예정 번호다.\nPhase 중간에 별도 로그가 필요하면 (예: 중단·핸드오프, 예상 못한 조사) 그 시점의 다음 번호를 가져가고, 이후 Phase 로그 번호는 그만큼 밀린다. 번호를 비워두거나 재사용하지 않는다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>로그 규약</span>"
+    ]
+  },
+  {
+    "objectID": "04-log-protocol.html#파일명-형식",
+    "href": "04-log-protocol.html#파일명-형식",
+    "title": "5  로그 규약",
+    "section": "5.3 파일명 형식",
+    "text": "5.3 파일명 형식\n[순번]_[phase-id]-[설명].qmd\n[순번]_[phase-id]-[설명].html\n\nphase-id 는 phaseNN (2 자리 zero-padded): phase01, phase02, … phase11\n설명 은 kebab-case 영문 슬러그, 3–5 단어\nqmd 와 html 은 항상 쌍으로 존재한다\n\nad-hoc 로그는 phase-id 자리에 stepN.M 또는 handoff / note 를 쓴다.\n007_step4.3-linux-baseline-interrupted.qmd     ← Phase 4 중간 핸드오프\n011_note-covr-token-rotation.qmd               ← 예상 못한 조사",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>로그 규약</span>"
+    ]
+  },
+  {
+    "objectID": "04-log-protocol.html#예정-로그-목록",
+    "href": "04-log-protocol.html#예정-로그-목록",
+    "title": "5  로그 규약",
+    "section": "5.4 예정 로그 목록",
+    "text": "5.4 예정 로그 목록\n\n\n\n\n\n\n\n\n순번\n파일명\n시점\n\n\n\n\n001\n001_plan-master-version-upgrade/ (이 책)\n계획 승인\n\n\n002\n002_phase01-foundation-recovery.qmd\nPhase 1 종료\n\n\n003\n003_phase02-defect-audit.qmd\nPhase 2 종료\n\n\n004\n004_phase03-scope-decisions.qmd\nPhase 3 종료 (PI 게이트)\n\n\n005\n005_phase04-reproducibility-contract.qmd\nPhase 4 종료\n\n\n006\n006_phase05-test-suite-rebuild.qmd\nPhase 5 종료\n\n\n007\n007_phase06-ci-restoration.qmd\nPhase 6 종료\n\n\n008\n008_phase07-defect-remediation.qmd\nPhase 7 종료\n\n\n009\n009_phase08-statistical-revalidation.qmd\nPhase 8 종료\n\n\n010\n010_phase09-documentation-sync.qmd\nPhase 9 종료\n\n\n011\n011_phase10-external-review.qmd\nPhase 10 종료 (외부 게이트)\n\n\n012\n012_phase11-v0.2.0-release.qmd\nPhase 11 종료",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>로그 규약</span>"
+    ]
+  },
+  {
+    "objectID": "04-log-protocol.html#로그-문서-구조",
+    "href": "04-log-protocol.html#로그-문서-구조",
+    "title": "5  로그 규약",
+    "section": "5.5 로그 문서 구조",
+    "text": "5.5 로그 문서 구조\n모든 Phase 로그가 동일한 8 절 구조를 따른다. 이 구조에서 벗어나지 않는다 — 6 개월 뒤에 읽는 사람이 어느 로그든 같은 자리에서 같은 정보를 찾을 수 있어야 한다.\n---\ntitle: \"Phase N — &lt;제목&gt;\"\nsubtitle: \"&lt;한 줄 요약&gt;\"\nauthor: \"Claude Opus 5\"\ndate: \"YYYY-MM-DD\"\nformat:\n  html:\n    theme: cosmo\n    toc: true\n    toc-depth: 3\n    number-sections: true\n    code-overflow: wrap\n    embed-resources: true\nexecute:\n  echo: true\n  eval: false\n---\n\n## 1. 요약\n   3–5 문장. 무엇을 했고, 무엇이 바뀌었고, 다음은 무엇인가.\n   여기만 읽어도 Phase 의 결과를 알 수 있어야 한다.\n\n## 2. Step 실행 기록\n   Step 별 표: 번호 | 제목 | 상태 | 실제 소요 | 계획 대비 | 비고\n   상태는 done / partial / split / skipped / blocked\n\n## 3. 산출물\n   생성·수정된 파일 전체 목록. 경로 + 한 줄 설명.\n   커밋 SHA 를 함께 적는다.\n\n## 4. 근거와 실행 결과\n   실제로 돌린 명령과 그 출력. 테스트 결과, check 결과, CI 결과.\n   길면 접기 블록으로. 원자료는 evidence/ 에 두고 링크.\n\n## 5. 결정 사항\n   이 Phase 에서 내린 판단과 근거. 대안이 있었다면 왜 택하지 않았는지.\n   되돌릴 수 있는 결정인지 표시.\n\n## 6. 원장 변경\n   defect-ledger.csv 에서 이 Phase 가 추가·변경한 행.\n   ID | 요약 | 이전 status | 이후 status\n\n## 7. 미해결 및 이월\n   이 Phase 에서 끝내지 못한 것. 각각 어디로 갔는지 (다음 Phase / v0.3 백로그 / wont-fix).\n\n## 8. 다음 Phase 진입 조건\n   해당 Phase 장의 \"Phase 종료 조건\" 을 체크리스트로 옮기고 실제 확인 결과 표시.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>로그 규약</span>"
+    ]
+  },
+  {
+    "objectID": "04-log-protocol.html#렌더",
+    "href": "04-log-protocol.html#렌더",
+    "title": "5  로그 규약",
+    "section": "5.6 렌더",
+    "text": "5.6 렌더\nquarto render 002_phase01-foundation-recovery.qmd --to html\n\nembed-resources: true 로 자체 완결 HTML 을 만든다. _files/ 디렉터리를 남기지 않는다. 과거 두 book 의 로그 폴더가 *_files/ 로 비대해진 전례가 있다.\nqmd 와 html 을 함께 커밋한다.\n렌더 실패 시 qmd 만 커밋하고 로그 §7 에 사유를 남긴다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>로그 규약</span>"
+    ]
+  },
+  {
+    "objectID": "04-log-protocol.html#작성-원칙",
+    "href": "04-log-protocol.html#작성-원칙",
+    "title": "5  로그 규약",
+    "section": "5.7 작성 원칙",
+    "text": "5.7 작성 원칙\n\n로그는 Phase 가 끝난 뒤 한 번에 쓰지 않는다. Step 을 진행하며 초안에 누적하고, Phase 종료 시 정리한다. 나중에 몰아 쓰면 실행 결과 원문이 사라진다.\n실행 출력을 붙여넣는다. “테스트가 통과했다” 가 아니라 실제 출력을 붙인다. 길면 접기 블록.\n실패를 지우지 않는다. 중간에 실패했다가 고친 것도 §4 에 남긴다. 다음 사람이 같은 함정을 피한다.\n계획과의 차이를 명시한다. Step 이 분할되거나 순서가 바뀌었으면 §2 에 적는다. 계획서를 사후 수정해서 맞추지 않는다.\n한국어 서술, 영문 기술 용어. 이 계획서와 blueprint book 의 관행을 따른다.\n날짜는 절대 표기. “지난주” 가 아니라 2026-08-20.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>로그 규약</span>"
+    ]
+  },
+  {
+    "objectID": "04-log-protocol.html#증거-파일",
+    "href": "04-log-protocol.html#증거-파일",
+    "title": "5  로그 규약",
+    "section": "5.8 증거 파일",
+    "text": "5.8 증거 파일\n로그 §4 에 붙이기에 긴 원자료는 별도로 둔다.\nlog/log-version-up-2026-08-14/evidence/\n├─ phase02/\n│  ├─ ci-forensics-r-cmd-check.txt\n│  ├─ test-skip-matrix.csv\n│  └─ coverage-baseline.json\n└─ phase04/\n   └─ hash-drift-bisect.txt\n로그에서는 상대 경로로 링크한다.",
+    "crumbs": [
+      "실행 규약",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>로그 규약</span>"
+    ]
+  },
+  {
+    "objectID": "05-phase-01-foundation.html",
+    "href": "05-phase-01-foundation.html",
+    "title": "6  Phase 1 — 작업 기반 복구",
+    "section": "",
+    "text": "6.1 목표\n버전 관리와 실행 환경을 복구해서, 이후 모든 작업이 diff 기반으로 진행되고 되돌릴 수 있게 만든다. Phase 1 은 package 의 동작을 전혀 바꾸지 않는다 — 오직 그것을 안전하게 만질 수 있는 기반을 만든다.\n이 Phase 가 첫 번째인 이유는 단순하다. Ch.1 A-1 이 확인했듯 로컬 작업본은 git repository 가 아니고, 원격 main 과 3 개월의 미확인 격차가 있다. 이 상태에서 코드를 고치면 무엇이 원래 상태였는지 영원히 알 수 없게 된다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Phase 1 — 작업 기반 복구</span>"
+    ]
+  },
+  {
+    "objectID": "05-phase-01-foundation.html#목표",
+    "href": "05-phase-01-foundation.html#목표",
+    "title": "6  Phase 1 — 작업 기반 복구",
+    "section": "",
+    "text": "Step 수\n5 (1.1 – 1.5)\n\n\n누적 시간\n~85 분\n\n\n선행 Phase\n없음 (계획 승인 G-A)\n\n\n종료 로그\n002_phase01-foundation-recovery.qmd",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Phase 1 — 작업 기반 복구</span>"
+    ]
+  },
+  {
+    "objectID": "05-phase-01-foundation.html#step-1.1-로컬-작업본과-원격-main-의-차이-확정",
+    "href": "05-phase-01-foundation.html#step-1.1-로컬-작업본과-원격-main-의-차이-확정",
+    "title": "6  Phase 1 — 작업 기반 복구",
+    "section": "6.2 Step 1.1 — 로컬 작업본과 원격 main 의 차이 확정",
+    "text": "6.2 Step 1.1 — 로컬 작업본과 원격 main 의 차이 확정\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n없음 (계획 승인 후 첫 Step)\n\n\n\n목표. 원격 joonho112/multisiteDGP 의 main 을 스크래치 영역에 클론하고, 로컬 작업본과 파일 단위로 비교해서 3 개월 격차의 정체를 확정한다. 어느 쪽이 최신인지, 로컬에만 있는 변경이 무엇인지, 원격에만 있는 변경이 무엇인지를 목록으로 만든다.\n작업.\n\n스크래치에 원격 클론 (log/log-version-up-2026-08-14/artifacts/remote-main-clone/ 이 아니라 세션 스크래치 — 저장소를 오염시키지 않는다)\ndiff -rq 로 파일 단위 비교. .Rbuildignore 대상, docs/, _files/, 빌드 산출물은 제외\n차이 나는 파일을 3 분류: 로컬만 있음 / 원격만 있음 / 양쪽 다 있으나 내용 다름\n세 번째 분류의 각 파일에 대해 어느 쪽이 최신인지 판정 (mtime + 내용 검토)\n원격 main 의 최근 커밋 20 개 로그 확보 — 로컬 상태가 어느 커밋에 대응하는지 추정\n\n산출물.\n\nlog/log-version-up-2026-08-14/evidence/phase01/local-vs-remote-diff.md — 3 분류 표 + 판정 근거\nlog/log-version-up-2026-08-14/evidence/phase01/remote-main-log.txt — 원격 커밋 로그\n판정 결론 한 문장: “로컬이 원격의 superset / subset / 분기” 중 하나\n\n완료 조건.\n\n차이 나는 모든 파일이 3 분류 중 하나에 배정되어 있다\n“양쪽 다 있으나 내용 다름” 분류의 각 파일에 최신 판정과 근거가 있다\n로컬이 원격보다 앞서는지 뒤처지는지가 한 문장으로 결론 나 있다\n\n\n\n\n\n\n\n이 Step 은 읽기 전용이다. 어떤 파일도 복사하거나 덮어쓰지 않는다. Step 1.2 가 판정에 따라 조치한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Phase 1 — 작업 기반 복구</span>"
+    ]
+  },
+  {
+    "objectID": "05-phase-01-foundation.html#step-1.2-git-복구-및-브랜치-전략-확정",
+    "href": "05-phase-01-foundation.html#step-1.2-git-복구-및-브랜치-전략-확정",
+    "title": "6  Phase 1 — 작업 기반 복구",
+    "section": "6.3 Step 1.2 — git 복구 및 브랜치 전략 확정",
+    "text": "6.3 Step 1.2 — git 복구 및 브랜치 전략 확정\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n1.1\n\n\n\n목표. 로컬 작업본을 git 관리 하에 두고 원격과 연결한다. Step 1.1 의 판정에 따라 복구 경로가 갈린다.\n복구 경로 (1.1 판정에 따라 택일).\n\n\n\n\n\n\n\n1.1 판정\n경로\n\n\n\n\n로컬 == 원격\n원격을 클론한 뒤 로컬 고유 파일을 얹는다. 가장 단순\n\n\n로컬이 원격의 superset (로컬이 앞섬)\n원격 클론 → 로컬 상태를 작업 트리에 반영 → chore: restore local working state 단일 커밋\n\n\n로컬이 원격보다 뒤처짐\nPI 확인 필요. 로컬에서만 한 작업이 있는지 물어보고 진행\n\n\n분기 (양쪽 고유 변경 존재)\nPI 확인 필요. 병합 방침 결정 후 진행\n\n\n\n작업.\n\n복구 경로 실행 — .git 이 로컬 작업 디렉터리에 존재하고 origin 이 연결된 상태를 만든다\ngit status 가 깨끗한지 확인. 안 깨끗하면 .gitignore / .Rbuildignore 를 점검 (Step 1.4 와 조율)\n브랜치 전략 확정 및 문서화 — 기본안은 Ch.3 의 upgrade/phase-NN-&lt;slug&gt;\nPhase 1 작업 브랜치 생성: upgrade/phase-01-foundation\n복구 시점 상태를 태그: pre-upgrade-baseline\n\n산출물.\n\ngit 관리 하의 작업 디렉터리 (.git 존재, origin 연결, 작업 트리 clean)\npre-upgrade-baseline 태그 (로컬 + 원격 push)\nupgrade/phase-01-foundation 브랜치\nlog/log-version-up-2026-08-14/decisions/branch-strategy.md\n\n완료 조건.\n\ngit rev-parse --is-inside-work-tree → true\ngit remote -v 가 joonho112/multisiteDGP 를 가리킨다\ngit status --porcelain 출력이 비어 있다\npre-upgrade-baseline 태그가 원격에 있다\n\n\n\n\n\n\n\nImportant되돌릴 수 없는 Step\n\n\n\n이 Step 전에 작업 디렉터리 전체를 압축 백업한다. 경로: log/log-version-up-2026-08-14/artifacts/pre-git-recovery-backup.tar.gz (.Rbuildignore 에 추가). git 복구 중 사고가 나면 여기서 복구한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Phase 1 — 작업 기반 복구</span>"
+    ]
+  },
+  {
+    "objectID": "05-phase-01-foundation.html#step-1.3-개발-환경-고정",
+    "href": "05-phase-01-foundation.html#step-1.3-개발-환경-고정",
+    "title": "6  Phase 1 — 작업 기반 복구",
+    "section": "6.4 Step 1.3 — 개발 환경 고정",
+    "text": "6.4 Step 1.3 — 개발 환경 고정\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n1.2\n\n\n\n목표. 누락된 Suggests 의존성을 설치하고, 이후 모든 Phase 가 동일한 환경에서 실행되도록 환경을 기록한다.\n작업.\n\n누락 3 종 설치 시도\n\ncopula — CRAN. 설치\nhedgehog — CRAN. 설치\nmultisitepower — CRAN 미배포. 개발 소스에서 설치 시도, 실패 시 사유 기록\n\n설치 후 Imports 13 + Suggests 18 전수 재확인\nstale install 정리 — 설치된 multisiteDGP 0.0.0.9000 제거 또는 devtools::install() 로 갱신. 이후 library(multisiteDGP) 대신 load_all() 사용 원칙 확인\n환경 스냅샷 기록 — sessionInfo(), R 버전, 플랫폼, 주요 package 버전, Quarto 버전\nCI 매트릭스가 쓰는 R 버전과 로컬 R 4.6.0 의 차이 확인 (R-CMD-check.yaml 의 release/devel/oldrel 정의)\n\n산출물.\n\nlog/log-version-up-2026-08-14/evidence/phase01/environment-snapshot.txt\nlog/log-version-up-2026-08-14/evidence/phase01/dependency-status.csv — package / 역할 / 요구 버전 / 설치 버전 / 상태\nmultisitepower 설치 실패 시 그 영향 범위 한 단락\n\n완료 조건.\n\ncopula 와 hedgehog 가 설치되어 있고 requireNamespace() 가 TRUE\n의존성 상태 CSV 에 31 개 package 전부 행이 있다\n환경 스냅샷이 기록되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Phase 1 — 작업 기반 복구</span>"
+    ]
+  },
+  {
+    "objectID": "05-phase-01-foundation.html#step-1.4-저장소-위생-정리",
+    "href": "05-phase-01-foundation.html#step-1.4-저장소-위생-정리",
+    "title": "6  Phase 1 — 작업 기반 복구",
+    "section": "6.5 Step 1.4 — 저장소 위생 정리",
+    "text": "6.5 Step 1.4 — 저장소 위생 정리\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n1.2\n\n\n\n목표. 빌드 산출물과 잔재를 제거해서 이후 진단이 가짜 신호로 오염되지 않게 한다. Ch.1 A-3 의 목록을 처리한다.\n작업.\n\n제거 대상 처리 — 각각 삭제 전에 내용을 확인하고, 원격에 없는 고유 정보가 있으면 보존\n\n..Rcheck/, multisiteDGP.Rcheck/ — check 잔재. 삭제\nmultisiteDGP_0.0.0.9000.tar.gz, multisiteDGP_0.1.0.tar.gz — 과거 빌드. artifacts/ 로 이동 후 작업 루트에서 제거\nLibrary/, Outputs/ — 빈 디렉터리. 삭제\n.DS_Store — 삭제 + .gitignore 등재\nblueprint-multisiteDGP-book-v1.0-20260507.zip (41 MB) — 원본 book 폴더가 존재하므로 중복. artifacts/ 이동 또는 삭제 (PI 확인)\n\n.gitignore 작성 또는 갱신 — 위 패턴 + _book/, _files/, *.Rcheck/, .quarto/\n.Rbuildignore 점검 — 새 log 폴더 ^log$ 가 이미 등재되어 있는지 확인 (등재되어 있음)\n정리 후 R CMD build 로 tarball 을 만들어 크기와 포함 파일 확인\n\n산출물.\n\n정리된 작업 디렉터리\n.gitignore (신규 또는 갱신)\nlog/log-version-up-2026-08-14/evidence/phase01/cleanup-manifest.md — 무엇을 어디로 보냈는지\ntarball 크기 before/after\n\n완료 조건.\n\n위 7 개 항목이 전부 처리되어 있다 (삭제 / 이동 / 보존 중 하나로, 각각 근거 기록)\ngit status --porcelain 이 깨끗하다\nR CMD build 가 성공하고 tarball 에 불필요한 파일이 없다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Phase 1 — 작업 기반 복구</span>"
+    ]
+  },
+  {
+    "objectID": "05-phase-01-foundation.html#step-1.5-베이스라인-측정",
+    "href": "05-phase-01-foundation.html#step-1.5-베이스라인-측정",
+    "title": "6  Phase 1 — 작업 기반 복구",
+    "section": "6.6 Step 1.5 — 베이스라인 측정",
+    "text": "6.6 Step 1.5 — 베이스라인 측정\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분 (백그라운드 실행 시간 별도)\n\n\n의존\n1.3, 1.4\n\n\n\n목표. v0.2.0 작업 시작 시점의 정량 상태를 고정한다. Phase 11 에서 이 수치와 비교해 개선을 증명한다.\n작업. 아래를 전부 실행하고 출력을 그대로 보존한다. 시간이 걸리는 것은 백그라운드로 병행.\n\n\n\n\n\n\n\n\n측정\n명령\n기록\n\n\n\n\n기본 테스트\ntestthat::test_local(\".\")\nPASS / FAIL / SKIP 수, 소요 시간\n\n\n확장 테스트\n위 + MULTISITEDGP_RUN_SLOW=true MULTISITEDGP_RUN_PROPERTY=true\n동일\n\n\ncheck (기본)\ndevtools::check(vignettes = FALSE, args = \"--as-cran\")\nE/W/N 수 + NOTE 전문\n\n\ncheck (전체)\ndevtools::check(args = \"--as-cran\") — vignette 포함\n동일 + vignette knit 시간\n\n\n커버리지\ncovr::package_coverage()\n전체 % + 파일별 %\n\n\nlint\nlintr::lint_package()\n위반 수 + 유형별 분포\n\n\n성능\nsim_multisite(preset_education_modest(), seed=1) 실행 시간, design_grid() 소규모 sweep\n벤치마크\n\n\n\n산출물.\n\nlog/log-version-up-2026-08-14/evidence/phase01/baseline-metrics.md — 위 7 개 측정의 요약 표\nevidence/phase01/baseline-raw/ — 각 실행의 원본 출력 7 개 파일\n특히 full check 의 NOTE 2 건 정체 를 확정 (Ch.1 U-6)\n\n완료 조건.\n\n7 개 측정이 전부 실행되고 원본 출력이 보존되어 있다\n요약 표에 각 수치가 있고, R CMD check NOTE 의 내용이 기록되어 있다\nPhase 11 Step 11.1 이 같은 명령으로 재측정할 수 있게 명령 전문이 기록되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Phase 1 — 작업 기반 복구</span>"
+    ]
+  },
+  {
+    "objectID": "05-phase-01-foundation.html#phase-종료-조건",
+    "href": "05-phase-01-foundation.html#phase-종료-조건",
+    "title": "6  Phase 1 — 작업 기반 복구",
+    "section": "6.7 Phase 종료 조건",
+    "text": "6.7 Phase 종료 조건\nPhase 1 로그(002)를 쓰기 전에 아래를 실제로 확인한다.\n\n로컬 작업 디렉터리가 git repository 이고 origin 이 연결되어 있다\npre-upgrade-baseline 태그가 로컬과 원격에 있다\ngit status --porcelain 이 비어 있다\n로컬 vs 원격 차이 판정이 문서로 남아 있다\ncopula, hedgehog 설치 완료 (multisitepower 는 실패해도 사유 기록으로 충족)\n저장소 위생 7 개 항목 처리 완료\n베이스라인 측정 7 종 원본 출력 보존\nPhase 1 브랜치가 main 에 병합되고 push 되어 CI 가 실행됐다 (실패해도 무방 — Phase 6 가 담당)",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Phase 1 — 작업 기반 복구</span>"
+    ]
+  },
+  {
+    "objectID": "05-phase-01-foundation.html#phase-로그",
+    "href": "05-phase-01-foundation.html#phase-로그",
+    "title": "6  Phase 1 — 작업 기반 복구",
+    "section": "6.8 Phase 로그",
+    "text": "6.8 Phase 로그\n002_phase01-foundation-recovery.qmd + .html. Ch.4 의 8 절 구조를 따른다.\n§4 (근거와 실행 결과) 에는 반드시 다음을 포함한다.\n\n로컬 vs 원격 diff 요약 표\ngit 복구 경로와 실행한 명령\n베이스라인 측정 7 종 요약 표 — 이 표가 Phase 11 의 비교 기준이 되므로 형식을 정확히 맞춘다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Phase 1 — 작업 기반 복구</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html",
+    "href": "06-phase-02-defect-audit.html",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "",
+    "text": "7.1 목표\n추측이 아니라 증거로 결함 원장을 구축한다. Ch.1 의 감사는 planning agent 가 한 세션에 훑은 결과다. Phase 2 는 각 영역을 체계적으로 재감사해서 ① 재현 절차가 붙은 결함 목록과 ② P0/P1/P2 트리아지를 확정한다.\nPhase 2 는 아무것도 고치지 않는다. 감사 중 명백한 버그를 발견해도 원장에 등재만 하고 지나간다. 수정은 Phase 4 · 5 · 7 이 원장을 소비하며 수행한다. 이 분리가 없으면 감사가 임기응변 수정으로 흩어지고 원장이 완성되지 않는다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#목표",
+    "href": "06-phase-02-defect-audit.html#목표",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "",
+    "text": "Step 수\n9 (2.1 – 2.9)\n\n\n누적 시간\n~175 분\n\n\n선행 Phase\nPhase 1\n\n\n종료 로그\n003_phase02-defect-audit.qmd\n\n\n\n\n\n\n\n\n\nNote감사 마비 방지\n\n\n\nPhase 2 의 실패 모드는 결함을 계속 발견하며 끝나지 않는 것이다. Step 2.9 에서 원장을 닫는다. 이후 발견분은 v0.3 백로그로 간다. 각 감사 Step 은 배정된 시간 안에 끝내고, 더 파야 할 것이 보이면 “추가 조사 필요” 행을 원장에 남기되 그 자리에서 파지 않는다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#step-2.1-ci-실패-포렌식",
+    "href": "06-phase-02-defect-audit.html#step-2.1-ci-실패-포렌식",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.2 Step 2.1 — CI 실패 포렌식",
+    "text": "7.2 Step 2.1 — CI 실패 포렌식\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분 (CI 실행 대기 별도)\n\n\n의존\nPhase 1\n\n\n\n목표. 2026-05-10 의 R-CMD-check / lint / test-coverage 실패 원인을 규명한다. GitHub 로그가 90 일 보존 기간을 넘겨 만료됐으므로(HTTP 410) 재현으로 알아내야 한다.\n작업.\n\n4 개 workflow YAML 정독 — R-CMD-check.yaml, lint.yaml, test-coverage.yaml, extended-tests.yaml. 매트릭스 정의, 환경 변수, 의존성 설치 방식, 실패 조건 기록\nextended-tests 실패 로그는 확보 가능(2026-07-13) — 전문을 evidence/ 에 보존하고 실패 항목 전수 분류\n나머지 3 개는 재현. 두 경로 중 택일:\n\n경로 A (권장). Phase 1 브랜치를 원격에 push 해 workflow 를 실제로 태우고 실패 로그를 새로 확보\n경로 B. 로컬에서 workflow 가 하는 일을 흉내낸다 — lintr::lint_package(), covr::package_coverage(), R CMD check 를 workflow 와 동일한 옵션으로\n\n각 실패를 원인별로 분류: 환경 문제(의존성 설치, 캐시, 토큰) / 코드 문제(실제 결함) / 아티팩트 문제(fixture, snapshot) / 설정 문제(YAML)\nextended-tests 10 주 연속 실패가 동일 원인인지 확인 — 첫 실패(2026-05-11)와 마지막 실패(2026-07-13)의 실패 항목이 같은지 대조\n\n산출물.\n\nevidence/phase02/ci-forensics.md — workflow 별 실패 원인 분류표\nevidence/phase02/extended-tests-2026-07-13-full.log — 원본 로그\n원장 행: CI 관련 결함 각각\n\n완료 조건.\n\n4 개 workflow 각각에 대해 실패 원인이 4 분류 중 하나로 배정되어 있다\nextended-tests 실패 항목이 전수 열거되어 있다 (testthat 10 건 절단을 넘어 — 로컬 Linux 재현 또는 --max-fails 조정)\n각 원인이 원장 행으로 등재되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#step-2.2-테스트-스위트-무결성-감사",
+    "href": "06-phase-02-defect-audit.html#step-2.2-테스트-스위트-무결성-감사",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.3 Step 2.2 — 테스트 스위트 무결성 감사",
+    "text": "7.3 Step 2.2 — 테스트 스위트 무결성 감사\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nPhase 1 (특히 1.3, 1.5)\n\n\n\n목표. 테스트 스위트가 실제로 무엇을 검증하고 무엇을 검증하지 않는지 확정한다.\n작업.\n\nskip 매트릭스 작성 — 71 개 테스트 파일 전수. 각 test_that() 블록에 대해: 테스트 ID | 파일 | 검증 대상 | skip 조건 | 기본 실행 시 실행 여부\nskip 사유 타당성 평가 — 각 skip 게이트에 대해: 왜 게이트되어 있나? 비용(실행 시간)이 근거인가, 환경(플랫폼·의존성)이 근거인가? 게이트를 없앨 때 드는 실제 비용은?\nslow 테스트 실행 시간 측정 — MULTISITEDGP_RUN_SLOW=true 로 파일별 소요 시간. 어느 테스트가 얼마나 비싼지 수치화\nhedgehog 부재 경로 확인 (Ch.1 U-3) — Step 1.3 설치 후 property 테스트를 다시 돌려 이전과 결과가 다른지 확인. 다르면 이전 통과는 가짜였다\n커버리지 공백 — Step 1.5 의 커버리지 출력에서 하위 파일 식별. 특히 R/ 대비 어느 함수가 0% 인지\n테스트 품질 스팟 체크 — expect_true(TRUE) 류의 빈 assertion, tolerance 가 과도하게 느슨한 수치 비교, snapshot 에만 의존하는 검증 탐색\n\n산출물.\n\nevidence/phase02/test-skip-matrix.csv — 전 테스트 × skip 상태\nevidence/phase02/slow-test-timing.csv — 파일별 소요 시간\nevidence/phase02/coverage-gaps.md — 커버리지 하위 파일 + 미검증 함수\n원장 행: 테스트 관련 결함\n\n완료 조건.\n\nskip 매트릭스가 71 개 파일 전수를 덮는다\nslow 테스트 전체 소요 시간이 수치로 나와 있다 (Phase 5 의 비용 절감 목표를 세우는 근거)\nhedgehog 설치 전후 property 테스트 결과 비교가 기록되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#step-2.3-재현성-계약-감사",
+    "href": "06-phase-02-defect-audit.html#step-2.3-재현성-계약-감사",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.4 Step 2.3 — 재현성 계약 감사",
+    "text": "7.4 Step 2.3 — 재현성 계약 감사\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n2.1\n\n\n\n목표. canonical_hash 플랫폼 드리프트의 발생 지점을 특정한다. Phase 4 의 재설계는 이 규명 없이 시작할 수 없다.\n작업.\n\ncanonical_hash() 구현 정독 — R/utils-reproducibility.R (507 줄). 직렬화 스키마, 정규화 단계, 해시 알고리즘(xxhash64), 무엇을 포함·제외하는지\n드리프트 이분 탐색 — Linux 와 macOS 에서 동일 seed 로 sim_multisite() 를 돌리고 Layer 별로 중간 산출물을 비교\n\nLayer 1 (gen_effects) 출력 z_j 가 같은가?\nLayer 2 (gen_site_sizes / gen_se_direct) 출력 se2_j 가 같은가?\nLayer 3 (dependence alignment) 후 같은가?\nLayer 4 (gen_observations) 후 같은가?\n첫 번째로 갈라지는 Layer 가 드리프트 발생 지점\n\n발생 지점의 원인 후보 좁히기 — libm 함수 호출(exp, log, qnorm 외 외부 라이브러리), nleqslv solver 반복, sn package 내부, long-double 누산, 정렬 안정성(tie-breaking)\n드리프트 크기 측정 — 몇 ULP 차이인가? 상대 오차는? 통계적으로 무의미한 수준인가?\ngolden fixture 9 개 + print-example snapshot 의 생성 provenance 전수 확인 — inst/extdata/golden/golden-fixture-manifest.csv, tests/testthat/_snaps/\ntools/cross-os-reproducibility-policy.md 의 조항과 실제 구현·아티팩트의 불일치 전수 열거\n\n산출물.\n\nevidence/phase02/hash-drift-bisect.md — Layer 별 비교 결과 + 발생 지점 특정\nevidence/phase02/fixture-provenance.csv — fixture / snapshot 별 생성 플랫폼\nevidence/phase02/policy-vs-reality.md — 정책 조항 × 실제 상태 대조표\n원장 행: 재현성 관련 결함\n\n완료 조건.\n\n드리프트가 처음 나타나는 Layer 가 특정되어 있다\n드리프트 크기가 ULP 또는 상대 오차로 수치화되어 있다\n모든 fixture / snapshot 의 생성 플랫폼이 확인되어 있다\n\n\n\n\n\n\n\nTipLinux 실행 수단\n\n\n\nLinux 비교는 ① Phase 1 에서 복구한 CI 에 진단용 workflow 를 임시로 태우거나, ② 로컬 Docker (rocker/r-ver) 로 한다. ② 가 반복 실험에 훨씬 빠르므로 권장하며, 컨테이너 정의를 evidence/phase02/ 에 남겨 Phase 4 가 재사용한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#step-2.4-광고-구현-갭-감사",
+    "href": "06-phase-02-defect-audit.html#step-2.4-광고-구현-갭-감사",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.5 Step 2.4 — 광고-구현 갭 감사",
+    "text": "7.5 Step 2.4 — 광고-구현 갭 감사\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nPhase 1\n\n\n\n목표. package 가 약속하는 것과 실제로 하는 것의 차이를 전수 조사한다.\n작업.\n\n약속 표면 수집 — DESCRIPTION Description 필드, NEWS.md 기능 목록, README.md, index.md, _pkgdown.yml 홈 설명, 53 개 exports 의 roxygen @description / @param / @return\n각 약속에 대해 실행으로 검증 — 특히 다음 4 개 기지 갭의 정확한 범위 확정\n\ntrue_dist = \"DPM\" — 어디까지 동작하고 어디서 abort 하나? gen_effects_dpm() 직접 호출은? g_fn bridge 경로는?\ntarget_marginal_rho — 인자 수용 지점, abort 지점, 관련 문서 언급 위치 전부\nupstream 예약 인자 — 어느 함수에 있고 문서에 노출되어 있나?\nscenario_audit() SkewN Group C resolver — 실제 실패 양상 재현\n\n미발견 갭 탐색 — 53 exports × 주요 인자 조합을 훑으며 “문서에 있는데 동작하지 않는” 것 추가 탐색. @examples 를 전부 실행해 실패하는 것이 있는지 확인\n역방향 확인 — 구현되어 있는데 문서화되지 않은 것 (숨은 기능, 미문서 인자)\ndocumentation-updates/working/06-final-punch-list.md 의 P0-1 ~ P0-7, P1-1 ~ P1-3, P2-1 ~ P2-3 각각의 실제 완료 여부 확인 (Ch.1 U-9)\n\n산출물.\n\nevidence/phase02/promise-vs-implementation.csv — 약속 | 출처 | 검증 방법 | 결과 | 갭 여부\nevidence/phase02/punch-list-status.md — 2026-05 punch list 13 항목의 현재 상태\n원장 행: 갭 각각\n\n완료 조건.\n\n4 개 기지 갭의 정확한 범위가 재현 절차와 함께 기록되어 있다\n53 exports 의 @examples 가 전부 실행되고 실패 목록이 있다\n2026-05 punch list 13 항목 전부에 현재 상태가 배정되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#step-2.5-통계-커널-감사-①-layer-1",
+    "href": "06-phase-02-defect-audit.html#step-2.5-통계-커널-감사-①-layer-1",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.6 Step 2.5 — 통계 커널 감사 ①: Layer 1",
+    "text": "7.6 Step 2.5 — 통계 커널 감사 ①: Layer 1\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n2.2\n\n\n\n목표. 여덟 개 분포 shape 의 표준화 계약 이 실제로 지켜지는지, 그리고 미검증 경계 가 어디인지 확정한다.\n작업.\n\n표준화 계약 재확인 — 각 shape 에 대해 큰 표본에서 mean(z_j) ≈ 0, var(z_j) ≈ 1 을 직접 측정. T13–T17 이 이미 검증하지만, 여기서는 테스트가 쓰는 것보다 넓은 파라미터 격자에서 확인\n경계 파라미터 탐색 — 각 shape 의 파라미터 공간 가장자리에서 무슨 일이 일어나는가\n\nStudent-t: nu 가 2 에 가까울 때 (분산 발산 직전)\nSkewN: alpha 극단값\nALD: 극단 비대칭\nMixture: pi 가 0 또는 1 에 가까울 때, ups 극단\nPMSlab: pi0 가 0 또는 1\n\nfail-fast 검증 — 위 경계에서 abort 해야 하는데 조용히 이상한 값을 주는 경우가 있는가? 반대로 유효한 파라미터인데 불필요하게 abort 하는가?\ngen_effects_user() callback 계약 — g_returns = \"standardized\" / \"raw\" 두 경로, RNG 격리, 오류 전파\ncovariate 경로 — formula + beta 가 있을 때 residual/marginal 분해가 문서와 일치하는지\n\n산출물.\n\nevidence/phase02/layer1-audit.md — shape 별 표준화 검증 + 경계 동작표\nevidence/phase02/layer1-parameter-grid.csv — 실행한 파라미터 격자와 결과\n원장 행: Layer 1 관련 결함\n\n완료 조건.\n\n8 shape 전부에 대해 표준화 계약 검증 결과가 있다\n각 shape 의 경계 파라미터 동작이 기록되어 있다 (정상 / abort / 조용한 이상값)\ngen_effects_user() 두 경로 모두 검증되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#step-2.6-통계-커널-감사-②-layer-24-및-solver",
+    "href": "06-phase-02-defect-audit.html#step-2.6-통계-커널-감사-②-layer-24-및-solver",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.7 Step 2.6 — 통계 커널 감사 ②: Layer 2–4 및 solver",
+    "text": "7.7 Step 2.6 — 통계 커널 감사 ②: Layer 2–4 및 solver\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n2.5\n\n\n\n목표. margin/SE 모형, dependence injection, observation layer 의 정확성과 solver 견고성을 감사한다.\n작업.\n\nLayer 2 — engine A1 / A2 — site size 경로와 direct precision 경로. (I, R) 목표가 실제로 달성되는가? A2 의 truncated gamma solver 가 실패하는 파라미터 영역은? (blueprint BR1/V04 “solver feasible region” 이 이미 다룬 영역 — 그 결론이 현재 코드에 반영되어 있는지 확인)\nLayer 3 — dependence injection 3 종 — rank / copula / hybrid\n\n목표 Spearman 이 실제로 달성되는가? 달성 오차 분포는?\n극단 목표값(±0.9 이상)에서 어떻게 되는가?\nalign_copula_corr() 는 copula package 설치 후 처음으로 제대로 검증된다 (Step 1.3 이후)\ntie 처리 (T19) 와 zero-alignment (BR6/V09) 경로\n\nLayer 4 — gen_observations() — Gaussian observation model. seed 전파, RNG 상태 보존\nwrapper 계약 — sim_multisite() / sim_meta() 의 인자 검증, wrong-door 오류, design 객체 경로와 flat 인자 경로의 동치성\n진단 함수 — compute_I, compute_kappa, feasibility_index, informativeness, mean_shrinkage 의 수식이 blueprint 정의와 일치하는지 (2026-05 Round 2 에서 kappa R² 공식 수정 이력 있음 — 회귀 확인)\n\n산출물.\n\nevidence/phase02/layer2-4-audit.md\nevidence/phase02/solver-feasible-region.csv — A2 solver 및 dependence solver 실패 영역\n원장 행: Layer 2–4 및 solver 관련 결함\n\n완료 조건.\n\nA2 solver 의 실패 영역이 파라미터 격자로 기록되어 있다\ndependence 3 방식 각각의 목표 달성 오차가 수치화되어 있다\n진단 함수 5 개의 수식이 blueprint 와 대조되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#step-2.7-api-ux-감사",
+    "href": "06-phase-02-defect-audit.html#step-2.7-api-ux-감사",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.8 Step 2.7 — API · UX 감사",
+    "text": "7.8 Step 2.7 — API · UX 감사\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n2.4\n\n\n\n목표. 사용자가 실제로 만나는 표면 — 인자 이름, 기본값, 오류 메시지, print/summary 출력 — 의 일관성과 유용성을 감사한다.\n작업.\n\n오류 메시지 감사 — 타입드 에러 7 종 × E01–E30 카탈로그. 각 오류가 실제로 발생 가능한가(도달 불가 코드는?), 메시지가 3 부 구조(무엇이 잘못 / 왜 / 어떻게)를 지키는가, tools/traceability/error-index.csv 와 일치하는가\n인자 일관성 — 유사 개념에 같은 이름을 쓰는가? (rank_corr vs pearson_corr vs target_marginal_rho, max_iter/tol 의 위치)\n기본값 타당성 — 53 exports 의 기본값이 문서가 말하는 “합리적 출발점” 인지\nprint / summary 출력 — scenario_audit() 의 PASS/WARN/FAIL 판정 임계값이 default_thresholds() 와 일치하는가. feasibility_index 가 “target N/A” 로 표시되는 것이 의도된 동작인가 (CI 로그에서 반복 관찰됨)\npreset 9 종 — 각 preset 이 문서가 주장하는 문헌 값과 일치하는가 (preset_walters_2024() 의 sigma_tau = 0.197 등)\n\n산출물.\n\nevidence/phase02/api-ux-audit.md\nevidence/phase02/error-catalog-reachability.csv — E01–E30 × 도달 가능성 × 메시지 품질\n원장 행: API/UX 관련 결함\n\n완료 조건.\n\nE01–E30 전부에 도달 가능성 판정이 있다\npreset 9 종의 파라미터가 문서 주장과 대조되어 있다\nscenario_audit() 임계값 체계가 검토되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#step-2.8-의존성-및-성능-감사",
+    "href": "06-phase-02-defect-audit.html#step-2.8-의존성-및-성능-감사",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.9 Step 2.8 — 의존성 및 성능 감사",
+    "text": "7.9 Step 2.8 — 의존성 및 성능 감사\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n1.3, 1.5\n\n\n\n목표. 의존성 정책 준수와 성능 회귀 여부를 확인한다.\n작업.\n\n의존성 정책 대조 — tools/dependency-policy.csv 와 실제 DESCRIPTION 의 Imports 13 / Suggests 18 대조. 정책에 없는 의존성이 있는가? 정책에 있는데 안 쓰는 것은?\nsoft-dep guard 검증 — Suggests 각각에 대해 미설치 상태에서 관련 함수를 호출했을 때 적절한 안내 오류가 나는가 (Engineering Principle 8)\nmultisitepower 처리 — CRAN 미배포 의존성의 문서화 상태와 CI 처리\nvignette knit 시간 (Ch.1 U-8, punch list P0-2 미완) — 16 편 각각의 knit 시간 측정. 총합이 5 분을 넘으면 어느 vignette 이 병목인지\n핵심 경로 성능 — Step 1.5 의 벤치마크를 확장. J 를 키우며(50 / 200 / 1000) 각 Layer 의 시간 스케일링. design_grid() 대규모 sweep 의 실용성\nno-compiled-code 정책 준수 확인 (tools/no-compiled-code-policy.md)\n\n산출물.\n\nevidence/phase02/dependency-audit.csv\nevidence/phase02/vignette-knit-timing.csv — 16 편 × 시간\nevidence/phase02/performance-scaling.csv\n원장 행: 의존성/성능 관련 결함\n\n완료 조건.\n\nImports/Suggests 31 개 전부가 정책과 대조되어 있다\nvignette 16 편의 knit 시간이 측정되어 있다 (P0-2 종결)\n성능 스케일링이 최소 3 개 J 값에서 측정되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#step-2.9-결함-원장-종합-및-트리아지",
+    "href": "06-phase-02-defect-audit.html#step-2.9-결함-원장-종합-및-트리아지",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.10 Step 2.9 — 결함 원장 종합 및 트리아지",
+    "text": "7.10 Step 2.9 — 결함 원장 종합 및 트리아지\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n2.1 – 2.8 전부\n\n\n\n목표. Step 2.1–2.8 이 만든 원장 행을 통합하고, 중복을 제거하고, P0/P1/P2 로 트리아지하고, 원장을 닫는다.\n작업.\n\nStep 2.1–2.8 의 원장 행을 defect-ledger.csv 로 통합. 스키마는 부록 A\n중복 제거 — 여러 감사 Step 이 같은 근본 원인을 다른 증상으로 잡은 경우 통합\n근본 원인 그룹핑 — 증상이 여러 개여도 원인이 하나면 한 행으로 묶고 증상을 나열. 예: Linux snapshot 실패 10 건 → hash 드리프트 1 행\n트리아지 — 각 행에 P0/P1/P2 배정\n\nP0 — v0.2.0 릴리스를 막는다. 성공 기준 G1–G7 중 하나를 직접 위협하는 것\nP1 — 고쳐야 하지만 비용이 크면 v0.3 으로. 사용자에게 보이는 결함이되 릴리스를 막지는 않음\nP2 — 있으면 좋은 것. v0.3 백로그 기본\n\nPhase 배정 — 각 P0/P1 행이 Phase 4 / 5 / 7 중 어디서 처리될지 지정\n재현 절차 검증 — P0 각 행의 재현 절차를 실제로 한 번씩 실행해서 재현되는지 확인. 재현 안 되면 P0 에서 강등\n원장 잠금 — 이후 발견분은 status deferred-v0.3 이 기본임을 원장 헤더에 명시\n\n산출물.\n\nlog/log-version-up-2026-08-14/defect-ledger.csv — 확정 원장\nevidence/phase02/triage-rationale.md — P0 배정 각각의 근거\nevidence/phase02/root-cause-groups.md — 증상 → 근본 원인 매핑\n\n완료 조건.\n\n원장의 모든 행에 ID, 우선순위, 재현 절차, 담당 Phase 가 있다\nP0 전건의 재현 절차가 실제로 실행되어 재현이 확인되어 있다\nP0 각 행이 성공 기준 G1–G7 중 어느 것을 위협하는지 명시되어 있다\nP0 개수가 Phase 4/5/7 의 용량(각 ~7 Step)에 들어가는지 검토되어 있다. 넘치면 Phase 3 이 범위를 조정한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#phase-종료-조건",
+    "href": "06-phase-02-defect-audit.html#phase-종료-조건",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.11 Phase 종료 조건",
+    "text": "7.11 Phase 종료 조건\n\nStep 2.1–2.8 각각의 증거 파일이 evidence/phase02/ 에 존재한다\ndefect-ledger.csv 가 존재하고 모든 행에 필수 필드가 채워져 있다\nP0 전건이 재현 확인되어 있다\nCh.1 §F 의 미확인 사항 U-1 ~ U-9 가 전부 해소되었거나, 해소 못한 것이 원장 행으로 남아 있다\n어떤 코드 파일도 수정되지 않았다 (git diff 가 R/, tests/, man/ 에 대해 비어 있다)",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "06-phase-02-defect-audit.html#phase-로그",
+    "href": "06-phase-02-defect-audit.html#phase-로그",
+    "title": "7  Phase 2 — 결함 인벤토리 감사",
+    "section": "7.12 Phase 로그",
+    "text": "7.12 Phase 로그\n003_phase02-defect-audit.qmd + .html.\n§4 (근거) 에는 감사 8 개 영역의 요약을, §6 (원장 변경) 에는 확정 원장 전문을 표로 포함한다. 이 로그가 Phase 3–7 의 작업 지시서 역할을 하므로 원장은 로그 안에서도 읽을 수 있어야 한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Phase 2 — 결함 인벤토리 감사</span>"
+    ]
+  },
+  {
+    "objectID": "07-phase-03-scope-decisions.html",
+    "href": "07-phase-03-scope-decisions.html",
+    "title": "8  Phase 3 — v0.2.0 범위 결정",
+    "section": "",
+    "text": "8.1 목표\n되돌리기 비싼 결정을 PI 승인 아래 확정한다. Phase 2 가 결함을 알아냈다면 Phase 3 은 무엇을 어떻게 고칠지 를 정한다. 네 가지 결정이 Phase 4–7 의 작업 내용을 좌우한다.\nPhase 3 은 아무것도 구현하지 않는다. 옵션을 비교하고, 근거를 정리하고, PI 결정을 받는다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Phase 3 — v0.2.0 범위 결정</span>"
+    ]
+  },
+  {
+    "objectID": "07-phase-03-scope-decisions.html#목표",
+    "href": "07-phase-03-scope-decisions.html#목표",
+    "title": "8  Phase 3 — v0.2.0 범위 결정",
+    "section": "",
+    "text": "결정\n왜 PI 승인이 필요한가\n\n\n\n\nD1 — 재현성 계약 재설계\nhash schema 변경은 기존 fixture · 논문 재현 증거 · 사용자 코드에 영향. cross-os-reproducibility-policy.md 는 이를 “major-version reproducibility decision” 사안으로 규정\n\n\nD2 — 광고-구현 갭 처리\nDPM 을 광고에서 빼는 것은 사용자에게 보이는 축소. IES 보고서에서 이미 8 shape 를 언급했을 수 있음\n\n\nD3 — 테스트 게이트 정책\n게이트를 없애면 CI 시간과 개발 루프 시간이 늘어난다. 비용/편익 판단\n\n\nD4 — 버전 번호와 릴리스 범위\nP0 개수에 따라 v0.2.0 에 넣을 것과 v0.3 으로 미룰 것이 갈린다\n\n\n\n\n\n\n\nStep 수\n5 (3.1 – 3.5)\n\n\n누적 시간\n~90 분 (+ PI 검토 시간)\n\n\n선행 Phase\nPhase 2 (원장 확정)\n\n\n종료 로그\n004_phase03-scope-decisions.qmd\n\n\n게이트\nG-B — PI 승인 없이 Phase 4 진입 금지",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Phase 3 — v0.2.0 범위 결정</span>"
+    ]
+  },
+  {
+    "objectID": "07-phase-03-scope-decisions.html#step-3.1-d1-재현성-계약-재설계-옵션-비교",
+    "href": "07-phase-03-scope-decisions.html#step-3.1-d1-재현성-계약-재설계-옵션-비교",
+    "title": "8  Phase 3 — v0.2.0 범위 결정",
+    "section": "8.2 Step 3.1 — D1: 재현성 계약 재설계 옵션 비교",
+    "text": "8.2 Step 3.1 — D1: 재현성 계약 재설계 옵션 비교\n\n\n\n항목\n값\n\n\n\n\n모드\n다중 관점 (3 옵션 각각을 옹호하는 관점으로 작성 후 비교)\n\n\n소요\n~25 분\n\n\n의존\nStep 2.3 (드리프트 발생 지점 특정)\n\n\n\n목표. Step 2.3 이 특정한 드리프트 원인을 놓고, 재현성 계약을 어떻게 다시 설계할지 옵션을 비교한다.\n옵션 (Step 2.3 결과에 따라 조정 가능).\n\n\n\n\n\n\n\n\n\n옵션\n내용\n장점\n단점\n\n\n\n\nO1 — 현행 유지 + 아티팩트 정정\nhash schema 그대로. golden fixture / snapshot 을 Linux 에서 재생성해 정책과 일치시킨다\n최소 변경, 계약 불변, 기존 재현 증거 유지\nmacOS/Windows 개발자는 여전히 로컬에서 T1a 검증 불가. 드리프트 원인 자체는 남음\n\n\nO2 — 허용 오차 기반 해시\n해시 전에 수치를 정해진 유효자리로 정규화(round). 플랫폼 간 동일 해시 달성\n세 플랫폼 전부에서 계약 검증 가능. 개발 루프 개선\nschema 변경 → 기존 hash 전부 무효. 정규화 자리수 선택이 자의적. 진짜 수치 회귀를 가릴 위험\n\n\nO3 — 이중 계약\n비트 해시(canonical_hash)는 same-machine 용으로 유지 + 별도 stable_hash (허용 오차 기반)를 cross-platform 계약으로 추가\n두 목적을 분리. 기존 계약 보존 + 새 계약 추가\n표면 증가, 두 해시의 용도 혼동 위험, 문서 부담\n\n\n\n작업.\n\nStep 2.3 의 드리프트 크기 수치를 근거로 각 옵션의 실현 가능성 평가. 드리프트가 1–2 ULP 면 O2 가 안전하고, 크면 O2 는 진짜 문제를 가린다\n각 옵션에 대해: 구현 범위(어느 파일, 몇 Step), 영향 받는 아티팩트(fixture / snapshot / vignette / traceability ledger), 사용자 영향, 되돌리기 비용\nJEBS 논문 재현성 영향 평가 — golden fixture 는 Lee et al. (2025) 부록 재현 증거다. 각 옵션이 이 증거를 어떻게 처리하는지가 결정적\ncross-os-reproducibility-policy.md 를 각 옵션에 맞게 개정할 때 바뀌는 조항 열거\n권고안 1 개 제시 + 근거\n\n산출물.\n\nlog/log-version-up-2026-08-14/decisions/D1-reproducibility-contract.md — 옵션 3 개 비교표 + 권고안 + PI 결정란\n각 옵션의 Phase 4 Step 구성 초안\n\n완료 조건.\n\n3 옵션 각각에 구현 범위 · 영향 · 되돌리기 비용이 명시되어 있다\nJEBS 재현 증거에 대한 영향이 각 옵션별로 평가되어 있다\n권고안과 근거가 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Phase 3 — v0.2.0 범위 결정</span>"
+    ]
+  },
+  {
+    "objectID": "07-phase-03-scope-decisions.html#step-3.2-d2-광고-구현-갭-처리-방침",
+    "href": "07-phase-03-scope-decisions.html#step-3.2-d2-광고-구현-갭-처리-방침",
+    "title": "8  Phase 3 — v0.2.0 범위 결정",
+    "section": "8.3 Step 3.2 — D2: 광고-구현 갭 처리 방침",
+    "text": "8.3 Step 3.2 — D2: 광고-구현 갭 처리 방침\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nStep 2.4\n\n\n\n목표. Step 2.4 가 확정한 갭 각각에 대해 구현 / 광고 축소 / 명시적 deprecate 중 하나를 배정한다.\n작업.\n각 갭에 대해 세 선택지를 비용과 함께 제시한다.\n\n\n\n\n\n\n\n\n\n갭\n선택지 A (구현)\n선택지 B (광고 축소)\n선택지 C (명시적 실험 기능)\n\n\n\n\nDPM\ndirichletprocess 또는 NIMBLE wrap. blueprint §24.2.1 이 v2.0 으로 미룬 항목 — 표준화 recipe 가 sample-dependent 라는 blocker 존재\nDESCRIPTION / NEWS 에서 “eight shapes” → “seven shapes + DPM bridge (미구현)”. gen_effects_dpm() 은 stub 유지\nlifecycle::experimental 배지 + 명시적 “미구현” 문서. export 유지\n\n\ntarget_marginal_rho\nblueprint §24.2.7 이 v2.0 으로 미룬 항목 — PSD compatibility bound 구현 필요\n인자 제거 또는 문서에서 숨김. E23 메시지를 “v2 예정” 으로 명확화\n현행 유지 + 문서 명확화\n\n\nupstream\n용도 불명 — 먼저 무엇을 위한 인자인지 blueprint 에서 확인\n인자 제거\n현행 유지\n\n\nSkewN audit resolver\nR/diagnostics-core.R Group C resolver 확장. punch list 는 60–90 분 추정\nM2 vignette 에 한계 명시 (punch list 기본안, ~10 분)\n—\n\n\n\n작업 순서.\n\n각 갭의 실제 구현 비용 을 blueprint 의 blocker 서술과 대조해 재추정\n사용자 영향 평가 — IES annual report, JEBS 논문, 기존 사용자 코드에서 해당 기능을 언급/사용하는가?\n각 갭에 권고 선택지 배정\n선택지 B(광고 축소)를 택한 갭에 대해 바꿔야 할 문서 위치 전수 열거 — DESCRIPTION, NEWS.md, README.Rmd, index.md, roxygen, vignette, pkgdown\n\n산출물.\n\ndecisions/D2-advertised-surface.md — 갭 × 선택지 × 비용 × 권고 + PI 결정란\n선택지 B 채택 시 수정 대상 문서 위치 목록\n\n완료 조건.\n\nStep 2.4 가 찾은 모든 갭에 권고 선택지가 배정되어 있다\n각 권고에 구현 비용 추정과 사용자 영향 평가가 있다\n광고 축소 대상의 문서 위치가 전수 열거되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Phase 3 — v0.2.0 범위 결정</span>"
+    ]
+  },
+  {
+    "objectID": "07-phase-03-scope-decisions.html#step-3.3-d3-테스트-게이트-정책-재설계",
+    "href": "07-phase-03-scope-decisions.html#step-3.3-d3-테스트-게이트-정책-재설계",
+    "title": "8  Phase 3 — v0.2.0 범위 결정",
+    "section": "8.4 Step 3.3 — D3: 테스트 게이트 정책 재설계",
+    "text": "8.4 Step 3.3 — D3: 테스트 게이트 정책 재설계\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\nStep 2.2 (skip 매트릭스, slow 테스트 타이밍)\n\n\n\n목표. 30 개 skip 을 어떻게 없앨지 정한다. 목표는 성공 기준 G3 — 기본 devtools::test() 의 skip ≤ 3 이다.\n작업.\n\nStep 2.2 의 타이밍 자료를 근거로 각 slow 테스트를 4 분류\n\n그대로 켠다 — 실행 비용이 실제로 낮음. 게이트가 관성으로 남아 있던 것\n비용을 줄여서 켠다 — 표본 크기 / 반복 수 / 격자 크기를 통계적 검정력을 유지하며 축소\n분할한다 — 빠른 핵심 검증은 기본, 전수 격자는 확장 스위트\n확장 스위트로 남긴다 — 정당한 사유가 있는 것만. 사유를 문서화\n\n기본 스위트 시간 예산 설정 — 목표: 기본 devtools::test() 가 N 분 이내. N 을 정한다 (권고: 3 분)\n확장 스위트 재정의 — 무엇이 남는가? extended-tests workflow 가 무엇을 돌리는가?\nproperty 테스트 처리 — hedgehog 를 Suggests 로 유지할지, 게이트를 없앨지\n플랫폼 게이트 처리 — skip_if_not_linux_strict_hash() 는 D1 결정에 종속. O2/O3 를 택하면 이 게이트는 사라진다\n\n산출물.\n\ndecisions/D3-test-gate-policy.md — 테스트별 4 분류 배정 + 시간 예산 + PI 결정란\n\n완료 조건.\n\n현재 게이트된 30 개 테스트 전부에 4 분류 중 하나가 배정되어 있다\n기본 스위트 목표 시간이 정해져 있다\n확장 스위트에 남기는 것 각각에 사유가 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Phase 3 — v0.2.0 범위 결정</span>"
+    ]
+  },
+  {
+    "objectID": "07-phase-03-scope-decisions.html#step-3.4-d4-버전-번호와-릴리스-범위-확정",
+    "href": "07-phase-03-scope-decisions.html#step-3.4-d4-버전-번호와-릴리스-범위-확정",
+    "title": "8  Phase 3 — v0.2.0 범위 결정",
+    "section": "8.5 Step 3.4 — D4: 버전 번호와 릴리스 범위 확정",
+    "text": "8.5 Step 3.4 — D4: 버전 번호와 릴리스 범위 확정\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n3.1, 3.2, 3.3, Step 2.9\n\n\n\n목표. 원장의 P0/P1 을 v0.2.0 에 넣을 것과 v0.3 으로 미룰 것으로 나누고, 버전 번호를 확정한다.\n작업.\n\nP0 용량 검토 — Phase 4/5/7 이 소화할 수 있는 Step 수는 각각 ~7. P0 개수가 이를 넘으면 일부를 P1 로 강등하거나 Phase 를 늘린다\n버전 번호 결정\n\nD1 이 O1(현행 유지)이면 → 0.2.0\nD1 이 O2(schema 변경)면 → 정책상 “major-version reproducibility decision” 에 해당. 0.2.0 으로 가되 NEWS 에 breaking change 를 명시할지, 아니면 다른 번호를 쓸지 판단\nD2 가 광고 축소를 포함하면 → 사용자에게 보이는 축소이므로 NEWS 상단에 명시\n\nv0.3 백로그 확정 — 미룬 항목을 dev/NEWS-internal.md 또는 GitHub Issues 로. GitHub Issues 사용을 권고 — 현재 이슈 0 건이며, 백로그를 저장소 밖에 두면 또 잊힌다\n릴리스 일정 초안 — Phase 4–11 의 예상 소요와 CI 왕복 시간을 반영\n\n산출물.\n\ndecisions/D4-release-scope.md — v0.2.0 포함/제외 목록 + 버전 번호 + 백로그 이관 계획 + PI 결정란\n\n완료 조건.\n\n원장의 모든 P0/P1 행이 “v0.2.0 포함” 또는 “v0.3 백로그” 로 배정되어 있다\n버전 번호가 근거와 함께 제안되어 있다\nv0.2.0 포함분이 Phase 4/5/7 의 Step 용량에 들어간다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Phase 3 — v0.2.0 범위 결정</span>"
+    ]
+  },
+  {
+    "objectID": "07-phase-03-scope-decisions.html#step-3.5-pi-승인-패킷-작성-및-제출",
+    "href": "07-phase-03-scope-decisions.html#step-3.5-pi-승인-패킷-작성-및-제출",
+    "title": "8  Phase 3 — v0.2.0 범위 결정",
+    "section": "8.6 Step 3.5 — PI 승인 패킷 작성 및 제출",
+    "text": "8.6 Step 3.5 — PI 승인 패킷 작성 및 제출\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n3.1 – 3.4\n\n\n\n목표. PI 가 10 분 안에 읽고 결정할 수 있는 승인 패킷을 만든다. 네 결정을 한 문서에 모으고, 각각에 권고안과 결정란을 둔다.\n작업.\n\nD1–D4 결정 문서를 한 패킷으로 통합. 각 결정마다:\n\n한 문단 배경 (왜 이 결정이 필요한가)\n옵션 표 (선택지 × 비용 × 영향)\n권고안 1 개 와 근거 3 줄\n결정란 (승인 / 대안 선택 / 보류)\n\n패킷 맨 앞에 1 페이지 요약 — 네 결정과 네 권고안만\n각 결정이 되돌릴 수 있는지 표시\n결정이 늦어질 때 무엇이 막히는지 표시 (D1 → Phase 4 전체, D2 → Phase 7 일부, D3 → Phase 5 전체, D4 → 없음)\n\n산출물.\n\ndecisions/000-PI-approval-packet.md — 통합 패킷\ndecisions/000-PI-approval-packet.html — 렌더본 (PI 가 읽기 편하게)\n\n완료 조건.\n\n네 결정 전부에 권고안과 결정란이 있다\n1 페이지 요약이 있다\n패킷이 렌더되어 있다\n\n\n\n\n\n\n\nImportant게이트 G-B\n\n\n\n이 Step 이후 실행을 멈추고 PI 결정을 기다린다. PI 결정 없이 Phase 4 로 진입하지 않는다. 결정이 도착하면 각 결정 문서의 결정란을 채우고 Phase 3 로그를 완성한 뒤 Phase 4 를 시작한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Phase 3 — v0.2.0 범위 결정</span>"
+    ]
+  },
+  {
+    "objectID": "07-phase-03-scope-decisions.html#phase-종료-조건",
+    "href": "07-phase-03-scope-decisions.html#phase-종료-조건",
+    "title": "8  Phase 3 — v0.2.0 범위 결정",
+    "section": "8.7 Phase 종료 조건",
+    "text": "8.7 Phase 종료 조건\n\nD1–D4 결정 문서 4 개가 decisions/ 에 있다\nPI 승인 패킷이 작성·렌더되어 제출됐다\nPI 결정이 도착했고 각 결정 문서에 기록됐다\nD1 결정에 따라 Phase 4 의 Step 구성이 확정됐다\nD3 결정에 따라 Phase 5 의 Step 구성이 확정됐다\nD4 결정에 따라 원장 행이 v0.2.0 / v0.3 으로 배정됐다\nv0.3 백로그가 GitHub Issues (또는 PI 가 정한 위치) 로 이관됐다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Phase 3 — v0.2.0 범위 결정</span>"
+    ]
+  },
+  {
+    "objectID": "07-phase-03-scope-decisions.html#phase-로그",
+    "href": "07-phase-03-scope-decisions.html#phase-로그",
+    "title": "8  Phase 3 — v0.2.0 범위 결정",
+    "section": "8.8 Phase 로그",
+    "text": "8.8 Phase 로그\n004_phase03-scope-decisions.qmd + .html.\n§5 (결정 사항) 이 이 로그의 핵심이다. 네 결정 각각에 대해 선택된 안, 기각된 안, 기각 사유, 되돌릴 수 있는지 를 적는다. 6 개월 뒤 “왜 이렇게 했지?” 를 이 절에서 답할 수 있어야 한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Phase 3 — v0.2.0 범위 결정</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html",
+    "href": "08-phase-04-reproducibility.html",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "",
+    "text": "9.1 목표\nPhase 3 D1 결정을 구현해서, 재현성 계약이 문서·아티팩트·CI 세 곳에서 일치하게 만든다. 성공 기준 G4 를 달성하고, extended-tests 10 주 연속 실패의 근본 원인을 제거한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#목표",
+    "href": "08-phase-04-reproducibility.html#목표",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "",
+    "text": "WarningD1 결정 종속\n\n\n\n이 Phase 의 Step 구성은 Phase 3 Step 3.1 의 D1 결정에 따라 달라진다. 아래는 세 옵션 공통 골격이며, 옵션별 차이는 각 Step 안에 분기로 표시했다. Phase 3 종료 시 실제 Step 구성을 확정하고 이 장을 참조해 실행한다.\n\n\n\n\n\nStep 수\n7 (4.1 – 4.7)\n\n\n누적 시간\n~135 분 (+ CI / Linux 실행 대기)\n\n\n선행 Phase\nPhase 3 (게이트 G-B 통과)\n\n\n종료 로그\n005_phase04-reproducibility-contract.qmd\n\n\n병렬 가능\nPhase 5, Phase 7 과 병렬 진행 가능",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#step-4.1-드리프트-근본-원인-확정-및-완화-가능성-판정",
+    "href": "08-phase-04-reproducibility.html#step-4.1-드리프트-근본-원인-확정-및-완화-가능성-판정",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "9.2 Step 4.1 — 드리프트 근본 원인 확정 및 완화 가능성 판정",
+    "text": "9.2 Step 4.1 — 드리프트 근본 원인 확정 및 완화 가능성 판정\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nStep 2.3, D1 결정\n\n\n\n목표. Step 2.3 이 어느 Layer 에서 드리프트가 시작되는지 특정했다면, 이 Step 은 어느 연산 인지 특정하고 그것을 제거할 수 있는지 판정한다.\n작업.\n\nStep 2.3 이 지목한 Layer 안에서 연산 단위로 좁힌다. Linux/macOS 양쪽에서 중간값을 덤프해 비교\n후보 연산별 확인\n\nnleqslv solver — 수렴 판정 tolerance 를 조여도 남는가? 초기값 의존성은?\nsn package 내부 (rsn, qsn) — 해당 shape 만 드리프트하는가?\n정렬 / rank / tie-breaking — order(), rank() 의 tie 처리가 플랫폼 의존인가?\nlibm 초월함수 — exp, log, pnorm 계열\n누산 순서 — sum(), mean() 의 long-double 사용\n\n완화 가능성 판정 — 이 연산을 플랫폼 중립으로 바꿀 수 있는가?\n\n가능하면 → 계약을 유지한 채 드리프트를 제거하는 것이 최선. D1 옵션과 무관하게 이것을 먼저 시도\n불가능하면 → D1 결정대로 진행\n\n판정 결과를 D1 결정과 대조. 완화가 가능한데 D1 이 O2/O3 를 택했다면 Phase 3 으로 되돌아가 재검토 (PI 에게 알림)\n\n산출물.\n\nevidence/phase04/drift-root-cause.md — 연산 단위 특정 + 완화 가능성 판정\n완화 가능 시: 수정안 스케치\n\n완료 조건.\n\n드리프트를 일으키는 연산이 함수·줄 수준으로 특정되어 있다\n완화 가능성이 판정되어 있다\nD1 결정과의 정합성이 확인되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#step-4.2-해시-계약-구현",
+    "href": "08-phase-04-reproducibility.html#step-4.2-해시-계약-구현",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "9.3 Step 4.2 — 해시 계약 구현",
+    "text": "9.3 Step 4.2 — 해시 계약 구현\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n4.1\n\n\n\n목표. D1 결정을 R/utils-reproducibility.R 에 구현한다.\n옵션별 작업.\n\n\n\n\n\n\n\nD1 결정\n이 Step 이 하는 일\n\n\n\n\nO1 (현행 유지)\n코드 변경 없음. 대신 canonical_hash() 의 문서에 플랫폼 범위를 명시하고, Step 4.1 이 완화 가능하다고 판정했다면 그 수정만 적용. Step 시간 단축\n\n\nO2 (허용 오차 해시)\n해시 전 수치 정규화 단계 추가. 유효자리 선택 근거를 코드 주석에 남긴다. 기존 hash 와의 관계를 문서화\n\n\nO3 (이중 계약)\nstable_hash() 신설 + export + roxygen. canonical_hash() 는 불변. NAMESPACE 갱신\n\n\n\n공통 작업.\n\n구현\nsame-machine 재현성 회귀 방지 — 같은 머신 · 같은 seed 에서 반복 호출 시 동일 해시 (T20 계약) 가 여전히 성립하는지 즉시 확인\nprovenance_string() 출력 형식 영향 확인 — snapshot 에 나타나는 문자열이 바뀌면 Step 4.5 가 처리\ndesign_hash 는 이미 플랫폼 중립이므로 건드리지 않는다\n\n산출물.\n\n수정된 R/utils-reproducibility.R\n(O3 인 경우) man/stable_hash.Rd, NAMESPACE 갱신\nevidence/phase04/hash-implementation-notes.md\n\n완료 조건.\n\n구현이 완료되고 devtools::load_all() 이 성공한다\nsame-machine 재현성이 확인된다\nLinux/macOS 양쪽에서 새 계약이 의도대로 동작한다 (O2/O3 인 경우 해시 일치, O1 인 경우 문서화된 범위대로)",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#step-4.3-linux-베이스라인-생성-파이프라인",
+    "href": "08-phase-04-reproducibility.html#step-4.3-linux-베이스라인-생성-파이프라인",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "9.4 Step 4.3 — Linux 베이스라인 생성 파이프라인",
+    "text": "9.4 Step 4.3 — Linux 베이스라인 생성 파이프라인\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n4.2\n\n\n\n목표. golden fixture 와 print-example 을 Linux x86_64 에서 재현 가능하게 생성하는 파이프라인을 만든다. 지금까지 이것이 없어서 macOS 산출물이 체크인됐다.\n작업.\n\n생성 환경 정의 — Docker 이미지 (rocker/r-ver:&lt;버전&gt;) 또는 GitHub Actions workflow. 양쪽 다 만드는 것을 권고 — Docker 는 반복 실험용, Actions 는 authoritative 생성용\n기존 생성 스크립트 검토 — tests/data-raw/generate_golden_fixtures.R, tests/data-raw/generate_print_examples.R, tools/jebs-golden-fixtures/generate-jebs-golden-fixtures.R\n파이프라인이 만족해야 할 것\n\n결정론적 — 같은 입력에서 같은 출력\nprovenance 자동 기록 — 플랫폼, R 버전, package 버전, 생성 일시\nMULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN 가드 준수\n\n파이프라인을 한 번 돌려서 기존 macOS 아티팩트와 비교 — 무엇이 얼마나 다른지 기록\n파이프라인 실행 방법을 문서화 (tools/ 또는 CONTRIBUTING.md)\n\n산출물.\n\nDocker 정의 또는 workflow 파일\n갱신된 생성 스크립트\nevidence/phase04/linux-vs-macos-artifacts.md — 차이 목록\n실행 방법 문서\n\n완료 조건.\n\nLinux 에서 fixture / print-example 을 생성하는 절차가 재현 가능하게 문서화되어 있다\n한 번 실행되어 macOS 아티팩트와의 차이가 기록되어 있다\nprovenance 가 자동 기록된다\n\n\n\n\n\n\n\nImportant이전 아티팩트 보존\n\n\n\n재생성 전에 현재 아티팩트 전체를 log/log-version-up-2026-08-14/artifacts/pre-phase04-fixtures/ 에 보존한다. JEBS 논문 재현 증거이므로 되돌릴 수 있어야 한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#step-4.4-golden-fixture-재생성",
+    "href": "08-phase-04-reproducibility.html#step-4.4-golden-fixture-재생성",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "9.5 Step 4.4 — golden fixture 재생성",
+    "text": "9.5 Step 4.4 — golden fixture 재생성\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n4.3\n\n\n\n목표. inst/extdata/golden/ 과 tests/testthat/_snaps/golden/ 의 fixture 9 개를 Linux 베이스라인으로 갱신하고 manifest 를 정정한다.\n작업.\n\nStep 4.3 파이프라인으로 fixture 9 개 재생성\n\npreset_jebs_paper, preset_jebs_strict, preset_walters_2024, preset_education_modest, preset_small_area_estimation\njebs_appendix_mixture_seed{1,42,2024,12345}\n\n수치 검증 — 재생성된 fixture 의 통계량이 기존 macOS fixture 와 통계적으로 동등한지 확인. 동등하지 않으면 멈추고 조사. 이것은 플랫폼 드리프트가 아니라 진짜 회귀다\nmanifest 갱신 — golden-fixture-manifest.csv, tools/jebs-golden-fixtures/jebs-golden-fixture-manifest.csv. generated_platform 을 실제 값으로\ninst/extdata/golden/README.md, tests/testthat/_snaps/golden/README.md 갱신\nJEBS 재현 증거 확인 — 재생성된 fixture 가 Lee et al. (2025) 부록 값을 여전히 재현하는지. 이것이 이 Step 의 가장 중요한 검증\n\n산출물.\n\n재생성된 fixture 9 개\n갱신된 manifest 2 개 + README 2 개\nevidence/phase04/fixture-regeneration-report.md — 수치 동등성 검증 + JEBS 재현 확인\n\n완료 조건.\n\nfixture 9 개 전부가 Linux 에서 생성되고 manifest 의 generated_platform 이 이를 반영한다\n통계적 동등성이 확인되어 있다\nJEBS 부록 재현이 확인되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#step-4.5-print-example-및-snapshot-재생성",
+    "href": "08-phase-04-reproducibility.html#step-4.5-print-example-및-snapshot-재생성",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "9.6 Step 4.5 — print-example 및 snapshot 재생성",
+    "text": "9.6 Step 4.5 — print-example 및 snapshot 재생성\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n4.4\n\n\n\n목표. extended-tests 를 실패시킨 snapshot 을 정정한다.\n작업.\n\ntests/testthat/_snaps/print-examples/ 5 개 파일 재생성 (Linux)\ntests/testthat/_snaps/snapshot-print.md, snapshot-errors.md 재생성\nsnapshot 안정성 개선 — Step 2.3 이 찾은 것 외에도, snapshot 에 들어가지 말아야 할 변동 요소가 있는지 점검\n\n&lt;VERSION&gt;, &lt;R&gt; 마스킹은 이미 있음\n해시가 snapshot 에 들어가야 하는가? D1 이 O1 이면 들어가야 하고, O2/O3 면 플랫폼 중립 해시를 쓴다\n부동소수점 표시 자리수가 과도하게 민감한가?\n\n재생성 후 즉시 세 플랫폼 검증 — Linux (생성지), macOS (로컬), Windows (CI). 셋 다 통과해야 이 Step 이 끝난다\nMULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN 가드가 실제로 동작하는지 확인\n\n산출물.\n\n재생성된 snapshot 전체\nevidence/phase04/snapshot-cross-platform-verification.md — 3 플랫폼 검증 결과\n\n완료 조건.\n\n모든 snapshot 이 Linux 베이스라인으로 갱신되어 있다\nLinux · macOS 두 곳에서 실제로 통과가 확인되어 있다 (Windows 는 Phase 6 CI 에서)\nsnapshot 에 남은 변동 요소가 없거나, 남은 것에 사유가 있다\n\n\n\n\n\n\n\nCautionfixture 세탁 금지\n\n\n\n이 Step 은 snapshot_accept() 를 무비판적으로 실행하는 Step 이 아니다. Step 4.1 이 원인을 규명하고 4.2 가 계약을 고친 뒤에야 재생성한다. 원인 규명 없이 accept 하면 재현성 계약을 포기하는 것이다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#step-4.6-재현성-테스트-재작성",
+    "href": "08-phase-04-reproducibility.html#step-4.6-재현성-테스트-재작성",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "9.7 Step 4.6 — 재현성 테스트 재작성",
+    "text": "9.7 Step 4.6 — 재현성 테스트 재작성\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n4.5\n\n\n\n목표. T1a / T20 / cross-os 정책 테스트를 새 계약에 맞게 다시 쓴다.\n작업.\n\nT1a (test-T1a-jebs-bit-identical.R) — D1 결정에 따라\n\nO1 → Linux 게이트 유지하되, CI 에서 실제로 실행되는지 확인. 지금까지 게이트만 있고 실행 증거가 없었다\nO2/O3 → 게이트 제거. 세 플랫폼 전부에서 실행\n\nT20 (test-T20-A2-reproducibility.R) — same-machine 재현성. 계약 변경 후에도 유지되는지\ncross-os 정책 테스트 (test-cross-os-reproducibility-policy-step10-7.R) — 정책 문서와 코드의 일치를 검사하는 테스트. 새 정책에 맞게 갱신\ntest-rng-hash-policy.R — 해시 스키마 계약 테스트. O2/O3 면 대폭 수정\n새 회귀 테스트 추가 — Step 4.1 이 특정한 드리프트 지점에 대한 회귀 테스트. 같은 문제가 다시 생기면 잡히게\n\n산출물.\n\n갱신된 테스트 4 개 + 신규 회귀 테스트\nevidence/phase04/reproducibility-test-matrix.md — 테스트 × 플랫폼 × 실행 여부\n\n완료 조건.\n\nT1a 가 최소 한 플랫폼에서 실제로 실행되고 통과한다 (skip 이 아니라)\nT20 이 세 플랫폼에서 통과한다\n정책 테스트가 새 정책 문서와 일치한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#step-4.7-정책-문서-및-관련-문서-동기화",
+    "href": "08-phase-04-reproducibility.html#step-4.7-정책-문서-및-관련-문서-동기화",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "9.8 Step 4.7 — 정책 문서 및 관련 문서 동기화",
+    "text": "9.8 Step 4.7 — 정책 문서 및 관련 문서 동기화\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n4.6\n\n\n\n목표. 재현성 관련 모든 문서를 새 계약에 맞춘다.\n작업.\n\ntools/cross-os-reproducibility-policy.md 전면 개정 — Step 3.1 이 열거한 바뀌는 조항 반영. 특히 “Current v0.1 golden fixture note” 의 모순 서술 제거\ninst/REPRODUCIBILITY.md 갱신\nvignette(\"m7-reproducibility-provenance\") 갱신 — 사용자가 읽는 재현성 설명\ncanonical_hash() / provenance_string() roxygen 갱신 (+ O3 면 stable_hash() 신규)\ntools/traceability/fixture-index.csv, invariant-index.csv 갱신\nNEWS.md 초안에 재현성 항목 추가 (최종 정리는 Phase 9)\ndevtools::document() 실행\n\n산출물.\n\n갱신된 정책 문서 2 개, vignette 1 편, roxygen, traceability ledger 2 개\nNEWS 초안 항목\n\n완료 조건.\n\n정책 문서에 모순 서술이 남아 있지 않다\nvignette M7 이 실제 동작을 설명한다\ndevtools::document() 후 man/ 이 최신이다\n정책 테스트(Step 4.6)가 여전히 통과한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#phase-종료-조건",
+    "href": "08-phase-04-reproducibility.html#phase-종료-조건",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "9.9 Phase 종료 조건",
+    "text": "9.9 Phase 종료 조건\n\n드리프트 근본 원인이 연산 수준으로 특정되어 있다\nD1 결정이 구현되어 있다\ngolden fixture 9 개가 Linux 베이스라인이고 manifest 가 이를 반영한다\nJEBS 부록 재현이 재확인되어 있다\n모든 snapshot 이 Linux 베이스라인이고 Linux · macOS 에서 통과한다\nT1a 가 실제로 실행되어 통과한다 (skip 아님)\n정책 문서에 모순이 없다\n이전 아티팩트가 artifacts/pre-phase04-fixtures/ 에 보존되어 있다\n원장의 재현성 관련 P0 행이 전부 fixed",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "08-phase-04-reproducibility.html#phase-로그",
+    "href": "08-phase-04-reproducibility.html#phase-로그",
+    "title": "9  Phase 4 — 재현성 계약 재구축",
+    "section": "9.10 Phase 로그",
+    "text": "9.10 Phase 로그\n005_phase04-reproducibility-contract.qmd + .html.\n§5 (결정 사항) 에 드리프트 근본 원인 과 그것을 어떻게 처리했는지 를 상세히 남긴다. 이 Phase 는 v0.2.0 의 가장 기술적으로 어려운 부분이며, 6 개월 뒤 유사 문제가 재발했을 때 이 로그가 유일한 단서다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Phase 4 — 재현성 계약 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html",
+    "href": "09-phase-05-test-suite.html",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "",
+    "text": "10.1 목표\n기본 테스트 실행이 실제로 통계적 정확성을 검증하게 만든다. 성공 기준 G3 — 기본 devtools::test() 의 skip ≤ 3, 각각 문서화된 사유 를 달성한다.\n현재 문제는 코드가 아니라 게이트다 (Ch.1 C-2). 게이트를 켜면 로컬에서 전부 통과한다. 따라서 이 Phase 의 본질은 테스트를 새로 쓰는 것이 아니라 이미 있는 테스트가 실행되게 만드는 것 이며, 그 과정에서 비용을 감당 가능한 수준으로 낮추는 것이다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#목표",
+    "href": "09-phase-05-test-suite.html#목표",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "",
+    "text": "Step 수\n8 (5.1 – 5.8)\n\n\n누적 시간\n~150 분\n\n\n선행 Phase\nPhase 3 (D3 결정)\n\n\n종료 로그\n006_phase05-test-suite-rebuild.qmd\n\n\n병렬 가능\nPhase 4, Phase 7 과 병렬 진행 가능\n\n\n\n\n\n\n\n\n\nNotePhase 4 와의 조율\n\n\n\nStep 5.5 (snapshot 안정화) 는 Phase 4 Step 4.5 와 겹친다. Phase 4 가 snapshot 아티팩트를, Phase 5 가 snapshot 테스트 코드를 담당한다. 두 Phase 를 병렬로 돌린다면 Step 5.5 는 Step 4.5 이후로 배치한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#step-5.1-skip-게이트-1-차-제거-비용이-낮은-것",
+    "href": "09-phase-05-test-suite.html#step-5.1-skip-게이트-1-차-제거-비용이-낮은-것",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.2 Step 5.1 — skip 게이트 1 차 제거: 비용이 낮은 것",
+    "text": "10.2 Step 5.1 — skip 게이트 1 차 제거: 비용이 낮은 것\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nD3 결정, Step 2.2\n\n\n\n목표. D3 이 “그대로 켠다” 로 분류한 테스트에서 게이트를 제거한다. 실행 비용이 실제로 낮은데 관성으로 게이트되어 있던 것들이다.\n작업.\n\nD3 분류 ①(“그대로 켠다”) 에 해당하는 테스트에서 skip_if_not_slow() / skip_if_not_property() 호출 제거\n제거 후 기본 스위트 실행 — 시간 증가분 측정\n시간 예산(D3 이 정한 값, 권고 3 분) 대비 여유 확인\n게이트 제거로 드러나는 실패가 있으면 원장에 등재하고 Phase 7 로 넘긴다. 여기서 고치지 않는다 — 이 Step 은 게이트 작업이다\n\n산출물.\n\n게이트가 제거된 테스트 파일들\nevidence/phase05/gate-removal-batch1.md — 제거 목록 + 시간 영향 + 새로 드러난 실패\n\n완료 조건.\n\nD3 분류 ① 전체에서 게이트가 제거되어 있다\n기본 스위트 실행 시간이 측정되어 있다\n새로 드러난 실패가 원장에 등재되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#step-5.2-slow-테스트-비용-절감-①-표준화-계약-t13t17",
+    "href": "09-phase-05-test-suite.html#step-5.2-slow-테스트-비용-절감-①-표준화-계약-t13t17",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.3 Step 5.2 — slow 테스트 비용 절감 ①: 표준화 계약 (T13–T17)",
+    "text": "10.3 Step 5.2 — slow 테스트 비용 절감 ①: 표준화 계약 (T13–T17)\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n5.1\n\n\n\n목표. 표준화 계약 테스트 T13(ALD) · T14(Mixture) · T15(Student-t) · T16(SkewN) · T17(PMSlab) 를 검정력을 유지하면서 기본 스위트에 넣을 수 있게 만든다.\n이 다섯 개가 package 의 핵심 과학적 주장 — “여덟 shape 가 단위분산 규약을 공유한다” — 을 검증한다. 기본 실행에서 빠져 있으면 안 된다.\n작업.\n\n각 테스트의 현재 비용 구조 분석 — 표본 크기, 반복 수, 파라미터 격자 크기 중 무엇이 지배적인가\n검정력 보존 축소 — 표본 크기를 줄이면 tolerance 를 그에 맞게 넓혀야 한다. 축소 후에도 실제 위반을 잡을 수 있는지 확인: 의도적으로 표준화를 깨뜨린 값을 넣어 테스트가 실패하는지 검증 (mutation 검사)\n축소한 버전을 기본 스위트에, 전수 격자 버전을 확장 스위트에 남긴다 (D3 분류 ③ “분할”)\n각 테스트에 tolerance 선택 근거를 주석으로 남긴다 — helper-tolerances.R 를 활용\n5 개 각각 재실행해 통과 확인\n\n산출물.\n\n수정된 테스트 5 개 (기본 + 확장 분할)\nevidence/phase05/standardization-test-power.md — 축소 전후 검정력 비교 + mutation 검사 결과\n\n완료 조건.\n\nT13–T17 이 기본 스위트에서 실행된다\n각 테스트가 mutation 검사를 통과한다 (의도적 위반을 잡아낸다)\n축소로 인한 시간 절감이 수치화되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#step-5.3-slow-테스트-비용-절감-②-분포-검정-t1b-t4-t9-t10-t11",
+    "href": "09-phase-05-test-suite.html#step-5.3-slow-테스트-비용-절감-②-분포-검정-t1b-t4-t9-t10-t11",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.4 Step 5.3 — slow 테스트 비용 절감 ②: 분포 검정 (T1b, T4, T9, T10, T11)",
+    "text": "10.4 Step 5.3 — slow 테스트 비용 절감 ②: 분포 검정 (T1b, T4, T9, T10, T11)\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n5.2\n\n\n\n목표. 분포 검정 계열을 같은 방식으로 처리한다.\n대상.\n\n\n\n\n\n\n\n\n테스트\n검증 대상\n비용 원인\n\n\n\n\nT1b\nEngine A2 Gaussian KS binomial gate\n반복 수\n\n\nT4\ndependence none 의 Spearman 순열 envelope\n순열 반복\n\n\nT9\n기본 true_dist 가 Gaussian (Shapiro binomial gate)\n반복 수\n\n\nT10\nnj_min truncation + multi-rep 평균\n반복 수 (로그에서 매우 긴 실행 확인)\n\n\nT11\nJEBS Paradigm A 전체 격자의 I envelope\n격자 크기\n\n\n\n작업.\n\nbinomial gate 방식 테스트(T1b, T9)는 gate 파라미터 재설계 — 반복 수와 허용 실패율의 조합. 반복을 줄이면서 1 종 오류율을 유지하는 조합 탐색\nT10 은 로그상 가장 긴 테스트 중 하나. 반복 수를 줄이고 전수는 확장 스위트로\nT11 은 격자를 대표점으로 축소하고 전수 격자는 확장 스위트로\nT4 는 순열 반복 수 조정\n각각 mutation 검사\n\n산출물.\n\n수정된 테스트 5 개\nevidence/phase05/distributional-test-tuning.md — gate 파라미터 재설계 근거\n\n완료 조건.\n\n5 개 전부 기본 스위트에서 실행된다\nbinomial gate 의 1 종 오류율이 계산되어 기록되어 있다\nmutation 검사 통과",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#step-5.4-property-테스트-정리",
+    "href": "09-phase-05-test-suite.html#step-5.4-property-테스트-정리",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.5 Step 5.4 — property 테스트 정리",
+    "text": "10.5 Step 5.4 — property 테스트 정리\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n5.1, Step 1.3 (hedgehog 설치)\n\n\n\n목표. P01–P12 core invariant 를 기본 스위트에 넣고, hedgehog 의존을 정리한다.\n작업.\n\nStep 2.2 의 확인 결과(hedgehog 부재 시 어떤 경로로 통과했는지)를 반영. 만약 hedgehog 없이는 실질 검증이 없었다면 그동안의 통과는 가짜였으므로 원장에 등재\nhedgehog 를 Suggests 로 유지할지 결정 (D3 이 정했으면 그대로)\n\n유지 → 미설치 시 명확한 skip + CI 에는 반드시 설치\n제거 → 자체 생성기로 대체. P01–P12 각각에 결정론적 대표 케이스 + 소수의 무작위 케이스\n\nP01–P12 를 기본 스위트로 이동. 케이스 수를 조정해 시간 예산 안에 들어가게\nP10 (A2 fixture 비트 동일성) 은 Phase 4 의 해시 계약 변경 영향을 받는다. Phase 4 결과와 정합 확인\n각 property 에 대해 mutation 검사\n\n산출물.\n\n수정된 test-property-core-invariants.R\nevidence/phase05/property-test-audit.md — hedgehog 처리 결정 + 케이스 수 + mutation 결과\n\n완료 조건.\n\nP01–P12 가 기본 스위트에서 실행된다\nhedgehog 처리 방침이 구현되고 문서화되어 있다\nP10 이 Phase 4 의 해시 계약과 정합한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#step-5.5-snapshot-테스트-안정화",
+    "href": "09-phase-05-test-suite.html#step-5.5-snapshot-테스트-안정화",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.6 Step 5.5 — snapshot 테스트 안정화",
+    "text": "10.6 Step 5.5 — snapshot 테스트 안정화\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nStep 4.5 (Phase 4 병렬 시)\n\n\n\n목표. snapshot 테스트가 플랫폼과 무관하게 안정적으로 통과하게 만든다. Phase 4 가 아티팩트를 고쳤다면 이 Step 은 테스트 코드 를 고친다.\n작업.\n\nhelper-snapshots.R 의 래퍼 검토 — 마스킹 규칙(&lt;VERSION&gt;, &lt;R&gt;)이 충분한가?\n변동 요소 전수 조사 — snapshot 에 들어가는 모든 값 중 환경 의존적인 것: 경로, 시간, locale, 부동소수점 표시, 해시\n각 변동 요소에 대해: 마스킹 / 제거 / 유지(사유 기록) 중 하나 배정\nscenario_audit() 의 PASS/WARN/FAIL 카운트가 snapshot 에 들어가는 것이 적절한지 재검토 — 이것은 유용한 회귀 검증이지만 임계값 근처 값에서 불안정하다. Step 2.7 의 API 감사 결과 반영\ntest-snapshot-errors.R — 오류 메시지 snapshot. 메시지 변경에 민감한 것이 의도인지 확인\n세 플랫폼 검증 (Windows 는 Phase 6)\n\n산출물.\n\n수정된 snapshot 테스트 + helper\nevidence/phase05/snapshot-variance-sources.csv — 변동 요소 × 처리\n\n완료 조건.\n\nsnapshot 의 모든 변동 요소가 분류·처리되어 있다\nLinux · macOS 에서 snapshot 테스트가 통과한다\n남은 환경 의존 값에 사유가 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#step-5.6-커버리지-공백-보강-①",
+    "href": "09-phase-05-test-suite.html#step-5.6-커버리지-공백-보강-①",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.7 Step 5.6 — 커버리지 공백 보강 ①",
+    "text": "10.7 Step 5.6 — 커버리지 공백 보강 ①\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nStep 2.2 (커버리지 공백 목록)\n\n\n\n목표. Step 2.2 가 식별한 커버리지 하위 파일 중 상위 절반에 테스트를 추가한다.\n작업.\n\n공백 목록에서 우선순위 결정 — 다음 순서\n\n사용자가 직접 호출하는 exported 함수의 미검증 경로\n오류 처리 경로 (typed error 를 발생시키는 분기)\n통계적으로 중요한 내부 함수\n순수 유틸리티\n\n상위 절반에 테스트 추가. 각 테스트는 행 커버리지가 아니라 동작 을 검증한다 — 커버리지 숫자를 올리기 위한 테스트는 쓰지 않는다\n추가 후 커버리지 재측정\n\n산출물.\n\n신규/확장 테스트 파일\nevidence/phase05/coverage-improvement-batch1.md — 대상 | 추가한 테스트 | 커버리지 변화\n\n완료 조건.\n\n우선순위 상위 절반이 처리되어 있다\n커버리지 변화가 측정되어 있다\n추가한 테스트가 전부 통과한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#step-5.7-커버리지-공백-보강-②",
+    "href": "09-phase-05-test-suite.html#step-5.7-커버리지-공백-보강-②",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.8 Step 5.7 — 커버리지 공백 보강 ②",
+    "text": "10.8 Step 5.7 — 커버리지 공백 보강 ②\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n5.6\n\n\n\n목표. 나머지 절반을 처리한다.\n작업. Step 5.6 과 동일한 절차. 추가로:\n\nE01–E30 오류 카탈로그 커버리지 — Step 2.7 이 도달 가능하다고 판정한 오류 전부에 발생 테스트가 있는가? 도달 불가로 판정된 것은 코드 제거 후보로 원장에\nsoft-dep guard 커버리지 — Suggests 미설치 상황 시뮬레이션 (with_mocked_bindings 또는 유사)\n최종 커버리지 목표 확인 — 절대 수치 목표를 세우지는 않되, 베이스라인(Step 1.5) 대비 개선을 기록\n\n산출물.\n\n신규/확장 테스트 파일\nevidence/phase05/coverage-improvement-batch2.md\n최종 커버리지 수치 (베이스라인 대비)\n\n완료 조건.\n\n공백 목록 전체가 처리되어 있다 (테스트 추가 또는 “추가 안 함 + 사유”)\n도달 가능한 오류 전부에 테스트가 있다\n커버리지가 베이스라인 이상이다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#step-5.8-회귀-테스트-추가-및-게이트-최종-정리",
+    "href": "09-phase-05-test-suite.html#step-5.8-회귀-테스트-추가-및-게이트-최종-정리",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.9 Step 5.8 — 회귀 테스트 추가 및 게이트 최종 정리",
+    "text": "10.9 Step 5.8 — 회귀 테스트 추가 및 게이트 최종 정리\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n5.1 – 5.7\n\n\n\n목표. 원장의 각 결함에 회귀 테스트를 붙이고, 남은 skip 을 최종 정리한다.\n작업.\n\n회귀 테스트 — 원장의 P0/P1 각 행에 대해, 그 결함이 재발하면 잡히는 테스트가 있는가? 없으면 추가. Phase 7 이 고칠 결함에 대해서는 먼저 실패하는 테스트를 쓴다 (Phase 7 이 통과시킨다)\n남은 skip 최종 정리 — 기본 스위트를 돌려 skip 목록 확인. 목표는 ≤ 3\n\n남는 것 각각에 사유를 테스트 파일 주석과 evidence/ 문서 양쪽에 기록\nskip_if_not_validation(), skip_if_api_missing() 이 여전히 필요한지 검토. 안 쓰이면 helper 에서 제거\n\n기본 스위트 최종 시간 측정 — D3 의 시간 예산 준수 확인\n확장 스위트 정의 확정 — extended-tests workflow 가 무엇을 돌리는지 명확히. Phase 6 이 이 정의를 쓴다\n전체 스위트 2 회 연속 실행해 플레이키 테스트 탐지\n\n산출물.\n\n회귀 테스트 파일들\n정리된 helper-skip-policy.R\nevidence/phase05/final-skip-inventory.md — 남은 skip × 사유\nevidence/phase05/suite-timing-final.md — 기본/확장 스위트 시간\n\n완료 조건.\n\n기본 스위트 skip ≤ 3, 각각 사유 기록 (성공 기준 G3)\n원장의 P0/P1 각 행에 회귀 테스트가 대응한다\n기본 스위트가 시간 예산 안에 든다\n2 회 연속 실행에서 결과가 동일하다 (플레이키 없음)",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#phase-종료-조건",
+    "href": "09-phase-05-test-suite.html#phase-종료-조건",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.10 Phase 종료 조건",
+    "text": "10.10 Phase 종료 조건\n\n기본 devtools::test() 의 skip 이 3 개 이하이고 각각 사유가 문서화되어 있다\nT13–T17, T1b, T4, T9, T10, T11, P01–P12 가 기본 스위트에서 실행된다\n축소한 테스트가 전부 mutation 검사를 통과한다\n커버리지가 베이스라인(Step 1.5) 이상이다\n원장의 P0/P1 각 행에 회귀 테스트가 있다\n기본 스위트가 D3 시간 예산 안에 든다\n2 회 연속 실행 결과가 동일하다\nhelper-skip-policy.R 에 안 쓰는 helper 가 없다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "09-phase-05-test-suite.html#phase-로그",
+    "href": "09-phase-05-test-suite.html#phase-로그",
+    "title": "10  Phase 5 — 테스트 스위트 재구축",
+    "section": "10.11 Phase 로그",
+    "text": "10.11 Phase 로그\n006_phase05-test-suite-rebuild.qmd + .html.\n§4 에 before/after 비교표를 넣는다: skip 수, 실행 시간, 커버리지, 검증되는 불변량 수. 이 표가 G3 달성의 증거다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Phase 5 — 테스트 스위트 재구축</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html",
+    "href": "10-phase-06-ci.html",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "",
+    "text": "11.1 목표\n5 개 workflow 를 전부 green 으로 만들고, 그 상태가 유지되게 만든다. 성공 기준 G2 를 달성한다.\nCI 가 3 개월간 red 였던 것은 단순히 “고치지 않아서” 가 아니다. red 인 CI 는 신호를 주지 않으므로, red 상태가 길어질수록 아무도 보지 않게 되고 결국 없는 것과 같아진다. 이 Phase 의 진짜 목표는 green 을 한 번 만드는 것이 아니라 red 가 다시 방치되지 않는 구조 를 만드는 것이다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html#목표",
+    "href": "10-phase-06-ci.html#목표",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "",
+    "text": "Step 수\n6 (6.1 – 6.6)\n\n\n누적 시간\n~110 분 (+ CI 실행 대기 상당)\n\n\n선행 Phase\nPhase 4, Phase 5, Phase 7 전부\n\n\n종료 로그\n007_phase06-ci-restoration.qmd\n\n\n\n\n\n\n\n\n\nImportant선행 조건이 엄격한 이유\n\n\n\nPhase 4/5/7 이 끝나기 전에 CI 를 고치면 두더지잡기가 된다. 아직 고치는 중인 코드를 대상으로 workflow 를 조정하면 무엇이 workflow 문제이고 무엇이 코드 문제인지 구별되지 않는다. Phase 6 은 “코드는 이미 로컬에서 옳다” 를 전제로 환경 차이만 다룬다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html#step-6.1-workflow-감사-및-수정-계획",
+    "href": "10-phase-06-ci.html#step-6.1-workflow-감사-및-수정-계획",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "11.2 Step 6.1 — workflow 감사 및 수정 계획",
+    "text": "11.2 Step 6.1 — workflow 감사 및 수정 계획\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nPhase 4, 5, 7\n\n\n\n목표. Step 2.1 의 포렌식 결과와 Phase 4/5/7 의 수정 내용을 대조해서, 아직 남아 있는 CI 문제만 골라낸다.\n작업.\n\nStep 2.1 의 실패 원인 분류표를 다시 연다. 각 원인에 대해:\n\n코드 문제 → Phase 4/5/7 이 고쳤는가? 확인\n아티팩트 문제 → Phase 4 가 고쳤는가? 확인\n환경 문제 / 설정 문제 → 이 Phase 가 처리. 남은 목록\n\n5 개 workflow YAML 재정독 — Phase 4/5 의 변경(확장 스위트 정의, 환경 변수, 새 의존성)이 workflow 에 반영되어야 하는 부분 식별\n현재 상태 실측 — Phase 4/5/7 이 병합된 브랜치를 push 해서 5 개 workflow 를 실제로 태운다. 지금 무엇이 실패하는지가 이 Phase 의 실제 작업 목록\n수정 계획 작성 — workflow 별 수정 항목\n\n산출물.\n\nevidence/phase06/ci-remaining-issues.md — 남은 문제 × workflow\nevidence/phase06/ci-baseline-run.md — Phase 4/5/7 이후 첫 CI 실행 결과 (run ID 포함)\nworkflow 별 수정 계획\n\n완료 조건.\n\nPhase 4/5/7 이후 CI 를 한 번 태웠고 결과가 기록되어 있다\n남은 실패가 workflow 별로 정리되어 있다\n각 실패에 수정 방향이 배정되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html#step-6.2-r-cmd-check-workflow-복구",
+    "href": "10-phase-06-ci.html#step-6.2-r-cmd-check-workflow-복구",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "11.3 Step 6.2 — R-CMD-check workflow 복구",
+    "text": "11.3 Step 6.2 — R-CMD-check workflow 복구\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분 (+ 실행 대기)\n\n\n의존\n6.1\n\n\n\n목표. 5-cell 매트릭스(linux-release, linux-devel, linux-oldrel, macos-release, windows-release)를 전부 green 으로 만든다.\n작업.\n\n매트릭스 정의가 tools/cross-os-reproducibility-policy.md 의 요구 매트릭스와 일치하는지 확인. Phase 4 에서 정책이 개정됐으면 그에 맞춘다\n환경 변수 확인\n\n_R_CHECK_FORCE_SUGGESTS_=false\nMULTISITEDGP_REPRODUCIBILITY_POLICY (Phase 4 개정 반영)\nMULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN=false\n\n의존성 설치 — multisitepower 가 CRAN 에 없으므로 특별 처리 필요. 2026-05-10 의 취소된 run 제목이 “ci: pin Suggests explicitly (multisitepower not on CRAN/r-universe)” 인 것으로 보아 이미 시도된 이력이 있다. 그 접근이 왜 실패했는지 확인\nvignette 빌드 포함 여부 — --as-cran 은 vignette 를 빌드한다. knit 시간(Step 2.8 측정)이 CI 시간에 미치는 영향 확인\n실패 cell 을 하나씩 처리. 매트릭스 전체를 한 번에 고치려 하지 않는다 — Linux release 부터 green 으로 만들고 순차 확장\nNOTE 처리 — 성공 기준 G6 은 “문서화된 NOTE 만” 이다. 각 NOTE 를 제거하거나, 제거 불가하면 사유를 문서화\n\n산출물.\n\n수정된 .github/workflows/R-CMD-check.yaml\nevidence/phase06/r-cmd-check-matrix-status.md — cell 별 상태 + 최종 run ID\nNOTE 처리 기록\n\n완료 조건.\n\n5 cell 전부 green\n각 cell 의 E/W/N 이 기록되어 있고, NOTE 는 전부 문서화되어 있다\nT1a 가 Linux cell 에서 실제로 실행된다 (Phase 4 Step 4.6 과 정합)",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html#step-6.3-lint-workflow-복구",
+    "href": "10-phase-06-ci.html#step-6.3-lint-workflow-복구",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "11.4 Step 6.3 — lint workflow 복구",
+    "text": "11.4 Step 6.3 — lint workflow 복구\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n6.1\n\n\n\n목표. lint workflow 를 green 으로 만든다.\n작업.\n\n로컬에서 lintr::lint_package() 실행 — Step 1.5 베이스라인 대비 Phase 4/5/7 이후 위반이 늘었는지 확인\n위반을 분류\n\n코드 수정으로 해결 — 대부분. 스타일 위반\n.lintr 설정 조정 — 규칙이 이 package 에 부적합한 경우. 근거 필요\n# nolint 주석 — 정당한 예외. 사유를 주석에 남긴다. 현재 R/utils-rng.R, R/wrapper-sim_multisite.R 등에 # nolint start/end 사용 이력 있음\n\n.lintr 의 현재 설정 검토 — cyclocomp_linter(20), line_length_linter(120), object_usage_linter = NULL. object_usage_linter 를 끈 것이 정당한지 재검토 (이 linter 는 미사용 변수와 오타를 잡는다)\nworkflow 자체의 문제(설치, 버전) 처리\n점진 도입 옵션 — 위반이 많으면 신규 코드에만 적용하는 방식도 가능. 단 그 경우 기존 위반 목록을 원장에 남긴다\n\n산출물.\n\n수정된 코드 + .lintr (필요시)\n수정된 .github/workflows/lint.yaml\nevidence/phase06/lint-resolution.md — 위반 × 처리\n\n완료 조건.\n\nlint workflow 가 green\n# nolint 사용 각각에 사유 주석이 있다\n.lintr 변경이 있다면 근거가 기록되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html#step-6.4-test-coverage-workflow-복구",
+    "href": "10-phase-06-ci.html#step-6.4-test-coverage-workflow-복구",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "11.5 Step 6.4 — test-coverage workflow 복구",
+    "text": "11.5 Step 6.4 — test-coverage workflow 복구\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n6.1\n\n\n\n목표. 커버리지 workflow 를 green 으로 만들고, 커버리지 추이가 보이게 한다.\n작업.\n\n실패 원인 확인 — 흔한 원인: Codecov 토큰 만료/부재, covr 버전, 의존성 설치 실패\n토큰이 문제면 PI 에게 알린다. secrets 설정은 agent 가 할 수 없다\nCodecov 를 계속 쓸지 결정 — 대안: 커버리지 리포트를 artifact 로 업로드만 하고 외부 서비스를 쓰지 않는 방식. 외부 의존을 줄이는 쪽이 유지보수에 유리\nPhase 5 에서 늘어난 테스트가 커버리지 측정 시간에 미치는 영향 확인\n커버리지 배지가 README 에 있다면 갱신\n\n산출물.\n\n수정된 .github/workflows/test-coverage.yaml\nevidence/phase06/coverage-workflow.md\n\n완료 조건.\n\nworkflow 가 green (또는 토큰 문제로 PI 조치 대기 — 그 경우 원장에 등재)\n커버리지 수치가 CI 에서 확인 가능하다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html#step-6.5-extended-tests-workflow-복구",
+    "href": "10-phase-06-ci.html#step-6.5-extended-tests-workflow-복구",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "11.6 Step 6.5 — extended-tests workflow 복구",
+    "text": "11.6 Step 6.5 — extended-tests workflow 복구\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분 (+ 실행 대기)\n\n\n의존\n6.1, Step 5.8 (확장 스위트 정의)\n\n\n\n목표. 10 주 연속 실패한 workflow 를 green 으로 만든다.\n작업.\n\nPhase 5 Step 5.8 이 확정한 확장 스위트 정의 를 workflow 에 반영. 무엇이 확장 스위트에 남았는지에 따라 환경 변수와 실행 명령이 달라진다\nPhase 4 가 snapshot / fixture 를 고쳤으므로 원래 실패 항목은 해소되어 있어야 한다. 확인\n실패 절단 해제 — testthat 이 10 건에서 절단하는 설정 때문에 전체 실패 목록을 볼 수 없었다. --max-fails 또는 reporter 설정 조정\n스케줄 주기 검토 — 주간이 적절한가? PR 에서도 돌 필요가 있는가?\n실패 알림 — 스케줄 실패가 10 주간 방치된 근본 원인은 알림이 없었다는 것이다. 실패 시 GitHub Issue 자동 생성 또는 다른 알림 경로를 추가한다. 이것이 이 Step 의 가장 중요한 산출물\n한 번 수동 실행(workflow_dispatch)해서 green 확인\n\n산출물.\n\n수정된 .github/workflows/extended-tests.yaml\n실패 알림 메커니즘\nevidence/phase06/extended-tests-recovery.md\n\n완료 조건.\n\nextended-tests 가 green\n전체 실패 목록이 절단 없이 보인다\n실패 시 알림 메커니즘이 동작한다 (의도적 실패로 검증)",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html#step-6.6-매트릭스-최종-확인-및-유지-장치",
+    "href": "10-phase-06-ci.html#step-6.6-매트릭스-최종-확인-및-유지-장치",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "11.7 Step 6.6 — 매트릭스 최종 확인 및 유지 장치",
+    "text": "11.7 Step 6.6 — 매트릭스 최종 확인 및 유지 장치\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분 (+ 실행 대기)\n\n\n의존\n6.2 – 6.5\n\n\n\n목표. 전체 CI 가 green 임을 확인하고, red 가 다시 방치되지 않는 장치를 넣는다.\n작업.\n\n연속 3 회 green 확인 — 한 번의 green 은 우연일 수 있다. 세 번 연속 (push 2 회 + 스케줄 1 회 또는 수동 3 회) 확인\nbranch protection 제안 — main 에 대해 CI 통과를 병합 조건으로. 설정은 PI 권한이므로 제안만 하고 PI 에게 요청\nREADME 배지 — CI 상태 배지 추가/갱신. 배지가 있으면 red 를 놓치기 어렵다\npkgdown-deploy 도 확인 — 유일하게 green 이었지만 Phase 4/9 변경 후에도 그런지\npr-commands.yaml 확인 — 사용 중인지, 아니면 제거 대상인지\nCI 소요 시간 기록 — workflow 별 실행 시간. 너무 길면 개발 루프를 방해한다\n.github/workflows/README.md 갱신 — 각 workflow 의 역할과 실패 시 대응\n\n산출물.\n\nREADME 배지\n갱신된 .github/workflows/README.md\nevidence/phase06/ci-final-status.md — 연속 3 회 green 증거 (run ID) + 소요 시간\nbranch protection 요청 문서\n\n완료 조건.\n\n6 개 workflow 전부 green, 연속 3 회 (성공 기준 G2)\nCI 상태 배지가 README 에 있다\nbranch protection 이 설정되어 있거나 PI 에게 요청되어 있다\n각 workflow 의 역할이 문서화되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html#phase-종료-조건",
+    "href": "10-phase-06-ci.html#phase-종료-조건",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "11.8 Phase 종료 조건",
+    "text": "11.8 Phase 종료 조건\n\nR-CMD-check 5 cell 전부 green\nlint, test-coverage, extended-tests, pkgdown-deploy green\n연속 3 회 green 이 run ID 로 증명되어 있다\nT1a 가 Linux cell 에서 실제로 실행된다\nextended-tests 실패 시 알림이 동작한다 (검증 완료)\nR CMD check NOTE 가 전부 문서화되어 있다\nCI 배지가 README 에 있다\nbranch protection 설정 또는 PI 요청 완료\n원장의 CI 관련 P0 행이 전부 fixed",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "10-phase-06-ci.html#phase-로그",
+    "href": "10-phase-06-ci.html#phase-로그",
+    "title": "11  Phase 6 — CI 복구",
+    "section": "11.9 Phase 로그",
+    "text": "11.9 Phase 로그\n007_phase06-ci-restoration.qmd + .html.\n§4 에 workflow 별 최종 run ID 와 URL 을 남긴다. GitHub 로그는 90 일 후 만료되므로, 핵심 출력은 로그 안에 인용하거나 evidence/ 에 보존한다 — 이번에 2026-05-10 로그가 만료되어 겪은 문제를 반복하지 않는다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Phase 6 — CI 복구</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html",
+    "href": "11-phase-07-remediation.html",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "",
+    "text": "12.1 목표\n원장의 P0 를 전부 소진하고, v0.2.0 범위의 P1 을 처리한다. 성공 기준 G5 — 광고 표면 == 구현 표면 을 달성한다.\nPhase 4 (재현성) 와 Phase 5 (테스트) 가 다루지 않는 결함이 이 Phase 의 대상이다. 원장 내용은 Phase 2 가 끝나야 알 수 있으므로, 아래 Step 구성은 범주 기반 골격이다. Phase 3 Step 3.4 (D4) 가 원장을 Phase 별로 배정하면 그에 맞게 Step 을 채운다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#목표",
+    "href": "11-phase-07-remediation.html#목표",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "",
+    "text": "Step 수\n7 (7.1 – 7.7)\n\n\n누적 시간\n~135 분\n\n\n선행 Phase\nPhase 3 (D2, D4 결정)\n\n\n종료 로그\n008_phase07-defect-remediation.qmd\n\n\n병렬 가능\nPhase 4, Phase 5 와 병렬 진행 가능\n\n\n\n\n\n\n\n\n\nNoteStep 배정 원칙\n\n\n\n원장의 P0 개수가 Step 7.1–7.2, 7.6 의 용량을 넘으면 Phase 3 D4 가 이미 조정했어야 한다. 그럼에도 넘치면 Step 을 늘리지 말고 Phase 를 늘린다 — Phase 7 을 7-A / 7-B 로 쪼개고 로그도 둘로 나눈다. 한 Phase 가 비대해지면 로그가 감사 추적으로서 쓸모없어진다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#step-7.1-p0-결함-배치-①",
+    "href": "11-phase-07-remediation.html#step-7.1-p0-결함-배치-①",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "12.2 Step 7.1 — P0 결함 배치 ①",
+    "text": "12.2 Step 7.1 — P0 결함 배치 ①\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nPhase 3\n\n\n\n목표. 원장 P0 중 통계 커널 관련 결함을 처리한다. Step 2.5 · 2.6 이 찾은 것들.\n작업.\n\n원장에서 이 Step 배정분을 연다\n각 결함에 대해:\n\nPhase 5 Step 5.8 이 이미 실패하는 회귀 테스트를 써 두었는지 확인. 없으면 먼저 쓴다\n수정\n회귀 테스트가 통과하는지 확인\ngolden fixture 영향 확인 — 수치 동작이 바뀌면 fixture 가 바뀐다. 바뀌면 Phase 4 Step 4.4 로 되돌아가거나, 이 Step 에서 fixture 를 재생성하고 로그에 명시\n\n각 수정을 별도 커밋. 메시지에 원장 ID\n수치 동작 변경은 반드시 로그 §5 에 기록 — 지도 원칙 5\n\n산출물.\n\n수정된 R/ 파일들 + 커밋\n원장 status 갱신\n수치 동작 변경이 있으면 그 목록\n\n완료 조건.\n\n배정된 P0 전부가 fixed 또는 wont-fix (근거) 이다\n각 수정에 통과하는 회귀 테스트가 있다\n수치 동작 변경이 전부 기록되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#step-7.2-p0-결함-배치-②",
+    "href": "11-phase-07-remediation.html#step-7.2-p0-결함-배치-②",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "12.3 Step 7.2 — P0 결함 배치 ②",
+    "text": "12.3 Step 7.2 — P0 결함 배치 ②\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n7.1\n\n\n\n목표. 원장 P0 중 API · 오류 처리 · 진단 함수 관련 결함을 처리한다. Step 2.7 이 찾은 것들.\n작업. Step 7.1 과 동일 절차. 추가로:\n\n오류 메시지 변경 시 snapshot 영향 — test-snapshot-errors.R 가 깨진다. 함께 갱신\n도달 불가 오류 코드 — Step 2.7 이 도달 불가로 판정한 E-코드는 제거 후보. 단 blueprint ch.16 이 forward-compatible 로 예약한 것(E24 등)은 제거하지 않는다. 근거를 확인하고 판단\n진단 함수 수식 수정 은 특히 조심 — compute_kappa 는 2026-05 에 이미 한 번 R² 공식이 수정된 이력이 있다. 수정 시 blueprint 정의를 인용하고 validation experiment 영향을 Phase 8 로 넘긴다\n\n산출물.\n\n수정된 파일 + 커밋\n갱신된 오류 snapshot\n원장 status 갱신\n\n완료 조건.\n\n배정된 P0 전부 처리\n오류 snapshot 이 정합한다\n진단 함수 수정이 있으면 blueprint 정의 인용이 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#step-7.3-d2-실행-①-dpm-처리",
+    "href": "11-phase-07-remediation.html#step-7.3-d2-실행-①-dpm-처리",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "12.4 Step 7.3 — D2 실행 ①: DPM 처리",
+    "text": "12.4 Step 7.3 — D2 실행 ①: DPM 처리\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nD2 결정\n\n\n\n목표. Phase 3 D2 가 DPM 에 배정한 선택지를 실행한다.\n선택지별 작업.\nA — 구현 (D2 가 선택했다면). blueprint §24.2.1 의 blocker 두 개를 해결해야 한다: dirichletprocess 의 수치 안정성, sample-dependent 한 표준화 recipe. 이 경우 Step 하나로 부족하다. Phase 3 이 A 를 선택했다면 Step 을 7.3a/7.3b/7.3c 로 확장하고 시간을 재추정한다.\nB — 광고 축소 (권고 기본).\n\nDESCRIPTION Description 수정 — “eight distribution shapes … and a Dirichlet-process-mixture bridge” → 실제를 반영. 예: “seven distribution shapes … plus a reserved Dirichlet-process-mixture slot (not yet implemented)”\nNEWS.md v0.1.0 항목의 8 shape 목록 — 과거 항목은 수정하지 않는다 (이력이므로). v0.2.0 항목에서 정정을 명시\nREADME.Rmd / index.md / _pkgdown.yml 의 shape 개수 언급 전수 수정\ngen_effects_dpm() roxygen — @description 첫 문장에 미구현 명시. lifecycle 배지 검토\nvignette(\"m2-g-distribution-catalog\") — DPM 절 갱신\nE22 오류 메시지 검토 — 사용자에게 v2 계획을 안내하는가?\ntools/traceability/api-index.csv 갱신\n\nC — 명시적 실험 기능. B 와 유사하되 export 를 유지하고 lifecycle::badge(\"experimental\") 를 추가.\n산출물.\n\n수정된 문서/코드\nevidence/phase07/dpm-surface-changes.md — 바꾼 위치 전수\n\n완료 조건.\n\nD2 선택지가 실행되어 있다\nStep 2.4 가 열거한 DPM 언급 위치가 전부 처리되어 있다 (누락 하나면 갭이 남는다)\ngrep -ri \"dpm\\|dirichlet\" 로 잔여 언급을 확인했다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#step-7.4-d2-실행-②-marginal-target-및-upstream",
+    "href": "11-phase-07-remediation.html#step-7.4-d2-실행-②-marginal-target-및-upstream",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "12.5 Step 7.4 — D2 실행 ②: marginal target 및 upstream",
+    "text": "12.5 Step 7.4 — D2 실행 ②: marginal target 및 upstream\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nD2 결정\n\n\n\n목표. target_marginal_rho 와 upstream 예약 인자를 D2 결정대로 처리한다.\n작업.\n\ntarget_marginal_rho\n\n광고 축소 → multisitedgp_design() 의 인자 문서에서 “v2 예정” 을 명확히. E23 메시지에 blueprint §24.2.7 의 blocker 요약 포함\n인자 제거 → NAMESPACE 영향 없음 (인자이므로). 단 기존 사용자 코드가 이 인자를 넘기면 “인식되지 않는 인자” 오류가 난다. E23 을 유지하는 편이 안내가 낫다. 제거보다 유지+명확화를 권고\n\nupstream — 용도를 blueprint 에서 확인. Layer 간 데이터 전달 hook 으로 예약된 것이라면 문서에서 숨기고, 아니면 제거\n두 인자의 @param 문서를 실제 동작과 일치시킨다\n관련 오류 snapshot 갱신\n\n산출물.\n\n수정된 R/class-multisitedgp_design.R, R/layer1-gen_effects.R\n갱신된 roxygen + snapshot\nevidence/phase07/reserved-args-resolution.md\n\n완료 조건.\n\n두 인자의 문서가 실제 동작과 일치한다\n오류 메시지가 사용자에게 대안을 안내한다\n관련 snapshot 이 통과한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#step-7.5-skewn-scenario_audit-resolver",
+    "href": "11-phase-07-remediation.html#step-7.5-skewn-scenario_audit-resolver",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "12.6 Step 7.5 — SkewN scenario_audit() resolver",
+    "text": "12.6 Step 7.5 — SkewN scenario_audit() resolver\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nD2 결정\n\n\n\n목표. punch list P1-1 을 종결한다. R/diagnostics-core.R 의 Group C reference resolver 가 SkewN target 을 지원하지 않는 문제.\n작업.\nD2 가 선택한 대로:\n옵션 (a) — resolver 확장 (punch list 추정 60–90 분). Step 하나를 넘길 수 있으므로, 이 옵션이면 7.5a/7.5b 로 분할한다.\n\nGroup C resolver 의 현재 구조 파악 — 어느 shape 에 대해 auto-target 을 해결하는가\nSkewN 의 reference 분포를 어떻게 정의할지 결정. sn package 의 모수화와 표준화 규약을 반영\n구현 + 테스트\nscenario_audit() 출력이 SkewN 설계에서 의미 있는 판정을 내는지 확인\n\n옵션 (b) — 문서화 (punch list 기본안, ~10 분).\n\nvignette(\"m2-g-distribution-catalog\") 에 한계 명시\nscenario_audit() roxygen 의 @details 에 지원 shape 명시\nSkewN 설계에서 scenario_audit() 호출 시 나오는 출력이 오해를 부르지 않는지 확인. “target N/A” 로 나온다면 그것으로 충분한가?\n\n산출물.\n\n옵션에 따라: 수정된 R/diagnostics-core.R + 테스트, 또는 문서 수정\nevidence/phase07/skewn-resolver.md\n\n완료 조건.\n\npunch list P1-1 이 종결되어 있다\nSkewN 설계에서 scenario_audit() 을 호출했을 때의 동작이 문서와 일치한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#step-7.6-p1-결함-배치",
+    "href": "11-phase-07-remediation.html#step-7.6-p1-결함-배치",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "12.7 Step 7.6 — P1 결함 배치",
+    "text": "12.7 Step 7.6 — P1 결함 배치\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n7.1 – 7.5\n\n\n\n목표. D4 가 v0.2.0 범위로 배정한 P1 결함을 처리한다.\n작업.\n\n원장의 v0.2.0 범위 P1 을 연다\n각각 Step 7.1 과 동일 절차로 처리\n시간이 부족하면 처리하지 못한 것을 v0.3 으로 넘긴다. P1 은 릴리스를 막지 않는다. 넘길 때는 원장 status 를 deferred-v0.3 으로 바꾸고 사유를 남긴다\n남은 punch list 항목(P1-2 T13–T20 cross-reference, P1-3 on= 인자 언급, P2-1~P2-3) 처리 여부 판단\n\n산출물.\n\n수정된 파일 + 커밋\n원장 status 갱신\nv0.3 이월 목록\n\n완료 조건.\n\nv0.2.0 범위 P1 이 전부 fixed 또는 deferred-v0.3 (사유) 이다\n이월분이 GitHub Issues 로 이관되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#step-7.7-오류-카탈로그-및-traceability-정합성",
+    "href": "11-phase-07-remediation.html#step-7.7-오류-카탈로그-및-traceability-정합성",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "12.8 Step 7.7 — 오류 카탈로그 및 traceability 정합성",
+    "text": "12.8 Step 7.7 — 오류 카탈로그 및 traceability 정합성\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n7.1 – 7.6\n\n\n\n목표. Phase 7 의 수정이 오류 카탈로그와 traceability ledger 에 반영되게 한다.\n작업.\n\n?multisiteDGP 의 Error catalog 절 갱신 — 이번 Phase 에서 추가/제거/변경된 오류 반영\ntools/traceability/error-index.csv 갱신\ntools/traceability/api-index.csv 갱신 — API 표면 변경 반영\ntools/traceability/decision-index.csv 에 Phase 3 D1–D4 결정 등재\ntools/traceability/conflict-checklist.csv — 해소된 항목 종결\ntest-traceability.R 실행 — ledger 와 코드의 일치를 검사하는 테스트가 통과하는지\ndevtools::document() + 전체 테스트 실행\n\n산출물.\n\n갱신된 traceability CSV 4–5 종\n갱신된 package-level roxygen\n\n완료 조건.\n\ntest-traceability.R 이 통과한다\n오류 카탈로그가 실제 오류 집합과 일치한다\n전체 테스트 스위트가 통과한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#phase-종료-조건",
+    "href": "11-phase-07-remediation.html#phase-종료-조건",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "12.9 Phase 종료 조건",
+    "text": "12.9 Phase 종료 조건\n\n원장의 P0 전건이 fixed 또는 wont-fix (근거) 이다\nv0.2.0 범위 P1 이 전부 처리되었거나 사유와 함께 이월되었다\nD2 결정이 전부 실행되었고 잔여 언급이 없다 (grep 확인)\n각 수정에 통과하는 회귀 테스트가 있다\n수치 동작 변경이 전부 기록되어 있다 (Phase 8 이 검증할 목록)\ntest-traceability.R 통과\n전체 테스트 스위트 통과 (기본 + 확장)\n이월분이 GitHub Issues 로 이관되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "11-phase-07-remediation.html#phase-로그",
+    "href": "11-phase-07-remediation.html#phase-로그",
+    "title": "12  Phase 7 — 기능 결함 수정",
+    "section": "12.10 Phase 로그",
+    "text": "12.10 Phase 로그\n008_phase07-defect-remediation.qmd + .html.\n§6 (원장 변경) 이 이 로그의 핵심이다. 원장의 모든 P0/P1 행에 대해 이전 status → 이후 status → 커밋 SHA 를 표로 남긴다.\n§5 에는 수치 동작이 바뀐 목록을 별도 절로 만든다. Phase 8 이 이 목록을 받아 통계 검증을 재실행한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Phase 7 — 기능 결함 수정</span>"
+    ]
+  },
+  {
+    "objectID": "12-phase-08-revalidation.html",
+    "href": "12-phase-08-revalidation.html",
+    "title": "13  Phase 8 — 통계 검증 재실행",
+    "section": "",
+    "text": "13.1 목표\nPhase 4 · 7 의 변경 이후에도 package 의 통계적 주장이 성립함을 증명한다. 2026-05 에 수행된 validation experiment V0–V12 를 재실행하고, 이번에는 Linux 를 포함한다.\n이 Phase 가 필요한 이유는 두 가지다. ① Phase 7 이 수치 동작을 바꿨을 수 있다. ② 원래 validation 이 macOS 로컬에서만 실행됐고 cross-OS 매트릭스는 “external to the local validation jobs” 로 미뤄져 있었다 (cross-os-reproducibility-policy.md). Phase 6 이 CI 를 복구했으므로 이제 그 미룬 일을 할 수 있다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Phase 8 — 통계 검증 재실행</span>"
+    ]
+  },
+  {
+    "objectID": "12-phase-08-revalidation.html#목표",
+    "href": "12-phase-08-revalidation.html#목표",
+    "title": "13  Phase 8 — 통계 검증 재실행",
+    "section": "",
+    "text": "Step 수\n5 (8.1 – 8.5)\n\n\n누적 시간\n~100 분 (+ validation 실행 시간 상당)\n\n\n선행 Phase\nPhase 6 (CI green), Phase 7 (수치 변경 목록)\n\n\n종료 로그\n009_phase08-statistical-revalidation.qmd",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Phase 8 — 통계 검증 재실행</span>"
+    ]
+  },
+  {
+    "objectID": "12-phase-08-revalidation.html#step-8.1-validation-하네스-복구",
+    "href": "12-phase-08-revalidation.html#step-8.1-validation-하네스-복구",
+    "title": "13  Phase 8 — 통계 검증 재실행",
+    "section": "13.2 Step 8.1 — validation 하네스 복구",
+    "text": "13.2 Step 8.1 — validation 하네스 복구\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nPhase 6, Phase 7\n\n\n\n목표. tools/validation/ 의 검증 하네스가 현재 코드에서 동작하게 만든다.\n작업.\n\n하네스 구조 파악\n\ntools/validation/validation-plan-manifest.csv — V0–V12 정의\ntools/validation/jobs/ — 실행 정의\ntools/validation/R/ — 지원 코드\ntools/validation/generated/ — 2026-05 결과 (~180 파일)\ntools/validation/reports/\n\n하네스를 현재 코드로 실행해보고 깨지는 부분 확인 — Phase 4/5/7 의 변경으로 인터페이스가 바뀌었을 수 있다\n수정\n2026-05 결과를 보존 — artifacts/validation-2026-05/ 로 복사. 비교 기준\nLinux 실행 경로 확보 — Phase 4 Step 4.3 의 Docker 정의를 재사용\nMULTISITEDGP_RUN_VALIDATION 게이트 확인 — helper-skip-policy.R 에 정의되어 있으나 실제로 쓰이는지\n\n산출물.\n\n수정된 validation 하네스\nartifacts/validation-2026-05/ — 이전 결과 보존\nevidence/phase08/harness-recovery.md\n\n완료 조건.\n\n하네스가 현재 코드에서 실행된다 (최소 V0 하나로 확인)\n이전 결과가 보존되어 있다\nLinux 실행 경로가 확보되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Phase 8 — 통계 검증 재실행</span>"
+    ]
+  },
+  {
+    "objectID": "12-phase-08-revalidation.html#step-8.2-p0-validation-재실행-v0v5",
+    "href": "12-phase-08-revalidation.html#step-8.2-p0-validation-재실행-v0v5",
+    "title": "13  Phase 8 — 통계 검증 재실행",
+    "section": "13.3 Step 8.2 — P0 validation 재실행 (V0–V5)",
+    "text": "13.3 Step 8.2 — P0 validation 재실행 (V0–V5)\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분 (+ 실행 대기)\n\n\n의존\n8.1\n\n\n\n목표. 우선순위 P0 validation experiment 를 macOS 와 Linux 양쪽에서 재실행한다.\n대상 (2026-05 이력 기준).\n\n\n\nID\n내용\n2026-05 상태\n\n\n\n\nV0\nhello-world aggregate calibration\nBR5 로 blocker 해소\n\n\nV01\nmarginal reporting contract\nBR2 로 해소\n\n\nV02\nJEBS seed stability\nBR4 로 해소\n\n\nV03\nWalters shrinkage consistency\nBR3 로 해소\n\n\nV04\nA2 solver feasible region\nBR1 로 해소\n\n\nV05\n—\nStep 9.3 에서 실행\n\n\n\n작업.\n\n각 experiment 를 macOS · Linux 에서 실행\n3 방향 비교 — ① 2026-05 결과 vs 현재 macOS, ② 현재 macOS vs 현재 Linux, ③ 2026-05 blocker 해소 결론이 여전히 성립하는가\n①에서 차이가 나면 Phase 7 의 수치 변경 목록과 대조. 목록에 없는 변화면 회귀다 — 멈추고 조사\n②에서 차이가 나면 Phase 4 의 재현성 계약이 예상대로 동작하는지 확인\n결과를 tools/validation/generated/ 에 v0.2.0 접두사로 저장\n\n산출물.\n\nvalidation 결과 CSV (macOS + Linux)\nevidence/phase08/validation-p0-comparison.md — 3 방향 비교표\n\n완료 조건.\n\nV0–V05 가 두 플랫폼에서 실행됐다\n3 방향 비교가 완료되어 있다\n설명되지 않는 차이가 없다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Phase 8 — 통계 검증 재실행</span>"
+    ]
+  },
+  {
+    "objectID": "12-phase-08-revalidation.html#step-8.3-p1p2-validation-재실행-v06v12",
+    "href": "12-phase-08-revalidation.html#step-8.3-p1p2-validation-재실행-v06v12",
+    "title": "13  Phase 8 — 통계 검증 재실행",
+    "section": "13.4 Step 8.3 — P1/P2 validation 재실행 (V06–V12)",
+    "text": "13.4 Step 8.3 — P1/P2 validation 재실행 (V06–V12)\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분 (+ 실행 대기)\n\n\n의존\n8.2\n\n\n\n목표. 나머지 validation experiment 를 재실행한다.\n대상. V06 (Student-t heavy tail tolerance, BR7), V08 (repeated-run canonical hash), V09 (zero rank alignment, BR6), V11 (scenario_audit artifact gate, BR8), V12 (JEBS pattern evidence, BR9), 그 외 manifest 에 정의된 것.\n작업.\n\nStep 8.2 와 동일 절차\nV08 은 특별 취급 — repeated-run canonical hash 검증이며 Phase 4 의 계약 변경에 직접 영향받는다. 새 계약에 맞게 experiment 정의 자체를 갱신해야 할 수 있다\nV12 (JEBS pattern evidence) 도 특별 취급 — 논문 재현 증거. Phase 4 Step 4.4 의 fixture 재생성과 정합해야 한다\ncross_os_matrix_status 필드 — 2026-05 에는 \"not_run_in_local_phase9_job\" 이었다. 이제 실제 값으로 채운다\n\n산출물.\n\nvalidation 결과 CSV\nevidence/phase08/validation-p1-p2-comparison.md\n\n완료 조건.\n\n나머지 experiment 가 두 플랫폼에서 실행됐다\nV08 이 새 재현성 계약에 맞게 갱신되어 통과한다\ncross_os_matrix_status 가 실제 값이다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Phase 8 — 통계 검증 재실행</span>"
+    ]
+  },
+  {
+    "objectID": "12-phase-08-revalidation.html#step-8.4-jebs-재현-증거-갱신",
+    "href": "12-phase-08-revalidation.html#step-8.4-jebs-재현-증거-갱신",
+    "title": "13  Phase 8 — 통계 검증 재실행",
+    "section": "13.5 Step 8.4 — JEBS 재현 증거 갱신",
+    "text": "13.5 Step 8.4 — JEBS 재현 증거 갱신\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n8.2, 8.3\n\n\n\n목표. Lee et al. (2025) JEBS 논문 재현 증거를 v0.2.0 기준으로 갱신한다.\n작업.\n\nJEBS 관련 아티팩트 전수 확인\n\ntools/jebs-golden-fixtures/ — 생성 스크립트 + manifest\npreset_jebs_paper(), preset_jebs_strict() 의 파라미터\nV02 (seed stability), V12 (pattern evidence)\nvignette(\"m1-statistical-dgp\") 의 JEBS 대조\n\n논문 값 재현 확인 — package 가 논문 부록 값을 재현하는가? 이것이 이 package 의 과학적 신뢰성의 뿌리다\nNEWS 의 “Known limitations” 중 “Exact reproduction of JEBS Figure 4(b) is deferred until digitized targets become available” — 이 상태가 유지되는지, 아니면 이번에 진전이 있는지\n재현 증거를 문서화 — 어떤 값이 어떤 정밀도로 재현되는지\n\n산출물.\n\nevidence/phase08/jebs-reproduction-evidence.md — 논문 값 × package 값 × 일치 여부\n갱신된 JEBS fixture manifest\n\n완료 조건.\n\nJEBS 부록 값 재현이 확인되어 있다\n재현되지 않는 항목이 있으면 사유가 기록되어 있다\nFigure 4(b) 관련 한계 서술이 현재 상태를 반영한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Phase 8 — 통계 검증 재실행</span>"
+    ]
+  },
+  {
+    "objectID": "12-phase-08-revalidation.html#step-8.5-검증-종합-리포트",
+    "href": "12-phase-08-revalidation.html#step-8.5-검증-종합-리포트",
+    "title": "13  Phase 8 — 통계 검증 재실행",
+    "section": "13.6 Step 8.5 — 검증 종합 리포트",
+    "text": "13.6 Step 8.5 — 검증 종합 리포트\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n8.2 – 8.4\n\n\n\n목표. validation 결과를 하나의 리포트로 종합하고, tools/traceability/validation-index.csv 를 갱신한다.\n작업.\n\n종합 리포트 작성 — experiment 별: 목적 | 2026-05 결과 | v0.2.0 macOS | v0.2.0 Linux | 판정\ncross-OS 매트릭스 결론 — 이번에 처음으로 실제 cross-OS 검증이 이뤄진다. 정책 문서(cross-os-reproducibility-policy.md)의 주장이 증거로 뒷받침되는지 확인하고, 안 되면 정책을 정정\ntools/traceability/validation-index.csv 갱신\n미해결 blocker 확인 — 2026-05 의 BR1–BR9 가 전부 종결 상태인지. 새 blocker 가 생겼으면 원장에 등재하고 릴리스 영향 판정\ntools/validation/README.md 갱신 — 재실행 방법\nNEWS 초안에 검증 항목 추가\n\n산출물.\n\ntools/validation/reports/v0.2.0-validation-synthesis.md\n갱신된 validation-index.csv\nevidence/phase08/validation-synthesis.md\n\n완료 조건.\n\n모든 experiment 가 종합 리포트에 있다\ncross-OS 결론이 증거와 함께 기록되어 있다\nBR1–BR9 상태가 확인되어 있다\n새 blocker 가 있으면 릴리스 영향이 판정되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Phase 8 — 통계 검증 재실행</span>"
+    ]
+  },
+  {
+    "objectID": "12-phase-08-revalidation.html#phase-종료-조건",
+    "href": "12-phase-08-revalidation.html#phase-종료-조건",
+    "title": "13  Phase 8 — 통계 검증 재실행",
+    "section": "13.7 Phase 종료 조건",
+    "text": "13.7 Phase 종료 조건\n\nV0–V12 가 macOS · Linux 양쪽에서 재실행됐다\n2026-05 결과 대비 모든 차이가 설명되어 있다 (Phase 7 수치 변경 목록으로 설명되거나, 회귀로 원장 등재)\nJEBS 부록 재현이 확인되어 있다\ncross_os_matrix_status 가 실제 값으로 채워져 있다\n2026-05 의 BR1–BR9 blocker 가 전부 종결 상태다\n새 blocker 가 없거나, 있으면 릴리스 영향이 판정되어 있다\n종합 리포트와 traceability ledger 가 갱신되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Phase 8 — 통계 검증 재실행</span>"
+    ]
+  },
+  {
+    "objectID": "12-phase-08-revalidation.html#phase-로그",
+    "href": "12-phase-08-revalidation.html#phase-로그",
+    "title": "13  Phase 8 — 통계 검증 재실행",
+    "section": "13.8 Phase 로그",
+    "text": "13.8 Phase 로그\n009_phase08-statistical-revalidation.qmd + .html.\n§4 에 3 방향 비교표 (2026-05 / v0.2.0 macOS / v0.2.0 Linux) 를 experiment 별로 넣는다. 이 표가 “통계적 주장이 여전히 성립한다” 의 증거다.\n이 로그는 IES 보고서와 논문 supplement 에서 인용될 수 있으므로, 다른 로그보다 자기 완결성을 높인다 — 외부 파일 참조에 의존하지 않고 핵심 수치를 로그 안에 넣는다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Phase 8 — 통계 검증 재실행</span>"
+    ]
+  },
+  {
+    "objectID": "13-phase-09-documentation.html",
+    "href": "13-phase-09-documentation.html",
+    "title": "14  Phase 9 — 문서 델타 동기화",
+    "section": "",
+    "text": "14.1 목표\nv0.2.0 에서 실제로 바뀐 것만 문서에 반영한다. 2026-05 문서 오버홀의 결과물은 그대로 두고, Phase 4 · 7 의 동작 변경과 Phase 3 의 결정만 반영한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Phase 9 — 문서 델타 동기화</span>"
+    ]
+  },
+  {
+    "objectID": "13-phase-09-documentation.html#목표",
+    "href": "13-phase-09-documentation.html#목표",
+    "title": "14  Phase 9 — 문서 델타 동기화",
+    "section": "",
+    "text": "Warning이 Phase 의 실패 모드\n\n\n\nPhase 9 가 세 번째 문서 오버홀이 되는 것. 문서를 읽다 보면 개선하고 싶은 곳이 계속 보이지만, 이 Phase 는 델타만 만진다. “이왕 여는 김에” 를 금지한다. 개선 아이디어는 v0.3 백로그(GitHub Issues)로 보낸다.\n\n\n\n\n\nStep 수\n5 (9.1 – 9.5)\n\n\n누적 시간\n~90 분 (+ vignette knit 시간)\n\n\n선행 Phase\nPhase 8\n\n\n종료 로그\n010_phase09-documentation-sync.qmd",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Phase 9 — 문서 델타 동기화</span>"
+    ]
+  },
+  {
+    "objectID": "13-phase-09-documentation.html#step-9.1-델타-목록-확정-및-description-news.md",
+    "href": "13-phase-09-documentation.html#step-9.1-델타-목록-확정-및-description-news.md",
+    "title": "14  Phase 9 — 문서 델타 동기화",
+    "section": "14.2 Step 9.1 — 델타 목록 확정 및 DESCRIPTION / NEWS.md",
+    "text": "14.2 Step 9.1 — 델타 목록 확정 및 DESCRIPTION / NEWS.md\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nPhase 8\n\n\n\n목표. 문서에 반영해야 할 변경 목록을 확정하고, 최상위 메타데이터를 갱신한다.\n작업.\n\n델타 목록 작성 — Phase 4 · 7 의 로그 §5 와 원장에서 사용자에게 보이는 변경을 추출\n\n동작 변경 (수치, 오류, 출력)\nAPI 표면 변경 (인자, 함수, 문서화 상태)\n재현성 계약 변경\n광고 축소 (D2 결정)\n테스트 게이트 변경 (개발자 대상 — CONTRIBUTING 에 반영)\n\nDESCRIPTION\n\nVersion — D4 가 정한 번호\nDescription — D2 가 광고 축소를 선택했으면 반영 (Step 7.3 에서 이미 했다면 확인만)\nImports / Suggests — Phase 5/7 에서 변경됐으면 반영\nRoxygenNote — document() 후 자동\n\nNEWS.md v0.2.0 항목 작성\n\n사용자 목소리로. 내부 Phase/Step 번호를 쓰지 않는다\n구조: 무엇이 바뀌었나 / 왜 / 사용자가 해야 할 일\nbreaking change 를 맨 위에 — 재현성 계약 변경, 광고 축소는 사용자에게 영향이 있다\n이전 NEWS 항목은 수정하지 않는다 (이력)\n“Known limitations” 갱신 — 해소된 것 제거, 남은 것 갱신. 특히 “The Linux x86_64 baseline is pending the first continuous-integration run” 은 해소됐어야 한다\n\ninst/CITATION 확인 — 버전은 packageVersion() 으로 자동이므로 수정 불필요\n\n산출물.\n\nevidence/phase09/documentation-delta.md — 반영해야 할 변경 목록\n갱신된 DESCRIPTION, NEWS.md\n\n완료 조건.\n\n델타 목록이 Phase 4·7 로그와 원장을 근거로 작성되어 있다\nNEWS v0.2.0 항목이 사용자 목소리로 쓰여 있다\nbreaking change 가 맨 위에 있다\n“Known limitations” 가 현재 상태를 반영한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Phase 9 — 문서 델타 동기화</span>"
+    ]
+  },
+  {
+    "objectID": "13-phase-09-documentation.html#step-9.2-roxygen-델타-동기화",
+    "href": "13-phase-09-documentation.html#step-9.2-roxygen-델타-동기화",
+    "title": "14  Phase 9 — 문서 델타 동기화",
+    "section": "14.3 Step 9.2 — roxygen 델타 동기화",
+    "text": "14.3 Step 9.2 — roxygen 델타 동기화\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n9.1\n\n\n\n목표. 델타 목록에 해당하는 함수의 roxygen 만 갱신한다.\n작업.\n\n델타 목록에서 영향받는 함수 식별\n각 함수의 roxygen 갱신 — 2026-05 의 canonical template 을 그대로 따른다 (applied-first opener, motivation-style @param, 전체 @return 열거, 실행 가능한 @examples, @seealso, @references). documentation-updates/working/05-roxygen-template.md 참조\n특히 확인할 것\n\ncanonical_hash() / provenance_string() — 재현성 계약 변경\n(O3 인 경우) stable_hash() — 신규\ngen_effects_dpm() — D2 결정\nmultisitedgp_design() — target_marginal_rho 문서\nscenario_audit() — SkewN 지원 범위\n?multisiteDGP package-level — Error catalog 절 (Step 7.7 에서 했으면 확인만)\n\n@examples 가 실제로 실행되는지 확인 — 동작이 바뀐 함수의 예제가 깨졌을 수 있다\ndevtools::document() → man/ 갱신\nR CMD check 의 Rd 관련 검사 통과 확인\n\n산출물.\n\n갱신된 roxygen + man/\nevidence/phase09/roxygen-delta.md — 수정한 함수 목록\n\n완료 조건.\n\n델타 목록의 모든 함수가 처리되어 있다\n수정한 함수의 @examples 가 전부 실행된다\ndevtools::document() 후 man/ 이 최신이고 check 가 통과한다\n델타 목록 밖의 함수는 수정되지 않았다 (git diff --stat 로 확인)",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Phase 9 — 문서 델타 동기화</span>"
+    ]
+  },
+  {
+    "objectID": "13-phase-09-documentation.html#step-9.3-vignette-델타-동기화",
+    "href": "13-phase-09-documentation.html#step-9.3-vignette-델타-동기화",
+    "title": "14  Phase 9 — 문서 델타 동기화",
+    "section": "14.4 Step 9.3 — vignette 델타 동기화",
+    "text": "14.4 Step 9.3 — vignette 델타 동기화\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분 (+ knit 시간)\n\n\n의존\n9.2\n\n\n\n목표. 16 편 중 델타의 영향을 받는 것만 갱신한다.\n작업.\n\n영향 판정 — 각 vignette 이 델타 목록의 어느 항목을 다루는가\n\nm7-reproducibility-provenance — 재현성 계약 (Phase 4 Step 4.7 에서 했으면 확인만)\nm2-g-distribution-catalog — DPM, SkewN\nm4-precision-dependence-theory — marginal target\na3-diagnostics-in-practice — scenario_audit() 변경, on= 인자 (punch list P1-3)\n나머지 — 출력 수치가 바뀌었으면 재knit 만 필요할 수 있다\n\n전체 재knit 필요성 판단 — 수치 동작이 바뀌었으면 모든 vignette 의 출력이 바뀐다. 이 경우 내용 수정은 영향받는 것만, 재knit 는 전체\n내용 수정 — 최소한으로\n전체 재knit + 시간 측정 (Step 2.8 의 baseline 대비)\n각 vignette 의 출력이 실제 동작과 일치하는지 스팟 체크\n\n산출물.\n\n갱신된 vignette .Rmd + .html\nevidence/phase09/vignette-delta.md — 수정한 것 × 이유, 재knit 시간\n\n완료 조건.\n\n영향받는 vignette 이 전부 갱신되어 있다\n전체 vignette 이 오류 없이 knit 된다\nknit 시간이 baseline 대비 크게 늘지 않았다 (늘었으면 사유)\n영향받지 않는 vignette 의 본문은 수정되지 않았다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Phase 9 — 문서 델타 동기화</span>"
+    ]
+  },
+  {
+    "objectID": "13-phase-09-documentation.html#step-9.4-readme-pkgdown-개발자-문서",
+    "href": "13-phase-09-documentation.html#step-9.4-readme-pkgdown-개발자-문서",
+    "title": "14  Phase 9 — 문서 델타 동기화",
+    "section": "14.5 Step 9.4 — README · pkgdown · 개발자 문서",
+    "text": "14.5 Step 9.4 — README · pkgdown · 개발자 문서\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n9.3\n\n\n\n목표. 사용자 진입점과 개발자 문서를 갱신한다.\n작업.\n\nREADME.Rmd\n\nQuick start 의 출력이 실제와 일치하는가 (수치 변경 시 재생성)\n결정론적 hash check — README 에 hash 확인 예제가 있다. Phase 4 의 계약 변경 반영 필수\nCI 배지 (Phase 6 Step 6.6 에서 했으면 확인만)\ndevtools::build_readme() 로 재생성\n\nindex.md — pkgdown 홈. shape 개수 등 D2 영향 반영\n_pkgdown.yml — 신규 export 가 있으면 reference index 에 추가. stable_hash() 등\nCONTRIBUTING.md — Phase 5 의 테스트 게이트 변경, Phase 4 의 fixture 재생성 절차를 개발자에게 안내. 이것이 이번 Phase 의 실질적 신규 내용\n.github/workflows/README.md — Phase 6 에서 했으면 확인만\npkgdown::build_site() 실행 → 오류 없이 빌드되는지\ndocs/ 커밋 여부 확인 — .Rbuildignore 에 있으나 git 에는 들어간다. pkgdown-deploy workflow 가 배포하므로 커밋 방침 확인\n\n산출물.\n\n갱신된 README.Rmd / README.md, index.md, _pkgdown.yml, CONTRIBUTING.md\n빌드된 pkgdown 사이트\n\n완료 조건.\n\nREADME 의 hash check 예제가 실제로 동작한다\npkgdown::build_site() 가 오류 없이 완료된다\nCONTRIBUTING 에 새 테스트/fixture 절차가 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Phase 9 — 문서 델타 동기화</span>"
+    ]
+  },
+  {
+    "objectID": "13-phase-09-documentation.html#step-9.5-traceability-ledger-최종-갱신",
+    "href": "13-phase-09-documentation.html#step-9.5-traceability-ledger-최종-갱신",
+    "title": "14  Phase 9 — 문서 델타 동기화",
+    "section": "14.6 Step 9.5 — traceability ledger 최종 갱신",
+    "text": "14.6 Step 9.5 — traceability ledger 최종 갱신\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n9.4\n\n\n\n목표. tools/traceability/ 의 8 개 ledger 를 v0.2.0 상태로 맞춘다.\n작업.\n\n8 개 CSV 각각 갱신\n\napi-index.csv — API 표면 (Step 7.7 에서 일부 했으면 확인 + 보완)\ndecision-index.csv — D1–D4 등재\ndocs-index.csv — vignette / roxygen 매핑\nerror-index.csv — 오류 카탈로그\nfixture-index.csv — Phase 4 재생성 반영\ninvariant-index.csv — T/P 불변량 (Phase 5 변경 반영)\npreset-index.csv — preset 9 종\nvalidation-index.csv — Phase 8 에서 했으면 확인만\nconflict-checklist.csv — 해소 항목 종결\n\ntest-traceability.R 실행 — ledger 와 코드의 일치 검사\ntools/traceability/README.md 갱신\n정책 문서 최종 확인 — dependency-policy.csv, no-compiled-code-policy.md, cross-os-reproducibility-policy.md\n전체 문서 정합성 스팟 체크 — grep 으로 다음을 확인\n\n옛 버전 번호(0.1.1) 잔여 언급\nD2 로 제거된 기능의 잔여 언급\n옛 재현성 정책 서술의 잔여\n\n\n산출물.\n\n갱신된 traceability CSV 9 종 + README\nevidence/phase09/consistency-scan.md — grep 스캔 결과\n\n완료 조건.\n\ntest-traceability.R 통과\n9 개 ledger 가 v0.2.0 상태를 반영한다\ngrep 스캔에서 잔여 불일치가 없다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Phase 9 — 문서 델타 동기화</span>"
+    ]
+  },
+  {
+    "objectID": "13-phase-09-documentation.html#phase-종료-조건",
+    "href": "13-phase-09-documentation.html#phase-종료-조건",
+    "title": "14  Phase 9 — 문서 델타 동기화",
+    "section": "14.7 Phase 종료 조건",
+    "text": "14.7 Phase 종료 조건\n\nDESCRIPTION Version 이 D4 결정과 일치한다\nNEWS.md v0.2.0 항목이 사용자 목소리로 작성되고 breaking change 가 명시되어 있다\n“Known limitations” 가 현재 상태를 반영한다 (해소된 것 제거)\n델타 목록의 모든 roxygen 이 갱신되고 @examples 가 실행된다\n영향받는 vignette 이 갱신되고 전체가 knit 된다\nREADME 의 hash check 예제가 동작한다\npkgdown::build_site() 성공\nCONTRIBUTING 에 새 테스트/fixture 절차가 있다\ntraceability ledger 9 종이 갱신되고 test-traceability.R 통과\ngrep 스캔에서 잔여 불일치 없음\n델타 목록 밖의 문서가 수정되지 않았다 (git diff --stat 로 확인)",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Phase 9 — 문서 델타 동기화</span>"
+    ]
+  },
+  {
+    "objectID": "13-phase-09-documentation.html#phase-로그",
+    "href": "13-phase-09-documentation.html#phase-로그",
+    "title": "14  Phase 9 — 문서 델타 동기화",
+    "section": "14.8 Phase 로그",
+    "text": "14.8 Phase 로그\n010_phase09-documentation-sync.qmd + .html.\n§3 (산출물) 에 수정한 파일과 수정하지 않은 파일을 모두 적는다. 후자가 중요하다 — 이 Phase 가 델타만 만졌다는 증거이며, 다음 사람이 “왜 이건 안 고쳤지?” 를 묻지 않게 한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Phase 9 — 문서 델타 동기화</span>"
+    ]
+  },
+  {
+    "objectID": "14-phase-10-external-review.html",
+    "href": "14-phase-10-external-review.html",
+    "title": "15  Phase 10 — 외부 리뷰 게이트",
+    "section": "",
+    "text": "15.1 목표\n계획을 만든 주체가 아닌 눈으로 v0.2.0 을 검토받고, 발견을 처리한다.\n2026-05 오버홀은 GPT Codex 3 라운드 리뷰를 거쳤고, 그것이 품질에 실질적으로 기여했다 (NEWS.md 가 명시). 같은 구조를 이번에도 쓴다. 다만 이번 릴리스는 문서가 아니라 동작과 계약 이 대상이므로 리뷰 초점이 다르다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Phase 10 — 외부 리뷰 게이트</span>"
+    ]
+  },
+  {
+    "objectID": "14-phase-10-external-review.html#목표",
+    "href": "14-phase-10-external-review.html#목표",
+    "title": "15  Phase 10 — 외부 리뷰 게이트",
+    "section": "",
+    "text": "Step 수\n5 (10.1 – 10.5)\n\n\n누적 시간\n~95 분 (+ 리뷰 왕복 대기)\n\n\n선행 Phase\nPhase 9\n\n\n종료 로그\n011_phase10-external-review.qmd\n\n\n게이트\n외부 리뷰 — Critical 발견 미해소 시 Phase 11 진입 금지\n\n\n\n\n\n\n\n\n\nNote리뷰어 격리\n\n\n\n리뷰어에게는 리뷰 패킷과 package 만 준다. 이 계획서, Phase 로그, 결함 원장은 주지 않는다. 계획의 프레이밍이 리뷰를 오염시키면 “우리가 이미 아는 것” 만 확인받게 된다. 리뷰어가 우리가 놓친 것을 찾게 하려면 백지에서 봐야 한다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Phase 10 — 외부 리뷰 게이트</span>"
+    ]
+  },
+  {
+    "objectID": "14-phase-10-external-review.html#step-10.1-리뷰-패킷-작성",
+    "href": "14-phase-10-external-review.html#step-10.1-리뷰-패킷-작성",
+    "title": "15  Phase 10 — 외부 리뷰 게이트",
+    "section": "15.2 Step 10.1 — 리뷰 패킷 작성",
+    "text": "15.2 Step 10.1 — 리뷰 패킷 작성\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\nPhase 9\n\n\n\n목표. 리뷰어가 맥락 없이도 판단할 수 있는 패킷을 만든다.\n패킷 구성.\n\n대상 서술 — package 가 무엇을 하는 것인지 (README 수준). v0.2.0 이 무엇을 바꿨는지 (NEWS 수준)\n리뷰 초점 4 개 — 이번 릴리스의 성격에 맞춰\n\n초점 1 — 재현성 계약. 계약이 명확한가? 문서 · 코드 · 테스트 · fixture 가 일관되는가? 사용자가 이 계약으로부터 무엇을 기대할 수 있는지 알 수 있는가?\n초점 2 — 정직성. package 가 약속하는 것과 하는 것이 일치하는가? 미구현 기능이 명확히 표시되는가? 오류 메시지가 사용자를 올바른 방향으로 보내는가?\n초점 3 — 테스트가 실제로 검증하는가. 테스트가 통과한다는 것이 무엇을 의미하는가? 축소된 테스트가 여전히 실제 위반을 잡는가? 놓친 불변량이 있는가?\n초점 4 — 통계적 타당성. DGP 의 수학적 주장이 구현과 일치하는가? 표준화 규약, dependence injection, 진단 수식\n\n진입점 — 리뷰어가 어디부터 볼지: README.md, NEWS.md, vignette(\"m1\"), vignette(\"m7\"), R/utils-reproducibility.R, tests/testthat/\n명시적 질문 목록 — 리뷰어에게 답을 요청할 것 (아래 §참조)\n비-질문 — 리뷰 범위 밖: 문서 문체, v0.3 기능 제안, 아키텍처 재설계\n\n리뷰어에게 던질 질문 (초안).\n\n재현성 계약을 읽고, 다른 컴퓨터에서 동일 결과를 얻으려면 무엇을 해야 하는지 말할 수 있는가?\nDESCRIPTION / NEWS / vignette 를 읽고 실제로 동작하지 않는 기능을 광고하는 곳을 찾을 수 있는가?\n테스트 스위트를 보고, 통과하는데도 놓칠 수 있는 결함을 상상할 수 있는가?\n어느 수학적 주장이 구현에서 증명되지 않는가?\n\n산출물.\n\nlog/log-version-up-2026-08-14/review-packet/ — 패킷 문서 + 진입점 목록\n패킷 렌더본\n\n완료 조건.\n\n패킷이 계획서 · 로그 · 원장을 참조하지 않고 자기 완결적이다\n4 개 초점과 질문 목록이 있다\n범위 밖 항목이 명시되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Phase 10 — 외부 리뷰 게이트</span>"
+    ]
+  },
+  {
+    "objectID": "14-phase-10-external-review.html#step-10.2-리뷰-수신-및-트리아지",
+    "href": "14-phase-10-external-review.html#step-10.2-리뷰-수신-및-트리아지",
+    "title": "15  Phase 10 — 외부 리뷰 게이트",
+    "section": "15.3 Step 10.2 — 리뷰 수신 및 트리아지",
+    "text": "15.3 Step 10.2 — 리뷰 수신 및 트리아지\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n10.1 + 리뷰어 응답\n\n\n\n목표. 리뷰 발견을 분류하고 처리 계획을 세운다.\n작업.\n\n리뷰 결과를 review-packet/round-1/findings.md 로 보존 (원문 그대로)\n각 발견을 분류\n\nCritical — 릴리스를 막는다. 잘못된 동작, 위험한 문서, 계약 모순\nImportant — 고쳐야 하지만 릴리스를 막지는 않는다\nMinor — 개선 제안\nRejected — 동의하지 않는다. 반드시 근거를 남긴다. 리뷰어가 틀릴 수 있고, 그 판단도 기록되어야 한다\n\n각 발견을 재현으로 검증 — 리뷰어의 지적이 실제로 성립하는지 확인. 성립하지 않으면 Rejected + 근거\nCritical / Important 를 원장에 등재 (source = external-review-r1)\n처리 계획 — Step 10.3 / 10.4 배정\n\n산출물.\n\nreview-packet/round-1/findings.md — 원문\nreview-packet/round-1/triage.md — 분류 + 검증 결과 + 배정\n원장 신규 행\n\n완료 조건.\n\n모든 발견이 4 분류 중 하나로 배정되어 있다\n각 발견이 재현으로 검증되어 있다\nRejected 각각에 근거가 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Phase 10 — 외부 리뷰 게이트</span>"
+    ]
+  },
+  {
+    "objectID": "14-phase-10-external-review.html#step-10.3-리메디에이션-①-critical",
+    "href": "14-phase-10-external-review.html#step-10.3-리메디에이션-①-critical",
+    "title": "15  Phase 10 — 외부 리뷰 게이트",
+    "section": "15.4 Step 10.3 — 리메디에이션 ①: Critical",
+    "text": "15.4 Step 10.3 — 리메디에이션 ①: Critical\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n10.2\n\n\n\n목표. Critical 발견을 전부 해소한다.\n작업.\n\nCritical 각각에 대해 Phase 7 과 동일 절차 — 회귀 테스트 먼저, 수정, 검증\n수정이 Phase 4/5/7/8/9 산출물에 영향을 주면 해당 Phase 의 검증을 부분 재실행\n\n수치 동작 변경 → Phase 8 의 관련 validation 재실행\nfixture 변경 → Phase 4 의 재생성 절차\n문서 변경 → Phase 9 의 정합성 스캔\n\n각 수정을 별도 커밋. 메시지에 발견 ID\n수정 후 전체 테스트 + R CMD check\n\n산출물.\n\n수정 + 커밋\n원장 status 갱신\n영향받은 이전 Phase 산출물의 재검증 기록\n\n완료 조건.\n\nCritical 전건이 fixed 이다\n각 수정에 회귀 테스트가 있다\n전체 테스트와 check 가 통과한다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Phase 10 — 외부 리뷰 게이트</span>"
+    ]
+  },
+  {
+    "objectID": "14-phase-10-external-review.html#step-10.4-리메디에이션-②-important",
+    "href": "14-phase-10-external-review.html#step-10.4-리메디에이션-②-important",
+    "title": "15  Phase 10 — 외부 리뷰 게이트",
+    "section": "15.5 Step 10.4 — 리메디에이션 ②: Important",
+    "text": "15.5 Step 10.4 — 리메디에이션 ②: Important\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n10.3\n\n\n\n목표. Important 발견을 처리하거나 v0.3 으로 이월한다.\n작업.\n\nImportant 각각에 대해: 처리 비용 추정 → v0.2.0 에서 처리 vs v0.3 이월 판단\n처리하는 것은 Step 10.3 과 동일 절차\n이월하는 것은 GitHub Issue 로 등록하고 원장 status 를 deferred-v0.3\nMinor 는 전부 v0.3 백로그 (Issue) — 단 5 분 안에 끝나는 것은 처리해도 된다\n\n산출물.\n\n수정 + 커밋\nGitHub Issues (이월분)\n원장 status 갱신\n\n완료 조건.\n\nImportant 전건이 fixed 또는 deferred-v0.3 (Issue 링크) 이다\nMinor 가 전부 Issue 로 등록되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Phase 10 — 외부 리뷰 게이트</span>"
+    ]
+  },
+  {
+    "objectID": "14-phase-10-external-review.html#step-10.5-리뷰-종료-및-2-차-라운드-판단",
+    "href": "14-phase-10-external-review.html#step-10.5-리뷰-종료-및-2-차-라운드-판단",
+    "title": "15  Phase 10 — 외부 리뷰 게이트",
+    "section": "15.6 Step 10.5 — 리뷰 종료 및 2 차 라운드 판단",
+    "text": "15.6 Step 10.5 — 리뷰 종료 및 2 차 라운드 판단\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n10.3, 10.4\n\n\n\n목표. 리뷰 라운드를 닫고, 2 차 라운드가 필요한지 판단한다.\n작업.\n\n리메디에이션 요약 — 발견 × 처리 × 커밋\n2 차 라운드 판단 기준\n\nCritical 이 3 건 이상이었다 → 2 차 권장 (1 차가 놓친 것이 더 있을 가능성)\nCritical 수정이 아키텍처를 건드렸다 → 2 차 필수\nCritical 0–2 건이고 수정이 국소적이었다 → 2 차 불필요\n\n2 차가 필요하면 Step 10.1–10.5 를 반복 (round-2/). 로그 번호는 다음 번호를 가져간다\n리뷰 아카이브 정리 — review-packet/ 이 자기 완결적인지 확인\n리뷰가 놓친 것 자기 평가 — 우리가 아는 문제 중 리뷰어가 지적하지 않은 것이 있는가? 있다면 패킷이 그 영역을 가렸을 수 있다. 다음 리뷰를 위해 기록\n\n산출물.\n\nreview-packet/round-1/closeout.md\n2 차 라운드 판단 + 근거\n\n완료 조건.\n\n리뷰 라운드가 종료 문서로 닫혀 있다\n2 차 필요 여부가 기준에 따라 판단되어 있다\n리뷰 아카이브가 자기 완결적이다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Phase 10 — 외부 리뷰 게이트</span>"
+    ]
+  },
+  {
+    "objectID": "14-phase-10-external-review.html#phase-종료-조건",
+    "href": "14-phase-10-external-review.html#phase-종료-조건",
+    "title": "15  Phase 10 — 외부 리뷰 게이트",
+    "section": "15.7 Phase 종료 조건",
+    "text": "15.7 Phase 종료 조건\n\n리뷰 패킷이 작성되고 리뷰어에게 전달됐다\n모든 발견이 분류·검증되어 있다\nCritical 전건이 해소되어 있다\nImportant 가 처리되었거나 Issue 로 이월되어 있다\nRejected 각각에 근거가 있다\n리메디에이션이 이전 Phase 산출물에 영향을 줬으면 해당 검증이 재실행됐다\n전체 테스트 + R CMD check + CI 가 여전히 green\n2 차 라운드 필요 여부가 판단되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Phase 10 — 외부 리뷰 게이트</span>"
+    ]
+  },
+  {
+    "objectID": "14-phase-10-external-review.html#phase-로그",
+    "href": "14-phase-10-external-review.html#phase-로그",
+    "title": "15  Phase 10 — 외부 리뷰 게이트",
+    "section": "15.8 Phase 로그",
+    "text": "15.8 Phase 로그\n011_phase10-external-review.qmd + .html.\n§5 (결정 사항) 에 Rejected 발견과 근거를 반드시 남긴다. 외부 지적을 받아들이지 않은 결정은 나중에 가장 자주 재검토되는 지점이다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Phase 10 — 외부 리뷰 게이트</span>"
+    ]
+  },
+  {
+    "objectID": "15-phase-11-release.html",
+    "href": "15-phase-11-release.html",
+    "title": "16  Phase 11 — v0.2.0 릴리스",
+    "section": "",
+    "text": "16.1 목표\n성공 기준 G1–G7 을 전부 실증하고 v0.2.0 을 릴리스한다. 그리고 v0.3 을 위한 인계 문서를 남긴다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Phase 11 — v0.2.0 릴리스</span>"
+    ]
+  },
+  {
+    "objectID": "15-phase-11-release.html#목표",
+    "href": "15-phase-11-release.html#목표",
+    "title": "16  Phase 11 — v0.2.0 릴리스",
+    "section": "",
+    "text": "Step 수\n5 (11.1 – 11.5)\n\n\n누적 시간\n~85 분 (+ CI 실행 대기)\n\n\n선행 Phase\nPhase 10 (Critical 전건 해소)\n\n\n종료 로그\n012_phase11-v0.2.0-release.qmd",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Phase 11 — v0.2.0 릴리스</span>"
+    ]
+  },
+  {
+    "objectID": "15-phase-11-release.html#step-11.1-전체-로컬-게이트",
+    "href": "15-phase-11-release.html#step-11.1-전체-로컬-게이트",
+    "title": "16  Phase 11 — v0.2.0 릴리스",
+    "section": "16.2 Step 11.1 — 전체 로컬 게이트",
+    "text": "16.2 Step 11.1 — 전체 로컬 게이트\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분 (+ 실행 대기)\n\n\n의존\nPhase 10\n\n\n\n목표. Step 1.5 와 동일한 명령으로 재측정해서 개선을 수치로 증명한다.\n작업. Step 1.5 의 7 개 측정을 그대로 재실행한다.\n\n\n\n측정\n베이스라인 (Step 1.5)\n목표\n\n\n\n\n기본 테스트\n30 skip\nskip ≤ 3\n\n\n확장 테스트\n1 skip (T1a)\nskip 0 또는 사유 기록\n\n\ncheck (기본)\n0E/0W/2N\n0E/0W, NOTE 문서화\n\n\ncheck (전체, vignette 포함)\nStep 1.5 측정값\n0E/0W, NOTE 문서화\n\n\n커버리지\nStep 1.5 측정값\n베이스라인 이상\n\n\nlint\nStep 1.5 측정값\n0 위반 (또는 문서화된 예외)\n\n\n성능\nStep 1.5 측정값\n유의한 회귀 없음\n\n\n\n작업.\n\n7 개 측정 실행 (긴 것은 백그라운드 병행)\nbefore/after 비교표 작성\n목표 미달 항목이 있으면 원인 파악 → 수정하거나 사유 기록\n2 회 연속 실행으로 플레이키 확인\n\n산출물.\n\nevidence/phase11/final-metrics.md — before/after 비교표\nevidence/phase11/final-raw/ — 원본 출력 7 개\n\n완료 조건.\n\n7 개 측정이 재실행되고 비교표가 있다\n목표 미달 항목이 없거나, 있으면 사유가 기록되어 있다\n2 회 실행 결과가 동일하다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Phase 11 — v0.2.0 릴리스</span>"
+    ]
+  },
+  {
+    "objectID": "15-phase-11-release.html#step-11.2-ci-최종-매트릭스-확인",
+    "href": "15-phase-11-release.html#step-11.2-ci-최종-매트릭스-확인",
+    "title": "16  Phase 11 — v0.2.0 릴리스",
+    "section": "16.3 Step 11.2 — CI 최종 매트릭스 확인",
+    "text": "16.3 Step 11.2 — CI 최종 매트릭스 확인\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분 (+ CI 대기)\n\n\n의존\n11.1\n\n\n\n목표. 릴리스 후보 커밋에서 전체 CI 가 green 임을 확인한다.\n작업.\n\n릴리스 후보를 main 에 병합하고 push\n6 개 workflow 전부 실행 확인\n\nR-CMD-check 5 cell\nlint, test-coverage, extended-tests, pkgdown-deploy\n\n각 cell 의 출력을 보존 — GitHub 로그는 90 일 후 만료된다. 핵심 출력을 evidence/phase11/ci-final/ 에 저장\nextended-tests 를 수동 실행(workflow_dispatch)해서 green 확인 — 스케줄을 기다리지 않는다\nWindows cell 의 snapshot 테스트 통과 확인 — Phase 4/5 에서 Linux · macOS 만 로컬 검증했으므로, Windows 는 여기가 첫 확인\n\n산출물.\n\nevidence/phase11/ci-final/ — workflow 별 출력 보존\nrun ID 목록\n\n완료 조건.\n\n6 개 workflow 전부 green (성공 기준 G2)\nWindows cell 이 통과한다\n출력이 보존되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Phase 11 — v0.2.0 릴리스</span>"
+    ]
+  },
+  {
+    "objectID": "15-phase-11-release.html#step-11.3-릴리스-아티팩트-생성",
+    "href": "15-phase-11-release.html#step-11.3-릴리스-아티팩트-생성",
+    "title": "16  Phase 11 — v0.2.0 릴리스",
+    "section": "16.4 Step 11.3 — 릴리스 아티팩트 생성",
+    "text": "16.4 Step 11.3 — 릴리스 아티팩트 생성\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n11.2\n\n\n\n목표. 배포 가능한 아티팩트를 만들고 검증한다.\n작업.\n\nR CMD build 로 tarball 생성 — multisiteDGP_0.2.0.tar.gz\ntarball 검증\n\n크기 (Step 1.4 의 baseline 대비)\n포함 파일 목록 — .Rbuildignore 가 제대로 동작하는가? log/, blueprint-*, documentation-updates/, tools/ 가 빠졌는가?\ntarball 에서 설치 → library(multisiteDGP) → 기본 동작 확인\n\n깨끗한 환경에서 설치 검증 — 새 R 라이브러리 경로에 설치하고 Suggests 없이 기본 기능이 동작하는지\nR CMD check 를 tarball 에 대해 실행 (source directory 가 아니라)\n릴리스 노트 작성 — NEWS.md v0.2.0 항목을 기반으로 GitHub Release 본문\n\n산출물.\n\nmultisiteDGP_0.2.0.tar.gz\nevidence/phase11/tarball-verification.md\n릴리스 노트 초안\n\n완료 조건.\n\ntarball 이 생성되고 검증됐다\n깨끗한 환경에서 설치·동작한다\ntarball 대상 R CMD check 가 통과한다\n불필요한 파일이 tarball 에 없다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Phase 11 — v0.2.0 릴리스</span>"
+    ]
+  },
+  {
+    "objectID": "15-phase-11-release.html#step-11.4-태그-및-배포",
+    "href": "15-phase-11-release.html#step-11.4-태그-및-배포",
+    "title": "16  Phase 11 — v0.2.0 릴리스",
+    "section": "16.5 Step 11.4 — 태그 및 배포",
+    "text": "16.5 Step 11.4 — 태그 및 배포\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~15 분\n\n\n의존\n11.3\n\n\n\n목표. 버전을 태그하고 공개한다.\n\n\n\n\n\n\nImportantPI 확인 필요\n\n\n\nGitHub Release 생성은 외부에 공개되는 행위다. 태그 생성과 Release 발행 전에 PI 확인을 받는다. Step 11.3 까지 완료된 상태를 보고하고 승인을 받은 뒤 진행한다.\n\n\n작업.\n\nv0.2.0 태그 생성 (annotated) 후 push\nGitHub Release 생성 — 릴리스 노트 + tarball 첨부\npkgdown-deploy 가 실행되어 사이트가 갱신되는지 확인\n공개 사이트 확인 — https://joonho112.github.io/multisiteDGP/\n\n버전 표시가 0.2.0\nNEWS 페이지에 v0.2.0 항목\nreference index 에 신규 export (있다면)\nvignette 16 편 접근 가능\n\n_pkgdown.yml 의 development: mode: unreleased 검토 — 태그된 릴리스가 생겼으므로 release 또는 auto 로 바꿀지 판단\n재현성 최종 확인 — 공개된 tarball 을 다운로드해서 설치하고 README 의 hash check 예제를 실행. 문서화된 값이 나오는가?\n\n산출물.\n\nv0.2.0 태그 (로컬 + 원격)\nGitHub Release\n갱신된 pkgdown 사이트\n\n완료 조건.\n\n태그와 Release 가 생성되어 있다 (성공 기준 G7)\npkgdown 사이트가 v0.2.0 을 반영한다\n공개 tarball 에서 README hash check 가 문서화된 값을 낸다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Phase 11 — v0.2.0 릴리스</span>"
+    ]
+  },
+  {
+    "objectID": "15-phase-11-release.html#step-11.5-종료-로그-및-v0.3-인계",
+    "href": "15-phase-11-release.html#step-11.5-종료-로그-및-v0.3-인계",
+    "title": "16  Phase 11 — v0.2.0 릴리스",
+    "section": "16.6 Step 11.5 — 종료 로그 및 v0.3 인계",
+    "text": "16.6 Step 11.5 — 종료 로그 및 v0.3 인계\n\n\n\n항목\n값\n\n\n\n\n모드\n단일\n\n\n소요\n~20 분\n\n\n의존\n11.4\n\n\n\n목표. 작업 전체를 닫고, 다음 사람(또는 6 개월 후의 자신)이 이어받을 수 있게 만든다.\n작업.\n\n성공 기준 G1–G7 최종 검증표 작성 — 각 기준 × 증거 × 판정. Ch.16 의 체크리스트를 채운다\nv0.3 백로그 정리\n\n원장의 deferred-v0.3 행 전부가 GitHub Issue 로 등록되어 있는가\nblueprint ch.24 의 v1.x 항목 중 우선순위\n리뷰 Minor 발견\nPhase 실행 중 발견한 개선 아이디어\n각 Issue 에 라벨과 근거 링크\n\n인계 문서 — log/log-version-up-2026-08-14/CLOSEOUT.md\n\n이번 작업이 무엇을 바꿨나 (한 페이지)\n로그 지도 — 어느 로그에 무엇이 있는지\n알려진 한계 — v0.2.0 이 해결하지 않은 것\nv0.3 시작점 — 무엇부터 하면 되는지\n재발 방지 장치 — CI 알림, branch protection, fixture 생성 파이프라인이 어디 있고 어떻게 쓰는지\n\n회고 — 계획 대비 실제. 어느 Phase 가 예상보다 길었나? 어느 Step 이 분할됐나? 다음 계획을 세울 때 반영할 것\n로그 폴더 정리 — evidence/, artifacts/, decisions/, review-packet/ 이 정돈되어 있는지. 임시 파일 제거\n\n산출물.\n\nlog/log-version-up-2026-08-14/CLOSEOUT.md\nG1–G7 최종 검증표\nGitHub Issues (v0.3 백로그)\n회고\n\n완료 조건.\n\nG1–G7 전부에 증거와 판정이 있다\nv0.3 백로그가 Issue 로 등록되어 있다\nCLOSEOUT 이 자기 완결적이다 (이 계획서를 안 읽어도 상황 파악 가능)\n로그 폴더가 정돈되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Phase 11 — v0.2.0 릴리스</span>"
+    ]
+  },
+  {
+    "objectID": "15-phase-11-release.html#phase-종료-조건",
+    "href": "15-phase-11-release.html#phase-종료-조건",
+    "title": "16  Phase 11 — v0.2.0 릴리스",
+    "section": "16.7 Phase 종료 조건",
+    "text": "16.7 Phase 종료 조건\n\nStep 1.5 대비 before/after 비교표가 있고 모든 목표가 달성되어 있다\nCI 6 개 workflow 가 릴리스 커밋에서 green 이고 출력이 보존되어 있다\ntarball 이 검증되고 깨끗한 환경에서 설치·동작한다\nv0.2.0 태그와 GitHub Release 가 있다\npkgdown 사이트가 v0.2.0 을 반영한다\n공개 tarball 에서 README hash check 가 동작한다\nG1–G7 최종 검증표가 완성되어 있다\nv0.3 백로그가 Issue 로 등록되어 있다\nCLOSEOUT.md 가 작성되어 있다",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Phase 11 — v0.2.0 릴리스</span>"
+    ]
+  },
+  {
+    "objectID": "15-phase-11-release.html#phase-로그",
+    "href": "15-phase-11-release.html#phase-로그",
+    "title": "16  Phase 11 — v0.2.0 릴리스",
+    "section": "16.8 Phase 로그",
+    "text": "16.8 Phase 로그\n012_phase11-v0.2.0-release.qmd + .html.\n이 로그는 전체 작업의 최종 기록이다. §1 (요약) 을 다른 로그보다 길게 써서, 이 로그 하나만 읽어도 v0.1.1 → v0.2.0 에서 무슨 일이 있었는지 알 수 있게 한다.\n§4 에 G1–G7 최종 검증표를, §7 에 v0.3 백로그를 넣는다.",
+    "crumbs": [
+      "Phase 로드맵",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Phase 11 — v0.2.0 릴리스</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html",
+    "href": "16-acceptance-criteria.html",
+    "title": "17  인수 기준",
+    "section": "",
+    "text": "17.1 G1 — 버전 관리 복구\n이 장은 v0.2.0 이 끝났다 고 말할 수 있는 조건을 검증 가능한 형태로 적는다. Phase 11 Step 11.5 가 이 체크리스트를 채운다.\n각 항목은 어떻게 검증하는가 를 명령 또는 확인 절차로 명시한다. “확인했다” 가 아니라 “이 명령이 이 출력을 냈다” 여야 한다.",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html#g1-버전-관리-복구",
+    "href": "16-acceptance-criteria.html#g1-버전-관리-복구",
+    "title": "17  인수 기준",
+    "section": "",
+    "text": "#\n조건\n검증\n\n\n\n\nG1.1\n작업 디렉터리가 git repository\ngit rev-parse --is-inside-work-tree → true\n\n\nG1.2\n원격이 연결되어 있다\ngit remote -v → joonho112/multisiteDGP\n\n\nG1.3\n작업 트리가 깨끗하다\ngit status --porcelain → 빈 출력\n\n\nG1.4\n로컬과 원격 main 이 동기화\ngit rev-parse HEAD == git rev-parse origin/main\n\n\nG1.5\npre-upgrade-baseline 태그 존재\ngit tag -l \"pre-upgrade-baseline\"\n\n\nG1.6\n모든 Phase 의 변경이 커밋으로 추적된다\ngit log --oneline pre-upgrade-baseline..v0.2.0 이 Step 번호를 포함한 커밋을 보여준다",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html#g2-ci-green",
+    "href": "16-acceptance-criteria.html#g2-ci-green",
+    "title": "17  인수 기준",
+    "section": "17.2 G2 — CI green",
+    "text": "17.2 G2 — CI green\n\n\n\n\n\n\n\n\n#\n조건\n검증\n\n\n\n\nG2.1\nR-CMD-check 5 cell green\ngh run list --workflow=R-CMD-check.yaml --limit 1 → success, 각 cell 확인\n\n\nG2.2\nlint green\n동일\n\n\nG2.3\ntest-coverage green\n동일\n\n\nG2.4\nextended-tests green\n동일 (수동 실행 포함)\n\n\nG2.5\npkgdown-deploy green\n동일\n\n\nG2.6\n연속 3 회 green\n최근 3 개 run 이 전부 success\n\n\nG2.7\n실패 알림이 동작한다\nPhase 6 Step 6.5 의 의도적 실패 검증 기록\n\n\nG2.8\nCI 출력이 보존되어 있다\nevidence/phase11/ci-final/ 에 workflow 별 출력",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html#g3-테스트가-실제로-검증한다",
+    "href": "16-acceptance-criteria.html#g3-테스트가-실제로-검증한다",
+    "title": "17  인수 기준",
+    "section": "17.3 G3 — 테스트가 실제로 검증한다",
+    "text": "17.3 G3 — 테스트가 실제로 검증한다\n\n\n\n\n\n\n\n\n#\n조건\n검증\n\n\n\n\nG3.1\n기본 스위트 skip ≤ 3\ntestthat::test_local(\".\") 출력의 Skipped 수\n\n\nG3.2\n남은 skip 각각에 사유\nevidence/phase05/final-skip-inventory.md\n\n\nG3.3\nT13–T17 이 기본 스위트에서 실행\n위 출력에 해당 테스트가 . 로 표시\n\n\nG3.4\nP01–P12 가 기본 스위트에서 실행\n동일\n\n\nG3.5\nT1b, T4, T9, T10, T11 이 기본 스위트에서 실행\n동일\n\n\nG3.6\n축소한 테스트가 mutation 검사 통과\nevidence/phase05/ 의 mutation 결과\n\n\nG3.7\n커버리지가 베이스라인 이상\nStep 1.5 vs Step 11.1 비교표\n\n\nG3.8\n2 회 연속 실행 결과 동일 (플레이키 없음)\nStep 11.1 기록\n\n\nG3.9\n기본 스위트가 시간 예산 안\nD3 이 정한 값 vs 실측",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html#g4-재현성-계약이-동작한다",
+    "href": "16-acceptance-criteria.html#g4-재현성-계약이-동작한다",
+    "title": "17  인수 기준",
+    "section": "17.4 G4 — 재현성 계약이 동작한다",
+    "text": "17.4 G4 — 재현성 계약이 동작한다\n\n\n\n\n\n\n\n\n#\n조건\n검증\n\n\n\n\nG4.1\n드리프트 근본 원인이 특정되어 있다\nevidence/phase04/drift-root-cause.md\n\n\nG4.2\nD1 결정이 구현되어 있다\ndecisions/D1-*.md + 해당 커밋\n\n\nG4.3\ngolden fixture 가 정책이 규정한 플랫폼에서 생성\nmanifest 의 generated_platform\n\n\nG4.4\nsnapshot 이 Linux · macOS 에서 통과\nPhase 4 Step 4.5 기록 + CI\n\n\nG4.5\nWindows 에서도 통과\nPhase 11 Step 11.2 CI 기록\n\n\nG4.6\nT1a 가 실제로 실행되어 통과 (skip 아님)\nCI 로그에서 T1a 가 . 로 표시\n\n\nG4.7\n정책 문서에 모순 서술이 없다\ntools/cross-os-reproducibility-policy.md 검토 기록\n\n\nG4.8\nsame-machine 재현성 유지 (T20)\n세 플랫폼 CI\n\n\nG4.9\n공개 tarball 에서 README hash check 동작\nStep 11.4 기록\n\n\nG4.10\n이전 fixture 가 보존되어 있다\nartifacts/pre-phase04-fixtures/",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html#g5-광고-구현",
+    "href": "16-acceptance-criteria.html#g5-광고-구현",
+    "title": "17  인수 기준",
+    "section": "17.5 G5 — 광고 == 구현",
+    "text": "17.5 G5 — 광고 == 구현\n\n\n\n\n\n\n\n\n#\n조건\n검증\n\n\n\n\nG5.1\nStep 2.4 가 찾은 갭이 전부 처리\n원장의 갭 관련 행 status\n\n\nG5.2\nDESCRIPTION Description 이 실제 기능만 서술\n문서 검토 + grep\n\n\nG5.3\n미구현 기능이 명확히 표시된다\n해당 함수 roxygen + 오류 메시지\n\n\nG5.4\n53 exports 의 @examples 가 전부 실행된다\nR CMD check 의 examples 검사\n\n\nG5.5\n제거된 기능의 잔여 언급이 없다\nevidence/phase09/consistency-scan.md grep 결과\n\n\nG5.6\n오류 카탈로그가 실제 오류 집합과 일치\ntest-traceability.R 통과",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html#g6-r-cmd-check-청결",
+    "href": "16-acceptance-criteria.html#g6-r-cmd-check-청결",
+    "title": "17  인수 기준",
+    "section": "17.6 G6 — R CMD check 청결",
+    "text": "17.6 G6 — R CMD check 청결\n\n\n\n\n\n\n\n\n#\n조건\n검증\n\n\n\n\nG6.1\n로컬 --as-cran 0E/0W\nStep 11.1 출력\n\n\nG6.2\nvignette 포함 full check 0E/0W\n동일\n\n\nG6.3\n3 OS CI 에서 0E/0W\nPhase 11 Step 11.2\n\n\nG6.4\nNOTE 가 전부 문서화되어 있다\nevidence/phase06/ + evidence/phase11/\n\n\nG6.5\ntarball 대상 check 통과\nStep 11.3 기록\n\n\nG6.6\nlint 0 위반 (또는 문서화된 예외)\nStep 11.1 출력",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html#g7-릴리스-아티팩트",
+    "href": "16-acceptance-criteria.html#g7-릴리스-아티팩트",
+    "title": "17  인수 기준",
+    "section": "17.7 G7 — 릴리스 아티팩트",
+    "text": "17.7 G7 — 릴리스 아티팩트\n\n\n\n\n\n\n\n\n#\n조건\n검증\n\n\n\n\nG7.1\nDESCRIPTION Version 이 D4 결정과 일치\n파일 확인\n\n\nG7.2\nNEWS.md v0.2.0 항목 존재, breaking change 명시\n파일 확인\n\n\nG7.3\n“Known limitations” 가 현재 상태 반영\n해소된 항목이 제거되어 있다\n\n\nG7.4\nv0.2.0 태그 (annotated, 원격 push)\ngit tag -l -n v0.2.0, gh release view v0.2.0\n\n\nG7.5\nGitHub Release + tarball 첨부\ngh release view v0.2.0\n\n\nG7.6\npkgdown 사이트가 v0.2.0 반영\n사이트 확인\n\n\nG7.7\n깨끗한 환경에서 설치·동작\nStep 11.3 기록\n\n\nG7.8\ntarball 에 불필요한 파일 없음\nStep 11.3 파일 목록",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html#프로세스-인수",
+    "href": "16-acceptance-criteria.html#프로세스-인수",
+    "title": "17  인수 기준",
+    "section": "17.8 프로세스 인수",
+    "text": "17.8 프로세스 인수\n성공 기준과 별개로, 작업 자체가 감사 가능한가 를 확인한다.\n\n\n\n\n\n\n\n\n#\n조건\n검증\n\n\n\n\nP.1\nPhase 로그 11 개가 qmd + html 로 존재\nls log/log-version-up-2026-08-14/*.qmd\n\n\nP.2\n로그 순번이 단조 증가하고 빈 번호가 없다\n파일명 확인\n\n\nP.3\n각 로그가 8 절 구조를 따른다\n로그 검토\n\n\nP.4\n결함 원장의 모든 행에 최종 status 가 있다\ndefect-ledger.csv\n\n\nP.5\nP0 전건이 fixed 또는 wont-fix (근거)\n동일\n\n\nP.6\nD1–D4 결정 문서에 PI 결정이 기록되어 있다\ndecisions/\n\n\nP.7\n외부 리뷰 Critical 전건 해소\nreview-packet/round-*/closeout.md\n\n\nP.8\nv0.3 백로그가 GitHub Issue 로 등록\ngh issue list\n\n\nP.9\nCLOSEOUT.md 존재 및 자기 완결적\n파일 확인\n\n\nP.10\n증거 파일이 evidence/ 에 보존\n디렉터리 확인",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "16-acceptance-criteria.html#pi-최종-서명",
+    "href": "16-acceptance-criteria.html#pi-최종-서명",
+    "title": "17  인수 기준",
+    "section": "17.9 PI 최종 서명",
+    "text": "17.9 PI 최종 서명\nPhase 11 Step 11.5 완료 후 PI 가 확인한다.\n\nG1 버전 관리 복구 — 확인\nG2 CI green — 확인\nG3 테스트가 실제로 검증 — 확인\nG4 재현성 계약 동작 — 확인\nG5 광고 == 구현 — 확인\nG6 check 청결 — 확인\nG7 릴리스 아티팩트 — 확인\n프로세스 인수 P.1–P.10 — 확인\n\nPI 서명란: ______________________ 일자: ____________\n\n\n\n\n\n\nNote미달 항목이 있을 때\n\n\n\n어떤 기준이 미달인 채로 릴리스해야 하는 상황이 오면 — 예를 들어 multisitepower 처럼 통제 밖의 의존성 문제 — 미달을 숨기지 않는다. 해당 기준에 “미달 + 사유 + 완화 조치 + 언제 해소할지” 를 적고 PI 가 그 상태로 서명한다. 기준을 낮춰 통과시키는 것보다 미달을 기록하는 것이 낫다.",
+    "crumbs": [
+      "인수",
+      "<span class='chapter-number'>17</span>  <span class='chapter-title'>인수 기준</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-a-defect-ledger.html",
+    "href": "appendix-a-defect-ledger.html",
+    "title": "18  부록 A — 결함 원장 스키마",
+    "section": "",
+    "text": "18.1 파일 위치\nPhase 2 가 만드는 defect-ledger.csv 의 스키마와 운영 규칙이다. Phase 4 · 5 · 7 · 10 이 이 원장을 소비한다.\nCSV 로 두는 이유: R 에서 바로 읽어 집계할 수 있고, git diff 에서 변경이 보이며, tools/traceability/ 의 기존 ledger 관행과 일치한다.",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>18</span>  <span class='chapter-title'>부록 A — 결함 원장 스키마</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-a-defect-ledger.html#파일-위치",
+    "href": "appendix-a-defect-ledger.html#파일-위치",
+    "title": "18  부록 A — 결함 원장 스키마",
+    "section": "",
+    "text": "log/log-version-up-2026-08-14/defect-ledger.csv",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>18</span>  <span class='chapter-title'>부록 A — 결함 원장 스키마</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-a-defect-ledger.html#열-정의",
+    "href": "appendix-a-defect-ledger.html#열-정의",
+    "title": "18  부록 A — 결함 원장 스키마",
+    "section": "18.2 열 정의",
+    "text": "18.2 열 정의\n\n\n\n\n\n\n\n\n\n열\n타입\n필수\n설명\n\n\n\n\nid\n문자\n✓\nD-NNN 형식, 3 자리. 부여 후 변경하지 않는다\n\n\ntitle\n문자\n✓\n한 줄 요약. 증상이 아니라 결함을 서술\n\n\narea\n열거\n✓\ninfra / repro / test / surface / kernel / api / deps / perf / docs\n\n\nseverity\n열거\n✓\nP0 / P1 / P2\n\n\ndiscovered_in\n문자\n✓\nstep2.3 같은 Step 번호, 또는 external-review-r1\n\n\nsymptom\n문자\n✓\n관찰된 현상. 사용자가 무엇을 겪는가\n\n\nroot_cause\n문자\n\n원인. 감사 시점에 모르면 비워두고 수정 Phase 에서 채운다\n\n\nrepro\n문자\n✓\n재현 절차. 실행 가능한 명령 또는 단계. P0 는 필수\n\n\nevidence\n문자\n✓\n증거 파일 경로 (evidence/phase02/...)\n\n\nthreatens\n문자\n\n위협하는 성공 기준 (G2, G4 등). P0 는 필수\n\n\nowner_phase\n문자\n✓\n처리 담당 Phase (phase04 / phase05 / phase07 / phase10)\n\n\nfix_approach\n문자\n\n수정 방향. Phase 3 결정에 종속되면 그 결정 ID (D1, D2)\n\n\nstatus\n열거\n✓\n아래 참조\n\n\nregression_test\n문자\n\n회귀 테스트 위치 (tests/testthat/test-xxx.R:42)\n\n\ncommit\n문자\n\n수정 커밋 SHA\n\n\nresolution_note\n문자\n\n종결 시 한 줄. wont-fix 는 근거 필수\n\n\nrelated\n문자\n\n관련 결함 ID, 쉼표 구분",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>18</span>  <span class='chapter-title'>부록 A — 결함 원장 스키마</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-a-defect-ledger.html#status-값",
+    "href": "appendix-a-defect-ledger.html#status-값",
+    "title": "18  부록 A — 결함 원장 스키마",
+    "section": "18.3 status 값",
+    "text": "18.3 status 값\n\n\n\n\n\n\n\n값\n의미\n\n\n\n\nopen\n등재됨, 미착수\n\n\nin-progress\n수정 중\n\n\nfixed\n수정 완료 + 회귀 테스트 통과\n\n\nwont-fix\n수정하지 않기로 결정. 근거 필수\n\n\ndeferred-v0.3\nv0.3 으로 이월. GitHub Issue 링크를 resolution_note 에\n\n\nnot-reproducible\n재현 실패. 강등 또는 삭제 후보\n\n\nduplicate\n다른 행과 중복. related 에 원본 ID",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>18</span>  <span class='chapter-title'>부록 A — 결함 원장 스키마</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-a-defect-ledger.html#우선순위-기준",
+    "href": "appendix-a-defect-ledger.html#우선순위-기준",
+    "title": "18  부록 A — 결함 원장 스키마",
+    "section": "18.4 우선순위 기준",
+    "text": "18.4 우선순위 기준\nP0 — 릴리스 차단. 다음 중 하나에 해당한다.\n\n성공 기준 G1–G7 중 하나를 직접 위협한다\n사용자에게 잘못된 수치를 준다 (조용한 오류)\n문서가 사실이 아닌 것을 주장한다\nCI 를 red 로 만든다\n\nP1 — 고쳐야 하지만 차단하지 않는다.\n\n사용자에게 보이는 결함이되 우회 가능하다\n오류 메시지가 불친절하다\n커버리지 공백\n성능 회귀 (심각하지 않은 수준)\n\nP2 — 개선.\n\n내부 정합성\n코드 품질\n향후 유지보수 편의",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>18</span>  <span class='chapter-title'>부록 A — 결함 원장 스키마</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-a-defect-ledger.html#운영-규칙",
+    "href": "appendix-a-defect-ledger.html#운영-규칙",
+    "title": "18  부록 A — 결함 원장 스키마",
+    "section": "18.5 운영 규칙",
+    "text": "18.5 운영 규칙\n\nPhase 2 가 채우고 Step 2.9 에서 닫는다. 이후 Phase 는 소비한다.\nPhase 2 이후 발견분의 기본 severity 는 P2 + deferred-v0.3. P0/P1 로 올리려면 위 기준에 해당함을 근거와 함께 보여야 한다. 예외는 외부 리뷰 Critical — 자동으로 P0.\nP0 는 재현 절차가 실제로 실행되어 확인된 것만. 재현 안 되면 not-reproducible 로 강등.\n근본 원인이 같으면 한 행. 증상이 10 개여도 원인이 하나면 한 행이고 symptom 에 10 개를 나열한다. 이것이 Linux snapshot 실패 10 건을 다루는 방식이다.\nwont-fix 는 근거가 필수. “시간이 없어서” 는 근거가 아니다 — 그건 deferred-v0.3 이다.\n모든 수정 커밋은 id 를 인용한다.\nPhase 7 종료 시 P0 전건이 fixed 또는 wont-fix. 하나라도 open 이면 Phase 7 이 끝나지 않은 것이다.",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>18</span>  <span class='chapter-title'>부록 A — 결함 원장 스키마</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-a-defect-ledger.html#예시-행",
+    "href": "appendix-a-defect-ledger.html#예시-행",
+    "title": "18  부록 A — 결함 원장 스키마",
+    "section": "18.6 예시 행",
+    "text": "18.6 예시 행\nPhase 2 가 이 감사(Ch.1)에서 확인된 사실을 어떻게 등재할지 보여주는 예시다. 실제 원장은 Phase 2 가 재감사 후 작성한다 — 아래는 형식 예시일 뿐 확정 행이 아니다.\nid,title,area,severity,discovered_in,symptom,root_cause,repro,evidence,threatens,owner_phase,fix_approach,status\nD-001,\"로컬 작업본이 git 관리 밖에 있다\",infra,P0,step1.1,\"3개월간 변경 이력 추적 불가; 원격과 격차 미확인\",\"2026-05-10 이후 .git 소실 또는 미초기화\",\"git rev-parse --is-inside-work-tree 가 fatal 반환\",evidence/phase01/local-vs-remote-diff.md,G1,phase01,\"원격 클론 후 로컬 상태 반영\",fixed\nD-002,\"canonical_hash 가 Linux 와 macOS 에서 불일치\",repro,P0,step2.3,\"extended-tests snapshot 10건 실패; design_hash 는 일치하나 canonical_hash 만 상이; 표시 수치는 동일\",TBD,\"Linux 컨테이너와 macOS 에서 sim_multisite(preset_education_modest(), seed=12345) 실행 후 canonical_hash 비교\",evidence/phase02/hash-drift-bisect.md,G2·G4,phase04,D1,open\nD-003,\"기본 테스트 실행이 통계 불변량 30건을 skip 한다\",test,P0,step2.2,\"기본 devtools::test() 가 green 이지만 표준화 계약·property invariant·분포 검정이 실행되지 않음\",\"slow/property 게이트가 환경변수 기본값 뒤에 있음\",\"testthat::test_local('.') 출력의 Skipped 30건\",evidence/phase02/test-skip-matrix.csv,G3,phase05,D3,open\nD-004,\"DESCRIPTION 이 미구현 DPM 을 8번째 shape 로 광고한다\",surface,P0,step2.4,\"gen_effects_dpm() 은 E22 로 abort 하나 DESCRIPTION·NEWS·README 는 8 shape 를 주장\",\"stub-not-silent 정책이 DESCRIPTION 수준까지 확장되지 않음\",\"gen_effects(true_dist='DPM', ...) 호출 시 abort; DESCRIPTION 3행 대조\",evidence/phase02/promise-vs-implementation.csv,G5,phase07,D2,open",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>18</span>  <span class='chapter-title'>부록 A — 결함 원장 스키마</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-a-defect-ledger.html#집계",
+    "href": "appendix-a-defect-ledger.html#집계",
+    "title": "18  부록 A — 결함 원장 스키마",
+    "section": "18.7 집계",
+    "text": "18.7 집계\nPhase 종료 로그 §6 에서 다음을 집계한다.\nled &lt;- readr::read_csv(\"log/log-version-up-2026-08-14/defect-ledger.csv\")\ndplyr::count(led, severity, status)              # 우선순위 × 상태\ndplyr::count(led, area, severity)                # 영역 × 우선순위\ndplyr::filter(led, severity == \"P0\", status != \"fixed\")   # 남은 차단 항목",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>18</span>  <span class='chapter-title'>부록 A — 결함 원장 스키마</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html",
+    "href": "appendix-b-evidence.html",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "",
+    "text": "19.1 B.1 저장소 상태\nCh.1 의 근거가 된 실행 결과다. 2026-08-14 실측. 이 부록은 Phase 2 가 재감사할 때의 출발점이자, 감사 결론을 나중에 재확인할 수 있게 하는 원본이다.",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.1-저장소-상태",
+    "href": "appendix-b-evidence.html#b.1-저장소-상태",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "",
+    "text": "$ cd \"multisiteDGP-R-package\" && git rev-parse --is-inside-work-tree\nfatal: not a git repository (or any of the parent directories): .git\n\n$ cd \"00_IES Multisite Trial Project\" && git rev-parse --is-inside-work-tree\nfatal: not a git repository (or any of the parent directories): .git\n\n$ gh repo view joonho112/multisiteDGP --json name,visibility,pushedAt\n{\"name\":\"multisiteDGP\",\"pushedAt\":\"2026-05-10T04:41:33Z\",\"visibility\":\"PUBLIC\"}\n\n$ gh release list --repo joonho112/multisiteDGP\n(빈 출력 — 릴리스 0 건)\n\n$ gh issue list --repo joonho112/multisiteDGP --limit 10\n(빈 출력 — 이슈 0 건)",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.2-ci-실행-이력",
+    "href": "appendix-b-evidence.html#b.2-ci-실행-이력",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.2 B.2 CI 실행 이력",
+    "text": "19.2 B.2 CI 실행 이력\ngh run list --repo joonho112/multisiteDGP --limit 15:\n\n\n\n\n\n\n\n\n\n\n\n\n상태\nworkflow\nbranch\ntrigger\nrun ID\n소요\n시각\n\n\n\n\nfailure\nextended-tests\nmain\nschedule\n29247044931\n6m46s\n2026-07-13T11:40:11Z\n\n\nfailure\nextended-tests\nmain\nschedule\n28783281261\n6m50s\n2026-07-06T09:56:56Z\n\n\nfailure\nextended-tests\nmain\nschedule\n28364523378\n5m44s\n2026-06-29T10:09:16Z\n\n\nfailure\nextended-tests\nmain\nschedule\n27946333441\n6m21s\n2026-06-22T10:29:49Z\n\n\nfailure\nextended-tests\nmain\nschedule\n27540776185\n6m21s\n2026-06-15T10:42:13Z\n\n\nfailure\nextended-tests\nmain\nschedule\n27130475464\n5m44s\n2026-06-08T10:06:56Z\n\n\nfailure\nextended-tests\nmain\nschedule\n26749251340\n6m4s\n2026-06-01T10:25:17Z\n\n\nfailure\nextended-tests\nmain\nschedule\n26394630128\n5m49s\n2026-05-25T09:56:49Z\n\n\nfailure\nextended-tests\nmain\nschedule\n26026458795\n6m10s\n2026-05-18T09:56:52Z\n\n\nfailure\nextended-tests\nmain\nschedule\n25663155660\n6m1s\n2026-05-11T09:54:52Z\n\n\nfailure\nR-CMD-check\nmain\npush\n25620008533\n34m3s\n2026-05-10T04:41:35Z\n\n\nfailure\nlint\nmain\npush\n25620008532\n1m58s\n2026-05-10T04:41:35Z\n\n\nfailure\ntest-coverage\nmain\npush\n25620008531\n2m44s\n2026-05-10T04:41:35Z\n\n\nsuccess\npkgdown-deploy\nmain\npush\n25620008530\n4m43s\n2026-05-10T04:41:35Z\n\n\ncancelled\nR-CMD-check\nmain\npush\n25619715961\n17m25s\n2026-05-10T04:24:14Z\n\n\n\n마지막 push 커밋 제목: fix(index): flatten HTML feature-card indentation so pandoc treats th… 취소된 run 의 커밋 제목: ci: pin Suggests explicitly (multisitepower not on CRAN/r-universe)\n\n\n\n\n\n\nWarning로그 만료\n\n\n\nR-CMD-check, lint, test-coverage (2026-05-10) 의 로그는 GitHub 보존 기간(90 일)을 넘겨 HTTP 410 을 반환한다. Phase 2 Step 2.1 은 재현으로 원인을 규명해야 한다.",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.3-extended-tests-실패-상세-2026-07-13-run-29247044931",
+    "href": "appendix-b-evidence.html#b.3-extended-tests-실패-상세-2026-07-13-run-29247044931",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.3 B.3 extended-tests 실패 상세 (2026-07-13, run 29247044931)",
+    "text": "19.3 B.3 extended-tests 실패 상세 (2026-07-13, run 29247044931)\ngh run view 29247044931 --log-failed 발췌. testthat 이 10 건에서 절단했다.\n실패 1 — test-generated-print-examples-step8-6.R:77:3\nExpected `read_print_example(\"ch14_ch17_irb_template.txt\")` to be identical to\n         `capture_generated_print(summary(irb))`.\nDifferences: actual[23:26] vs expected[23:26]\n  \"   feasibility_index:          14.431  (target N/A)  WARN  [no target]\"\n  \"------------------------------------------------------------\"\n  \"Overall: 3 PASS, 3 WARN, 2 FAIL.\"\n- \"Provenance: multisiteDGP &lt;VERSION&gt; | paradigm=site_size | seed=12345 |\n   canonical_hash=128c43fb9cfc4416 | design_hash=db50cfd4e1659537 |\n   hash_algo=xxhash64 | R=&lt;R&gt; | hooks=none\"\n+ \"Provenance: multisiteDGP &lt;VERSION&gt; | paradigm=site_size | seed=12345 |\n   canonical_hash=7b960a5122df9c88 | design_hash=db50cfd4e1659537 |\n   hash_algo=xxhash64 | R=&lt;R&gt; | hooks=none\"\n실패 2 — test-generated-print-examples-step8-6.R:83:3\n  \"   feasibility_index:           6.153  (target N/A)  WARN  [no target]\"\n  \"Overall: 5 PASS, 3 WARN, 3 FAIL.\"\n- canonical_hash=c743272c10cf35c6 | design_hash=23d5c64c78ea3137\n+ canonical_hash=c37d52c8b467bceb | design_hash=23d5c64c78ea3137\n실패 3–7 — test-snapshot-print.R:87:5 (summary.multisitedgp_data snapshot, seed 별)\n\n\n\n\n\n\n\n\n\n\nseed\n표시 수치\ndesign_hash\ncanonical_hash (기대)\ncanonical_hash (Linux)\n\n\n\n\n4719\nfeasibility_index: 13.755 / 3 PASS, 2 WARN, 1 FAIL\nb1891bd7d287895f\na96eaabd1c022e32\n4b148f68942b0c8b\n\n\n4719\n28.883 / 2 PASS, 3 WARN, 1 FAIL\n5eda5659b1ad514d\n871d0fa960030a02\n9c71c21dc178cb97\n\n\n12345\n14.431 / 3 PASS, 3 WARN, 2 FAIL\ndb50cfd4e1659537\n128c43fb9cfc4416\n7b960a5122df9c88\n\n\n1\n35.828 / 5 PASS, 1 WARN, 2 FAIL\n3f1b3fa764d5ec00\n461c8b7f4ff83ec7\nd6fd7082ad0e865f\n\n\n—\n5 PASS, 3 WARN, 3 FAIL\n—\n—\n—\n\n\n\n실패 8–10 — test-snapshot-print.R:102:3 (direct paradigm), :110:3 (covariate), :118:3 (row-subset)\nMaximum number of 10 failures reached, some test results may be missing.\nError: ! Test failures.\n##[error]Process completed with exit code 1.\n\n\n\n\n\n\nImportant핵심 관찰\n\n\n\n모든 실패에서 design_hash 는 일치하고 canonical_hash 만 다르다. 표시되는 수치(feasibility_index, PASS/WARN/FAIL 카운트)도 전부 일치한다. 즉 생성된 데이터가 표시 정밀도까지는 같으나 비트 수준에서 다르다. 이것이 Phase 4 가 규명·해결해야 할 문제의 정확한 형태다.\n\n\n또한 skip 항목 중 다음이 관찰된다.\n22. Step 8.5 error snapshot traceability statuses are synchronized\n    ('test-traceability.R:149:3')\n    - Reason: Development-only traceability ledgers are not shipped in the package tarball.",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.4-로컬-테스트-실행-①-기본-환경",
+    "href": "appendix-b-evidence.html#b.4-로컬-테스트-실행-①-기본-환경",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.4 B.4 로컬 테스트 실행 ① — 기본 환경",
+    "text": "19.4 B.4 로컬 테스트 실행 ① — 기본 환경\n$ Rscript -e 'devtools::load_all(\".\"); testthat::test_local(\".\", reporter=\"summary\")'\n결과: 실패 0, skip 30, 종료 코드 0, 💅 Your tests are beautiful 💅\nskip 사유별 집계:\n\n\n\n\n\n\n\n사유\n건수\n\n\n\n\nSet MULTISITEDGP_RUN_SLOW=true to run slow multisiteDGP tests.\n22\n\n\nSet MULTISITEDGP_RUN_PROPERTY=true to run multisiteDGP property tests.\n7\n\n\nStrict canonical_hash equality is Linux x86_64/amd64 baseline only.\n1\n\n\n\nskip 된 테스트 (전체 30 건):\n\n\n\n\n\n\n\n\n#\n테스트\n파일\n\n\n\n\n1\nGaussian/Student-t large-sample z_j moments\ntest-gen-effects-gaussian-studentt.R:105\n\n\n2\nT14a raw legacy mixture variance\ntest-gen-effects-mixture.R:50\n\n\n3\nT14b standardized mixture unit variance\ntest-gen-effects-mixture.R:64\n\n\n4\nT17 PMSlab standardization + zero mass\ntest-gen-effects-pmslab-user-dpm.R:34\n\n\n5\nSkewN standardization + skewness sign (T16)\ntest-gen-effects-skewn-ald.R:45\n\n\n6\nALD standardization (T13, Yu-Zhang 변환)\ntest-gen-effects-skewn-ald.R:66\n\n\n7–18\nP01–P12 core invariants\ntest-property-core-invariants.R:57–265\n\n\n19\nT10 nj_min truncation + multi-rep mean\ntest-T10-n-min-truncation.R:3\n\n\n20\nT11 JEBS Paradigm A I-envelope\ntest-T11-jebs-I-grid.R:3\n\n\n21\nT13 ALD standardization (Yu-Zhang moment)\ntest-T13-ALD-standardization.R:3\n\n\n22\nT14a legacy raw mixture variance == 7.15\ntest-T14-mixture-ups.R:3\n\n\n23\nT14b standardized Mixture unit variance\ntest-T14-mixture-ups.R:19\n\n\n24\nT15 Student-t standardization (nu grid)\ntest-T15-studentt-standardization.R:3\n\n\n25\nT16 Skew-Normal standardization\ntest-T16-skewn-standardization.R:3\n\n\n26\nT17 PMSlab standardization + point-mass\ntest-T17-pmslab-standardization.R:3\n\n\n27\nT1a Engine A1 Mixture == JEBS golden fixtures\ntest-T1a-jebs-bit-identical.R:3\n\n\n28\nT1b Engine A2 Gaussian KS binomial gate\ntest-T1b-A2-distributional.R:3\n\n\n29\nT4 dependence none Spearman envelope\ntest-T4-independence.R:3\n\n\n30\nT9 default true_dist Gaussian (Shapiro)\ntest-T9-default-G.R:3",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.5-로컬-테스트-실행-②-slow-property-게이트-on",
+    "href": "appendix-b-evidence.html#b.5-로컬-테스트-실행-②-slow-property-게이트-on",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.5 B.5 로컬 테스트 실행 ② — slow + property 게이트 on",
+    "text": "19.5 B.5 로컬 테스트 실행 ② — slow + property 게이트 on\n$ MULTISITEDGP_RUN_SLOW=true MULTISITEDGP_RUN_PROPERTY=true \\\n  Rscript -e 'devtools::load_all(\".\"); testthat::test_local(\".\", reporter=\"summary\")'\n결과: 실패 0, skip 1, 종료 코드 0\n══ Skipped ═════════════════════════════════════════════════════════════════════\n1. T1a Engine A1 Mixture matches JEBS appendix golden fixtures\n   ('test-T1a-jebs-bit-identical.R:3:3')\n   - Reason: Strict canonical_hash equality is Linux x86_64/amd64 baseline only.\n\n══ DONE ════════════════════════════════════════════════════════════════════════\n💅 Your tests are beautiful 💅\n통계 커널이 건강하다는 핵심 증거. 게이트를 켜면 전부 통과하며, 유일한 skip 은 플랫폼 정책에 의한 것이다.",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.6-r-cmd-check---as-cran-vignette-제외",
+    "href": "appendix-b-evidence.html#b.6-r-cmd-check---as-cran-vignette-제외",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.6 B.6 R CMD check --as-cran (vignette 제외)",
+    "text": "19.6 B.6 R CMD check --as-cran (vignette 제외)\n$ Rscript -e 'devtools::check(\".\", document=FALSE, vignettes=FALSE,\n                              args=c(\"--no-manual\",\"--as-cran\"), error_on=\"never\")'\n0 errors ✔ | 0 warnings ✔ | 2 notes ✖\nNOTE 중 하나는 man/*.Rd 의 상대 URL(../articles/*.html) 관련이다. vignette 를 빌드하지 않은 실행이라 해당 대상이 없어서 발생한 것으로 보이며, vignette 포함 full check 로 재확인이 필요하다 (Phase 1 Step 1.5).\n영향받는 Rd 파일 (일부): gen_effects_skewn.Rd, gen_effects_studentt.Rd, gen_effects_user.Rd, gen_se_direct.Rd, gen_site_sizes.Rd, heterogeneity_ratio.Rd, informativeness.Rd, ks_distance.Rd, mean_shrinkage.Rd, multisiteDGP-package.Rd (16 개 vignette 전부 참조), multisitedgp_design.Rd, plots.Rd, presets.Rd, provenance_string.Rd, realized_rank_corr.Rd, realized_rank_corr_marginal.Rd, scenario_audit.Rd, sim_meta.Rd, sim_multisite.Rd",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.7-의존성-설치-상태",
+    "href": "appendix-b-evidence.html#b.7-의존성-설치-상태",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.7 B.7 의존성 설치 상태",
+    "text": "19.7 B.7 의존성 설치 상태\nR 4.6.0 (2026-04-24), aarch64-apple-darwin 기준.\n\n\n\n\n\n\n\n\npackage\n역할\n상태\n\n\n\n\nmultisiteDGP\n대상 package\n0.0.0.9000 (stale — 소스는 0.1.1)\n\n\nstats · tibble 3.3.1 · dplyr 1.2.1 · tidyr 1.3.2 · withr 3.0.2 · cli 3.6.6 · rlang 1.2.0 · nleqslv 3.3.7 · ggplot2 4.0.3 · digest 0.6.39 · RColorBrewer 1.1.3 · viridisLite 0.4.3\nImports\n전부 설치됨\n\n\nsn 2.1.3\nSkewN\n설치됨\n\n\nLaplacesDemon 16.1.8\nALD\n설치됨\n\n\ncopula\nGaussian copula dependence\nMISSING\n\n\nmetafor 5.0.1 · baggr 0.8\nadapter\n설치됨\n\n\nmultisitepower\nadapter\nMISSING (CRAN 미배포 — 문서화된 예외)\n\n\ndeconvolveR 1.2.1 · furrr 0.4.0 · yaml 2.3.12 · arrow 24.0.0 · moments 0.14.1\nSuggests\n설치됨\n\n\nhedgehog\nproperty-based test\nMISSING\n\n\ntestthat 3.3.2 · knitr 1.51 · rmarkdown 2.31 · covr 3.6.5 · gridExtra 2.3 · patchwork 1.3.2\nSuggests\n설치됨\n\n\ndevtools 2.5.2 · roxygen2 8.0.0 · pkgdown 2.2.0 · lintr 3.3.0.1 · cyclocomp 1.1.2\n개발 도구\n설치됨\n\n\n\nQuarto 1.9.37.",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.8-미구현-표면-코드-grep",
+    "href": "appendix-b-evidence.html#b.8-미구현-표면-코드-grep",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.8 B.8 미구현 표면 (코드 grep)",
+    "text": "19.8 B.8 미구현 표면 (코드 grep)\n$ grep -rn \"not implemented\\|reserved and is not\" R/\nR/layer1-gen_effects.R:191:      \"`upstream` is reserved and is not implemented yet.\",\nR/layer1-gen_effects.R:293:    sprintf(\"`true_dist = \\\"%s\\\"` is not implemented.\", true_dist),\nR/class-multisitedgp_design.R:77:#'   target; not implemented in the current release.\nR/layer1-gen_effects_dpm.R:127:    \"`true_dist = \\\"DPM\\\"` is not implemented in multisiteDGP v1.\",\nDESCRIPTION Description 필드 (해당 부분):\n\ngenerates latent site effects under a catalog of eight distribution shapes (Gaussian, Student-t, skew-normal, asymmetric Laplace, two-component mixture, point-mass slab, user callback, and a Dirichlet-process-mixture bridge)",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.9-저장소-위생",
+    "href": "appendix-b-evidence.html#b.9-저장소-위생",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.9 B.9 저장소 위생",
+    "text": "19.9 B.9 저장소 위생\n\n\n\n\n\n\n\n항목\n크기 / 상태\n\n\n\n\n..Rcheck/\n존재. 00check.log 에 Required fields missing or empty: 'Author' 'Maintainer' (다른 경로에서 실행된 잔재)\n\n\nmultisiteDGP.Rcheck/\n존재\n\n\nmultisiteDGP_0.0.0.9000.tar.gz\n421,058 bytes\n\n\nmultisiteDGP_0.1.0.tar.gz\n421,308 bytes\n\n\nblueprint-multisiteDGP-book-v1.0-20260507.zip\n41,478,339 bytes (41 MB)\n\n\nLibrary/, Outputs/\n빈 디렉터리\n\n\n.DS_Store\n존재",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.10-package-규모",
+    "href": "appendix-b-evidence.html#b.10-package-규모",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.10 B.10 package 규모",
+    "text": "19.10 B.10 package 규모\n\n\n\n\n\n\n\n영역\n규모\n\n\n\n\nR/\n35 파일, 10,287 줄. 최대: class-multisitedgp_design.R (826), layer2-diagnostics.R (820), diagnostics-core.R (779)\n\n\ntests/testthat/\n71 파일, 7,836 줄\n\n\nman/\n47 Rd\n\n\nvignettes/\n16 Rmd (A1–A8, M1–M8) + .html\n\n\nNAMESPACE\n53 export + 28 S3 method\n\n\ninst/cookbook/\n9 recipe (R5-1 ~ R5-9) + manifest\n\n\ntools/traceability/\nledger CSV 8 종 + conflict-checklist\n\n\ntools/validation/generated/\n~180 결과 파일 (2026-05)\n\n\nblueprint book\n25 장 + 부록 3\n\n\nbuild-implementation book\nlog 127 건\n\n\ndocumentation-updates\nlog 99 건",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  },
+  {
+    "objectID": "appendix-b-evidence.html#b.11-이번-감사에서-실행한-명령-전체",
+    "href": "appendix-b-evidence.html#b.11-이번-감사에서-실행한-명령-전체",
+    "title": "19  부록 B — 감사 원자료",
+    "section": "19.11 B.11 이번 감사에서 실행한 명령 전체",
+    "text": "19.11 B.11 이번 감사에서 실행한 명령 전체\nPhase 1 Step 1.5 가 베이스라인을 재측정할 때 참조한다.\n# 저장소 상태\ngit rev-parse --is-inside-work-tree\ngh repo view joonho112/multisiteDGP --json name,visibility,pushedAt\ngh run list --repo joonho112/multisiteDGP --limit 15\ngh run view 29247044931 --repo joonho112/multisiteDGP --log-failed\n\n# 테스트 (기본)\nRscript -e 'suppressMessages(devtools::load_all(\".\", quiet=TRUE));\n            testthat::test_local(\".\", reporter=\"summary\", stop_on_failure=FALSE)'\n\n# 테스트 (확장)\nMULTISITEDGP_RUN_SLOW=true MULTISITEDGP_RUN_PROPERTY=true \\\nRscript -e 'suppressMessages(devtools::load_all(\".\", quiet=TRUE));\n            testthat::test_local(\".\", reporter=\"summary\", stop_on_failure=FALSE)'\n\n# check\nRscript -e 'devtools::check(\".\", document=FALSE, vignettes=FALSE,\n                            args=c(\"--no-manual\",\"--as-cran\"), error_on=\"never\")'\n\n# 의존성\nRscript -e 'inst &lt;- rownames(installed.packages()); ...'",
+    "crumbs": [
+      "부록",
+      "<span class='chapter-number'>19</span>  <span class='chapter-title'>부록 B — 감사 원자료</span>"
+    ]
+  }
+]

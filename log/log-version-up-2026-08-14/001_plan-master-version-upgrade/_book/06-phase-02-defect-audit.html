@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>7&nbsp; Phase 2 — 결함 인벤토리 감사 – multisiteDGP Version Upgrade — Master Plan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./07-phase-03-scope-decisions.html" rel="next">
+<link href="./05-phase-01-foundation.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-676a5d7ec044db2339335543664513bd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-df430a3b89f676b22d1da82ae4649026.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-676a5d7ec044db2339335543664513bd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./05-phase-01-foundation.html">Phase 로드맵</a></li><li class="breadcrumb-item"><a href="./06-phase-02-defect-audit.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Phase 2 — 결함 인벤토리 감사</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">multisiteDGP Version Upgrade — Master Plan</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Preface</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text">진단</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-current-state-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">현재 상태 감사</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-goals-and-scope.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">목표와 범위</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">실행 규약</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-operating-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">실행 규약</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-log-protocol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">로그 규약</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Phase 로드맵</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-phase-01-foundation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Phase 1 — 작업 기반 복구</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-phase-02-defect-audit.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Phase 2 — 결함 인벤토리 감사</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-phase-03-scope-decisions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Phase 3 — v0.2.0 범위 결정</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-phase-04-reproducibility.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Phase 4 — 재현성 계약 재구축</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-phase-05-test-suite.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phase 5 — 테스트 스위트 재구축</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-phase-06-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Phase 6 — CI 복구</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-phase-07-remediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Phase 7 — 기능 결함 수정</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-phase-08-revalidation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Phase 8 — 통계 검증 재실행</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-phase-09-documentation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Phase 9 — 문서 델타 동기화</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-phase-10-external-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Phase 10 — 외부 리뷰 게이트</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-phase-11-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Phase 11 — v0.2.0 릴리스</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">인수</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-acceptance-criteria.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">인수 기준</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">부록</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix-a-defect-ledger.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">부록 A — 결함 원장 스키마</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix-b-evidence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">부록 B — 감사 원자료</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#목표" id="toc-목표" class="nav-link active" data-scroll-target="#목표"><span class="header-section-number">7.1</span> 목표</a></li>
+  <li><a href="#step-2.1-ci-실패-포렌식" id="toc-step-2.1-ci-실패-포렌식" class="nav-link" data-scroll-target="#step-2.1-ci-실패-포렌식"><span class="header-section-number">7.2</span> Step 2.1 — CI 실패 포렌식</a></li>
+  <li><a href="#step-2.2-테스트-스위트-무결성-감사" id="toc-step-2.2-테스트-스위트-무결성-감사" class="nav-link" data-scroll-target="#step-2.2-테스트-스위트-무결성-감사"><span class="header-section-number">7.3</span> Step 2.2 — 테스트 스위트 무결성 감사</a></li>
+  <li><a href="#step-2.3-재현성-계약-감사" id="toc-step-2.3-재현성-계약-감사" class="nav-link" data-scroll-target="#step-2.3-재현성-계약-감사"><span class="header-section-number">7.4</span> Step 2.3 — 재현성 계약 감사</a></li>
+  <li><a href="#step-2.4-광고-구현-갭-감사" id="toc-step-2.4-광고-구현-갭-감사" class="nav-link" data-scroll-target="#step-2.4-광고-구현-갭-감사"><span class="header-section-number">7.5</span> Step 2.4 — 광고-구현 갭 감사</a></li>
+  <li><a href="#step-2.5-통계-커널-감사-①-layer-1" id="toc-step-2.5-통계-커널-감사-①-layer-1" class="nav-link" data-scroll-target="#step-2.5-통계-커널-감사-①-layer-1"><span class="header-section-number">7.6</span> Step 2.5 — 통계 커널 감사 ①: Layer 1</a></li>
+  <li><a href="#step-2.6-통계-커널-감사-②-layer-24-및-solver" id="toc-step-2.6-통계-커널-감사-②-layer-24-및-solver" class="nav-link" data-scroll-target="#step-2.6-통계-커널-감사-②-layer-24-및-solver"><span class="header-section-number">7.7</span> Step 2.6 — 통계 커널 감사 ②: Layer 2–4 및 solver</a></li>
+  <li><a href="#step-2.7-api-ux-감사" id="toc-step-2.7-api-ux-감사" class="nav-link" data-scroll-target="#step-2.7-api-ux-감사"><span class="header-section-number">7.8</span> Step 2.7 — API · UX 감사</a></li>
+  <li><a href="#step-2.8-의존성-및-성능-감사" id="toc-step-2.8-의존성-및-성능-감사" class="nav-link" data-scroll-target="#step-2.8-의존성-및-성능-감사"><span class="header-section-number">7.9</span> Step 2.8 — 의존성 및 성능 감사</a></li>
+  <li><a href="#step-2.9-결함-원장-종합-및-트리아지" id="toc-step-2.9-결함-원장-종합-및-트리아지" class="nav-link" data-scroll-target="#step-2.9-결함-원장-종합-및-트리아지"><span class="header-section-number">7.10</span> Step 2.9 — 결함 원장 종합 및 트리아지</a></li>
+  <li><a href="#phase-종료-조건" id="toc-phase-종료-조건" class="nav-link" data-scroll-target="#phase-종료-조건"><span class="header-section-number">7.11</span> Phase 종료 조건</a></li>
+  <li><a href="#phase-로그" id="toc-phase-로그" class="nav-link" data-scroll-target="#phase-로그"><span class="header-section-number">7.12</span> Phase 로그</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./05-phase-01-foundation.html">Phase 로드맵</a></li><li class="breadcrumb-item"><a href="./06-phase-02-defect-audit.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Phase 2 — 결함 인벤토리 감사</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Phase 2 — 결함 인벤토리 감사</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="목표" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="목표"><span class="header-section-number">7.1</span> 목표</h2>
+<p><strong>추측이 아니라 증거로 결함 원장을 구축한다.</strong> <a href="./01-current-state-audit.html">Ch.1</a> 의 감사는 planning agent 가 한 세션에 훑은 결과다. Phase 2 는 각 영역을 체계적으로 재감사해서 ① 재현 절차가 붙은 결함 목록과 ② P0/P1/P2 트리아지를 확정한다.</p>
+<p>Phase 2 는 <strong>아무것도 고치지 않는다.</strong> 감사 중 명백한 버그를 발견해도 원장에 등재만 하고 지나간다. 수정은 Phase 4 · 5 · 7 이 원장을 소비하며 수행한다. 이 분리가 없으면 감사가 임기응변 수정으로 흩어지고 원장이 완성되지 않는다.</p>
+<table class="caption-top table">
+<tbody>
+<tr class="odd">
+<td><strong>Step 수</strong></td>
+<td>9 (2.1 – 2.9)</td>
+</tr>
+<tr class="even">
+<td><strong>누적 시간</strong></td>
+<td>~175 분</td>
+</tr>
+<tr class="odd">
+<td><strong>선행 Phase</strong></td>
+<td>Phase 1</td>
+</tr>
+<tr class="even">
+<td><strong>종료 로그</strong></td>
+<td><code>003_phase02-defect-audit.qmd</code></td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-simple callout-note callout-titled" title="감사 마비 방지">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>감사 마비 방지
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Phase 2 의 실패 모드는 결함을 계속 발견하며 끝나지 않는 것이다. <strong>Step 2.9 에서 원장을 닫는다.</strong> 이후 발견분은 v0.3 백로그로 간다. 각 감사 Step 은 배정된 시간 안에 끝내고, 더 파야 할 것이 보이면 “추가 조사 필요” 행을 원장에 남기되 그 자리에서 파지 않는다.</p>
+</div>
+</div>
+<hr>
+</section>
+<section id="step-2.1-ci-실패-포렌식" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="step-2.1-ci-실패-포렌식"><span class="header-section-number">7.2</span> Step 2.1 — CI 실패 포렌식</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분 (CI 실행 대기 별도)</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>Phase 1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> 2026-05-10 의 <code>R-CMD-check</code> / <code>lint</code> / <code>test-coverage</code> 실패 원인을 규명한다. GitHub 로그가 90 일 보존 기간을 넘겨 만료됐으므로(HTTP 410) <strong>재현으로</strong> 알아내야 한다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li>4 개 workflow YAML 정독 — <code>R-CMD-check.yaml</code>, <code>lint.yaml</code>, <code>test-coverage.yaml</code>, <code>extended-tests.yaml</code>. 매트릭스 정의, 환경 변수, 의존성 설치 방식, 실패 조건 기록</li>
+<li><code>extended-tests</code> 실패 로그는 확보 가능(2026-07-13) — 전문을 <code>evidence/</code> 에 보존하고 실패 항목 전수 분류</li>
+<li>나머지 3 개는 재현. 두 경로 중 택일:
+<ul>
+<li><strong>경로 A (권장).</strong> Phase 1 브랜치를 원격에 push 해 workflow 를 실제로 태우고 실패 로그를 새로 확보</li>
+<li><strong>경로 B.</strong> 로컬에서 workflow 가 하는 일을 흉내낸다 — <code>lintr::lint_package()</code>, <code>covr::package_coverage()</code>, <code>R CMD check</code> 를 workflow 와 동일한 옵션으로</li>
+</ul></li>
+<li>각 실패를 원인별로 분류: <strong>환경 문제</strong>(의존성 설치, 캐시, 토큰) / <strong>코드 문제</strong>(실제 결함) / <strong>아티팩트 문제</strong>(fixture, snapshot) / <strong>설정 문제</strong>(YAML)</li>
+<li><code>extended-tests</code> 10 주 연속 실패가 <strong>동일 원인인지</strong> 확인 — 첫 실패(2026-05-11)와 마지막 실패(2026-07-13)의 실패 항목이 같은지 대조</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>evidence/phase02/ci-forensics.md</code> — workflow 별 실패 원인 분류표</li>
+<li><code>evidence/phase02/extended-tests-2026-07-13-full.log</code> — 원본 로그</li>
+<li>원장 행: CI 관련 결함 각각</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>4 개 workflow 각각에 대해 실패 원인이 4 분류 중 하나로 배정되어 있다</li>
+<li><code>extended-tests</code> 실패 항목이 전수 열거되어 있다 (testthat 10 건 절단을 넘어 — 로컬 Linux 재현 또는 <code>--max-fails</code> 조정)</li>
+<li>각 원인이 원장 행으로 등재되어 있다</li>
+</ul>
+<hr>
+</section>
+<section id="step-2.2-테스트-스위트-무결성-감사" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="step-2.2-테스트-스위트-무결성-감사"><span class="header-section-number">7.3</span> Step 2.2 — 테스트 스위트 무결성 감사</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>Phase 1 (특히 1.3, 1.5)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> 테스트 스위트가 <strong>실제로 무엇을 검증하고 무엇을 검증하지 않는지</strong> 확정한다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li><strong>skip 매트릭스 작성</strong> — 71 개 테스트 파일 전수. 각 <code>test_that()</code> 블록에 대해: 테스트 ID | 파일 | 검증 대상 | skip 조건 | 기본 실행 시 실행 여부</li>
+<li><strong>skip 사유 타당성 평가</strong> — 각 skip 게이트에 대해: 왜 게이트되어 있나? 비용(실행 시간)이 근거인가, 환경(플랫폼·의존성)이 근거인가? 게이트를 없앨 때 드는 실제 비용은?</li>
+<li><strong>slow 테스트 실행 시간 측정</strong> — <code>MULTISITEDGP_RUN_SLOW=true</code> 로 파일별 소요 시간. 어느 테스트가 얼마나 비싼지 수치화</li>
+<li><strong><code>hedgehog</code> 부재 경로 확인</strong> (<a href="./01-current-state-audit.html">Ch.1 U-3</a>) — Step 1.3 설치 후 property 테스트를 다시 돌려 이전과 결과가 다른지 확인. 다르면 이전 통과는 가짜였다</li>
+<li><strong>커버리지 공백</strong> — Step 1.5 의 커버리지 출력에서 하위 파일 식별. 특히 <code>R/</code> 대비 어느 함수가 0% 인지</li>
+<li><strong>테스트 품질 스팟 체크</strong> — <code>expect_true(TRUE)</code> 류의 빈 assertion, tolerance 가 과도하게 느슨한 수치 비교, snapshot 에만 의존하는 검증 탐색</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>evidence/phase02/test-skip-matrix.csv</code> — 전 테스트 × skip 상태</li>
+<li><code>evidence/phase02/slow-test-timing.csv</code> — 파일별 소요 시간</li>
+<li><code>evidence/phase02/coverage-gaps.md</code> — 커버리지 하위 파일 + 미검증 함수</li>
+<li>원장 행: 테스트 관련 결함</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>skip 매트릭스가 71 개 파일 전수를 덮는다</li>
+<li>slow 테스트 전체 소요 시간이 수치로 나와 있다 (Phase 5 의 비용 절감 목표를 세우는 근거)</li>
+<li><code>hedgehog</code> 설치 전후 property 테스트 결과 비교가 기록되어 있다</li>
+</ul>
+<hr>
+</section>
+<section id="step-2.3-재현성-계약-감사" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="step-2.3-재현성-계약-감사"><span class="header-section-number">7.4</span> Step 2.3 — 재현성 계약 감사</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>2.1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> <code>canonical_hash</code> 플랫폼 드리프트의 <strong>발생 지점을 특정</strong>한다. Phase 4 의 재설계는 이 규명 없이 시작할 수 없다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li><code>canonical_hash()</code> 구현 정독 — <code>R/utils-reproducibility.R</code> (507 줄). 직렬화 스키마, 정규화 단계, 해시 알고리즘(xxhash64), 무엇을 포함·제외하는지</li>
+<li><strong>드리프트 이분 탐색</strong> — Linux 와 macOS 에서 동일 seed 로 <code>sim_multisite()</code> 를 돌리고 Layer 별로 중간 산출물을 비교
+<ul>
+<li>Layer 1 (<code>gen_effects</code>) 출력 <code>z_j</code> 가 같은가?</li>
+<li>Layer 2 (<code>gen_site_sizes</code> / <code>gen_se_direct</code>) 출력 <code>se2_j</code> 가 같은가?</li>
+<li>Layer 3 (dependence alignment) 후 같은가?</li>
+<li>Layer 4 (<code>gen_observations</code>) 후 같은가?</li>
+<li>첫 번째로 갈라지는 Layer 가 드리프트 발생 지점</li>
+</ul></li>
+<li>발생 지점의 <strong>원인 후보</strong> 좁히기 — libm 함수 호출(<code>exp</code>, <code>log</code>, <code>qnorm</code> 외 외부 라이브러리), <code>nleqslv</code> solver 반복, <code>sn</code> package 내부, long-double 누산, 정렬 안정성(tie-breaking)</li>
+<li>드리프트 <strong>크기</strong> 측정 — 몇 ULP 차이인가? 상대 오차는? 통계적으로 무의미한 수준인가?</li>
+<li>golden fixture 9 개 + print-example snapshot 의 생성 provenance 전수 확인 — <code>inst/extdata/golden/golden-fixture-manifest.csv</code>, <code>tests/testthat/_snaps/</code></li>
+<li><code>tools/cross-os-reproducibility-policy.md</code> 의 조항과 실제 구현·아티팩트의 불일치 전수 열거</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>evidence/phase02/hash-drift-bisect.md</code> — Layer 별 비교 결과 + 발생 지점 특정</li>
+<li><code>evidence/phase02/fixture-provenance.csv</code> — fixture / snapshot 별 생성 플랫폼</li>
+<li><code>evidence/phase02/policy-vs-reality.md</code> — 정책 조항 × 실제 상태 대조표</li>
+<li>원장 행: 재현성 관련 결함</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>드리프트가 처음 나타나는 Layer 가 특정되어 있다</li>
+<li>드리프트 크기가 ULP 또는 상대 오차로 수치화되어 있다</li>
+<li>모든 fixture / snapshot 의 생성 플랫폼이 확인되어 있다</li>
+</ul>
+<div class="callout callout-style-simple callout-tip callout-titled" title="Linux 실행 수단">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Linux 실행 수단
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Linux 비교는 ① Phase 1 에서 복구한 CI 에 진단용 workflow 를 임시로 태우거나, ② 로컬 Docker (<code>rocker/r-ver</code>) 로 한다. ② 가 반복 실험에 훨씬 빠르므로 권장하며, 컨테이너 정의를 <code>evidence/phase02/</code> 에 남겨 Phase 4 가 재사용한다.</p>
+</div>
+</div>
+<hr>
+</section>
+<section id="step-2.4-광고-구현-갭-감사" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="step-2.4-광고-구현-갭-감사"><span class="header-section-number">7.5</span> Step 2.4 — 광고-구현 갭 감사</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>Phase 1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> package 가 <strong>약속하는 것</strong>과 <strong>실제로 하는 것</strong>의 차이를 전수 조사한다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li><strong>약속 표면 수집</strong> — <code>DESCRIPTION</code> Description 필드, <code>NEWS.md</code> 기능 목록, <code>README.md</code>, <code>index.md</code>, <code>_pkgdown.yml</code> 홈 설명, 53 개 exports 의 roxygen <code>@description</code> / <code>@param</code> / <code>@return</code></li>
+<li>각 약속에 대해 <strong>실행으로 검증</strong> — 특히 다음 4 개 기지 갭의 정확한 범위 확정
+<ul>
+<li><code>true_dist = "DPM"</code> — 어디까지 동작하고 어디서 abort 하나? <code>gen_effects_dpm()</code> 직접 호출은? <code>g_fn</code> bridge 경로는?</li>
+<li><code>target_marginal_rho</code> — 인자 수용 지점, abort 지점, 관련 문서 언급 위치 전부</li>
+<li><code>upstream</code> 예약 인자 — 어느 함수에 있고 문서에 노출되어 있나?</li>
+<li><code>scenario_audit()</code> SkewN Group C resolver — 실제 실패 양상 재현</li>
+</ul></li>
+<li><strong>미발견 갭 탐색</strong> — 53 exports × 주요 인자 조합을 훑으며 “문서에 있는데 동작하지 않는” 것 추가 탐색. <code>@examples</code> 를 전부 실행해 실패하는 것이 있는지 확인</li>
+<li><strong>역방향 확인</strong> — 구현되어 있는데 문서화되지 않은 것 (숨은 기능, 미문서 인자)</li>
+<li><code>documentation-updates/working/06-final-punch-list.md</code> 의 P0-1 ~ P0-7, P1-1 ~ P1-3, P2-1 ~ P2-3 각각의 <strong>실제 완료 여부</strong> 확인 (<a href="./01-current-state-audit.html">Ch.1 U-9</a>)</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>evidence/phase02/promise-vs-implementation.csv</code> — 약속 | 출처 | 검증 방법 | 결과 | 갭 여부</li>
+<li><code>evidence/phase02/punch-list-status.md</code> — 2026-05 punch list 13 항목의 현재 상태</li>
+<li>원장 행: 갭 각각</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>4 개 기지 갭의 정확한 범위가 재현 절차와 함께 기록되어 있다</li>
+<li>53 exports 의 <code>@examples</code> 가 전부 실행되고 실패 목록이 있다</li>
+<li>2026-05 punch list 13 항목 전부에 현재 상태가 배정되어 있다</li>
+</ul>
+<hr>
+</section>
+<section id="step-2.5-통계-커널-감사-①-layer-1" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="step-2.5-통계-커널-감사-①-layer-1"><span class="header-section-number">7.6</span> Step 2.5 — 통계 커널 감사 ①: Layer 1</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>2.2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> 여덟 개 분포 shape 의 <strong>표준화 계약</strong> 이 실제로 지켜지는지, 그리고 <strong>미검증 경계</strong> 가 어디인지 확정한다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li>표준화 계약 재확인 — 각 shape 에 대해 큰 표본에서 <code>mean(z_j) ≈ 0</code>, <code>var(z_j) ≈ 1</code> 을 직접 측정. T13–T17 이 이미 검증하지만, 여기서는 <strong>테스트가 쓰는 것보다 넓은 파라미터 격자</strong>에서 확인</li>
+<li><strong>경계 파라미터 탐색</strong> — 각 shape 의 파라미터 공간 가장자리에서 무슨 일이 일어나는가
+<ul>
+<li>Student-t: <code>nu</code> 가 2 에 가까울 때 (분산 발산 직전)</li>
+<li>SkewN: <code>alpha</code> 극단값</li>
+<li>ALD: 극단 비대칭</li>
+<li>Mixture: <code>pi</code> 가 0 또는 1 에 가까울 때, <code>ups</code> 극단</li>
+<li>PMSlab: <code>pi0</code> 가 0 또는 1</li>
+</ul></li>
+<li><strong>fail-fast 검증</strong> — 위 경계에서 abort 해야 하는데 조용히 이상한 값을 주는 경우가 있는가? 반대로 유효한 파라미터인데 불필요하게 abort 하는가?</li>
+<li><code>gen_effects_user()</code> callback 계약 — <code>g_returns = "standardized" / "raw"</code> 두 경로, RNG 격리, 오류 전파</li>
+<li>covariate 경로 — <code>formula</code> + <code>beta</code> 가 있을 때 residual/marginal 분해가 문서와 일치하는지</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>evidence/phase02/layer1-audit.md</code> — shape 별 표준화 검증 + 경계 동작표</li>
+<li><code>evidence/phase02/layer1-parameter-grid.csv</code> — 실행한 파라미터 격자와 결과</li>
+<li>원장 행: Layer 1 관련 결함</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>8 shape 전부에 대해 표준화 계약 검증 결과가 있다</li>
+<li>각 shape 의 경계 파라미터 동작이 기록되어 있다 (정상 / abort / 조용한 이상값)</li>
+<li><code>gen_effects_user()</code> 두 경로 모두 검증되어 있다</li>
+</ul>
+<hr>
+</section>
+<section id="step-2.6-통계-커널-감사-②-layer-24-및-solver" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="step-2.6-통계-커널-감사-②-layer-24-및-solver"><span class="header-section-number">7.7</span> Step 2.6 — 통계 커널 감사 ②: Layer 2–4 및 solver</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>2.5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> margin/SE 모형, dependence injection, observation layer 의 정확성과 solver 견고성을 감사한다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li><strong>Layer 2 — engine A1 / A2</strong> — site size 경로와 direct precision 경로. <code>(I, R)</code> 목표가 실제로 달성되는가? A2 의 truncated gamma solver 가 실패하는 파라미터 영역은? (blueprint BR1/V04 “solver feasible region” 이 이미 다룬 영역 — 그 결론이 현재 코드에 반영되어 있는지 확인)</li>
+<li><strong>Layer 3 — dependence injection 3 종</strong> — rank / copula / hybrid
+<ul>
+<li>목표 Spearman 이 실제로 달성되는가? 달성 오차 분포는?</li>
+<li>극단 목표값(±0.9 이상)에서 어떻게 되는가?</li>
+<li><code>align_copula_corr()</code> 는 <code>copula</code> package 설치 후 처음으로 제대로 검증된다 (Step 1.3 이후)</li>
+<li>tie 처리 (T19) 와 zero-alignment (BR6/V09) 경로</li>
+</ul></li>
+<li><strong>Layer 4 — <code>gen_observations()</code></strong> — Gaussian observation model. seed 전파, RNG 상태 보존</li>
+<li><strong>wrapper 계약</strong> — <code>sim_multisite()</code> / <code>sim_meta()</code> 의 인자 검증, wrong-door 오류, <code>design</code> 객체 경로와 flat 인자 경로의 동치성</li>
+<li><strong>진단 함수</strong> — <code>compute_I</code>, <code>compute_kappa</code>, <code>feasibility_index</code>, <code>informativeness</code>, <code>mean_shrinkage</code> 의 수식이 blueprint 정의와 일치하는지 (2026-05 Round 2 에서 kappa R² 공식 수정 이력 있음 — 회귀 확인)</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>evidence/phase02/layer2-4-audit.md</code></li>
+<li><code>evidence/phase02/solver-feasible-region.csv</code> — A2 solver 및 dependence solver 실패 영역</li>
+<li>원장 행: Layer 2–4 및 solver 관련 결함</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>A2 solver 의 실패 영역이 파라미터 격자로 기록되어 있다</li>
+<li>dependence 3 방식 각각의 목표 달성 오차가 수치화되어 있다</li>
+<li>진단 함수 5 개의 수식이 blueprint 와 대조되어 있다</li>
+</ul>
+<hr>
+</section>
+<section id="step-2.7-api-ux-감사" class="level2" data-number="7.8">
+<h2 data-number="7.8" class="anchored" data-anchor-id="step-2.7-api-ux-감사"><span class="header-section-number">7.8</span> Step 2.7 — API · UX 감사</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>2.4</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> 사용자가 실제로 만나는 표면 — 인자 이름, 기본값, 오류 메시지, print/summary 출력 — 의 일관성과 유용성을 감사한다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li><strong>오류 메시지 감사</strong> — 타입드 에러 7 종 × E01–E30 카탈로그. 각 오류가 실제로 발생 가능한가(도달 불가 코드는?), 메시지가 3 부 구조(무엇이 잘못 / 왜 / 어떻게)를 지키는가, <code>tools/traceability/error-index.csv</code> 와 일치하는가</li>
+<li><strong>인자 일관성</strong> — 유사 개념에 같은 이름을 쓰는가? (<code>rank_corr</code> vs <code>pearson_corr</code> vs <code>target_marginal_rho</code>, <code>max_iter</code>/<code>tol</code> 의 위치)</li>
+<li><strong>기본값 타당성</strong> — 53 exports 의 기본값이 문서가 말하는 “합리적 출발점” 인지</li>
+<li><strong>print / summary 출력</strong> — <code>scenario_audit()</code> 의 PASS/WARN/FAIL 판정 임계값이 <code>default_thresholds()</code> 와 일치하는가. <code>feasibility_index</code> 가 “target N/A” 로 표시되는 것이 의도된 동작인가 (CI 로그에서 반복 관찰됨)</li>
+<li><strong>preset 9 종</strong> — 각 preset 이 문서가 주장하는 문헌 값과 일치하는가 (<code>preset_walters_2024()</code> 의 <code>sigma_tau = 0.197</code> 등)</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>evidence/phase02/api-ux-audit.md</code></li>
+<li><code>evidence/phase02/error-catalog-reachability.csv</code> — E01–E30 × 도달 가능성 × 메시지 품질</li>
+<li>원장 행: API/UX 관련 결함</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>E01–E30 전부에 도달 가능성 판정이 있다</li>
+<li>preset 9 종의 파라미터가 문서 주장과 대조되어 있다</li>
+<li><code>scenario_audit()</code> 임계값 체계가 검토되어 있다</li>
+</ul>
+<hr>
+</section>
+<section id="step-2.8-의존성-및-성능-감사" class="level2" data-number="7.9">
+<h2 data-number="7.9" class="anchored" data-anchor-id="step-2.8-의존성-및-성능-감사"><span class="header-section-number">7.9</span> Step 2.8 — 의존성 및 성능 감사</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~15 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>1.3, 1.5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> 의존성 정책 준수와 성능 회귀 여부를 확인한다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li><strong>의존성 정책 대조</strong> — <code>tools/dependency-policy.csv</code> 와 실제 <code>DESCRIPTION</code> 의 Imports 13 / Suggests 18 대조. 정책에 없는 의존성이 있는가? 정책에 있는데 안 쓰는 것은?</li>
+<li><strong>soft-dep guard 검증</strong> — <code>Suggests</code> 각각에 대해 미설치 상태에서 관련 함수를 호출했을 때 적절한 안내 오류가 나는가 (Engineering Principle 8)</li>
+<li><strong><code>multisitepower</code> 처리</strong> — CRAN 미배포 의존성의 문서화 상태와 CI 처리</li>
+<li><strong>vignette knit 시간</strong> (<a href="./01-current-state-audit.html">Ch.1 U-8</a>, punch list P0-2 미완) — 16 편 각각의 knit 시간 측정. 총합이 5 분을 넘으면 어느 vignette 이 병목인지</li>
+<li><strong>핵심 경로 성능</strong> — Step 1.5 의 벤치마크를 확장. <code>J</code> 를 키우며(50 / 200 / 1000) 각 Layer 의 시간 스케일링. <code>design_grid()</code> 대규모 sweep 의 실용성</li>
+<li><strong>no-compiled-code 정책</strong> 준수 확인 (<code>tools/no-compiled-code-policy.md</code>)</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>evidence/phase02/dependency-audit.csv</code></li>
+<li><code>evidence/phase02/vignette-knit-timing.csv</code> — 16 편 × 시간</li>
+<li><code>evidence/phase02/performance-scaling.csv</code></li>
+<li>원장 행: 의존성/성능 관련 결함</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>Imports/Suggests 31 개 전부가 정책과 대조되어 있다</li>
+<li>vignette 16 편의 knit 시간이 측정되어 있다 (P0-2 종결)</li>
+<li>성능 스케일링이 최소 3 개 <code>J</code> 값에서 측정되어 있다</li>
+</ul>
+<hr>
+</section>
+<section id="step-2.9-결함-원장-종합-및-트리아지" class="level2" data-number="7.10">
+<h2 data-number="7.10" class="anchored" data-anchor-id="step-2.9-결함-원장-종합-및-트리아지"><span class="header-section-number">7.10</span> Step 2.9 — 결함 원장 종합 및 트리아지</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>2.1 – 2.8 전부</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> Step 2.1–2.8 이 만든 원장 행을 통합하고, 중복을 제거하고, P0/P1/P2 로 트리아지하고, <strong>원장을 닫는다.</strong></p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li>Step 2.1–2.8 의 원장 행을 <code>defect-ledger.csv</code> 로 통합. 스키마는 <a href="./appendix-a-defect-ledger.html">부록 A</a></li>
+<li><strong>중복 제거</strong> — 여러 감사 Step 이 같은 근본 원인을 다른 증상으로 잡은 경우 통합</li>
+<li><strong>근본 원인 그룹핑</strong> — 증상이 여러 개여도 원인이 하나면 한 행으로 묶고 증상을 나열. 예: Linux snapshot 실패 10 건 → hash 드리프트 1 행</li>
+<li><strong>트리아지</strong> — 각 행에 P0/P1/P2 배정
+<ul>
+<li><strong>P0</strong> — v0.2.0 릴리스를 막는다. 성공 기준 G1–G7 중 하나를 직접 위협하는 것</li>
+<li><strong>P1</strong> — 고쳐야 하지만 비용이 크면 v0.3 으로. 사용자에게 보이는 결함이되 릴리스를 막지는 않음</li>
+<li><strong>P2</strong> — 있으면 좋은 것. v0.3 백로그 기본</li>
+</ul></li>
+<li><strong>Phase 배정</strong> — 각 P0/P1 행이 Phase 4 / 5 / 7 중 어디서 처리될지 지정</li>
+<li><strong>재현 절차 검증</strong> — P0 각 행의 재현 절차를 실제로 한 번씩 실행해서 재현되는지 확인. 재현 안 되면 P0 에서 강등</li>
+<li><strong>원장 잠금</strong> — 이후 발견분은 status <code>deferred-v0.3</code> 이 기본임을 원장 헤더에 명시</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>log/log-version-up-2026-08-14/defect-ledger.csv</code> — <strong>확정 원장</strong></li>
+<li><code>evidence/phase02/triage-rationale.md</code> — P0 배정 각각의 근거</li>
+<li><code>evidence/phase02/root-cause-groups.md</code> — 증상 → 근본 원인 매핑</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>원장의 모든 행에 ID, 우선순위, 재현 절차, 담당 Phase 가 있다</li>
+<li>P0 전건의 재현 절차가 실제로 실행되어 재현이 확인되어 있다</li>
+<li>P0 각 행이 성공 기준 G1–G7 중 어느 것을 위협하는지 명시되어 있다</li>
+<li>P0 개수가 Phase 4/5/7 의 용량(각 ~7 Step)에 들어가는지 검토되어 있다. 넘치면 Phase 3 이 범위를 조정한다</li>
+</ul>
+<hr>
+</section>
+<section id="phase-종료-조건" class="level2" data-number="7.11">
+<h2 data-number="7.11" class="anchored" data-anchor-id="phase-종료-조건"><span class="header-section-number">7.11</span> Phase 종료 조건</h2>
+<ul class="task-list">
+<li><label><input type="checkbox">Step 2.1–2.8 각각의 증거 파일이 <code>evidence/phase02/</code> 에 존재한다</label></li>
+<li><label><input type="checkbox"><code>defect-ledger.csv</code> 가 존재하고 모든 행에 필수 필드가 채워져 있다</label></li>
+<li><label><input type="checkbox">P0 전건이 재현 확인되어 있다</label></li>
+<li><label><input type="checkbox"><a href="./01-current-state-audit.html">Ch.1 §F</a> 의 미확인 사항 U-1 ~ U-9 가 전부 해소되었거나, 해소 못한 것이 원장 행으로 남아 있다</label></li>
+<li><label><input type="checkbox">어떤 코드 파일도 수정되지 않았다 (<code>git diff</code> 가 <code>R/</code>, <code>tests/</code>, <code>man/</code> 에 대해 비어 있다)</label></li>
+</ul>
+</section>
+<section id="phase-로그" class="level2" data-number="7.12">
+<h2 data-number="7.12" class="anchored" data-anchor-id="phase-로그"><span class="header-section-number">7.12</span> Phase 로그</h2>
+<p><code>003_phase02-defect-audit.qmd</code> + <code>.html</code>.</p>
+<p>§4 (근거) 에는 감사 8 개 영역의 요약을, §6 (원장 변경) 에는 <strong>확정 원장 전문</strong>을 표로 포함한다. 이 로그가 Phase 3–7 의 작업 지시서 역할을 하므로 원장은 로그 안에서도 읽을 수 있어야 한다.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./05-phase-01-foundation.html" class="pagination-link" aria-label="Phase 1 — 작업 기반 복구">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Phase 1 — 작업 기반 복구</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./07-phase-03-scope-decisions.html" class="pagination-link" aria-label="Phase 3 — v0.2.0 범위 결정">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Phase 3 — v0.2.0 범위 결정</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

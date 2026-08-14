@@ -1,0 +1,28 @@
+id,topic,type,status,owner_phase,owner_step,implementation_policy
+DA,Layer 3 site_index preservation,Decision,locked,Phase 2,Step 2.3,Preserve site_index while L3 permutes se columns
+DB,z_j as canonical column,Decision,locked,Phase 3,Step 3.1,Expose z_j as column not attribute
+DC,Engine A1 plus dependence reject,Decision,locked,Phase 2,Step 2.2,Abort A1_legacy with dependence not none
+DD,Walters bias estimators out of layer scope,Decision,locked,Phase 6,Step 6.3,Keep estimator-specific diagnostics outside DGP layers
+DE,Gate C residual rank diagnostic threshold,Decision,locked,Gate C,Step 1.1,Use finite-J sampling_drift bands for zero residual rank targets with PASS 2/sqrt(J-1) and WARN 3/sqrt(J-1)
+DF,Gate C hybrid design controls,Decision,locked,Gate C,Step 1.2,Expose hybrid_init and hybrid_polish through multisitedgp_design and wrapper dependence dispatch
+Q1,g_fn return convention,OpenQuestion,resolved,Phase 3,Step 3.5,Use residual-first convention and g_returns contract
+Q2,Finite vs superpopulation framing,OpenQuestion,resolved,Phase 3,Step 3.1,Use DGP and T9 framing from ch04
+Q3,Non-Gaussian observation models,OpenQuestion,deferred-v2,Phase 5,Step 5.6,Keep Gaussian L4 and allow obs_fn escape hatch
+Q4,Mixture parameterization,OpenQuestion,resolved,Phase 3,Step 3.4,Use ups as SD ratio; fix double scaling; preserve JEBS two-rnorm stream
+Q5,Vector-valued effects,OpenQuestion,deferred-v2,Phase 11,Step 11.5,Do not implement vector-valued effects in v1
+Q6,Defaults from Weiss et al 2017,OpenQuestion,resolved,Phase 7,Step 7.1,Use ch13 preset values
+Q7,multisitepower adapter format,OpenQuestion,resolved,Phase 7,Step 7.3,Use site estimate se n column convention and E30 pre-check
+Q8,Lifecycle stage for v0.1,OpenQuestion,resolved,Phase 11,Step 11.3,All v1 API surface rows remain experimental for v0.1; status is expressed through prose/docs/NEWS rather than a lifecycle dependency or lifecycle::badge calls
+Q9,F-number namespace collision,OpenQuestion,resolved,Phase 1,Step 1.3,Record as resolved audit trail only
+Q10,preset_education_substantial persona drift,OpenQuestion,resolved-refined,Phase 7,Step 7.1,Use Priya or Chen primary with Rodriguez secondary
+Q11,R2-F18 rejection rationale,OpenQuestion,resolved-rejected,Phase 7,Step 7.3,Keep as_metafor soft-dep guard
+Q12,Walters G shape Gaussian vs PointMassSlab,OpenQuestion,deferred-v1.1,Phase 7,Step 7.2,Implement Gaussian v1 and sparse preset later
+Q13,twin_towers Paradigm A vs B,OpenQuestion,noted,Phase 7,Step 7.2,Implement Paradigm A v1 and record reversal cost
+Q14,OS-specific reproducibility,OpenQuestion,deferred-v1.x,Phase 10,Step 10.7,Linux strict and macOS Windows demoted
+Q15,spearman_to_pearson export surface,OpenQuestion,resolved-internal,Phase 11,Step 11.3,Keep spearman_to_pearson internal for v0.1; align_hybrid_corr remains the public hybrid interface; no export Rd or pkgdown reference
+Q16,compute_kappa public API count,OpenQuestion,resolved-amended-inventory,Phase 11,Step 11.3,Keep compute_kappa public for v0.1 and amend release inventory to 60 API surface rows
+PA1,F-number namespace collision approval,PIApproval,resolved,Phase 1,Step 1.3,No implementation blocker
+PA2,Substantial preset persona approval,PIApproval,refined,Phase 7,Step 7.1,Apply refined persona attribution in docs
+PA3,Walters sparse preset approval,PIApproval,deferred-v1.1,Phase 7,Step 7.2,Do not add sparse preset in v1
+PA4,twin_towers reversal cost approval,PIApproval,noted,Phase 7,Step 7.2,Retain Paradigm A v1
+PA5,Helper API surface approval,PIApproval,resolved-option-a,Phase 11,Step 11.2,Implement all 9 helpers with experimental lifecycle

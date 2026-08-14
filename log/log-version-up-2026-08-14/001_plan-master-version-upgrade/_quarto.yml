@@ -1,0 +1,72 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "multisiteDGP Version Upgrade — Master Plan"
+  subtitle: "v0.1.1 → v0.2.0 신뢰성 릴리스: 11 Phase / 67 Step 로드맵, 결함 감사 근거, 실행 규약, 인수 기준"
+  author:
+    - name: "JoonHo Lee"
+      affiliation: "University of Alabama (PI, IES R305D240078)"
+    - name: "Claude Opus 5 (planning agent)"
+      affiliation: "Anthropic"
+  date: "2026-08-14"
+  date-format: "YYYY-MM-DD"
+  search: true
+  page-navigation: true
+  sidebar:
+    style: docked
+    collapse-level: 1
+  chapters:
+    - index.qmd
+    - part: "진단"
+      chapters:
+        - 01-current-state-audit.qmd
+        - 02-goals-and-scope.qmd
+    - part: "실행 규약"
+      chapters:
+        - 03-operating-model.qmd
+        - 04-log-protocol.qmd
+    - part: "Phase 로드맵"
+      chapters:
+        - 05-phase-01-foundation.qmd
+        - 06-phase-02-defect-audit.qmd
+        - 07-phase-03-scope-decisions.qmd
+        - 08-phase-04-reproducibility.qmd
+        - 09-phase-05-test-suite.qmd
+        - 10-phase-06-ci.qmd
+        - 11-phase-07-remediation.qmd
+        - 12-phase-08-revalidation.qmd
+        - 13-phase-09-documentation.qmd
+        - 14-phase-10-external-review.qmd
+        - 15-phase-11-release.qmd
+    - part: "인수"
+      chapters:
+        - 16-acceptance-criteria.qmd
+    - part: "부록"
+      chapters:
+        - appendix-a-defect-ledger.qmd
+        - appendix-b-evidence.qmd
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    fig-cap-location: bottom
+    tbl-cap-location: top
+    callout-appearance: simple
+    link-external-newwindow: true
+    grid:
+      sidebar-width: 300px
+      body-width: 920px
+      margin-width: 240px
+
+execute:
+  echo: true
+  eval: false
+  warning: false

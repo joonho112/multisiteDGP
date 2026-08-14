@@ -1,0 +1,2 @@
+"step","advanced_vignettes","cookbook_vignette","total_vignette_sources","article_html","recipes","cookbook_audit_rows","cookbook_audit_pass","pkgdown_check","pkgdown_build","r_cmd_check_status","check_note"
+"10.4",3,1,8,8,9,9,TRUE,"pass","pass","1 NOTE","unused lifecycle import; pre-existing C09"

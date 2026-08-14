@@ -1,0 +1,128 @@
+════════════════════ .Rbuildignore ════════════════════
+--- /private/tmp/claude-503/-Users-joonholee-Documents-00-IES-Multisite-Trial-Project/b5868274-17c7-48f6-834f-7336e165dbe3/scratchpad/remote-main/.Rbuildignore	2026-08-14 09:50:36
++++ /Users/joonholee/Documents/00_IES Multisite Trial Project/multisiteDGP-R-package/.Rbuildignore	2026-05-09 21:50:54
+@@ -9,8 +9,20 @@
+ ^_pkgdown\.yml$
+ ^docs$
+ ^Rplots\.pdf$
++^PACKAGES$
++^PACKAGES\.gz$
++^PACKAGES\.rds$
+ ^\.\.Rcheck$
++^Library$
++^Outputs$
++^documentation-updates$
+ ^.*_files$
++^blueprint-multisiteDGP-book$
++^blueprint-multisiteDGP-book-v1\.0-20260507\.zip$
++^multisiteDGP-build-implementation-book$
++^log$
++^dev$
++^tools$
+ ^tests/data-raw$
+ ^multisiteDGP_.*\.tar\.gz$
+ ^multisiteDGP\.Rcheck$
+@@ -18,4 +30,3 @@
+ ^README\.html$
+ ^index\.md$
+ ^pkgdown$
+-^LICENSE\.md$
+
+════════════════════ CONTRIBUTING.md ════════════════════
+--- /private/tmp/claude-503/-Users-joonholee-Documents-00-IES-Multisite-Trial-Project/b5868274-17c7-48f6-834f-7336e165dbe3/scratchpad/remote-main/CONTRIBUTING.md	2026-08-14 09:50:36
++++ /Users/joonholee/Documents/00_IES Multisite Trial Project/multisiteDGP-R-package/CONTRIBUTING.md	2026-05-09 11:33:50
+@@ -11,9 +11,9 @@
+ ## Code conventions
+ 
+ - R code follows the [tidyverse style guide](https://style.tidyverse.org/).
+-- Roxygen headers follow the package's established style: applied-researcher first, motivation-style `@param` (range + when-to-move-it), pedagogical `@examples` (commented; ends with interpretation), aggressive `@seealso` cross-linking, `@references` quoted verbatim from `vignettes/references.bib`.
+-- Vignettes follow the standardized frontmatter, setup chunk, and footer chunk used across the existing 16 `aN`/`mN` vignettes (see any of them for a template).
+-- Voice and tone: every primary function call shows its rendered output; plot captions explain *what to read off* the plot, not what the plot is; cross-link aggressively.
++- Roxygen headers follow the canonical template at `multisiteDGP-R-package/documentation-updates/001_plan-master-documentation-overhaul/appendix-b-roxygen-template.qmd` (style: applied-researcher first, motivation-style `@param`, pedagogical `@examples`).
++- Vignettes follow the standardized frontmatter and chunk options at `documentation-updates/001_plan-master-documentation-overhaul/10-phase-7-vignettes-applied.qmd` Step 7.1.
++- Voice and tone follow the package style guide at `documentation-updates/working/02-style-guide.md`.
+ 
+ ## Pre-merge checklist
+ 
+
+════════════════════ vignettes/references.bib ════════════════════
+--- /private/tmp/claude-503/-Users-joonholee-Documents-00-IES-Multisite-Trial-Project/b5868274-17c7-48f6-834f-7336e165dbe3/scratchpad/remote-main/vignettes/references.bib	2026-08-14 09:50:36
++++ /Users/joonholee/Documents/00_IES Multisite Trial Project/multisiteDGP-R-package/vignettes/references.bib	2026-05-09 16:33:21
+@@ -1,10 +1,11 @@
+ % =====================================================================
+-% multisiteDGP vignette bibliography
+-% Last updated: 2026-05-09
++% multisiteDGP vignette bibliography — PI-confirmed entries only
++% Source: documentation-updates/log/064_session-handoff-to-phase-7.qmd §5.4
++% Last updated: 2026-05-09 (Step 7.1)
+ %
+-% Add new BibTeX entries here only after verifying the citation
+-% against an authoritative source (DOI, journal page, or published
+-% volume).
++% RULE: Never compose new entries. If a vignette needs a citation not in
++% this file, mark `[CITATION TBD — PI to confirm: <author> <year> on <topic>]`
++% in the vignette text and add to a "PI-pending" punch list.
+ % =====================================================================
+ 
+ @article{lee2025improving,
+
+════════════════════ .github/workflows/R-CMD-check.yaml ════════════════════
+--- /private/tmp/claude-503/-Users-joonholee-Documents-00-IES-Multisite-Trial-Project/b5868274-17c7-48f6-834f-7336e165dbe3/scratchpad/remote-main/.github/workflows/R-CMD-check.yaml	2026-08-14 09:50:36
++++ /Users/joonholee/Documents/00_IES Multisite Trial Project/multisiteDGP-R-package/.github/workflows/R-CMD-check.yaml	2026-05-08 21:30:10
+@@ -56,15 +56,6 @@
+             any::testthat
+             any::knitr
+             any::rmarkdown
+-            any::metafor
+-            any::baggr
+-            any::sn
+-            any::LaplacesDemon
+-            any::copula
+-            any::gridExtra
+-            any::patchwork
+-            any::deconvolveR
+-            any::moments
+           install-quarto: false
+ 
+       - uses: r-lib/actions/check-r-package@v2
+
+════════════════════ .github/workflows/pkgdown-deploy.yaml ════════════════════
+--- /private/tmp/claude-503/-Users-joonholee-Documents-00-IES-Multisite-Trial-Project/b5868274-17c7-48f6-834f-7336e165dbe3/scratchpad/remote-main/.github/workflows/pkgdown-deploy.yaml	2026-08-14 09:50:36
++++ /Users/joonholee/Documents/00_IES Multisite Trial Project/multisiteDGP-R-package/.github/workflows/pkgdown-deploy.yaml	2026-05-08 21:30:10
+@@ -45,15 +45,6 @@
+             any::pkgdown
+             any::knitr
+             any::rmarkdown
+-            any::metafor
+-            any::baggr
+-            any::sn
+-            any::LaplacesDemon
+-            any::copula
+-            any::gridExtra
+-            any::patchwork
+-            any::deconvolveR
+-            any::moments
+           install-quarto: false
+ 
+       - name: Build pkgdown site
+
+════════════════════ .github/workflows/test-coverage.yaml ════════════════════
+--- /private/tmp/claude-503/-Users-joonholee-Documents-00-IES-Multisite-Trial-Project/b5868274-17c7-48f6-834f-7336e165dbe3/scratchpad/remote-main/.github/workflows/test-coverage.yaml	2026-08-14 09:50:36
++++ /Users/joonholee/Documents/00_IES Multisite Trial Project/multisiteDGP-R-package/.github/workflows/test-coverage.yaml	2026-05-08 21:30:10
+@@ -47,15 +47,6 @@
+             any::testthat
+             any::knitr
+             any::rmarkdown
+-            any::metafor
+-            any::baggr
+-            any::sn
+-            any::LaplacesDemon
+-            any::copula
+-            any::gridExtra
+-            any::patchwork
+-            any::deconvolveR
+-            any::moments
+           install-quarto: false
+ 
+       - name: Check exported-function coverage
+

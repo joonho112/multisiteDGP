@@ -1,0 +1,4 @@
+"experiment_id","run_id","priority","status","completed","failed_rows","key_result","evidence"
+"V0","step9-2-v0-full","P0","fail",7000,0,"All active shapes failed ch19 per-rep gates; mean I 0.305-0.307, mean R 9.37-9.68","tools/validation/generated/step9-2-v0-full-summary.csv"
+"V01","step9-2-v01-full","P0","fail",7000,0,"Residual pass/convergence 100% active shapes; marginal target status not_preregistered; User two-number distinct 0.000","tools/validation/generated/step9-2-v01-full-summary.csv"
+"V02","step9-2-v02-full","P0","fail",2000,0,"I envelope pass, T1a anchor pass, seed stability fail; max seed range 0.0638","tools/validation/generated/step9-2-v02-full-summary.csv"

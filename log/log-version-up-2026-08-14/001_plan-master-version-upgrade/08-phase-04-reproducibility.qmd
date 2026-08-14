@@ -1,0 +1,294 @@
+---
+title: "Phase 4 — 재현성 계약 재구축"
+---
+
+## 목표
+
+**Phase 3 D1 결정을 구현해서, 재현성 계약이 문서·아티팩트·CI 세 곳에서 일치하게 만든다.** 성공 기준 **G4** 를 달성하고, `extended-tests` 10 주 연속 실패의 근본 원인을 제거한다.
+
+::: {.callout-warning title="D1 결정 종속"}
+이 Phase 의 Step 구성은 Phase 3 Step 3.1 의 D1 결정에 따라 달라진다. 아래는 **세 옵션 공통 골격**이며, 옵션별 차이는 각 Step 안에 분기로 표시했다. Phase 3 종료 시 실제 Step 구성을 확정하고 이 장을 참조해 실행한다.
+:::
+
+| | |
+|---|---|
+| **Step 수** | 7 (4.1 – 4.7) |
+| **누적 시간** | ~135 분 (+ CI / Linux 실행 대기) |
+| **선행 Phase** | Phase 3 (게이트 G-B 통과) |
+| **종료 로그** | `005_phase04-reproducibility-contract.qmd` |
+| **병렬 가능** | Phase 5, Phase 7 과 병렬 진행 가능 |
+
+---
+
+## Step 4.1 — 드리프트 근본 원인 확정 및 완화 가능성 판정
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | Step 2.3, D1 결정 |
+
+**목표.** Step 2.3 이 **어느 Layer** 에서 드리프트가 시작되는지 특정했다면, 이 Step 은 **어느 연산** 인지 특정하고 **그것을 제거할 수 있는지** 판정한다.
+
+**작업.**
+
+1. Step 2.3 이 지목한 Layer 안에서 연산 단위로 좁힌다. Linux/macOS 양쪽에서 중간값을 덤프해 비교
+2. 후보 연산별 확인
+   - `nleqslv` solver — 수렴 판정 tolerance 를 조여도 남는가? 초기값 의존성은?
+   - `sn` package 내부 (`rsn`, `qsn`) — 해당 shape 만 드리프트하는가?
+   - 정렬 / rank / tie-breaking — `order()`, `rank()` 의 tie 처리가 플랫폼 의존인가?
+   - libm 초월함수 — `exp`, `log`, `pnorm` 계열
+   - 누산 순서 — `sum()`, `mean()` 의 long-double 사용
+3. **완화 가능성 판정** — 이 연산을 플랫폼 중립으로 바꿀 수 있는가?
+   - 가능하면 → 계약을 유지한 채 드리프트를 제거하는 것이 최선. D1 옵션과 무관하게 이것을 먼저 시도
+   - 불가능하면 → D1 결정대로 진행
+4. 판정 결과를 D1 결정과 대조. **완화가 가능한데 D1 이 O2/O3 를 택했다면 Phase 3 으로 되돌아가 재검토** (PI 에게 알림)
+
+**산출물.**
+
+- `evidence/phase04/drift-root-cause.md` — 연산 단위 특정 + 완화 가능성 판정
+- 완화 가능 시: 수정안 스케치
+
+**완료 조건.**
+
+- 드리프트를 일으키는 연산이 함수·줄 수준으로 특정되어 있다
+- 완화 가능성이 판정되어 있다
+- D1 결정과의 정합성이 확인되어 있다
+
+---
+
+## Step 4.2 — 해시 계약 구현
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | 4.1 |
+
+**목표.** D1 결정을 `R/utils-reproducibility.R` 에 구현한다.
+
+**옵션별 작업.**
+
+| D1 결정 | 이 Step 이 하는 일 |
+|---|---|
+| **O1 (현행 유지)** | 코드 변경 없음. 대신 `canonical_hash()` 의 문서에 플랫폼 범위를 명시하고, Step 4.1 이 완화 가능하다고 판정했다면 그 수정만 적용. Step 시간 단축 |
+| **O2 (허용 오차 해시)** | 해시 전 수치 정규화 단계 추가. 유효자리 선택 근거를 코드 주석에 남긴다. 기존 hash 와의 관계를 문서화 |
+| **O3 (이중 계약)** | `stable_hash()` 신설 + export + roxygen. `canonical_hash()` 는 불변. NAMESPACE 갱신 |
+
+**공통 작업.**
+
+1. 구현
+2. **same-machine 재현성 회귀 방지** — 같은 머신 · 같은 seed 에서 반복 호출 시 동일 해시 (T20 계약) 가 여전히 성립하는지 즉시 확인
+3. `provenance_string()` 출력 형식 영향 확인 — snapshot 에 나타나는 문자열이 바뀌면 Step 4.5 가 처리
+4. `design_hash` 는 이미 플랫폼 중립이므로 건드리지 않는다
+
+**산출물.**
+
+- 수정된 `R/utils-reproducibility.R`
+- (O3 인 경우) `man/stable_hash.Rd`, `NAMESPACE` 갱신
+- `evidence/phase04/hash-implementation-notes.md`
+
+**완료 조건.**
+
+- 구현이 완료되고 `devtools::load_all()` 이 성공한다
+- same-machine 재현성이 확인된다
+- Linux/macOS 양쪽에서 새 계약이 의도대로 동작한다 (O2/O3 인 경우 해시 일치, O1 인 경우 문서화된 범위대로)
+
+---
+
+## Step 4.3 — Linux 베이스라인 생성 파이프라인
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | 4.2 |
+
+**목표.** golden fixture 와 print-example 을 **Linux x86_64 에서 재현 가능하게 생성하는 파이프라인**을 만든다. 지금까지 이것이 없어서 macOS 산출물이 체크인됐다.
+
+**작업.**
+
+1. 생성 환경 정의 — Docker 이미지 (`rocker/r-ver:<버전>`) 또는 GitHub Actions workflow. **양쪽 다 만드는 것을 권고** — Docker 는 반복 실험용, Actions 는 authoritative 생성용
+2. 기존 생성 스크립트 검토 — `tests/data-raw/generate_golden_fixtures.R`, `tests/data-raw/generate_print_examples.R`, `tools/jebs-golden-fixtures/generate-jebs-golden-fixtures.R`
+3. 파이프라인이 만족해야 할 것
+   - 결정론적 — 같은 입력에서 같은 출력
+   - provenance 자동 기록 — 플랫폼, R 버전, package 버전, 생성 일시
+   - `MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN` 가드 준수
+4. 파이프라인을 한 번 돌려서 **기존 macOS 아티팩트와 비교** — 무엇이 얼마나 다른지 기록
+5. 파이프라인 실행 방법을 문서화 (`tools/` 또는 `CONTRIBUTING.md`)
+
+**산출물.**
+
+- Docker 정의 또는 workflow 파일
+- 갱신된 생성 스크립트
+- `evidence/phase04/linux-vs-macos-artifacts.md` — 차이 목록
+- 실행 방법 문서
+
+**완료 조건.**
+
+- Linux 에서 fixture / print-example 을 생성하는 절차가 재현 가능하게 문서화되어 있다
+- 한 번 실행되어 macOS 아티팩트와의 차이가 기록되어 있다
+- provenance 가 자동 기록된다
+
+::: {.callout-important title="이전 아티팩트 보존"}
+재생성 전에 현재 아티팩트 전체를 `log/log-version-up-2026-08-14/artifacts/pre-phase04-fixtures/` 에 보존한다. JEBS 논문 재현 증거이므로 되돌릴 수 있어야 한다.
+:::
+
+---
+
+## Step 4.4 — golden fixture 재생성
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | 4.3 |
+
+**목표.** `inst/extdata/golden/` 과 `tests/testthat/_snaps/golden/` 의 fixture 9 개를 Linux 베이스라인으로 갱신하고 manifest 를 정정한다.
+
+**작업.**
+
+1. Step 4.3 파이프라인으로 fixture 9 개 재생성
+   - `preset_jebs_paper`, `preset_jebs_strict`, `preset_walters_2024`, `preset_education_modest`, `preset_small_area_estimation`
+   - `jebs_appendix_mixture_seed{1,42,2024,12345}`
+2. **수치 검증** — 재생성된 fixture 의 통계량이 기존 macOS fixture 와 통계적으로 동등한지 확인. 동등하지 않으면 **멈추고 조사**. 이것은 플랫폼 드리프트가 아니라 진짜 회귀다
+3. manifest 갱신 — `golden-fixture-manifest.csv`, `tools/jebs-golden-fixtures/jebs-golden-fixture-manifest.csv`. `generated_platform` 을 실제 값으로
+4. `inst/extdata/golden/README.md`, `tests/testthat/_snaps/golden/README.md` 갱신
+5. **JEBS 재현 증거 확인** — 재생성된 fixture 가 Lee et al. (2025) 부록 값을 여전히 재현하는지. 이것이 이 Step 의 가장 중요한 검증
+
+**산출물.**
+
+- 재생성된 fixture 9 개
+- 갱신된 manifest 2 개 + README 2 개
+- `evidence/phase04/fixture-regeneration-report.md` — 수치 동등성 검증 + JEBS 재현 확인
+
+**완료 조건.**
+
+- fixture 9 개 전부가 Linux 에서 생성되고 manifest 의 `generated_platform` 이 이를 반영한다
+- 통계적 동등성이 확인되어 있다
+- JEBS 부록 재현이 확인되어 있다
+
+---
+
+## Step 4.5 — print-example 및 snapshot 재생성
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | 4.4 |
+
+**목표.** `extended-tests` 를 실패시킨 snapshot 을 정정한다.
+
+**작업.**
+
+1. `tests/testthat/_snaps/print-examples/` 5 개 파일 재생성 (Linux)
+2. `tests/testthat/_snaps/snapshot-print.md`, `snapshot-errors.md` 재생성
+3. **snapshot 안정성 개선** — Step 2.3 이 찾은 것 외에도, snapshot 에 들어가지 말아야 할 변동 요소가 있는지 점검
+   - `<VERSION>`, `<R>` 마스킹은 이미 있음
+   - 해시가 snapshot 에 들어가야 하는가? D1 이 O1 이면 들어가야 하고, O2/O3 면 플랫폼 중립 해시를 쓴다
+   - 부동소수점 표시 자리수가 과도하게 민감한가?
+4. **재생성 후 즉시 세 플랫폼 검증** — Linux (생성지), macOS (로컬), Windows (CI). 셋 다 통과해야 이 Step 이 끝난다
+5. `MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN` 가드가 실제로 동작하는지 확인
+
+**산출물.**
+
+- 재생성된 snapshot 전체
+- `evidence/phase04/snapshot-cross-platform-verification.md` — 3 플랫폼 검증 결과
+
+**완료 조건.**
+
+- 모든 snapshot 이 Linux 베이스라인으로 갱신되어 있다
+- Linux · macOS 두 곳에서 실제로 통과가 확인되어 있다 (Windows 는 Phase 6 CI 에서)
+- snapshot 에 남은 변동 요소가 없거나, 남은 것에 사유가 있다
+
+::: {.callout-caution title="fixture 세탁 금지"}
+이 Step 은 `snapshot_accept()` 를 무비판적으로 실행하는 Step 이 **아니다.** Step 4.1 이 원인을 규명하고 4.2 가 계약을 고친 뒤에야 재생성한다. 원인 규명 없이 accept 하면 재현성 계약을 포기하는 것이다.
+:::
+
+---
+
+## Step 4.6 — 재현성 테스트 재작성
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | 4.5 |
+
+**목표.** T1a / T20 / cross-os 정책 테스트를 새 계약에 맞게 다시 쓴다.
+
+**작업.**
+
+1. **T1a** (`test-T1a-jebs-bit-identical.R`) — D1 결정에 따라
+   - O1 → Linux 게이트 유지하되, CI 에서 **실제로 실행되는지** 확인. 지금까지 게이트만 있고 실행 증거가 없었다
+   - O2/O3 → 게이트 제거. 세 플랫폼 전부에서 실행
+2. **T20** (`test-T20-A2-reproducibility.R`) — same-machine 재현성. 계약 변경 후에도 유지되는지
+3. **cross-os 정책 테스트** (`test-cross-os-reproducibility-policy-step10-7.R`) — 정책 문서와 코드의 일치를 검사하는 테스트. 새 정책에 맞게 갱신
+4. **`test-rng-hash-policy.R`** — 해시 스키마 계약 테스트. O2/O3 면 대폭 수정
+5. **새 회귀 테스트 추가** — Step 4.1 이 특정한 드리프트 지점에 대한 회귀 테스트. 같은 문제가 다시 생기면 잡히게
+
+**산출물.**
+
+- 갱신된 테스트 4 개 + 신규 회귀 테스트
+- `evidence/phase04/reproducibility-test-matrix.md` — 테스트 × 플랫폼 × 실행 여부
+
+**완료 조건.**
+
+- T1a 가 최소 한 플랫폼에서 **실제로 실행되고 통과**한다 (skip 이 아니라)
+- T20 이 세 플랫폼에서 통과한다
+- 정책 테스트가 새 정책 문서와 일치한다
+
+---
+
+## Step 4.7 — 정책 문서 및 관련 문서 동기화
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~15 분 |
+| **의존** | 4.6 |
+
+**목표.** 재현성 관련 모든 문서를 새 계약에 맞춘다.
+
+**작업.**
+
+1. `tools/cross-os-reproducibility-policy.md` 전면 개정 — Step 3.1 이 열거한 바뀌는 조항 반영. 특히 "Current v0.1 golden fixture note" 의 모순 서술 제거
+2. `inst/REPRODUCIBILITY.md` 갱신
+3. `vignette("m7-reproducibility-provenance")` 갱신 — 사용자가 읽는 재현성 설명
+4. `canonical_hash()` / `provenance_string()` roxygen 갱신 (+ O3 면 `stable_hash()` 신규)
+5. `tools/traceability/fixture-index.csv`, `invariant-index.csv` 갱신
+6. `NEWS.md` 초안에 재현성 항목 추가 (최종 정리는 Phase 9)
+7. `devtools::document()` 실행
+
+**산출물.**
+
+- 갱신된 정책 문서 2 개, vignette 1 편, roxygen, traceability ledger 2 개
+- NEWS 초안 항목
+
+**완료 조건.**
+
+- 정책 문서에 모순 서술이 남아 있지 않다
+- vignette M7 이 실제 동작을 설명한다
+- `devtools::document()` 후 `man/` 이 최신이다
+- 정책 테스트(Step 4.6)가 여전히 통과한다
+
+---
+
+## Phase 종료 조건
+
+- [ ] 드리프트 근본 원인이 연산 수준으로 특정되어 있다
+- [ ] D1 결정이 구현되어 있다
+- [ ] golden fixture 9 개가 Linux 베이스라인이고 manifest 가 이를 반영한다
+- [ ] JEBS 부록 재현이 재확인되어 있다
+- [ ] 모든 snapshot 이 Linux 베이스라인이고 Linux · macOS 에서 통과한다
+- [ ] T1a 가 실제로 실행되어 통과한다 (skip 아님)
+- [ ] 정책 문서에 모순이 없다
+- [ ] 이전 아티팩트가 `artifacts/pre-phase04-fixtures/` 에 보존되어 있다
+- [ ] 원장의 재현성 관련 P0 행이 전부 `fixed`
+
+## Phase 로그
+
+`005_phase04-reproducibility-contract.qmd` + `.html`.
+
+§5 (결정 사항) 에 **드리프트 근본 원인** 과 **그것을 어떻게 처리했는지** 를 상세히 남긴다. 이 Phase 는 v0.2.0 의 가장 기술적으로 어려운 부분이며, 6 개월 뒤 유사 문제가 재발했을 때 이 로그가 유일한 단서다.

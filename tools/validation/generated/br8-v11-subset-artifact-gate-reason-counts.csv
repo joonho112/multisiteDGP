@@ -1,0 +1,7 @@
+"run_id","experiment_id","reason_type","reason","n"
+"br8-v11-subset-artifact-gate","V11","fail","bhattacharyya:median<0.850",72
+"br8-v11-subset-artifact-gate","V11","fail","feasibility:median<5.000",37
+"br8-v11-subset-artifact-gate","V11","fail","ks:median>0.100",63
+"br8-v11-subset-artifact-gate","V11","fail","mean_shrinkage:median<0.300",50
+"br8-v11-subset-artifact-gate","V11","fail","R:median>30.000",1
+"br8-v11-subset-artifact-gate","V11","warn","ks:q95>0.100",5

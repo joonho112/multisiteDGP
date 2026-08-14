@@ -1,0 +1,5 @@
+"run_id","experiment_id","mode","cell_id","J","target_rho","rows","completed","failed","pass_rate","required_pass_rate","mean_abs_error","max_abs_error","converged_rate","warning_rate","multiset_preserved_rate","permutation_valid_rate","gate_pass"
+"br6-v09-rho0-targeted","V09","targeted-rho0","J100_rho0",100,0,100,100,0,1,0.95,0.00329753487591234,0.0197976428361408,1,0,1,1,TRUE
+"br6-v09-rho0-targeted","V09","targeted-rho0","J200_rho0",200,0,100,100,0,1,0.95,0.00471114696450249,0.0199625174328614,1,0,1,1,TRUE
+"br6-v09-rho0-targeted","V09","targeted-rho0","J50_rho0",50,0,100,100,0,1,0.95,0.00271571045606181,0.0197896160771411,1,0,1,1,TRUE
+"br6-v09-rho0-targeted","V09","targeted-rho0","J500_rho0",500,0,100,100,0,1,0.95,0.00888984699463879,0.0196381655271575,1,0,1,1,TRUE

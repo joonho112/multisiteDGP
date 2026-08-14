@@ -1,0 +1,21 @@
+repos:
+- repo: https://github.com/lorenzwalthert/precommit
+  rev: v0.4.0
+  hooks:
+  - id: style-files
+    args: [--style_pkg=styler, --style_fun=tidyverse_style]
+  - id: lintr
+  - id: parsable-R
+  - id: no-debug-statement
+  - id: deps-in-desc
+  - id: codemeta-description-updated
+  - id: spell-check
+    args: [--lang=en]
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+  - id: check-yaml
+  - id: mixed-line-ending
+    args: [--fix=lf]

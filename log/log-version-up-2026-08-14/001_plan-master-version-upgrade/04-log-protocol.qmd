@@ -1,0 +1,145 @@
+---
+title: "로그 규약"
+---
+
+## 로그 폴더
+
+이번 작업의 모든 로그는 다음 폴더에 쌓인다.
+
+```
+multisiteDGP-R-package/log/log-version-up-2026-08-14/
+```
+
+2026-08-14 기준 이 폴더는 비어 있었다. 따라서 **순번은 `001` 부터 시작**한다. (상위 `log/` 폴더의 `draft-A-architecture.md` 등은 번호 체계가 없는 2026-05 이전 산출물이며 이번 순번과 무관하다.)
+
+## 순번 규칙
+
+- **3 자리 zero-padded 정수**, 폴더 전체에서 **단조 증가**.
+- `001` 은 이 계획서(Quarto Book 폴더)가 점유한다.
+- `002` 부터 Phase 종료 로그가 순서대로 가져간다.
+- **번호는 파일을 만드는 시점에 폴더 안의 최대 번호 + 1 로 정한다.** 아래 표의 번호는 ad-hoc 로그가 하나도 없을 때의 예정 번호다.
+- Phase 중간에 별도 로그가 필요하면 (예: 중단·핸드오프, 예상 못한 조사) 그 시점의 다음 번호를 가져가고, 이후 Phase 로그 번호는 그만큼 밀린다. **번호를 비워두거나 재사용하지 않는다.**
+
+## 파일명 형식
+
+```
+[순번]_[phase-id]-[설명].qmd
+[순번]_[phase-id]-[설명].html
+```
+
+- `phase-id` 는 `phaseNN` (2 자리 zero-padded): `phase01`, `phase02`, … `phase11`
+- `설명` 은 kebab-case 영문 슬러그, 3–5 단어
+- qmd 와 html 은 항상 쌍으로 존재한다
+
+ad-hoc 로그는 `phase-id` 자리에 `stepN.M` 또는 `handoff` / `note` 를 쓴다.
+
+```
+007_step4.3-linux-baseline-interrupted.qmd     ← Phase 4 중간 핸드오프
+011_note-covr-token-rotation.qmd               ← 예상 못한 조사
+```
+
+## 예정 로그 목록
+
+| 순번 | 파일명 | 시점 |
+|---|---|---|
+| `001` | `001_plan-master-version-upgrade/` (이 책) | 계획 승인 |
+| `002` | `002_phase01-foundation-recovery.qmd` | Phase 1 종료 |
+| `003` | `003_phase02-defect-audit.qmd` | Phase 2 종료 |
+| `004` | `004_phase03-scope-decisions.qmd` | Phase 3 종료 (PI 게이트) |
+| `005` | `005_phase04-reproducibility-contract.qmd` | Phase 4 종료 |
+| `006` | `006_phase05-test-suite-rebuild.qmd` | Phase 5 종료 |
+| `007` | `007_phase06-ci-restoration.qmd` | Phase 6 종료 |
+| `008` | `008_phase07-defect-remediation.qmd` | Phase 7 종료 |
+| `009` | `009_phase08-statistical-revalidation.qmd` | Phase 8 종료 |
+| `010` | `010_phase09-documentation-sync.qmd` | Phase 9 종료 |
+| `011` | `011_phase10-external-review.qmd` | Phase 10 종료 (외부 게이트) |
+| `012` | `012_phase11-v0.2.0-release.qmd` | Phase 11 종료 |
+
+## 로그 문서 구조
+
+모든 Phase 로그가 동일한 8 절 구조를 따른다. **이 구조에서 벗어나지 않는다** — 6 개월 뒤에 읽는 사람이 어느 로그든 같은 자리에서 같은 정보를 찾을 수 있어야 한다.
+
+```markdown
+---
+title: "Phase N — <제목>"
+subtitle: "<한 줄 요약>"
+author: "Claude Opus 5"
+date: "YYYY-MM-DD"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+## 1. 요약
+   3–5 문장. 무엇을 했고, 무엇이 바뀌었고, 다음은 무엇인가.
+   여기만 읽어도 Phase 의 결과를 알 수 있어야 한다.
+
+## 2. Step 실행 기록
+   Step 별 표: 번호 | 제목 | 상태 | 실제 소요 | 계획 대비 | 비고
+   상태는 done / partial / split / skipped / blocked
+
+## 3. 산출물
+   생성·수정된 파일 전체 목록. 경로 + 한 줄 설명.
+   커밋 SHA 를 함께 적는다.
+
+## 4. 근거와 실행 결과
+   실제로 돌린 명령과 그 출력. 테스트 결과, check 결과, CI 결과.
+   길면 접기 블록으로. 원자료는 evidence/ 에 두고 링크.
+
+## 5. 결정 사항
+   이 Phase 에서 내린 판단과 근거. 대안이 있었다면 왜 택하지 않았는지.
+   되돌릴 수 있는 결정인지 표시.
+
+## 6. 원장 변경
+   defect-ledger.csv 에서 이 Phase 가 추가·변경한 행.
+   ID | 요약 | 이전 status | 이후 status
+
+## 7. 미해결 및 이월
+   이 Phase 에서 끝내지 못한 것. 각각 어디로 갔는지 (다음 Phase / v0.3 백로그 / wont-fix).
+
+## 8. 다음 Phase 진입 조건
+   해당 Phase 장의 "Phase 종료 조건" 을 체크리스트로 옮기고 실제 확인 결과 표시.
+```
+
+## 렌더
+
+```bash
+quarto render 002_phase01-foundation-recovery.qmd --to html
+```
+
+- `embed-resources: true` 로 **자체 완결 HTML** 을 만든다. `_files/` 디렉터리를 남기지 않는다. 과거 두 book 의 로그 폴더가 `*_files/` 로 비대해진 전례가 있다.
+- qmd 와 html 을 함께 커밋한다.
+- 렌더 실패 시 qmd 만 커밋하고 로그 §7 에 사유를 남긴다.
+
+## 작성 원칙
+
+1. **로그는 Phase 가 끝난 뒤 한 번에 쓰지 않는다.** Step 을 진행하며 초안에 누적하고, Phase 종료 시 정리한다. 나중에 몰아 쓰면 실행 결과 원문이 사라진다.
+2. **실행 출력을 붙여넣는다.** "테스트가 통과했다" 가 아니라 실제 출력을 붙인다. 길면 접기 블록.
+3. **실패를 지우지 않는다.** 중간에 실패했다가 고친 것도 §4 에 남긴다. 다음 사람이 같은 함정을 피한다.
+4. **계획과의 차이를 명시한다.** Step 이 분할되거나 순서가 바뀌었으면 §2 에 적는다. 계획서를 사후 수정해서 맞추지 않는다.
+5. **한국어 서술, 영문 기술 용어.** 이 계획서와 blueprint book 의 관행을 따른다.
+6. **날짜는 절대 표기.** "지난주" 가 아니라 `2026-08-20`.
+
+## 증거 파일
+
+로그 §4 에 붙이기에 긴 원자료는 별도로 둔다.
+
+```
+log/log-version-up-2026-08-14/evidence/
+├─ phase02/
+│  ├─ ci-forensics-r-cmd-check.txt
+│  ├─ test-skip-matrix.csv
+│  └─ coverage-baseline.json
+└─ phase04/
+   └─ hash-drift-bisect.txt
+```
+
+로그에서는 상대 경로로 링크한다.
