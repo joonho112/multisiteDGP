@@ -101,7 +101,13 @@
 
 .require_soft_dependency <- function(package, context) {
   if (!.require_namespace(package)) {
-    off_cran <- .OFF_CRAN_SOURCES[[package]]
+    # `[[` on a named character vector throws for an absent name, so look the
+    # key up first rather than relying on a NULL return.
+    off_cran <- if (package %in% names(.OFF_CRAN_SOURCES)) {
+      .OFF_CRAN_SOURCES[[package]]
+    } else {
+      NULL
+    }
     if (is.null(off_cran)) {
       .abort_arg(
         sprintf("Package `%s` is required for `%s()`.", package, context),
