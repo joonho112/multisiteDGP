@@ -64,6 +64,32 @@ traceability: ..................................................................
 utils-reproducibility-canonicalization: ............................................
 wrapper-sim-meta: .........................................................................................................................
 wrapper-sim-multisite: ......................................................................................
+zz-hash-drift-probe: 
+===PROBE-BEGIN===
+platform: aarch64-apple-darwin23 
+full_hash: 69100f5dcf405f4f 
+data_only: 8a357e803aeb2ab5 
+diag_only: f51618461965e30b 
+manifest : 609fe1356c6e9d34 
+col n_j        digest=9dd0c3c25cf18b2a  head=117  84  38
+col se2_j      digest=d383263a5d9d98de  head=0.034188034200000002 0.047619047599999999 0.105263157999999996
+col se_j       digest=1724abc939b2ee72  head=0.18490006500000000 0.21821789000000000 0.32444284200000001
+col site_index digest=2acb18f2c6ec26aa  head=1 2 3
+col tau_j      digest=fcf8678cb7573a6c  head= 0.117105764000000001  0.141893203999999995 -0.021860662900000001
+col tau_j_hat  digest=0c80af256715d080  head= 0.15850958600000001 -0.11041541200000000  0.11519000500000000
+col z_j        digest=6a526f11186b2f06  head= 0.58552881800000001  0.70946601799999998 -0.10930331500000000
+diag I_hat              0.45246395700000003
+diag R_hat              7
+diag rho_P_marginal     -0.18428017299999999
+diag rho_P_residual     -0.18428017299999999
+diag rho_S_marginal     -0.15149987500000001
+diag rho_S_residual     -0.15149987500000001
+diag sigma_tau_marg     0.21931720299999999
+diag sigma_tau_resid    0.21931720299999999
+n_j all integer: TRUE 
+n_j sum: 4512  sorted head: 31,34,38,43,45 
+===PROBE-END===
+.
 
 ══ Skipped ═════════════════════════════════════════════════════════════════════
 1. T1a Engine A1 Mixture matches JEBS appendix golden fixtures ('test-T1a-jebs-bit-identical.R:3:3') - Reason: Strict canonical_hash equality is Linux x86_64/amd64 baseline only.

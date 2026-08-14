@@ -360,7 +360,13 @@ provenance_string.default <- function(x, ...) {
   numeric_scalar <- vapply(selected, function(x) {
     is.numeric(x) && length(x) == 1L && is.finite(x)
   }, logical(1))
-  lapply(selected[numeric_scalar], unname)
+  # Diagnostics do not pass through `.canonicalize_for_hash()`, so the rounding
+  # has to be applied here too. These are the payload's most drift-prone
+  # entries — cor(), sd() and mean() accumulate in an order that varies across
+  # platforms, and the gap shows even on one machine, where `rho_P_marginal`
+  # and `rho_P_residual` differ in their last digits for a design where they
+  # are mathematically identical.
+  lapply(selected[numeric_scalar], function(x) signif(unname(x), .HASH_SIGNIF_DIGITS))
 }
 
 .canonical_diagnostics_allowlist <- function() {

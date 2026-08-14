@@ -536,7 +536,7 @@
          feasibility_index:          13.755  (target N/A)  WARN  [no target]
       ------------------------------------------------------------
       Overall: 3 PASS, 2 WARN, 1 FAIL.
-      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=4719 | canonical_hash=410d13701430c217 | design_hash=e7260a14c83690a1 | hash_algo=xxhash64 | R=<R> | hooks=none
+      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=4719 | canonical_hash=1bcc8c3437a1eb6a | design_hash=e7260a14c83690a1 | hash_algo=xxhash64 | R=<R> | hooks=none
 
 ---
 
@@ -572,7 +572,7 @@
          feasibility_index:          28.883  (target N/A)  WARN  [no target]
       ------------------------------------------------------------
       Overall: 2 PASS, 3 WARN, 1 FAIL.
-      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=4719 | canonical_hash=d9e6c09c73406503 | design_hash=b5e9f645d66b74c9 | hash_algo=xxhash64 | R=<R> | hooks=none
+      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=4719 | canonical_hash=4f6b534ce7af70f0 | design_hash=b5e9f645d66b74c9 | hash_algo=xxhash64 | R=<R> | hooks=none
 
 ---
 
@@ -608,7 +608,7 @@
          feasibility_index:          14.431  (target N/A)  WARN  [no target]
       ------------------------------------------------------------
       Overall: 3 PASS, 3 WARN, 2 FAIL.
-      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 | canonical_hash=91541f844d2bc0e0 | design_hash=02bf5e4c5066a2ae | hash_algo=xxhash64 | R=<R> | hooks=none
+      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 | canonical_hash=ce2157243af3f1b8 | design_hash=02bf5e4c5066a2ae | hash_algo=xxhash64 | R=<R> | hooks=none
 
 ---
 
@@ -644,7 +644,7 @@
          feasibility_index:          35.828  (target N/A)  PASS  [no target]
       ------------------------------------------------------------
       Overall: 5 PASS, 1 WARN, 2 FAIL.
-      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=1 | canonical_hash=b1d88c966a78f221 | design_hash=81f5414d29da7c6a | hash_algo=xxhash64 | R=<R> | hooks=none
+      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=1 | canonical_hash=e39989c0a83bf36c | design_hash=81f5414d29da7c6a | hash_algo=xxhash64 | R=<R> | hooks=none
 
 ---
 
@@ -680,7 +680,7 @@
          feasibility_index:           6.153  (target N/A)  WARN  [no target]
       ------------------------------------------------------------
       Overall: 5 PASS, 3 WARN, 3 FAIL.
-      Provenance: multisiteDGP <VERSION> | paradigm=direct | seed=42 | canonical_hash=73ffaabd3e267e0d | design_hash=909e07826e1ea40c | hash_algo=xxhash64 | R=<R> | hooks=none
+      Provenance: multisiteDGP <VERSION> | paradigm=direct | seed=42 | canonical_hash=7c1fca03c0fd40b4 | design_hash=909e07826e1ea40c | hash_algo=xxhash64 | R=<R> | hooks=none
 
 # print and summary snapshot a direct meta-analysis preset
 
@@ -734,7 +734,7 @@
          feasibility_index:          15.030  (target N/A)  WARN  [no target]
       ------------------------------------------------------------
       Overall: 8 PASS, 2 WARN, 1 FAIL.
-      Provenance: multisiteDGP <VERSION> | paradigm=direct | seed=8602 | canonical_hash=c5d28ac867055ac9 | design_hash=2d161adf75177555 | hash_algo=xxhash64 | R=<R> | hooks=none
+      Provenance: multisiteDGP <VERSION> | paradigm=direct | seed=8602 | canonical_hash=181fcee0acbd5142 | design_hash=2d161adf75177555 | hash_algo=xxhash64 | R=<R> | hooks=none
 
 # print and summary snapshot covariate two-number reporting
 
@@ -788,7 +788,7 @@
          feasibility_index:           8.292  (target N/A)  WARN  [no target]
       ------------------------------------------------------------
       Overall: 3 PASS, 2 WARN, 3 FAIL.
-      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=8601 | canonical_hash=7726362721d0733f | design_hash=37564bb222c8882e | hash_algo=xxhash64 | R=<R> | hooks=none
+      Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=8601 | canonical_hash=473febb82aa31fdf | design_hash=37564bb222c8882e | hash_algo=xxhash64 | R=<R> | hooks=none
 
 # summary snapshots row-subset diagnostic recomputation
 
