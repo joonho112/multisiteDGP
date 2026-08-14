@@ -200,32 +200,68 @@ test_that(".validate_positive_scalar_number rejects zero and negatives", {
   expect_identical(.validate_positive_scalar_number(2.5, "alpha"), 2.5)
 })
 
-# ── 조건수 경고와 실제 실패 경계 ──────────────────────────────────────
+# ── 검증 정밀도 경고와 적응적 tolerance ───────────────────────────────
 #
-# 경고는 cv < 1e-3 에서 발화하지만 실제 실패 경계는 cv ~ 0.005 다.
-# 즉 경고 구간은 전부 실패하고, cv = 0.002 처럼 경고 없이 실패하는
-# 구간도 있다. 결함 원장 D-022. 아래 테스트는 v0.2.0 시점의 실제
-# 동작을 고정한다 — D-022 가 수정되면 함께 갱신해야 한다.
+# v0.1.x 의 경고는 `cv < 1e-3` 에서 발화하며 "수치적으로 민감할 수 있다" 고
+# 말했다. 둘 다 사실과 달랐다 (D-022): 실제 실패 경계는 cv ~ 0.005 여서
+# cv = 0.002 는 경고 없이 abort 했고, 경고가 나는 구간은 전부 실패했다.
+#
+# v0.2.0 은 post-solve tolerance 를 잔차 평가의 노이즈 바닥에서 유도하고
+# (D-024), 그 바닥이 통계적으로 의미 있는 수준을 넘을 때만 경고한다.
 
-test_that("solve_trunc_gamma warns and then aborts below cv = 1e-3", {
+test_that("the post-solve tolerance never drops below the evaluation noise floor", {
+  # cv 가 작으면 lgamma 와 sd^2 에서 두 번 상쇄가 일어나 잔차를 1e-6 보다
+  # 정밀하게 평가할 수 없다. 요청 tolerance 가 그보다 작으면 무시된다.
+  out <- suppressWarnings(solve_trunc_gamma(n_bar = 100, cv = 0.005, n_min = 5L))
+  floor_value <- .trunc_gamma_residual_floor(out$alpha, 0.005)
+
+  expect_gt(floor_value, 1e-6)
+  expect_identical(out$tol_effective, floor_value)
+  expect_lte(max(abs(out$residual)), out$tol_effective)
+})
+
+test_that("a well-conditioned design keeps the requested tolerance", {
+  out <- solve_trunc_gamma(n_bar = 100, cv = 0.4, n_min = 5L)
+
+  expect_lt(.trunc_gamma_residual_floor(out$alpha, 0.4), 1e-6)
+  expect_identical(out$tol_effective, 1e-6)
+})
+
+test_that("the noise floor reproduces the platform split that motivated it", {
+  # Linux CI (run 31819108226) 가 cv = 0.005 에서 잔차 1.908e-06 으로 abort 했고
+  # 같은 호출이 macOS 에서는 7.44e-07 로 통과했다. 유효 tolerance 는 두 값을
+  # 모두 담아야 판정이 플랫폼에 따라 갈리지 않는다.
+  out <- suppressWarnings(solve_trunc_gamma(n_bar = 100, cv = 0.005, n_min = 5L))
+
+  expect_gt(out$tol_effective, 1.90807440825225e-06)
+  expect_gt(out$tol_effective, 7.44e-07)
+})
+
+test_that("the noise floor grows as cv shrinks and is flat once cancellation stops", {
+  floors <- vapply(c(0.001, 0.005, 0.05, 0.5),
+                   function(cv) .trunc_gamma_residual_floor(1 / cv^2, cv), numeric(1))
+
+  expect_true(all(diff(floors) < 0))          # cv 가 커질수록 바닥이 낮아진다
+  expect_gt(floors[1], 1e-3)                  # cv = 0.001 은 검증이 사실상 불가능
+  expect_lt(floors[4], 1e-10)                 # cv = 0.5 는 machine epsilon 수준
+})
+
+test_that("weak verification warns with an actionable number", {
   expect_warning(
-    expect_error(
-      solve_trunc_gamma(n_bar = 100, cv = 1e-4, n_min = 5L),
-      class = "multisitedgp_solver_error"
-    ),
-    "very small positive"
+    solve_trunc_gamma(n_bar = 100, cv = 0.001, n_min = 5L),
+    "cannot verify this site-size fit"
   )
 })
 
-test_that("the conditioning warning does not cover the whole failure region", {
-  # D-022: cv = 0.002 는 경고 없이 실패한다. 경고 임계값(1e-3)이
-  # 실제 실패 경계(~0.005)보다 낮게 잡혀 있다.
-  expect_silent(
-    expect_error(
-      solve_trunc_gamma(n_bar = 100, cv = 0.002, n_min = 5L),
-      class = "multisitedgp_solver_error"
-    )
-  )
+test_that("designs that are verifiable do not warn", {
+  expect_silent(solve_trunc_gamma(n_bar = 100, cv = 0.005, n_min = 5L))
+  expect_silent(solve_trunc_gamma(n_bar = 100, cv = 0.05, n_min = 5L))
+})
+
+test_that("cv = 0.002 no longer aborts without explanation", {
+  # D-022 의 최악 사례: 경고도 없이 abort 했다. 이제는 통과한다.
+  out <- solve_trunc_gamma(n_bar = 100, cv = 0.002, n_min = 5L)
+  expect_true(is.finite(out$alpha))
 })
 
 test_that("solve_trunc_gamma succeeds well inside the feasible region", {

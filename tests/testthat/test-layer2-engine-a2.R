@@ -74,7 +74,7 @@ test_that("Engine A2 deterministic CV zero path consumes no RNG", {
 test_that("Engine A2 conditioning warnings are soft guidance", {
   warn_conditioning <- multisitedgp_internal(".warn_trunc_gamma_conditioning")
 
-  expect_warning(warn_conditioning(n_bar = 50, cv = 0.0005, n_min = 5L), "very small positive")
+  expect_warning(warn_conditioning(n_bar = 50, cv = 0.0005, n_min = 5L), "cannot verify this site-size fit")
   expect_warning(warn_conditioning(n_bar = 50, cv = 1.6, n_min = 5L), "large")
   expect_warning(warn_conditioning(n_bar = 6, cv = 0.5, n_min = 5L), "close to the lower")
 })

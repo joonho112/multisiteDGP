@@ -112,10 +112,20 @@ solve_trunc_gamma <- function(
   }
 
   best <- verified[[which.min(vapply(verified, `[[`, numeric(1), "residual_norm"))]]
-  if (any(abs(best$residual) > tol)) {
+  tol_effective <- max(tol, .trunc_gamma_residual_floor(best$alpha, cv))
+  if (any(abs(best$residual) > tol_effective)) {
     .abort_solver(
       "Engine A2 truncated-Gamma post-solve verification failed.",
-      sprintf("Maximum scaled residual was %s with tolerance %s.", max(abs(best$residual)), tol),
+      sprintf(
+        # Rounded on purpose. Full-precision doubles in a message make the
+        # error snapshot platform dependent, which is the very problem the
+        # adaptive tolerance exists to remove.
+        "Maximum scaled residual was %s against an effective tolerance of %s (requested %s, evaluation noise floor %s).",
+        format(max(abs(best$residual)), digits = 3),
+        format(tol_effective, digits = 3),
+        format(tol, digits = 3),
+        format(.trunc_gamma_residual_floor(best$alpha, cv), digits = 3)
+      ),
       "Try a less extreme site-size design or increase `tol` slightly."
     )
   }
@@ -128,10 +138,46 @@ solve_trunc_gamma <- function(
     sd = moments$sd,
     cv = moments$cv,
     residual = best$residual,
+    tol_effective = tol_effective,
     start = best$start,
     termcd = best$termcd,
     message = best$message
   )
+}
+
+# Smallest scaled residual that `.trunc_gamma_residual()` can actually resolve
+# at a given solution. Below this, a residual comparison is measuring floating
+# point noise rather than fit quality, and the verdict becomes platform
+# dependent (defect ledger D-024).
+#
+# Two cancellations set the floor.
+#
+#   1. Raw moments come from `lgamma(alpha + k) - lgamma(alpha)`. For large
+#      `alpha` this subtracts two large numbers to get a small one, so the log
+#      moment carries absolute error of order `eps * lgamma(alpha)`. After
+#      `exp()` that becomes a relative error of the same order.
+#
+#   2. `sd^2 = E[X^2] - E[X]^2` cancels again. Since `E[X^2] ~ mean^2` and
+#      `sd^2 = cv^2 * mean^2`, the relative error of `sd^2` is inflated by
+#      `1 / cv^2`, and `sd` by half that.
+#
+# Hence `eps * lgamma(alpha) / (2 * cv^2)`, plus a plain machine-epsilon term
+# that dominates once `cv` is large enough for the cancellations to vanish.
+#
+# The constants were fitted to a measured (n_bar, cv, n_min) grid: over the
+# cancellation-dominated region the empirical floor ran 0.73x to 3.05x the
+# analytic prediction, so 8x leaves roughly a factor of three of headroom.
+# Measurement: log/log-version-up-2026-08-14/evidence/phase04/residual-noise-floor.csv
+.TRUNC_GAMMA_FLOOR_SCALE <- 8
+.TRUNC_GAMMA_FLOOR_BASE <- 256
+
+.trunc_gamma_residual_floor <- function(alpha, cv) {
+  if (!is.finite(alpha) || !is.finite(cv) || cv <= 0) {
+    return(.TRUNC_GAMMA_FLOOR_BASE * .Machine$double.eps)
+  }
+  cancellation <- .TRUNC_GAMMA_FLOOR_SCALE * .Machine$double.eps *
+    max(lgamma(alpha), 1) / (2 * cv^2)
+  cancellation + .TRUNC_GAMMA_FLOOR_BASE * .Machine$double.eps
 }
 
 trunc_gamma_moments <- function(alpha, beta, n_min) {
@@ -309,11 +355,34 @@ rtrunc_gamma <- function(n, alpha, beta, n_min) {
   nleqslv::nleqslv(...)
 }
 
+# Relative error in the realized site-size SD that the caller deserves to hear
+# about. Once the residual evaluation cannot resolve better than this, the fit
+# is accepted but its quality is no longer verifiable to a useful precision.
+.TRUNC_GAMMA_WEAK_VERIFICATION <- 1e-3
+
 .warn_trunc_gamma_conditioning <- function(n_bar, cv, n_min) {
-  if (cv < 1e-3) {
+  # The old form of this warning fired on `cv < 1e-3` and described the
+  # solution as "mathematically allowed but may be numerically delicate". Both
+  # halves were wrong (defect ledger D-022): the real failure boundary sat near
+  # `cv = 0.005`, so designs at `cv = 0.002` aborted with no warning at all,
+  # while everything that did warn failed outright rather than being merely
+  # delicate.
+  #
+  # The condition is now the measured one — how precisely the post-solve
+  # residual can be evaluated at the shape this design implies. `alpha` is not
+  # known before solving, but for a Gamma `cv = 1 / sqrt(alpha)`, which is
+  # accurate enough to decide whether to warn.
+  approx_alpha <- 1 / cv^2
+  floor_estimate <- .trunc_gamma_residual_floor(approx_alpha, cv)
+  if (floor_estimate > .TRUNC_GAMMA_WEAK_VERIFICATION) {
     cli::cli_warn(c(
-      "!" = "Engine A2 received a very small positive `cv`.",
-      "i" = "The truncated-Gamma solution is mathematically allowed but may be numerically delicate."
+      "!" = "Engine A2 cannot verify this site-size fit to a useful precision.",
+      "i" = paste0(
+        "At `cv = ", format(cv, digits = 3), "` the truncated-Gamma moment ",
+        "evaluation cancels to about ", format(floor_estimate, digits = 2),
+        " relative error, so the realized SD is only checkable to that level."
+      ),
+      ">" = "Use a larger `cv`, or treat the realized site-size SD as approximate."
     ))
   }
   if (cv > 1.5) {
