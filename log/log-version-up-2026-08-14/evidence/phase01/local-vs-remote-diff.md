@@ -77,7 +77,12 @@ a8b4199 2026-05-09 Initial commit
 | `.github/workflows/test-coverage.yaml` | `5d4e4fc` | **원격 최신** | 동일 |
 | `CONTRIBUTING.md` | `bf2961e` | **원격 최신** | 원격은 공개용으로 정제됨. 로컬은 `documentation-updates/…/appendix-b-roxygen-template.qmd` 같은 내부 경로를 참조 |
 | `vignettes/references.bib` | `bf2961e` | **원격 최신** | 원격 헤더는 공개용. 로컬 헤더는 내부 프로세스 노트(`documentation-updates/log/064_…` 참조, "PI-pending punch list" 규칙) |
+| `NEWS.md` | `bf2961e` | **원격 최신** | 동일한 정제 패턴. 원격 "three independent **external** review rounds" / "remaining polish-level items are tracked in the `v0.2.0` roadmap" vs 로컬 "three independent **GPT Codex** review rounds" / 내부 경로 `documentation-updates/working/06-final-punch-list.md` 인용 |
 | `.Rbuildignore` | `bf2961e` | **양방향 차이** | §2.2 참조 |
+
+::: {.callout-note title="정제 패턴"}
+`CONTRIBUTING.md` · `references.bib` · `NEWS.md` 세 파일의 차이가 **동일한 성격**이다 — 공개 릴리스 커밋(`bf2961e`)에서 내부 경로 참조와 내부 도구명을 제거한 정제본이 원격에 올라갔고, **그 정제본이 로컬 작업본으로 되돌아오지 않았다.** 로컬에서 이 세 파일을 열면 내부 버전이 보이므로, 정제 사실을 모른 채 편집하면 공개본의 정제가 되돌려질 위험이 있었다.
+:::
 
 ### 2.2 `.Rbuildignore` — 유일한 양방향 차이
 
