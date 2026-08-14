@@ -1,0 +1,241 @@
+---
+title: "Phase 1 — 작업 기반 복구"
+subtitle: "git 복구 · 환경 고정 · 저장소 위생 · 베이스라인 측정 — v0.2.0 업그레이드의 출발선"
+author: "Claude Opus 5"
+date: "2026-08-14"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+## 요약
+
+로컬 작업본을 git 관리 하에 되돌리고, 개발 환경을 고정하고, v0.2.0 시작 시점의 정량 상태를 확정했다. **package 의 동작은 전혀 바꾸지 않았다.**
+
+가장 중요한 발견은 우려가 빗나갔다는 것이다. [계획서 Ch.1 A-1](001_plan-master-version-upgrade/_book/01-current-state-audit.html) 은 로컬과 원격 사이에 "3 개월의 미확인 격차" 가 있다고 보았으나, 실제로는 **격차가 아니라 정지 상태**였다 — 원격 추적 파일 235 개 중 226 개가 바이트 단위로 동일하고, 로컬에서 원격 쪽으로 가야 할 변경은 **하나도 없었다.** 차이 나는 9 개는 전부 원격이 새것이었고, 그중 3 개는 공개 릴리스 시점에 내부 경로를 지운 정제본이 로컬로 돌아오지 않은 것이었다.
+
+두 번째 발견은 Phase 3 · 5 의 계획을 바꾼다. **테스트 게이트를 전부 켜는 데 드는 비용이 +94.6 초뿐**이다. 계획서는 slow 테스트의 표본 크기를 줄여야 기본 스위트에 넣을 수 있다고 전제했으나, 실측 결과 축소 없이 전부 켜도 113 초로 시간 예산 안에 들어온다.
+
+세 번째로, CI lint 실패의 원인이 좁혀졌다. 로컬 lint 위반이 65 건인 데다 **`.lintr` 이 원격에 추적조차 되지 않았다** — CI 는 프로젝트 설정 없이 `lintr` 기본 규칙으로 돌았으므로 실제 위반은 그보다 많았을 것이다.
+
+다음은 Phase 2 (결함 인벤토리 감사) 다.
+
+## Step 실행 기록
+
+| Step | 제목 | 상태 | 계획 | 실제 | 비고 |
+|---|---|---|--:|--:|---|
+| 1.1 | 로컬 vs 원격 차이 확정 | done | ~20 분 | ~20 분 | 판정: 로컬은 원격의 subset |
+| 1.2 | git 복구 및 브랜치 전략 | done | ~20 분 | ~25 분 | `reset --mixed` 접목 방식 |
+| 1.3 | 개발 환경 고정 | done | ~15 분 | ~15 분 | `multisitepower` 는 설치 불가 (사유 기록) |
+| 1.4 | 저장소 위생 정리 | done | ~15 분 | ~20 분 | 아카이브 저장소 생성이 추가됨 |
+| 1.5 | 베이스라인 측정 | done | ~20 분 | ~35 분 | 벤치마크 스크립트 2 회 재작성 |
+
+**계획 대비 차이.** Step 1.4 에 세 history book 의 아카이브 저장소 생성이 추가됐다 (PI 결정). Step 1.5 는 예상보다 길었는데, 초기 벤치마크 스크립트가 R 의 lazy evaluation 때문에 promise 를 한 번만 평가해 모든 median 이 0.000 초로 나왔고, 두 번째 판에서는 `theta_G` 파라미터명을 siteBayes2 관례로 잘못 추측했다. 세 번째 판이 정상 동작했다.
+
+## 산출물
+
+### 커밋 (`upgrade/phase-01-foundation`)
+
+| SHA | 제목 |
+|---|---|
+| `1304501` | `chore(step1.2): restore version control and reconcile with origin/main` |
+| `b7c1b79` | `chore(step1.2): track tools/, log/, dev/ and developer config` |
+| `515163b` | `docs(step1.2): record branch strategy and tracking scope` |
+| `ad52c7c` | `chore(step1.3,1.4): fix environment, clean repository, snapshot history books` |
+| `f4af535` | `docs(step1.5): record baseline metrics and cleanup manifest` |
+
+태그 `pre-upgrade-baseline` → `5239cf5` (원격 `main` 최종 커밋).
+
+### 문서
+
+| 경로 | 내용 |
+|---|---|
+| `evidence/phase01/local-vs-remote-diff.md` | Step 1.1 — 235 파일 3 분류 + 9 개 차이 판정 |
+| `evidence/phase01/remote-main-log.txt` | 원격 커밋 6 건 전문 |
+| `evidence/phase01/diff-remote-vs-local.patch` | 6 개 파일 unified diff |
+| `evidence/phase01/environment-snapshot.txt` | R · OS · BLAS · locale · Quarto |
+| `evidence/phase01/dependency-status.csv` | 37 항목 × 설치 상태 |
+| `evidence/phase01/cleanup-manifest.md` | Step 1.4 — 무엇을 어디로 |
+| `evidence/phase01/baseline-metrics.md` | **Step 1.5 — Phase 11 비교 기준** |
+| `evidence/phase01/baseline-raw/` | 원본 출력 7 종 + `coverage-by-file.csv` |
+| `evidence/phase01/scripts/` | `bench.R` · `cov.R` · `dep-status.R` (재측정용) |
+| `decisions/000-pi-approval-record.md` | 게이트 G-A 승인 + A1–A4 |
+| `decisions/branch-strategy.md` | 브랜치 · 추적 범위 · 되돌리기 |
+
+### 저장소
+
+- `multisiteDGP-R-package/` — git 관리 하, 627 파일 추적, `.git` 9.3 MB
+- `multisiteDGP-design-archive/` — **신규 로컬 저장소.** 세 history book 소스 스냅샷 950 파일, 21 MB (원본 344 MB)
+
+## 근거와 실행 결과
+
+### Step 1.1 — 3 분류 결과
+
+원격 `joonho112/multisiteDGP` `main` @ `5239cf5` 를 스크래치에 클론해 추적 파일 235 개를 `cmp` 로 바이트 비교했다.
+
+| 분류 | 건수 |
+|---|---:|
+| 동일 | **226** |
+| 내용 다름 | 7 |
+| 로컬에 없음 | 2 |
+
+차이 9 건은 **전부 원격이 최신**이었다.
+
+| 파일 | 원격 커밋 | 성격 |
+|---|---|---|
+| `.github/workflows/{R-CMD-check,pkgdown-deploy,test-coverage}.yaml` | `5d4e4fc` | Suggests 9 종 명시 설치 블록 추가 |
+| `CONTRIBUTING.md`, `NEWS.md`, `vignettes/references.bib` | `bf2961e` | **공개 릴리스 정제** — 내부 경로와 내부 도구명 제거 |
+| `.gitignore`, `LICENSE.md` | `bf2961e` | 로컬에 부재 |
+| `.Rbuildignore` | `bf2961e` | 양방향 (union 병합으로 해소) |
+
+`NEWS.md` 의 정제 예:
+
+```diff
+-The release is backed by **three independent external review rounds**   (원격/공개)
++The release is backed by **three independent GPT Codex review rounds**  (로컬/내부)
+
+-remaining polish-level items are tracked in the `v0.2.0` roadmap
++bucket-B items are documented in
++`documentation-updates/working/06-final-punch-list.md` and the `v0.2.0` roadmap
+```
+
+원격 저장소는 커밋 6 건뿐이다 — squash 된 초기 릴리스 1 건, CI 수정 3 건, index 수정 1 건, Initial commit 1 건. **개발 이력 226 건(build-implementation 127 + documentation-updates 99)은 git 밖에서 이뤄졌다.**
+
+### Step 1.2 — 접목 방식 복구
+
+```bash
+git init -b main
+git remote add origin https://github.com/joonho112/multisiteDGP.git
+git fetch origin main
+git reset origin/main          # --mixed: index만 갱신, 작업 트리 무손상
+```
+
+`git status` 가 Step 1.1 의 비교를 **독립적으로 재확인**했다.
+
+```
+ M .Rbuildignore
+ M .github/workflows/R-CMD-check.yaml
+ M .github/workflows/pkgdown-deploy.yaml
+ M .github/workflows/test-coverage.yaml
+ D .gitignore
+ M CONTRIBUTING.md
+ D LICENSE.md
+ M NEWS.md
+ M vignettes/references.bib
+```
+
+이후 9 건을 원격 기준으로 맞추고 `.Rbuildignore` 만 union 병합했다 (로컬 32 행 + `^LICENSE\.md$` = 33 행). 상세는 `decisions/branch-strategy.md`.
+
+### Step 1.3 — 환경
+
+| package | 이전 | 이후 |
+|---|---|---|
+| `copula` | 없음 | **1.1.7** |
+| `hedgehog` | 없음 | **0.2** |
+| `multisitepower` | 없음 | 없음 (CRAN 미배포) |
+| `multisiteDGP` (설치본) | 0.0.0.9000 (stale) | 제거 |
+
+의존성 37 항목 중 35 설치. `R` 항목은 `Depends: R (>= 4.1.0)` 파싱 결과이며 package 가 아니다.
+
+### Step 1.4 — 위생
+
+| 지표 | 전 | 후 |
+|---|---:|---:|
+| 작업 디렉터리 | 462 MB | 417 MB |
+| 최상위 항목 | 37 | 29 |
+
+`R CMD build .` 성공(9.2 MB tarball)으로 `.Rbuildignore` 병합을 검증했다. 상세는 `evidence/phase01/cleanup-manifest.md`.
+
+### Step 1.5 — 베이스라인
+
+| # | 측정 | 값 |
+|---|---|---|
+| 1 | 기본 테스트 | **18.1 s / 0 실패 / 30 skip** |
+| 2 | 확장 테스트 | **112.7 s / 0 실패 / 1 skip** |
+| 3 | check (vignette 제외) | 0E / 0W / 2N |
+| 4 | check (vignette 포함) | **0E / 0W / 1N** |
+| 5 | 커버리지 | **90.89 %** |
+| 6 | lint | **65 위반** |
+| 7 | 성능 | preset 15–37 ms, J 스케일링 평탄, `dependence="rank"` 274 ms |
+
+전체는 `evidence/phase01/baseline-metrics.md`.
+
+## 결정 사항
+
+### PI 결정 (게이트 G-A + Step 1.2 · 1.4)
+
+| ID | 결정 | 되돌릴 수 있나 |
+|---|---|---|
+| A1 | 계획 승인, Step 1.1 부터 실행 | — |
+| A2 | v0.2.0 범위 = 신뢰성만. v1.x 기능은 v0.3 이후 | 예 |
+| A3 | D1 (재현성 계약) 은 Phase 2 측정 후 Phase 3 에서 결정 | — |
+| A4 | 광고-구현 갭은 **광고 축소** 로 처리 | 예 |
+| — | 추적 범위 = 패키지 + `tools/` + `log/` + 개발설정 | 예 |
+| — | history book 은 **private 단일 아카이브 저장소** | 예 |
+| — | zip 삭제, 나머지 빌드 잔재는 `artifacts/` 이동 | 부분 (zip 은 폴더에서 재생성) |
+| — | **원격 push 는 보류** — 전부 로컬 유지 | 예 |
+
+### 실행 중 판단
+
+**복구 방식으로 `reset --mixed` 접목을 택했다.** 대안이었던 ① 원격 클론 후 로컬 자산 복사 — 파일 이동이 많아 사고 여지가 크고, ② `git init` 후 새 initial commit — 원격 이력 6 건과 연결이 끊긴다. 접목은 작업 트리를 건드리지 않으면서 원격 이력을 잇는다.
+
+**세 history book 을 이동하지 않고 복사했다.** 이동하면 계획서와 blueprint 사이의 상대 경로 참조가 전부 깨진다. 21 MB 중복은 그 대가로 싸다.
+
+**`pre-upgrade-baseline` 을 새 커밋이 아니라 `origin/main` 에 붙였다.** 로컬의 복구 전 상태는 커밋이 아니었으므로, 정직한 "before" 지점은 마지막으로 공개된 커밋이다.
+
+## 원장 변경
+
+`defect-ledger.csv` 는 Phase 2 Step 2.9 가 만든다. Phase 1 이 발견한 것은 **원장 후보**로 아래에 남긴다.
+
+| 후보 | 요약 | 영역 | 예상 | 위협 | 담당 |
+|---|---|---|---|---|---|
+| C-01 | **`.lintr` 이 원격에 미추적** — CI lint 가 프로젝트 설정 없이 기본 규칙으로 실행됨 | infra | P0 | G2 · G6 | Step 2.1 |
+| C-02 | **lint 위반 65 건** (로컬 `.lintr` 기준). CI 는 더 많을 것 | infra | P0 | G2 · G6 | Step 2.1 |
+| C-03 | **`multisitepower` 설치 경로가 어디에도 없음** — CRAN 미배포이고 개발 소스 URL 이 `DESCRIPTION`·vignette·정책 어디에도 기록되지 않았는데 `as_multisitepower()` 는 광고됨 | surface | P1 | G5 | Step 2.4 |
+| C-04 | **tarball 9.2 MB, `inst/doc/` 이 13.7 MB** — vignette HTML 에 plot 이 base64 임베드 (`m2` 단독 2.2 MB) | perf | P2 | — | Step 2.8 |
+| C-05 | check NOTE — `Non-standard file/directory found at top level: 'README.Rmd'` | infra | P2 | G6 | Step 2.1 |
+| C-06 | **`layer2-engine-a2.R` 커버리지 84.8 %** (미커버 17 줄). blueprint BR1/V04 의 A2 solver 실패 영역과 겹칠 가능성 | test | P1 | G3 | Step 2.6 |
+
+**원장에 올리지 않은 것** — 확인해보니 결함이 아니었다.
+
+- `theta_G` 검증 오류가 shape 별 필수 파라미터를 이름으로 지목한다 (`theta_G$slant`, `theta_G$rho`, `theta_G$delta`·`$eps`·…). fail-fast 가 의도대로 동작한다.
+- `scenario_audit()` 이 `design_grid()` 출력을 요구하고, 잘못 호출 시 올바른 사용법을 안내한다.
+- `design_grid()` 가 `seed_root` 를 요구한다 — caller 의 전역 RNG 에서 seed 를 만들지 않는다는 정책의 구현이다.
+
+## 미해결 및 이월
+
+| 항목 | 어디로 |
+|---|---|
+| 원격 push (브랜치 3 커밋 + 태그) | **보류** — PI 가 시점을 정한다. 그때까지 로컬에만 존재하므로 디스크 사고 시 복구 수단이 없다 |
+| 아카이브 저장소의 원격 생성 | **보류** — private 단일 저장소로 만들기로 했으나 원격 생성은 push 결정과 함께 |
+| `multisitepower` 설치 | 불가 — C-03 으로 이월 |
+| 세 history book 원본 344 MB | 제자리 유지. 아카이브 스냅샷으로 보존 목적은 달성 |
+
+::: {.callout-warning title="push 보류의 위험"}
+Phase 1 의 산출물이 전부 로컬 디스크에만 있다. git 저장소가 생겼으므로 실수로 인한 파일 손실은 복구 가능하지만, **디스크 자체가 고장나면 복구 수단이 없다.** Phase 2 에 들어가기 전에 push 시점을 정하는 것을 권한다.
+:::
+
+## 다음 Phase 진입 조건
+
+계획서 Ch.5 의 Phase 1 종료 조건 대조.
+
+| # | 조건 | 결과 |
+|---|---|---|
+| 1 | 작업 디렉터리가 git repository 이고 `origin` 연결 | **충족** — `git rev-parse --is-inside-work-tree` → true |
+| 2 | `pre-upgrade-baseline` 태그 존재 | **부분** — 로컬 존재, 원격 push 는 PI 결정으로 보류 |
+| 3 | `git status --porcelain` 비어 있음 | **충족** |
+| 4 | 로컬 vs 원격 차이 판정 문서화 | **충족** — `local-vs-remote-diff.md` |
+| 5 | `copula`, `hedgehog` 설치 | **충족** (1.1.7 / 0.2) |
+| 6 | 저장소 위생 7 항목 처리 | **충족** — `cleanup-manifest.md` |
+| 7 | 베이스라인 측정 7 종 원본 보존 | **충족** — `baseline-raw/` |
+| 8 | Phase 1 브랜치를 `main` 에 병합·push | **미충족 (의도적)** — PI 가 push 를 보류. CI 실행은 Step 2.1 이 로컬 재현 또는 push 후로 조정 |
+
+**판정: Phase 2 진입 가능.** 조건 2 와 8 의 미충족은 PI 의 명시적 결정에 따른 것이며 Phase 2 의 작업을 막지 않는다. 다만 Step 2.1 (CI 포렌식) 은 원래 "브랜치를 push 해 workflow 를 태워 신선한 실패 로그를 얻는" 경로(경로 A)를 권장했으므로, push 없이 진행하려면 **로컬 Docker 재현(경로 B)** 으로 전환해야 한다. Step 2.3 의 Linux 비교에도 어차피 Docker 가 필요하므로 경로 B 로의 전환 비용은 낮다.
