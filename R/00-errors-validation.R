@@ -115,7 +115,7 @@
         "`%s` is optional and is not on CRAN, so it is not a declared Suggests dependency.",
         package
       ),
-      sprintf("Install it from source with `%s`, then try again.", off_cran)
+      sprintf("Use `%s` to install it from source, then try again.", off_cran)
     )
   }
   invisible(TRUE)

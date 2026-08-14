@@ -1,4 +1,4 @@
-adapters-step7-3: ...........................1..............................23456789abcdefghij...k..l........
+adapters-step7-3: ..........................................................123456789abcdefghi......j........
 cookbook-audit-step10-4: ......
 cross-os-reproducibility-policy-step10-7: ...................................
 data-classes: ...............................................................................
@@ -11,12 +11,12 @@ errors-validation-foundation: ..................................................
 gen-effects-gaussian-studentt: .....................................................................
 gen-effects-mixture: ...............................................................................
 gen-effects-pmslab-user-dpm: ..........................................................................................................................
-gen-effects-skewn-ald: .....................................................mnopqrst.................
+gen-effects-skewn-ald: .....................................................klmnopqr.................
 gen-effects: ..........................................................................................
 generated-print-examples-step8-6: ...............
 golden-fixtures-step8-1: ...........................................................................
 golden: ..........
-harness: .....................................
+harness: .............................s.......
 layer2-diagnostics: ...................................................................................................................................................................
 layer2-engine-a1: ................................
 layer2-engine-a2-edges: ........................................................
@@ -37,7 +37,7 @@ print-summary: ....................................................
 property-core-invariants: ..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
 rng-hash-policy: .....................................................................
 scenario-audit-step7-6: ..........................................................................
-snapshot-errors: ..................uv.....wx...
+snapshot-errors: ..................tu.....vw...
 snapshot-print: ........................
 T10-n-min-truncation: .........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
 T11-jebs-I-grid: .....
@@ -69,34 +69,23 @@ wrapper-sim-multisite: .........................................................
 1. T1a Engine A1 Mixture matches JEBS appendix golden fixtures ('test-T1a-jebs-bit-identical.R:3:3') - Reason: Strict canonical_hash equality is Linux x86_64/amd64 baseline only.
 
 ══ Failed ══════════════════════════════════════════════════════════════════════
-── 1. Failure ('test-adapters-step7-3.R:68:5'): adapter public methods work when
-Expected `conditionMessage(err)` to match regexp "Try|Use|Pass|Remove".
-Actual text:
-x | x Package `multisitepower` is required for `as_multisitepower()`.
-  | i `multisitepower` is optional and is not on CRAN, so it is not a declared Suggests dependency.
-  | > Install it from source with `remotes::install_github("jche/multisitepower")`, then try again.
+── 1. Failure ('test-adapters-step7-3.R:143:3'): adapter helper validation expos
+Expected `err` to inherit from "multisitedgp_arg_error".
+Actual class: "subscriptOutOfBoundsError"/"error"/"condition".
 Backtrace:
     ▆
- 1. └─expect_multisitedgp_error(as_multisitepower(dat), "multisitedgp_arg_error") at test-adapters-step7-3.R:68:5
- 2.   └─testthat::expect_match(conditionMessage(err), "Try|Use|Pass|Remove") at tests/testthat/helper-errors.R:6:3
+ 1. └─expect_multisitedgp_error(...) at test-adapters-step7-3.R:143:3
+ 2.   └─testthat::expect_s3_class(err, specific_class) at tests/testthat/helper-errors.R:3:3
 
 ── 2. Failure ('test-adapters-step7-3.R:143:3'): adapter helper validation expos
-Expected `err` to inherit from "multisitedgp_arg_error".
+Expected `err` to inherit from "multisitedgp_error".
 Actual class: "subscriptOutOfBoundsError"/"error"/"condition".
 Backtrace:
     ▆
  1. └─expect_multisitedgp_error(...) at test-adapters-step7-3.R:143:3
- 2.   └─testthat::expect_s3_class(err, specific_class) at tests/testthat/helper-errors.R:3:3
+ 2.   └─testthat::expect_s3_class(err, "multisitedgp_error") at tests/testthat/helper-errors.R:4:3
 
 ── 3. Failure ('test-adapters-step7-3.R:143:3'): adapter helper validation expos
-Expected `err` to inherit from "multisitedgp_error".
-Actual class: "subscriptOutOfBoundsError"/"error"/"condition".
-Backtrace:
-    ▆
- 1. └─expect_multisitedgp_error(...) at test-adapters-step7-3.R:143:3
- 2.   └─testthat::expect_s3_class(err, "multisitedgp_error") at tests/testthat/helper-errors.R:4:3
-
-── 4. Failure ('test-adapters-step7-3.R:143:3'): adapter helper validation expos
 Expected `err` to inherit from "rlang_error".
 Actual class: "subscriptOutOfBoundsError"/"error"/"condition".
 Backtrace:
@@ -104,7 +93,7 @@ Backtrace:
  1. └─expect_multisitedgp_error(...) at test-adapters-step7-3.R:143:3
  2.   └─testthat::expect_s3_class(err, "rlang_error") at tests/testthat/helper-errors.R:5:3
 
-── 5. Failure ('test-adapters-step7-3.R:143:3'): adapter helper validation expos
+── 4. Failure ('test-adapters-step7-3.R:143:3'): adapter helper validation expos
 Expected `conditionMessage(err)` to match regexp "Try|Use|Pass|Remove".
 Actual text:
 x | subscript out of bounds
@@ -113,7 +102,7 @@ Backtrace:
  1. └─expect_multisitedgp_error(...) at test-adapters-step7-3.R:143:3
  2.   └─testthat::expect_match(conditionMessage(err), "Try|Use|Pass|Remove") at tests/testthat/helper-errors.R:6:3
 
-── 6. Failure ('test-adapters-step7-3.R:160:5'): all adapter soft-dependency gua
+── 5. Failure ('test-adapters-step7-3.R:160:5'): all adapter soft-dependency gua
 Expected `err` to inherit from "multisitedgp_arg_error".
 Actual class: "subscriptOutOfBoundsError"/"error"/"condition".
 Backtrace:
@@ -121,7 +110,7 @@ Backtrace:
  1. └─expect_multisitedgp_error(case$call(), "multisitedgp_arg_error") at test-adapters-step7-3.R:160:5
  2.   └─testthat::expect_s3_class(err, specific_class) at tests/testthat/helper-errors.R:3:3
 
-── 7. Failure ('test-adapters-step7-3.R:160:5'): all adapter soft-dependency gua
+── 6. Failure ('test-adapters-step7-3.R:160:5'): all adapter soft-dependency gua
 Expected `err` to inherit from "multisitedgp_error".
 Actual class: "subscriptOutOfBoundsError"/"error"/"condition".
 Backtrace:
@@ -129,7 +118,7 @@ Backtrace:
  1. └─expect_multisitedgp_error(case$call(), "multisitedgp_arg_error") at test-adapters-step7-3.R:160:5
  2.   └─testthat::expect_s3_class(err, "multisitedgp_error") at tests/testthat/helper-errors.R:4:3
 
-── 8. Failure ('test-adapters-step7-3.R:160:5'): all adapter soft-dependency gua
+── 7. Failure ('test-adapters-step7-3.R:160:5'): all adapter soft-dependency gua
 Expected `err` to inherit from "rlang_error".
 Actual class: "subscriptOutOfBoundsError"/"error"/"condition".
 Backtrace:
@@ -137,7 +126,7 @@ Backtrace:
  1. └─expect_multisitedgp_error(case$call(), "multisitedgp_arg_error") at test-adapters-step7-3.R:160:5
  2.   └─testthat::expect_s3_class(err, "rlang_error") at tests/testthat/helper-errors.R:5:3
 
-── 9. Failure ('test-adapters-step7-3.R:160:5'): all adapter soft-dependency gua
+── 8. Failure ('test-adapters-step7-3.R:160:5'): all adapter soft-dependency gua
 Expected `conditionMessage(err)` to match regexp "Try|Use|Pass|Remove".
 Actual text:
 x | subscript out of bounds
@@ -146,11 +135,16 @@ Backtrace:
  1. └─expect_multisitedgp_error(case$call(), "multisitedgp_arg_error") at test-adapters-step7-3.R:160:5
  2.   └─testthat::expect_match(conditionMessage(err), "Try|Use|Pass|Remove") at tests/testthat/helper-errors.R:6:3
 
-── 10. Failure ('test-adapters-step7-3.R:161:5'): all adapter soft-dependency gu
+── 9. Failure ('test-adapters-step7-3.R:161:5'): all adapter soft-dependency gua
 Expected `conditionMessage(err)` to match string "Package `metafor` is required".
 Actual text:
 x | subscript out of bounds
-  ... and 23 more
+
+── 10. Failure ('test-adapters-step7-3.R:162:5'): all adapter soft-dependency gu
+Expected `conditionMessage(err)` to match string "`as_metafor()`".
+Actual text:
+x | subscript out of bounds
+  ... and 22 more
 
 
 Maximum number of 10 failures reached, some test results may be missing.
