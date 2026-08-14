@@ -9,7 +9,7 @@
 <meta name="author" content="Claude Opus 5">
 <meta name="dcterms.date" content="2026-08-14">
 
-<title>Phase 4 — 재현성 계약 재구축 (Step 4.1b 완료)</title>
+<title>Phase 4 — 재현성 계약 재구축 (Step 4.1a·4.1b 완료)</title>
 <style>
 
 code{white-space: pre-wrap;}
@@ -2359,10 +2359,19 @@ window.Quarto = {
   <li><a href="#플랫폼-판정-일치-확인" id="toc-플랫폼-판정-일치-확인" class="nav-link" data-scroll-target="#플랫폼-판정-일치-확인"><span class="header-section-number">4.4</span> 플랫폼 판정 일치 확인</a></li>
   <li><a href="#d-022-경고-재설계" id="toc-d-022-경고-재설계" class="nav-link" data-scroll-target="#d-022-경고-재설계"><span class="header-section-number">4.5</span> D-022 — 경고 재설계</a></li>
   </ul></li>
-  <li><a href="#결정-사항" id="toc-결정-사항" class="nav-link" data-scroll-target="#결정-사항"><span class="header-section-number">5</span> 결정 사항</a></li>
-  <li><a href="#원장-변경" id="toc-원장-변경" class="nav-link" data-scroll-target="#원장-변경"><span class="header-section-number">6</span> 원장 변경</a></li>
-  <li><a href="#미해결-및-이월" id="toc-미해결-및-이월" class="nav-link" data-scroll-target="#미해결-및-이월"><span class="header-section-number">7</span> 미해결 및 이월</a></li>
-  <li><a href="#다음-phase-진입-조건" id="toc-다음-phase-진입-조건" class="nav-link" data-scroll-target="#다음-phase-진입-조건"><span class="header-section-number">8</span> 다음 Phase 진입 조건</a></li>
+  <li><a href="#step-4.1a-해시-계약-cross-platform-성립" id="toc-step-4.1a-해시-계약-cross-platform-성립" class="nav-link" data-scroll-target="#step-4.1a-해시-계약-cross-platform-성립"><span class="header-section-number">5</span> Step 4.1a — 해시 계약 (cross-platform 성립)</a>
+  <ul class="collapse">
+  <li><a href="#o4-를-먼저-시도했고-해시를-고치지-못했다" id="toc-o4-를-먼저-시도했고-해시를-고치지-못했다" class="nav-link" data-scroll-target="#o4-를-먼저-시도했고-해시를-고치지-못했다"><span class="header-section-number">5.1</span> O4 를 먼저 시도했고, 해시를 고치지 못했다</a></li>
+  <li><a href="#진짜-원인은-파생-진단이었다" id="toc-진짜-원인은-파생-진단이었다" class="nav-link" data-scroll-target="#진짜-원인은-파생-진단이었다"><span class="header-section-number">5.2</span> 진짜 원인은 파생 진단이었다</a></li>
+  <li><a href="#o2-해시-스키마-v2" id="toc-o2-해시-스키마-v2" class="nav-link" data-scroll-target="#o2-해시-스키마-v2"><span class="header-section-number">5.3</span> O2 — 해시 스키마 v2</a></li>
+  <li><a href="#linux-검증-계약-성립" id="toc-linux-검증-계약-성립" class="nav-link" data-scroll-target="#linux-검증-계약-성립"><span class="header-section-number">5.4</span> Linux 검증 — 계약 성립</a></li>
+  <li><a href="#수치-출력은-바뀌지-않았다" id="toc-수치-출력은-바뀌지-않았다" class="nav-link" data-scroll-target="#수치-출력은-바뀌지-않았다"><span class="header-section-number">5.5</span> 수치 출력은 바뀌지 않았다</a></li>
+  <li><a href="#부수-수정" id="toc-부수-수정" class="nav-link" data-scroll-target="#부수-수정"><span class="header-section-number">5.6</span> 부수 수정</a></li>
+  </ul></li>
+  <li><a href="#결정-사항" id="toc-결정-사항" class="nav-link" data-scroll-target="#결정-사항"><span class="header-section-number">6</span> 결정 사항</a></li>
+  <li><a href="#원장-변경" id="toc-원장-변경" class="nav-link" data-scroll-target="#원장-변경"><span class="header-section-number">7</span> 원장 변경</a></li>
+  <li><a href="#미해결-및-이월" id="toc-미해결-및-이월" class="nav-link" data-scroll-target="#미해결-및-이월"><span class="header-section-number">8</span> 미해결 및 이월</a></li>
+  <li><a href="#다음-phase-진입-조건" id="toc-다음-phase-진입-조건" class="nav-link" data-scroll-target="#다음-phase-진입-조건"><span class="header-section-number">9</span> 다음 Phase 진입 조건</a></li>
   </ul>
 </nav>
 </div>
@@ -2370,8 +2379,8 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Phase 4 — 재현성 계약 재구축 (Step 4.1b 완료)</h1>
-<p class="subtitle lead">post-solve tolerance 를 잔차 평가 정밀도에서 유도 — solver 판정의 플랫폼 의존 제거</p>
+<h1 class="title">Phase 4 — 재현성 계약 재구축 (Step 4.1a·4.1b 완료)</h1>
+<p class="subtitle lead">해시 스키마 v2 로 cross-platform 계약 성립 · post-solve tolerance 를 잔차 평가 정밀도에서 유도</p>
 </div>
 
 
@@ -2413,9 +2422,10 @@ window.Quarto = {
 <p>Phase 4 는 결정 D6 에 따라 <strong>두 갈래</strong>로 나뉘었다.</p>
 <ul>
 <li><strong>Step 4.1b — solver 견고화</strong>: <strong>완료</strong></li>
-<li><strong>Step 4.1a — 해시 계약</strong>: 미착수</li>
+<li><strong>Step 4.1a — 해시 계약</strong>: <strong>완료</strong></li>
+<li>Step 4.2–4.7 (정책 문서 개정 등): 미착수</li>
 </ul>
-<p>D6 은 “solver 를 먼저 안정화하면 해시 드리프트도 줄어들 수 있으므로 순서가 맞다” 는 근거로 이 순서를 정했다. 결과적으로 <strong>줄어들지 않았다</strong> — 아래 §5 참조. 해시 계약은 별도로 처리해야 한다.</p>
+<p>D6 은 “solver 를 먼저 안정화하면 해시 드리프트도 줄어들 수 있으므로 순서가 맞다” 는 근거로 이 순서를 정했다. 그 가정은 <strong>성립하지 않았지만</strong> 순서 자체는 유용했다 — solver 를 먼저 안정화한 덕에 4.1a 에서 양자화가 판정을 흔들 위험이 없었다.</p>
 </div>
 </div>
 <section id="요약" class="level2" data-number="1">
@@ -2423,10 +2433,18 @@ window.Quarto = {
 <p>engine A2 의 post-solve 검증 tolerance 를 고정값 <code>1e-6</code> 에서 <strong>잔차를 실제로 평가할 수 있는 정밀도에서 유도한 값</strong>으로 바꿨다. 결정 D7(적응적 tolerance)의 구현이며, PI 가 권고안(실현 가능 영역 축소) 대신 이 방향을 택했을 때 함께 못박은 보완 방침 — <strong>tolerance 를 손으로 고르지 않는다</strong> — 을 지켰다.</p>
 <p>노이즈 바닥은 두 번의 상쇄에서 <strong>해석적으로 유도</strong>했고 24 셀 격자로 검증했다 (경험/예측 0.73–3.05 배). 24 셀 중 <strong>6 셀에서 기존 고정 tolerance 가 노이즈 바닥보다 낮았다</strong> — 존재하지 않는 정밀도를 요구하고 있었고, 그것이 판정이 플랫폼마다 갈린 이유다.</p>
 <p><strong>Linux CI 검증 결과 solver 관련 실패가 0 이 되었다.</strong> D-024 와 D-022 가 함께 닫혔다.</p>
+<p>이어서 Step 4.1a 가 해시 계약을 세웠다. D1 대로 O4(solver 출력 양자화)를 먼저 시도했으나 <code>n_j</code> 정수 반올림 때문에 해시에 무영향이었고, 진짜 원인은 <strong>해시 payload 에 실린 파생 진단 스칼라</strong>였다. O2(유효숫자 9 자리 정규화)로 해시 스키마를 v2 로 올려 <strong>macOS 와 Linux 가 동일한 해시를 낸다.</strong> <code>extended-tests</code> 가 이번 업그레이드 최초로 green 이 되었고 R-CMD-check 은 0/5 에서 4/5 cell green 이 되었다.</p>
+<p><strong>수치 출력은 바뀌지 않았다</strong> — golden fixture 9 개 전부 컬럼값이 비트 동일하고, JEBS appendix fixture 4 개는 바이트 동일이다.</p>
 </section>
 <section id="step-실행-기록" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="step-실행-기록"><span class="header-section-number">2</span> Step 실행 기록</h2>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Step</th>
@@ -2467,14 +2485,50 @@ window.Quarto = {
 <td style="text-align: right;">~35 분</td>
 </tr>
 <tr class="even">
-<td><strong>4.1a</strong></td>
-<td><strong>해시 계약 (O4 조사 → O2)</strong></td>
-<td><strong>미착수</strong></td>
+<td>4.1a-①</td>
+<td>O4 solver 출력 양자화 구현 및 평가</td>
+<td>done</td>
+<td style="text-align: right;">~25 분</td>
+</tr>
+<tr class="odd">
+<td>4.1a-②</td>
+<td>드리프트 원인 재특정 (프로브)</td>
+<td>done</td>
+<td style="text-align: right;">~30 분</td>
+</tr>
+<tr class="even">
+<td>4.1a-③</td>
+<td>O2 해시 스키마 v2 구현</td>
+<td>done</td>
+<td style="text-align: right;">~20 분</td>
+</tr>
+<tr class="odd">
+<td>4.1a-④</td>
+<td>fixture · print example · JEBS manifest 재생성</td>
+<td>done</td>
+<td style="text-align: right;">~25 분</td>
+</tr>
+<tr class="even">
+<td>4.1a-⑤</td>
+<td>Linux CI 구성요소별 검증</td>
+<td>done</td>
+<td style="text-align: right;">~30 분</td>
+</tr>
+<tr class="odd">
+<td>4.2–4.5</td>
+<td>아티팩트 재생성</td>
+<td>done (4.1a 에 포함)</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr class="even">
+<td>4.6</td>
+<td>재현성 테스트 재작성</td>
+<td>부분</td>
 <td style="text-align: right;">—</td>
 </tr>
 <tr class="odd">
-<td>4.2–4.7</td>
-<td>fixture · snapshot 재생성, 정책 문서</td>
+<td>4.7</td>
+<td>정책 문서 개정</td>
 <td>미착수</td>
 <td style="text-align: right;">—</td>
 </tr>
@@ -2708,15 +2762,150 @@ i At `cv = 0.001` the truncated-Gamma moment evaluation cancels to about
 </table>
 </section>
 </section>
-<section id="결정-사항" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="결정-사항"><span class="header-section-number">5</span> 결정 사항</h2>
+<section id="step-4.1a-해시-계약-cross-platform-성립" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="step-4.1a-해시-계약-cross-platform-성립"><span class="header-section-number">5</span> Step 4.1a — 해시 계약 (cross-platform 성립)</h2>
+<section id="o4-를-먼저-시도했고-해시를-고치지-못했다" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="o4-를-먼저-시도했고-해시를-고치지-못했다"><span class="header-section-number">5.1</span> O4 를 먼저 시도했고, 해시를 고치지 못했다</h3>
+<p>D1 대로 O4(solver 출력 양자화)를 먼저 구현했다. <code>.fit_trunc_gamma_start()</code> 가 해를 유효숫자 10 자리로 반올림하고, 시작점 선택은 잔차 노름을 6 자리로 비교해 libm 차이가 근소한 우열을 뒤집지 못하게 했다. 결과적으로 5 개 시작점이 <strong>완전히 동일한</strong> <code>(alpha, beta)</code> 에 도달한다 — 5,230 ULP → <strong>0 ULP</strong>.</p>
+<p><strong>그런데 해시가 하나도 바뀌지 않았다.</strong> 이유는 <code>gen_site_sizes()</code> 가 <code>n_j</code> 를 <strong>정수로 반올림</strong>하기 때문이다. alpha 의 1e-11 상대 변화는 정수 경계를 거의 넘지 않으므로 solver 의 불확정성은 이미 흡수되고 있었다.</p>
+<p>즉 <strong>O4 는 위생상 좋지만 해시 드리프트의 원인이 아니었다.</strong></p>
+</section>
+<section id="진짜-원인은-파생-진단이었다" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="진짜-원인은-파생-진단이었다"><span class="header-section-number">5.2</span> 진짜 원인은 파생 진단이었다</h3>
+<p>해시 payload 에는 데이터 컬럼 7 개 외에 파생 진단 스칼라 8 개(<code>I_hat</code>, <code>R_hat</code>, <code>rho_*</code>, <code>sigma_tau_*</code>)가 들어간다. 이들은 <code>cor()</code>·<code>sd()</code>·<code>mean()</code> 으로 계산되며 누산 순서가 플랫폼마다 다르다.</p>
+<p><strong>한 머신 안에서도 보인다.</strong> covariate 없는 설계에서 <code>rho_P_marginal</code> 과 <code>rho_P_residual</code> 은 수학적으로 동일한데:</p>
+<pre><code>rho_P_marginal   -0.18428017280171624
+rho_P_residual   -0.1842801728017163</code></pre>
+</section>
+<section id="o2-해시-스키마-v2" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="o2-해시-스키마-v2"><span class="header-section-number">5.3</span> O2 — 해시 스키마 v2</h3>
+<p><code>.canonicalize_for_hash()</code> 가 모든 double 을 <strong>유효숫자 9 자리</strong>로 정규화한다. 스키마 버전을 <code>multisiteDGP-canonical-hash-v2</code> 로 올렸다.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>검증</th>
+<th>결과</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2 ULP 섭동</td>
+<td>해시 불변</td>
+</tr>
+<tr class="even">
+<td>1e-8 상대 변화</td>
+<td>해시 변경 (검출력 유지)</td>
+</tr>
+<tr class="odd">
+<td>정수·논리 컬럼</td>
+<td>타입 보존</td>
+</tr>
+<tr class="even">
+<td>same-machine 재현성</td>
+<td>성립</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-note callout-titled" title="구현 중 놓친 경로 — 프로브가 잡았다">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>구현 중 놓친 경로 — 프로브가 잡았다
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>첫 구현은 데이터 컬럼만 반올림하고 진단은 그대로 두었다. <code>.canonicalize_diagnostics()</code> 가 <code>lapply(..., unname)</code> 으로 직접 만들어 <code>.canonicalize_for_hash()</code> 를 <strong>거치지 않기</strong> 때문이다. 하필 진단이 드리프트가 심한 쪽이라 Linux 는 여전히 실패했다.</p>
+<p>임시 프로브 테스트를 넣어 payload 구성요소별 digest 를 CI 로그에 찍게 하니 즉시 드러났다 — 데이터는 반올림돼 있는데(<code>0.034188034200000002</code>) 진단은 원시값이었다. 두 번째 경로에도 같은 반올림을 적용해 해소했다.</p>
+</div>
+</div>
+</section>
+<section id="linux-검증-계약-성립" class="level3" data-number="5.4">
+<h3 data-number="5.4" class="anchored" data-anchor-id="linux-검증-계약-성립"><span class="header-section-number">5.4</span> Linux 검증 — 계약 성립</h3>
+<p><code>extended-tests</code> Linux run <code>31828735201</code> = <strong>success.</strong> 이번 업그레이드 최초 green 이다. 프로브가 구성요소별로 확인했다.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>macOS <code>aarch64-apple-darwin23</code></th>
+<th>Linux <code>x86_64-pc-linux-gnu</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>full_hash</code></td>
+<td><code>69100f5dcf405f4f</code></td>
+<td><strong>동일</strong></td>
+</tr>
+<tr class="even">
+<td><code>data_only</code></td>
+<td><code>8a357e803aeb2ab5</code></td>
+<td><strong>동일</strong></td>
+</tr>
+<tr class="odd">
+<td><code>diag_only</code></td>
+<td><code>f51618461965e30b</code></td>
+<td><strong>동일</strong></td>
+</tr>
+<tr class="even">
+<td><code>manifest</code></td>
+<td><code>609fe1356c6e9d34</code></td>
+<td><strong>동일</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>“같은 design + 같은 seed → 어디서나 같은 해시” 가 실제로 성립한다.</strong></p>
+</section>
+<section id="수치-출력은-바뀌지-않았다" class="level3" data-number="5.5">
+<h3 data-number="5.5" class="anchored" data-anchor-id="수치-출력은-바뀌지-않았다"><span class="header-section-number">5.5</span> 수치 출력은 바뀌지 않았다</h3>
+<p>golden fixture 9 개 전부 <strong>컬럼값이 비트 동일</strong>하고 진단도 동일하다. 바뀐 것은 저장된 <code>provenance</code> 해시뿐이다. JEBS appendix fixture 4 개는 provenance 가 없는 순수 <code>data.frame</code> 이라 <strong>바이트 동일</strong> — <strong>JEBS 재현 증거가 그대로 보존된다.</strong></p>
+</section>
+<section id="부수-수정" class="level3" data-number="5.6">
+<h3 data-number="5.6" class="anchored" data-anchor-id="부수-수정"><span class="header-section-number">5.6</span> 부수 수정</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>ID</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>D-007</strong></td>
+<td><code>test-golden.R</code> 의 바이너리 비교가 cross-OS 면제를 무력화하던 문제 — 해시가 플랫폼 간 일치하므로 면제할 것이 없어져 자연 해소</td>
+</tr>
+<tr class="even">
+<td><strong>D-026</strong></td>
+<td>print-example 생성기가 패키지 버전을 마스킹하지 않아 재생성마다 테스트가 깨지던 문제. 테스트와 같은 두 규칙으로 맞춤</td>
+</tr>
+<tr class="odd">
+<td><strong>D-027</strong></td>
+<td><code>test-coverage</code> workflow 에 <code>xml2</code> 누락 — 커버리지 92.86% 로 게이트를 통과한 직후 <code>to_cobertura()</code> 에서 실패하던 것</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="결정-사항" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="결정-사항"><span class="header-section-number">6</span> 결정 사항</h2>
 <p><strong>PI 의 선택(적응적 tolerance)을 그대로 따르되 약점을 보완했다.</strong> 권고안은 실현 가능 영역 축소였고, PI 는 기존 설계가 계속 동작하는 쪽을 택했다. 그때 지적한 약점은 “어느 수준까지 느슨해도 되는지의 근거” 였고, 이번 Step 이 그것을 상쇄 분석 + 24 셀 실측으로 대체했다. 결과적으로 <strong>“느슨하게 했다” 가 아니라 “평가 가능한 정밀도만큼만 요구한다”</strong> 가 되었다.</p>
 <p><strong>노이즈 바닥을 오류 메시지에 조건부로만 넣었다.</strong> 처음에는 항상 출력했는데, 그 값이 solver 의 <code>alpha</code> 에서 나오므로 3 자리로 반올림해도 플랫폼 의존이다. Linux CI 가 E15 snapshot 실패로 이것을 잡았다 — <strong>적응적 tolerance 가 없애려던 문제를 메시지가 다시 들여온 셈</strong>이었다. 이제 바닥이 실제로 tolerance 를 넓혔을 때만 언급하고, 그 외에는 v0.1.1 과 동일한 문구를 쓴다. 결과적으로 E15 snapshot 은 변경되지 않았다.</p>
 <p><strong>상수 두 개(8, 256)는 실측에서 정했다.</strong> 8 은 관측된 경험/예측 비율 최대 3.05 에 약 3 배 여유를 두고, 256 은 상쇄가 멈춘 영역의 관측 바닥 ~2e-14 를 덮는다. 근거를 코드 주석과 이 로그에 남겼다.</p>
 </section>
-<section id="원장-변경" class="level2" data-number="6">
-<h2 data-number="6" class="anchored" data-anchor-id="원장-변경"><span class="header-section-number">6</span> 원장 변경</h2>
+<section id="원장-변경" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="원장-변경"><span class="header-section-number">7</span> 원장 변경</h2>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>ID</th>
@@ -2726,6 +2915,18 @@ i At `cv = 0.001` the truncated-Gamma moment evaluation cancels to about
 </tr>
 </thead>
 <tbody>
+<tr class="odd">
+<td><strong>D-002</strong></td>
+<td><strong><code>canonical_hash</code> 플랫폼 불일치</strong></td>
+<td>open</td>
+<td><strong>fixed</strong></td>
+</tr>
+<tr class="even">
+<td><strong>D-007</strong></td>
+<td><code>test-golden.R</code> 이 cross-OS 면제 무력화</td>
+<td>open</td>
+<td><strong>fixed</strong></td>
+</tr>
 <tr class="odd">
 <td>D-022</td>
 <td>A2 조건수 경고 임계값 불일치</td>
@@ -2738,12 +2939,24 @@ i At `cv = 0.001` the truncated-Gamma moment evaluation cancels to about
 <td>open</td>
 <td><strong>fixed</strong></td>
 </tr>
+<tr class="odd">
+<td><strong>D-026</strong></td>
+<td>print-example 생성기 버전 마스킹 누락</td>
+<td>—</td>
+<td><strong>신규 → fixed</strong></td>
+</tr>
+<tr class="even">
+<td><strong>D-027</strong></td>
+<td><code>test-coverage</code> 의 <code>xml2</code> 누락</td>
+<td>—</td>
+<td><strong>신규 → fixed</strong></td>
+</tr>
 </tbody>
 </table>
-<p>원장 25 행 — P0 6 해소 / 6 잔여, P1 3 해소 / 3 잔여, P2 7 잔여.</p>
+<p>원장 27 행.</p>
 </section>
-<section id="미해결-및-이월" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="미해결-및-이월"><span class="header-section-number">7</span> 미해결 및 이월</h2>
+<section id="미해결-및-이월" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="미해결-및-이월"><span class="header-section-number">8</span> 미해결 및 이월</h2>
 <div class="callout callout-style-default callout-warning callout-titled" title="D6 의 가정은 성립하지 않았다">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -2802,6 +3015,10 @@ i At `cv = 0.001` the truncated-Gamma moment evaluation cancels to about
 </div>
 </div>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>항목</th>
@@ -2810,12 +3027,20 @@ i At `cv = 0.001` the truncated-Gamma moment evaluation cancels to about
 </thead>
 <tbody>
 <tr class="odd">
-<td>Step 4.1a 해시 계약</td>
-<td>미착수 — 다음 작업</td>
+<td>Step 4.2–4.5 fixture · snapshot 재생성</td>
+<td><strong>완료</strong> (Step 4.1a 중 수행)</td>
 </tr>
 <tr class="even">
-<td>Step 4.2–4.7 (fixture · snapshot 재생성, 정책 문서)</td>
-<td>미착수</td>
+<td>Step 4.6 재현성 테스트 재작성</td>
+<td>부분 — T1a 게이트 제거 필요</td>
+</tr>
+<tr class="odd">
+<td>Step 4.7 정책 문서 개정</td>
+<td><strong>미착수</strong> — <code>cross-os-reproducibility-policy.md</code> 가 아직 Linux-authoritative 를 규정</td>
+</tr>
+<tr class="even">
+<td>D-006 lint 위반 76 건</td>
+<td>Phase 6</td>
 </tr>
 <tr class="odd">
 <td>Phase 5 Step 5.6 (회귀 테스트, 확장 스위트 재정의)</td>
@@ -2828,8 +3053,8 @@ i At `cv = 0.001` the truncated-Gamma moment evaluation cancels to about
 </tbody>
 </table>
 </section>
-<section id="다음-phase-진입-조건" class="level2" data-number="8">
-<h2 data-number="8" class="anchored" data-anchor-id="다음-phase-진입-조건"><span class="header-section-number">8</span> 다음 Phase 진입 조건</h2>
+<section id="다음-phase-진입-조건" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="다음-phase-진입-조건"><span class="header-section-number">9</span> 다음 Phase 진입 조건</h2>
 <p>Phase 4 는 미완이다. Step 4.1b 만 종료 조건을 만족한다.</p>
 <table class="caption-top table">
 <colgroup>
@@ -2857,15 +3082,23 @@ i At `cv = 0.001` the truncated-Gamma moment evaluation cancels to about
 </tr>
 <tr class="even">
 <td>D1 결정 구현</td>
-<td>미충족 — Step 4.1a</td>
+<td><strong>충족</strong> — 해시 스키마 v2</td>
 </tr>
 <tr class="odd">
-<td>fixture · snapshot Linux 베이스라인</td>
-<td>미충족 — Step 4.4 · 4.5</td>
+<td>fixture · snapshot 재생성</td>
+<td><strong>충족</strong> — 9 fixture + print example + JEBS manifest</td>
+</tr>
+<tr class="even">
+<td>해시가 플랫폼 간 일치</td>
+<td><strong>충족</strong> — Linux CI 로 구성요소별 확인</td>
+</tr>
+<tr class="odd">
+<td>JEBS 재현 증거 보존</td>
+<td><strong>충족</strong> — appendix fixture 4 개 바이트 동일</td>
 </tr>
 <tr class="even">
 <td>T1a 가 실제로 실행되어 통과</td>
-<td>미충족</td>
+<td>미충족 — 게이트 제거가 남음</td>
 </tr>
 <tr class="odd">
 <td>정책 문서 개정</td>
