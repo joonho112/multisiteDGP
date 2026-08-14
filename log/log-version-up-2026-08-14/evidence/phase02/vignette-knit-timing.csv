@@ -1,0 +1,17 @@
+"vignette","elapsed_s","ok"
+"a8-cookbook.Rmd",3.8,TRUE
+"a6-case-study-multisite.Rmd",3.6,TRUE
+"a3-diagnostics-in-practice.Rmd",2.8,TRUE
+"a1-getting-started.Rmd",2.2,TRUE
+"m2-g-distribution-catalog.Rmd",2.1,TRUE
+"m7-reproducibility-provenance.Rmd",1.3,TRUE
+"a5-calibrating-real-data.Rmd",1.2,TRUE
+"a7-case-study-meta-analysis.Rmd",1.2,TRUE
+"a2-choosing-a-preset.Rmd",1.1,TRUE
+"m1-statistical-dgp.Rmd",1.1,TRUE
+"m3-margin-se-models.Rmd",1,TRUE
+"m4-precision-dependence-theory.Rmd",1,TRUE
+"a4-covariates-precision-dependence.Rmd",0.9,TRUE
+"m5-custom-g-distributions.Rmd",0.9,TRUE
+"m8-migration-from-siteBayes2.Rmd",0.9,TRUE
+"m6-adapters-downstream.Rmd",0.8,TRUE

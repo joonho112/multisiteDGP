@@ -22,8 +22,17 @@
 #' @details
 #' \strong{Soft-dependency guard.} Each adapter checks that the target
 #' package is installed and aborts with a friendly install hint if not.
-#' \pkg{metafor}, \pkg{baggr}, and \pkg{multisitepower} are Suggests, not
-#' Imports — they are not required to use multisiteDGP itself.
+#' \pkg{metafor} and \pkg{baggr} are Suggests, not Imports — they are not
+#' required to use multisiteDGP itself, and `install.packages()` reaches
+#' both.
+#'
+#' \pkg{multisitepower} is different. It is not on CRAN — it lives at
+#' \url{https://github.com/jche/multisitepower} — so it is deliberately
+#' \emph{not} declared in Suggests: a Suggests entry that no repository
+#' can resolve breaks dependency solvers on some platforms. Install it
+#' yourself before calling `as_multisitepower()`:
+#'
+#' \preformatted{remotes::install_github("jche/multisitepower")}
 #'
 #' \strong{Reserved column-name protection.} If your simulation includes
 #' covariate columns that collide with the target package's reserved
@@ -116,7 +125,7 @@ as_baggr.multisitedgp_data <- function(x, ..., include_truth = FALSE) {
   .as_baggr_rename(x, include_truth = include_truth)
 }
 
-#' @describeIn adapters Convert to \pkg{multisitepower}'s `(site, estimate, se, n)` column convention. `site <- site_index`, `estimate <- tau_j_hat`, `se <- se_j`, `n <- n_j` (when present). Use as input to `multisitepower::power_calc()`. Soft-dep guard on \pkg{multisitepower}.
+#' @describeIn adapters Convert to \pkg{multisitepower}'s `(site, estimate, se, n)` column convention. `site <- site_index`, `estimate <- tau_j_hat`, `se <- se_j`, `n <- n_j` (when present). Use as input to `multisitepower::power_calc()`. Requires `remotes::install_github("jche/multisitepower")` — the package is not on CRAN and is not a declared Suggests dependency.
 #' @export
 as_multisitepower <- function(x, ...) {
   UseMethod("as_multisitepower")

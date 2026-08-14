@@ -201,14 +201,14 @@ constructor contract;
 \code{\link{presets}} for defensible starting designs;
 \code{\link{design_grid}} for scenario-grid sweeps.
 
-Other family-design: 
-\code{\link{as_tibble.multisitedgp_data}()},
-\code{\link{design_grid}()},
-\code{\link{is_multisitedgp_data}()},
-\code{\link{is_multisitedgp_design}()},
-\code{\link{print.multisitedgp_data}()},
-\code{\link{summary.multisitedgp_data}()},
-\code{\link{update_multisitedgp_design}()},
-\code{\link{validate_multisitedgp_design}()}
+Other family-design:
+\code{\link[=as_tibble.multisitedgp_data]{as_tibble.multisitedgp_data()}},
+\code{\link[=design_grid]{design_grid()}},
+\code{\link[=is_multisitedgp_data]{is_multisitedgp_data()}},
+\code{\link[=is_multisitedgp_design]{is_multisitedgp_design()}},
+\code{\link[=print.multisitedgp_data]{print.multisitedgp_data()}},
+\code{\link[=summary.multisitedgp_data]{summary.multisitedgp_data()}},
+\code{\link[=update_multisitedgp_design]{update_multisitedgp_design()}},
+\code{\link[=validate_multisitedgp_design]{validate_multisitedgp_design()}}
 }
 \concept{family-design}

@@ -48,14 +48,14 @@ attributes(plain)   # only standard tibble attributes
 \code{\link{adapters}} for downstream package-specific
 coercions (\code{as_metafor}, \code{as_baggr}, \code{as_multisitepower}).
 
-Other family-design: 
-\code{\link{design_grid}()},
-\code{\link{is_multisitedgp_data}()},
-\code{\link{is_multisitedgp_design}()},
-\code{\link{multisitedgp_design}()},
-\code{\link{print.multisitedgp_data}()},
-\code{\link{summary.multisitedgp_data}()},
-\code{\link{update_multisitedgp_design}()},
-\code{\link{validate_multisitedgp_design}()}
+Other family-design:
+\code{\link[=design_grid]{design_grid()}},
+\code{\link[=is_multisitedgp_data]{is_multisitedgp_data()}},
+\code{\link[=is_multisitedgp_design]{is_multisitedgp_design()}},
+\code{\link[=multisitedgp_design]{multisitedgp_design()}},
+\code{\link[=print.multisitedgp_data]{print.multisitedgp_data()}},
+\code{\link[=summary.multisitedgp_data]{summary.multisitedgp_data()}},
+\code{\link[=update_multisitedgp_design]{update_multisitedgp_design()}},
+\code{\link[=validate_multisitedgp_design]{validate_multisitedgp_design()}}
 }
 \concept{family-design}

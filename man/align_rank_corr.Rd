@@ -123,8 +123,8 @@ four-layer pipeline;
 the \href{../articles/m4-precision-dependence-theory.html}{M4
 Precision dependence theory} vignette.
 
-Other family-dependence: 
-\code{\link{align_copula_corr}()},
-\code{\link{align_hybrid_corr}()}
+Other family-dependence:
+\code{\link[=align_copula_corr]{align_copula_corr()}},
+\code{\link[=align_hybrid_corr]{align_hybrid_corr()}}
 }
 \concept{family-dependence}

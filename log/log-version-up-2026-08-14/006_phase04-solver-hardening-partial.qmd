@@ -1,0 +1,287 @@
+---
+title: "Phase 4 — 재현성 계약 재구축 (Step 4.1a·4.1b 완료)"
+subtitle: "해시 스키마 v2 로 cross-platform 계약 성립 · post-solve tolerance 를 잔차 평가 정밀도에서 유도"
+author: "Claude Opus 5"
+date: "2026-08-14"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+::: {.callout-important title="부분 완료"}
+Phase 4 는 결정 D6 에 따라 **두 갈래**로 나뉘었다.
+
+- **Step 4.1b — solver 견고화**: **완료**
+- **Step 4.1a — 해시 계약**: **완료**
+- Step 4.2–4.7 (정책 문서 개정 등): 미착수
+
+D6 은 "solver 를 먼저 안정화하면 해시 드리프트도 줄어들 수 있으므로 순서가 맞다" 는 근거로 이 순서를 정했다. 그 가정은 **성립하지 않았지만** 순서 자체는 유용했다 — solver 를 먼저 안정화한 덕에 4.1a 에서 양자화가 판정을 흔들 위험이 없었다.
+:::
+
+## 요약
+
+engine A2 의 post-solve 검증 tolerance 를 고정값 `1e-6` 에서 **잔차를 실제로 평가할 수 있는 정밀도에서 유도한 값**으로 바꿨다. 결정 D7(적응적 tolerance)의 구현이며, PI 가 권고안(실현 가능 영역 축소) 대신 이 방향을 택했을 때 함께 못박은 보완 방침 — **tolerance 를 손으로 고르지 않는다** — 을 지켰다.
+
+노이즈 바닥은 두 번의 상쇄에서 **해석적으로 유도**했고 24 셀 격자로 검증했다 (경험/예측 0.73–3.05 배). 24 셀 중 **6 셀에서 기존 고정 tolerance 가 노이즈 바닥보다 낮았다** — 존재하지 않는 정밀도를 요구하고 있었고, 그것이 판정이 플랫폼마다 갈린 이유다.
+
+**Linux CI 검증 결과 solver 관련 실패가 0 이 되었다.** D-024 와 D-022 가 함께 닫혔다.
+
+이어서 Step 4.1a 가 해시 계약을 세웠다. D1 대로 O4(solver 출력 양자화)를 먼저 시도했으나 `n_j` 정수 반올림 때문에 해시에 무영향이었고, 진짜 원인은 **해시 payload 에 실린 파생 진단 스칼라**였다. O2(유효숫자 9 자리 정규화)로 해시 스키마를 v2 로 올려 **macOS 와 Linux 가 동일한 해시를 낸다.** `extended-tests` 가 이번 업그레이드 최초로 green 이 되었고 R-CMD-check 은 0/5 에서 4/5 cell green 이 되었다.
+
+**수치 출력은 바뀌지 않았다** — golden fixture 9 개 전부 컬럼값이 비트 동일하고, JEBS appendix fixture 4 개는 바이트 동일이다.
+
+## Step 실행 기록
+
+| Step | 제목 | 상태 | 소요 |
+|---|---|---|--:|
+| 4.1b-① | 잔차 평가 노이즈 바닥 해석적 유도 | done | ~15 분 |
+| 4.1b-② | 24 셀 격자 실측 및 예측 검증 | done | ~20 분 |
+| 4.1b-③ | 적응적 tolerance 구현 | done | ~15 분 |
+| 4.1b-④ | 조건수 경고 재설계 (D-022) | done | ~15 분 |
+| 4.1b-⑤ | 테스트 재작성 + Linux CI 검증 | done | ~35 분 |
+| 4.1a-① | O4 solver 출력 양자화 구현 및 평가 | done | ~25 분 |
+| 4.1a-② | 드리프트 원인 재특정 (프로브) | done | ~30 분 |
+| 4.1a-③ | O2 해시 스키마 v2 구현 | done | ~20 분 |
+| 4.1a-④ | fixture · print example · JEBS manifest 재생성 | done | ~25 분 |
+| 4.1a-⑤ | Linux CI 구성요소별 검증 | done | ~30 분 |
+| 4.2–4.5 | 아티팩트 재생성 | done (4.1a 에 포함) | — |
+| 4.6 | 재현성 테스트 재작성 | 부분 | — |
+| 4.7 | 정책 문서 개정 | 미착수 | — |
+
+## 산출물
+
+| 경로 | 내용 |
+|---|---|
+| `R/layer2-engine-a2.R` | `.trunc_gamma_residual_floor()` 신설, `solve_trunc_gamma()` 에 적응적 tolerance, `.warn_trunc_gamma_conditioning()` 재설계 |
+| `tests/testthat/test-layer2-engine-a2-edges.R` | 경고·tolerance 테스트 7 개 재작성 |
+| `tests/testthat/test-layer2-engine-a2.R` | 기존 조건수 경고 기대값 갱신 |
+| `tests/testthat/_snaps/snapshot-errors.md` | E15 — 결과적으로 v0.1.1 과 동일 (§4 참조) |
+| `evidence/phase04/residual-noise-floor.R` / `.csv` / `.txt` | 24 셀 격자 실측 |
+| `evidence/phase04/extended-tests-final.log` | Linux CI 검증 |
+
+## 근거와 실행 결과
+
+### 노이즈 바닥의 해석적 유도
+
+잔차의 `sd` 성분은 `moments$sd / (cv * n_bar) - 1` 이고 `moments$sd = sqrt(E[X²] − E[X]²)` 다. 여기서 상쇄가 **두 번** 일어난다.
+
+**① 원시 모멘트.** `lgamma(alpha + k) − lgamma(alpha)` 로 계산된다. `alpha` 가 크면 거대한 두 값을 빼서 작은 값을 얻는다. `alpha = 40000` 에서 `lgamma(alpha) ≈ 3.9 × 10⁵` 인데 차분은 약 10.6 이므로 5 자리를 잃는다.
+
+$$\text{log\_moment 의 절대오차} \approx \varepsilon \cdot |\operatorname{lgamma}(\alpha)|$$
+
+`exp()` 를 취하면 그것이 그대로 상대오차가 된다.
+
+**② 분산.** `sd² = E[X²] − E[X]²` 에서 또 상쇄된다. `E[X²] ≈ mean²` 이고 `sd² = cv² · mean²` 이므로
+
+$$\frac{\delta(sd^2)}{sd^2} \approx \frac{\delta \cdot mean^2}{sd^2} = \frac{\delta}{cv^2}, \qquad \frac{\delta(sd)}{sd} \approx \frac{\delta}{2\,cv^2}$$
+
+따라서
+
+$$\boxed{\ \text{noise floor} \approx \frac{\varepsilon \cdot \operatorname{lgamma}(\alpha)}{2\,cv^2}\ }$$
+
+Gamma 에서 `cv = 1/√alpha` 이므로 `cv` 가 작아질수록 **두 요인이 함께** 나빠진다.
+
+### 실측 — 24 셀 격자
+
+`n_bar ∈ {50, 100, 250}` × `cv ∈ {0.002, …, 0.8}`, `n_min = 5`. 해를 log 스케일에서 ULP 단위로 흔들어 잔차의 산포를 쟀다.
+
+| `cv` | `alpha` | 경험적 바닥 | 예측 | 비율 | 고정 tol 1e-6 충분? |
+|--:|--:|--:|--:|--:|:--:|
+| 0.002 | 2.5e5 | 5.8e-5 ~ 1.2e-4 | 7.9e-5 | 0.73 – 1.47 | **아니오** |
+| 0.005 | 4.0e4 | 1.5e-6 ~ 4.7e-6 | 1.7e-6 | 0.87 – 2.73 | **아니오** |
+| 0.01 | 1.0e4 | 1.5e-7 | 9.1e-8 | 1.60 | 예 |
+| 0.05 | 400 | ~1e-10 | 8.9e-11 | 1.03 – 2.09 | 예 |
+| 0.1 | 100 | ~6e-12 | 4.0e-12 | 1.43 – 2.51 | 예 |
+| 0.25 | 16 | ~1e-13 | 5.0e-14 | 2.07 – 3.05 | 예 |
+| ≥ 0.5 | ≤ 4 | ~2e-14 | (음수) | — | 예 |
+
+**상쇄가 지배하는 영역에서 경험/예측 비율이 0.73–3.05.** 1 차 오차분석으로 이 정도 일치는 충분하다.
+
+`cv ≥ 0.5` 에서는 `alpha < 2` 라 `lgamma(alpha)` 가 음수가 되고 예측이 깨진다. 그 영역의 바닥은 상쇄가 아니라 순수 machine epsilon (~2e-14) 이므로 상수항으로 처리했다.
+
+**24 셀 중 6 셀에서 고정 tolerance 가 노이즈 바닥보다 낮았다.**
+
+### 구현
+
+```r
+.TRUNC_GAMMA_FLOOR_SCALE <- 8      # 관측 비율 최대 3.05 대비 약 3배 여유
+.TRUNC_GAMMA_FLOOR_BASE  <- 256    # 상쇄가 멈춘 영역의 machine epsilon 항
+
+.trunc_gamma_residual_floor <- function(alpha, cv) {
+  cancellation <- .TRUNC_GAMMA_FLOOR_SCALE * .Machine$double.eps *
+    max(lgamma(alpha), 1) / (2 * cv^2)
+  cancellation + .TRUNC_GAMMA_FLOOR_BASE * .Machine$double.eps
+}
+
+tol_effective <- max(tol, .trunc_gamma_residual_floor(best$alpha, cv))
+```
+
+`solve_trunc_gamma()` 가 `tol_effective` 를 반환하므로 판단 근거를 확인할 수 있다.
+
+### 플랫폼 판정 일치 확인
+
+D-024 를 낳은 바로 그 호출:
+
+| `solve_trunc_gamma(n_bar=100, cv=0.005, n_min=5)` | 값 | 이전 (tol 1e-6) | 이후 (tol_eff 1.36e-5) |
+|---|--:|:--:|:--:|
+| macOS 잔차 | 7.44e-07 | 통과 | 통과 |
+| **Linux 잔차** | **1.91e-06** | **abort** | **통과** (7.1 배 여유) |
+
+**실현 불가능 영역은 이동하지 않았다.** `(n_bar=10, cv≥0.6)` 과 `(25, 1.3)` 은 여전히 abort 한다 — 그것은 정밀도가 아니라 절단 하에서 모멘트 매칭 자체에 해가 없는 다른 실패 모드다.
+
+### D-022 — 경고 재설계
+
+이전 경고는 `cv < 1e-3` 에서 발화하며 "mathematically allowed but may be numerically delicate" 라고 했다. **양쪽 다 사실과 달랐다** — 실제 실패 경계는 `cv ≈ 0.005` 여서 `cv = 0.002` 는 경고 없이 abort 했고, 경고가 나는 구간은 전부 실패했다.
+
+이제는 **측정된 조건**에서 발화한다. 노이즈 바닥이 실현 SD 상대오차 `1e-3`(0.1%)을 넘으면 — 즉 적합은 받아들이되 유용한 정밀도로 검증할 수 없을 때 — 얼마나 나쁜지를 수치로 말한다.
+
+```
+! Engine A2 cannot verify this site-size fit to a useful precision.
+i At `cv = 0.001` the truncated-Gamma moment evaluation cancels to about
+  0.011 relative error, so the realized SD is only checkable to that level.
+→ Use a larger `cv`, or treat the realized site-size SD as approximate.
+```
+
+| `cv` | 노이즈 바닥 | 경고 | 결과 |
+|--:|--:|:--:|---|
+| 0.0005 | 2.0e-1 | 발화 | 통과 |
+| 0.001 | 1.1e-2 | 발화 | 통과 |
+| 0.002 | 6.3e-4 | — | 통과 (이전엔 **경고 없이 abort**) |
+| ≥ 0.005 | ≤ 1.4e-5 | — | 통과 |
+
+## Step 4.1a — 해시 계약 (cross-platform 성립)
+
+### O4 를 먼저 시도했고, 해시를 고치지 못했다
+
+D1 대로 O4(solver 출력 양자화)를 먼저 구현했다. `.fit_trunc_gamma_start()` 가 해를 유효숫자 10 자리로 반올림하고, 시작점 선택은 잔차 노름을 6 자리로 비교해 libm 차이가 근소한 우열을 뒤집지 못하게 했다. 결과적으로 5 개 시작점이 **완전히 동일한** `(alpha, beta)` 에 도달한다 — 5,230 ULP → **0 ULP**.
+
+**그런데 해시가 하나도 바뀌지 않았다.** 이유는 `gen_site_sizes()` 가 `n_j` 를 **정수로 반올림**하기 때문이다. alpha 의 1e-11 상대 변화는 정수 경계를 거의 넘지 않으므로 solver 의 불확정성은 이미 흡수되고 있었다.
+
+즉 **O4 는 위생상 좋지만 해시 드리프트의 원인이 아니었다.**
+
+### 진짜 원인은 파생 진단이었다
+
+해시 payload 에는 데이터 컬럼 7 개 외에 파생 진단 스칼라 8 개(`I_hat`, `R_hat`, `rho_*`, `sigma_tau_*`)가 들어간다. 이들은 `cor()`·`sd()`·`mean()` 으로 계산되며 누산 순서가 플랫폼마다 다르다.
+
+**한 머신 안에서도 보인다.** covariate 없는 설계에서 `rho_P_marginal` 과 `rho_P_residual` 은 수학적으로 동일한데:
+
+```
+rho_P_marginal   -0.18428017280171624
+rho_P_residual   -0.1842801728017163
+```
+
+### O2 — 해시 스키마 v2
+
+`.canonicalize_for_hash()` 가 모든 double 을 **유효숫자 9 자리**로 정규화한다. 스키마 버전을 `multisiteDGP-canonical-hash-v2` 로 올렸다.
+
+| 검증 | 결과 |
+|---|---|
+| 2 ULP 섭동 | 해시 불변 |
+| 1e-8 상대 변화 | 해시 변경 (검출력 유지) |
+| 정수·논리 컬럼 | 타입 보존 |
+| same-machine 재현성 | 성립 |
+
+::: {.callout-note title="구현 중 놓친 경로 — 프로브가 잡았다"}
+첫 구현은 데이터 컬럼만 반올림하고 진단은 그대로 두었다. `.canonicalize_diagnostics()` 가 `lapply(..., unname)` 으로 직접 만들어 `.canonicalize_for_hash()` 를 **거치지 않기** 때문이다. 하필 진단이 드리프트가 심한 쪽이라 Linux 는 여전히 실패했다.
+
+임시 프로브 테스트를 넣어 payload 구성요소별 digest 를 CI 로그에 찍게 하니 즉시 드러났다 — 데이터는 반올림돼 있는데(`0.034188034200000002`) 진단은 원시값이었다. 두 번째 경로에도 같은 반올림을 적용해 해소했다.
+:::
+
+### Linux 검증 — 계약 성립
+
+`extended-tests` Linux run `31828735201` = **success.** 이번 업그레이드 최초 green 이다. 프로브가 구성요소별로 확인했다.
+
+| | macOS `aarch64-apple-darwin23` | Linux `x86_64-pc-linux-gnu` |
+|---|---|---|
+| `full_hash` | `69100f5dcf405f4f` | **동일** |
+| `data_only` | `8a357e803aeb2ab5` | **동일** |
+| `diag_only` | `f51618461965e30b` | **동일** |
+| `manifest` | `609fe1356c6e9d34` | **동일** |
+
+**"같은 design + 같은 seed → 어디서나 같은 해시" 가 실제로 성립한다.**
+
+### 수치 출력은 바뀌지 않았다
+
+golden fixture 9 개 전부 **컬럼값이 비트 동일**하고 진단도 동일하다. 바뀐 것은 저장된 `provenance` 해시뿐이다. JEBS appendix fixture 4 개는 provenance 가 없는 순수 `data.frame` 이라 **바이트 동일** — **JEBS 재현 증거가 그대로 보존된다.**
+
+### 부수 수정
+
+| ID | 내용 |
+|---|---|
+| **D-007** | `test-golden.R` 의 바이너리 비교가 cross-OS 면제를 무력화하던 문제 — 해시가 플랫폼 간 일치하므로 면제할 것이 없어져 자연 해소 |
+| **D-026** | print-example 생성기가 패키지 버전을 마스킹하지 않아 재생성마다 테스트가 깨지던 문제. 테스트와 같은 두 규칙으로 맞춤 |
+| **D-027** | `test-coverage` workflow 에 `xml2` 누락 — 커버리지 92.86% 로 게이트를 통과한 직후 `to_cobertura()` 에서 실패하던 것 |
+
+## 결정 사항
+
+**PI 의 선택(적응적 tolerance)을 그대로 따르되 약점을 보완했다.** 권고안은 실현 가능 영역 축소였고, PI 는 기존 설계가 계속 동작하는 쪽을 택했다. 그때 지적한 약점은 "어느 수준까지 느슨해도 되는지의 근거" 였고, 이번 Step 이 그것을 상쇄 분석 + 24 셀 실측으로 대체했다. 결과적으로 **"느슨하게 했다" 가 아니라 "평가 가능한 정밀도만큼만 요구한다"** 가 되었다.
+
+**노이즈 바닥을 오류 메시지에 조건부로만 넣었다.** 처음에는 항상 출력했는데, 그 값이 solver 의 `alpha` 에서 나오므로 3 자리로 반올림해도 플랫폼 의존이다. Linux CI 가 E15 snapshot 실패로 이것을 잡았다 — **적응적 tolerance 가 없애려던 문제를 메시지가 다시 들여온 셈**이었다. 이제 바닥이 실제로 tolerance 를 넓혔을 때만 언급하고, 그 외에는 v0.1.1 과 동일한 문구를 쓴다. 결과적으로 E15 snapshot 은 변경되지 않았다.
+
+**상수 두 개(8, 256)는 실측에서 정했다.** 8 은 관측된 경험/예측 비율 최대 3.05 에 약 3 배 여유를 두고, 256 은 상쇄가 멈춘 영역의 관측 바닥 ~2e-14 를 덮는다. 근거를 코드 주석과 이 로그에 남겼다.
+
+## 원장 변경
+
+| ID | 요약 | 이전 | 이후 |
+|---|---|---|---|
+| **D-002** | **`canonical_hash` 플랫폼 불일치** | open | **fixed** |
+| **D-007** | `test-golden.R` 이 cross-OS 면제 무력화 | open | **fixed** |
+| D-022 | A2 조건수 경고 임계값 불일치 | open | **fixed** |
+| D-024 | solver 실현 가능 경계의 플랫폼 의존 | open | **fixed** |
+| **D-026** | print-example 생성기 버전 마스킹 누락 | — | **신규 → fixed** |
+| **D-027** | `test-coverage` 의 `xml2` 누락 | — | **신규 → fixed** |
+
+원장 27 행.
+
+## 미해결 및 이월
+
+::: {.callout-warning title="D6 의 가정은 성립하지 않았다"}
+D6 은 "solver 를 먼저 안정화하면 해시 드리프트도 줄어들 수 있다" 는 근거로 solver 를 앞세웠다. **줄어들지 않았다.**
+
+solver 견고화 후 Linux CI 의 실패는 다음과 같다.
+
+| 실패 | 건수 | 원인 |
+|---|--:|---|
+| `test-snapshot-print.R:87` | 4 | provenance 해시 |
+| `test-layer4-gen-observations.R:154` | 4 | `canonical_hash` vs manifest |
+| `test-generated-print-examples-step8-6.R` | 2 | provenance 해시 |
+| `test-layer2-engine-a2*` | **0** | 해소 |
+| `test-snapshot-errors.R` | **0** | 해소 |
+
+**전부 해시 계열이다.** 적응적 tolerance 는 solver 의 *판정* 을 일치시켰을 뿐 *출력값* 을 일치시키지 않는다 — 두 플랫폼은 여전히 약 5,000 ULP 떨어진 `alpha`/`beta` 를 얻고, 그것이 하류 데이터로 전파되어 해시를 가른다.
+
+따라서 **Step 4.1a 는 예정대로 필요하다.** D1 의 O4(solver 출력 양자화)가 이제 더 유망해졌을 수 있다 — 판정이 안정됐으므로 양자화가 판정을 흔들 위험이 사라졌다. Step 4.1a 가 O4 를 먼저 시도하고 닫히지 않으면 O2 로 간다는 D1 결정은 유효하다.
+:::
+
+| 항목 | 상태 |
+|---|---|
+| Step 4.2–4.5 fixture · snapshot 재생성 | **완료** (Step 4.1a 중 수행) |
+| Step 4.6 재현성 테스트 재작성 | 부분 — T1a 게이트 제거 필요 |
+| Step 4.7 정책 문서 개정 | **미착수** — `cross-os-reproducibility-policy.md` 가 아직 Linux-authoritative 를 규정 |
+| D-006 lint 위반 76 건 | Phase 6 |
+| Phase 5 Step 5.6 (회귀 테스트, 확장 스위트 재정의) | 미착수 |
+| Phase 7 (D2 실행 등) | 미착수 |
+
+## 다음 Phase 진입 조건
+
+Phase 4 는 미완이다. Step 4.1b 만 종료 조건을 만족한다.
+
+| 조건 | 결과 |
+|---|---|
+| 드리프트 근본 원인이 연산 수준으로 특정 | **충족** (Phase 2 + 이번 Step) |
+| solver 판정이 플랫폼 간 일치 | **충족** — Linux CI 로 확인 |
+| tolerance 근거가 문서화 | **충족** — 상쇄 분석 + 격자 실측 |
+| D1 결정 구현 | **충족** — 해시 스키마 v2 |
+| fixture · snapshot 재생성 | **충족** — 9 fixture + print example + JEBS manifest |
+| 해시가 플랫폼 간 일치 | **충족** — Linux CI 로 구성요소별 확인 |
+| JEBS 재현 증거 보존 | **충족** — appendix fixture 4 개 바이트 동일 |
+| T1a 가 실제로 실행되어 통과 | 미충족 — 게이트 제거가 남음 |
+| 정책 문서 개정 | 미충족 — Step 4.7 |

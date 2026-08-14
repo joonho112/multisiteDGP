@@ -1,0 +1,2 @@
+"blocker_id","experiment_id","run_id","source_run_id","rows","M","simulated_replications","distinct_cell_ids","distinct_parameter_keys","error_cells","finite_metric_rate","public_pass_rate","public_pass_rate_gate","feasibility_fail_cells","feasibility_fail_plausible_rate","acceptance_pass","tests","resolution"
+"P2-V11-001","V11","br8-v11-full-artifact-gate","step9-5-v11-full",1500,100,150000,1500,1500,0,1,0.105333333333333,"reporting_only_empirical",581,1,TRUE,"scenario_audit_step7_6;diagnostic_thresholds;traceability","resolved_artifact_pass"

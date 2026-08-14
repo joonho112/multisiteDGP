@@ -1,0 +1,5 @@
+platform: x86_64-pc-linux-gnu 
+full_hash: 69100f5dcf405f4f 
+data_only: 8a357e803aeb2ab5 
+diag_only: f51618461965e30b 
+manifest : 609fe1356c6e9d34 

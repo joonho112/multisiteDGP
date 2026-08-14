@@ -78,7 +78,7 @@ provenance summary;
 the \href{../articles/m7-reproducibility-provenance.html}{M7
 Reproducibility and provenance} vignette.
 
-Other family-reproducibility: 
-\code{\link{provenance_string}()}
+Other family-reproducibility:
+\code{\link[=provenance_string]{provenance_string()}}
 }
 \concept{family-reproducibility}

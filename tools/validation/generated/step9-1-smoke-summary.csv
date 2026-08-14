@@ -1,0 +1,2 @@
+"run_id","experiment_id","mode","reps","completed","failed","all_finite_diagnostics","all_hashes_present","all_design_hashes_present","mean_I_hat","mean_R_hat","mean_sigma_tau_resid","mean_GM_se2","smoke_pass"
+"step9-1-smoke","V0","smoke",3,3,0,TRUE,TRUE,TRUE,0.315962163416921,9.09401709401709,0.183558476168235,0.0871352842815021,TRUE

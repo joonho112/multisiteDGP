@@ -1,0 +1,2 @@
+"run_id","experiment_id","mode","fixtures","seeds_per_fixture","rows","completed","failed","I_pass_rate","R_pass_rate","fixture_I_pass_rate","fixture_R_pass_rate","max_I_abs_error","max_R_abs_error","acceptance_pass","acceptance_note"
+"step9-4-v07-subset","V07","subset",10,2,20,20,0,1,1,1,1,1.11022302462516e-16,8.88178419700125e-16,TRUE,"V07 uses sim_meta wrapper path with shuffle=TRUE; exactness is measured with compute_I() and heterogeneity_ratio() on se2_j."

@@ -1,4 +1,4 @@
-test_that("Step 10.7 policy document records OS-specific hash contract", {
+test_that("the policy document states the portable hash contract", {
   policy_file <- test_path("../../tools/cross-os-reproducibility-policy.md")
   skip_if_not(
     file.exists(policy_file),
@@ -6,11 +6,23 @@ test_that("Step 10.7 policy document records OS-specific hash contract", {
   )
 
   policy <- paste(readLines(policy_file, warn = FALSE), collapse = "\n")
-  expect_match(policy, "Linux is the strict cross-run hash baseline", fixed = TRUE)
-  expect_match(policy, "macOS and Windows are demoted", fixed = TRUE)
-  expect_match(policy, "Same-machine reproducibility is required on every OS", fixed = TRUE)
-  expect_match(policy, "MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN=false", fixed = TRUE)
-  expect_match(policy, "T1a strict golden hash fails on Linux", fixed = TRUE)
+  expect_match(policy, "the same data, on any platform", fixed = TRUE)
+  expect_match(policy, "Same-machine reproducibility", fixed = TRUE)
+  expect_match(policy, "Derived diagnostics", fixed = TRUE)
+})
+
+test_that("the policy document no longer claims a platform hierarchy", {
+  # v0.1 named Linux the authoritative baseline and exempted macOS and Windows.
+  # The hash is portable now, so any survivor of that wording would be a false
+  # statement about what the package promises (defect ledger D-002, D-007).
+  policy_file <- test_path("../../tools/cross-os-reproducibility-policy.md")
+  skip_if_not(file.exists(policy_file), "Policy is not shipped in the package tarball.")
+
+  contract <- sub("## What changed in v0.2.0.*$", "",
+                  paste(readLines(policy_file, warn = FALSE), collapse = "\n"))
+
+  expect_false(grepl("strict cross-run hash baseline", contract, fixed = TRUE))
+  expect_false(grepl("are demoted", contract, fixed = TRUE))
 })
 
 test_that("Step 10.7 CI workflows advertise the reproducibility policy", {
@@ -21,8 +33,7 @@ test_that("Step 10.7 CI workflows advertise the reproducibility policy", {
   for (workflow_file in workflow_files) {
     workflow_text <- paste(readLines(workflow_file, warn = FALSE), collapse = "\n")
     expect_match(workflow_text, "MULTISITEDGP_REPRODUCIBILITY_POLICY", fixed = TRUE)
-    expect_match(workflow_text, "linux-strict-hash-cross-os-demoted", fixed = TRUE)
-    expect_match(workflow_text, "MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN", fixed = TRUE)
+    expect_match(workflow_text, "portable-hash-v3", fixed = TRUE)
   }
 })
 
@@ -54,13 +65,19 @@ test_that("Step 10.7 R-CMD-check matrix locks the five OS/R cells", {
   }, logical(1))))
 })
 
-test_that("Step 10.7 strict hash helper requires Linux x86_64 or amd64", {
-  helper_file <- test_path("helper-skip-policy.R")
-  helper_text <- paste(readLines(helper_file, warn = FALSE), collapse = "\n")
+test_that("the hash is identical across the paradigms and engines", {
+  # The contract is one promise for every platform, so the thing worth pinning
+  # is that a design hashes to one value however it is reached — not that some
+  # platform is privileged.
+  flat <- sim_multisite(J = 12L, sigma_tau = 0.2, nj_mean = 100, seed = 7304L)
+  viad <- sim_multisite(
+    multisitedgp_design(
+      paradigm = "site_size", J = 12L, sigma_tau = 0.2,
+      nj_mean = 100, seed = 7304L
+    )
+  )
 
-  expect_match(helper_text, "R.version$platform", fixed = TRUE)
-  expect_match(helper_text, "x86_64|amd64", fixed = TRUE)
-  expect_match(helper_text, "Linux x86_64/amd64 baseline only", fixed = TRUE)
+  expect_identical(canonical_hash(flat), canonical_hash(viad))
 })
 
 test_that("Step 10.7 golden fixture generator blocks non-Linux authoritative regeneration", {
@@ -68,9 +85,10 @@ test_that("Step 10.7 golden fixture generator blocks non-Linux authoritative reg
   skip_if_not(file.exists(generator_file), "Golden fixture generator is not shipped in the package tarball.")
 
   generator_text <- paste(readLines(generator_file, warn = FALSE), collapse = "\n")
-  expect_match(generator_text, "is_linux_x86_64", fixed = TRUE)
+  # The gate survives as a speed bump against accidental regeneration. It is no
+  # longer a platform claim — fixtures are byte-identical wherever they are
+  # built.
   expect_match(generator_text, "MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN", fixed = TRUE)
-  expect_match(generator_text, "Do not commit non-Linux hash-only diffs", fixed = TRUE)
 })
 
 test_that("Step 10.7 same-machine seed reproducibility is stable", {

@@ -1,0 +1,131 @@
+---
+title: "인수 기준"
+---
+
+이 장은 v0.2.0 이 **끝났다** 고 말할 수 있는 조건을 검증 가능한 형태로 적는다. Phase 11 Step 11.5 가 이 체크리스트를 채운다.
+
+각 항목은 **어떻게 검증하는가** 를 명령 또는 확인 절차로 명시한다. "확인했다" 가 아니라 "이 명령이 이 출력을 냈다" 여야 한다.
+
+## G1 — 버전 관리 복구
+
+| # | 조건 | 검증 |
+|---|---|---|
+| G1.1 | 작업 디렉터리가 git repository | `git rev-parse --is-inside-work-tree` → `true` |
+| G1.2 | 원격이 연결되어 있다 | `git remote -v` → `joonho112/multisiteDGP` |
+| G1.3 | 작업 트리가 깨끗하다 | `git status --porcelain` → 빈 출력 |
+| G1.4 | 로컬과 원격 `main` 이 동기화 | `git rev-parse HEAD` == `git rev-parse origin/main` |
+| G1.5 | `pre-upgrade-baseline` 태그 존재 | `git tag -l "pre-upgrade-baseline"` |
+| G1.6 | 모든 Phase 의 변경이 커밋으로 추적된다 | `git log --oneline pre-upgrade-baseline..v0.2.0` 이 Step 번호를 포함한 커밋을 보여준다 |
+
+## G2 — CI green
+
+| # | 조건 | 검증 |
+|---|---|---|
+| G2.1 | `R-CMD-check` 5 cell green | `gh run list --workflow=R-CMD-check.yaml --limit 1` → success, 각 cell 확인 |
+| G2.2 | `lint` green | 동일 |
+| G2.3 | `test-coverage` green | 동일 |
+| G2.4 | `extended-tests` green | 동일 (수동 실행 포함) |
+| G2.5 | `pkgdown-deploy` green | 동일 |
+| G2.6 | 연속 3 회 green | 최근 3 개 run 이 전부 success |
+| G2.7 | 실패 알림이 동작한다 | Phase 6 Step 6.5 의 의도적 실패 검증 기록 |
+| G2.8 | CI 출력이 보존되어 있다 | `evidence/phase11/ci-final/` 에 workflow 별 출력 |
+
+## G3 — 테스트가 실제로 검증한다
+
+| # | 조건 | 검증 |
+|---|---|---|
+| G3.1 | 기본 스위트 skip ≤ 3 | `testthat::test_local(".")` 출력의 Skipped 수 |
+| G3.2 | 남은 skip 각각에 사유 | `evidence/phase05/final-skip-inventory.md` |
+| G3.3 | T13–T17 이 기본 스위트에서 실행 | 위 출력에 해당 테스트가 `.` 로 표시 |
+| G3.4 | P01–P12 가 기본 스위트에서 실행 | 동일 |
+| G3.5 | T1b, T4, T9, T10, T11 이 기본 스위트에서 실행 | 동일 |
+| G3.6 | 축소한 테스트가 mutation 검사 통과 | `evidence/phase05/` 의 mutation 결과 |
+| G3.7 | 커버리지가 베이스라인 이상 | Step 1.5 vs Step 11.1 비교표 |
+| G3.8 | 2 회 연속 실행 결과 동일 (플레이키 없음) | Step 11.1 기록 |
+| G3.9 | 기본 스위트가 시간 예산 안 | D3 이 정한 값 vs 실측 |
+
+## G4 — 재현성 계약이 동작한다
+
+| # | 조건 | 검증 |
+|---|---|---|
+| G4.1 | 드리프트 근본 원인이 특정되어 있다 | `evidence/phase04/drift-root-cause.md` |
+| G4.2 | D1 결정이 구현되어 있다 | `decisions/D1-*.md` + 해당 커밋 |
+| G4.3 | golden fixture 가 정책이 규정한 플랫폼에서 생성 | manifest 의 `generated_platform` |
+| G4.4 | snapshot 이 Linux · macOS 에서 통과 | Phase 4 Step 4.5 기록 + CI |
+| G4.5 | Windows 에서도 통과 | Phase 11 Step 11.2 CI 기록 |
+| G4.6 | T1a 가 **실제로 실행**되어 통과 (skip 아님) | CI 로그에서 T1a 가 `.` 로 표시 |
+| G4.7 | 정책 문서에 모순 서술이 없다 | `tools/cross-os-reproducibility-policy.md` 검토 기록 |
+| G4.8 | same-machine 재현성 유지 (T20) | 세 플랫폼 CI |
+| G4.9 | 공개 tarball 에서 README hash check 동작 | Step 11.4 기록 |
+| G4.10 | 이전 fixture 가 보존되어 있다 | `artifacts/pre-phase04-fixtures/` |
+
+## G5 — 광고 == 구현
+
+| # | 조건 | 검증 |
+|---|---|---|
+| G5.1 | Step 2.4 가 찾은 갭이 전부 처리 | 원장의 갭 관련 행 status |
+| G5.2 | `DESCRIPTION` Description 이 실제 기능만 서술 | 문서 검토 + grep |
+| G5.3 | 미구현 기능이 명확히 표시된다 | 해당 함수 roxygen + 오류 메시지 |
+| G5.4 | 53 exports 의 `@examples` 가 전부 실행된다 | `R CMD check` 의 examples 검사 |
+| G5.5 | 제거된 기능의 잔여 언급이 없다 | `evidence/phase09/consistency-scan.md` grep 결과 |
+| G5.6 | 오류 카탈로그가 실제 오류 집합과 일치 | `test-traceability.R` 통과 |
+
+## G6 — `R CMD check` 청결
+
+| # | 조건 | 검증 |
+|---|---|---|
+| G6.1 | 로컬 `--as-cran` 0E/0W | Step 11.1 출력 |
+| G6.2 | vignette 포함 full check 0E/0W | 동일 |
+| G6.3 | 3 OS CI 에서 0E/0W | Phase 11 Step 11.2 |
+| G6.4 | NOTE 가 전부 문서화되어 있다 | `evidence/phase06/` + `evidence/phase11/` |
+| G6.5 | tarball 대상 check 통과 | Step 11.3 기록 |
+| G6.6 | lint 0 위반 (또는 문서화된 예외) | Step 11.1 출력 |
+
+## G7 — 릴리스 아티팩트
+
+| # | 조건 | 검증 |
+|---|---|---|
+| G7.1 | `DESCRIPTION` Version 이 D4 결정과 일치 | 파일 확인 |
+| G7.2 | `NEWS.md` v0.2.0 항목 존재, breaking change 명시 | 파일 확인 |
+| G7.3 | "Known limitations" 가 현재 상태 반영 | 해소된 항목이 제거되어 있다 |
+| G7.4 | `v0.2.0` 태그 (annotated, 원격 push) | `git tag -l -n v0.2.0`, `gh release view v0.2.0` |
+| G7.5 | GitHub Release + tarball 첨부 | `gh release view v0.2.0` |
+| G7.6 | pkgdown 사이트가 v0.2.0 반영 | 사이트 확인 |
+| G7.7 | 깨끗한 환경에서 설치·동작 | Step 11.3 기록 |
+| G7.8 | tarball 에 불필요한 파일 없음 | Step 11.3 파일 목록 |
+
+## 프로세스 인수
+
+성공 기준과 별개로, **작업 자체가 감사 가능한가** 를 확인한다.
+
+| # | 조건 | 검증 |
+|---|---|---|
+| P.1 | Phase 로그 11 개가 qmd + html 로 존재 | `ls log/log-version-up-2026-08-14/*.qmd` |
+| P.2 | 로그 순번이 단조 증가하고 빈 번호가 없다 | 파일명 확인 |
+| P.3 | 각 로그가 8 절 구조를 따른다 | 로그 검토 |
+| P.4 | 결함 원장의 모든 행에 최종 status 가 있다 | `defect-ledger.csv` |
+| P.5 | P0 전건이 `fixed` 또는 `wont-fix (근거)` | 동일 |
+| P.6 | D1–D4 결정 문서에 PI 결정이 기록되어 있다 | `decisions/` |
+| P.7 | 외부 리뷰 Critical 전건 해소 | `review-packet/round-*/closeout.md` |
+| P.8 | v0.3 백로그가 GitHub Issue 로 등록 | `gh issue list` |
+| P.9 | `CLOSEOUT.md` 존재 및 자기 완결적 | 파일 확인 |
+| P.10 | 증거 파일이 `evidence/` 에 보존 | 디렉터리 확인 |
+
+## PI 최종 서명
+
+Phase 11 Step 11.5 완료 후 PI 가 확인한다.
+
+- [ ] G1 버전 관리 복구 — 확인
+- [ ] G2 CI green — 확인
+- [ ] G3 테스트가 실제로 검증 — 확인
+- [ ] G4 재현성 계약 동작 — 확인
+- [ ] G5 광고 == 구현 — 확인
+- [ ] G6 check 청결 — 확인
+- [ ] G7 릴리스 아티팩트 — 확인
+- [ ] 프로세스 인수 P.1–P.10 — 확인
+
+**PI 서명란:** ______________________  **일자:** ____________
+
+::: {.callout-note title="미달 항목이 있을 때"}
+어떤 기준이 미달인 채로 릴리스해야 하는 상황이 오면 — 예를 들어 `multisitepower` 처럼 통제 밖의 의존성 문제 — **미달을 숨기지 않는다.** 해당 기준에 "미달 + 사유 + 완화 조치 + 언제 해소할지" 를 적고 PI 가 그 상태로 서명한다. 기준을 낮춰 통과시키는 것보다 미달을 기록하는 것이 낫다.
+:::

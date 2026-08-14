@@ -1,0 +1,279 @@
+---
+title: "부록 B — 감사 원자료"
+---
+
+[Ch.1](01-current-state-audit.qmd) 의 근거가 된 실행 결과다. **2026-08-14 실측.** 이 부록은 Phase 2 가 재감사할 때의 출발점이자, 감사 결론을 나중에 재확인할 수 있게 하는 원본이다.
+
+## B.1 저장소 상태
+
+```
+$ cd "multisiteDGP-R-package" && git rev-parse --is-inside-work-tree
+fatal: not a git repository (or any of the parent directories): .git
+
+$ cd "00_IES Multisite Trial Project" && git rev-parse --is-inside-work-tree
+fatal: not a git repository (or any of the parent directories): .git
+
+$ gh repo view joonho112/multisiteDGP --json name,visibility,pushedAt
+{"name":"multisiteDGP","pushedAt":"2026-05-10T04:41:33Z","visibility":"PUBLIC"}
+
+$ gh release list --repo joonho112/multisiteDGP
+(빈 출력 — 릴리스 0 건)
+
+$ gh issue list --repo joonho112/multisiteDGP --limit 10
+(빈 출력 — 이슈 0 건)
+```
+
+## B.2 CI 실행 이력
+
+`gh run list --repo joonho112/multisiteDGP --limit 15`:
+
+| 상태 | workflow | branch | trigger | run ID | 소요 | 시각 |
+|---|---|---|---|---|---|---|
+| failure | extended-tests | main | schedule | 29247044931 | 6m46s | 2026-07-13T11:40:11Z |
+| failure | extended-tests | main | schedule | 28783281261 | 6m50s | 2026-07-06T09:56:56Z |
+| failure | extended-tests | main | schedule | 28364523378 | 5m44s | 2026-06-29T10:09:16Z |
+| failure | extended-tests | main | schedule | 27946333441 | 6m21s | 2026-06-22T10:29:49Z |
+| failure | extended-tests | main | schedule | 27540776185 | 6m21s | 2026-06-15T10:42:13Z |
+| failure | extended-tests | main | schedule | 27130475464 | 5m44s | 2026-06-08T10:06:56Z |
+| failure | extended-tests | main | schedule | 26749251340 | 6m4s | 2026-06-01T10:25:17Z |
+| failure | extended-tests | main | schedule | 26394630128 | 5m49s | 2026-05-25T09:56:49Z |
+| failure | extended-tests | main | schedule | 26026458795 | 6m10s | 2026-05-18T09:56:52Z |
+| failure | extended-tests | main | schedule | 25663155660 | 6m1s | 2026-05-11T09:54:52Z |
+| failure | R-CMD-check | main | push | 25620008533 | 34m3s | 2026-05-10T04:41:35Z |
+| failure | lint | main | push | 25620008532 | 1m58s | 2026-05-10T04:41:35Z |
+| failure | test-coverage | main | push | 25620008531 | 2m44s | 2026-05-10T04:41:35Z |
+| **success** | **pkgdown-deploy** | main | push | 25620008530 | 4m43s | 2026-05-10T04:41:35Z |
+| cancelled | R-CMD-check | main | push | 25619715961 | 17m25s | 2026-05-10T04:24:14Z |
+
+마지막 push 커밋 제목: `fix(index): flatten HTML feature-card indentation so pandoc treats th…`
+취소된 run 의 커밋 제목: `ci: pin Suggests explicitly (multisitepower not on CRAN/r-universe)`
+
+::: {.callout-warning title="로그 만료"}
+`R-CMD-check`, `lint`, `test-coverage` (2026-05-10) 의 로그는 GitHub 보존 기간(90 일)을 넘겨 `HTTP 410` 을 반환한다. **Phase 2 Step 2.1 은 재현으로 원인을 규명해야 한다.**
+:::
+
+## B.3 extended-tests 실패 상세 (2026-07-13, run 29247044931)
+
+`gh run view 29247044931 --log-failed` 발췌. testthat 이 10 건에서 절단했다.
+
+**실패 1 — `test-generated-print-examples-step8-6.R:77:3`**
+
+```
+Expected `read_print_example("ch14_ch17_irb_template.txt")` to be identical to
+         `capture_generated_print(summary(irb))`.
+Differences: actual[23:26] vs expected[23:26]
+  "   feasibility_index:          14.431  (target N/A)  WARN  [no target]"
+  "------------------------------------------------------------"
+  "Overall: 3 PASS, 3 WARN, 2 FAIL."
+- "Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 |
+   canonical_hash=128c43fb9cfc4416 | design_hash=db50cfd4e1659537 |
+   hash_algo=xxhash64 | R=<R> | hooks=none"
++ "Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 |
+   canonical_hash=7b960a5122df9c88 | design_hash=db50cfd4e1659537 |
+   hash_algo=xxhash64 | R=<R> | hooks=none"
+```
+
+**실패 2 — `test-generated-print-examples-step8-6.R:83:3`**
+
+```
+  "   feasibility_index:           6.153  (target N/A)  WARN  [no target]"
+  "Overall: 5 PASS, 3 WARN, 3 FAIL."
+- canonical_hash=c743272c10cf35c6 | design_hash=23d5c64c78ea3137
++ canonical_hash=c37d52c8b467bceb | design_hash=23d5c64c78ea3137
+```
+
+**실패 3–7 — `test-snapshot-print.R:87:5`** (`summary.multisitedgp_data` snapshot, seed 별)
+
+| seed | 표시 수치 | design_hash | canonical_hash (기대) | canonical_hash (Linux) |
+|---|---|---|---|---|
+| 4719 | `feasibility_index: 13.755` / `3 PASS, 2 WARN, 1 FAIL` | `b1891bd7d287895f` | `a96eaabd1c022e32` | `4b148f68942b0c8b` |
+| 4719 | `28.883` / `2 PASS, 3 WARN, 1 FAIL` | `5eda5659b1ad514d` | `871d0fa960030a02` | `9c71c21dc178cb97` |
+| 12345 | `14.431` / `3 PASS, 3 WARN, 2 FAIL` | `db50cfd4e1659537` | `128c43fb9cfc4416` | `7b960a5122df9c88` |
+| 1 | `35.828` / `5 PASS, 1 WARN, 2 FAIL` | `3f1b3fa764d5ec00` | `461c8b7f4ff83ec7` | `d6fd7082ad0e865f` |
+| — | `5 PASS, 3 WARN, 3 FAIL` | — | — | — |
+
+**실패 8–10** — `test-snapshot-print.R:102:3` (direct paradigm), `:110:3` (covariate), `:118:3` (row-subset)
+
+```
+Maximum number of 10 failures reached, some test results may be missing.
+Error: ! Test failures.
+##[error]Process completed with exit code 1.
+```
+
+::: {.callout-important title="핵심 관찰"}
+**모든 실패에서 `design_hash` 는 일치하고 `canonical_hash` 만 다르다. 표시되는 수치(feasibility_index, PASS/WARN/FAIL 카운트)도 전부 일치한다.** 즉 생성된 데이터가 표시 정밀도까지는 같으나 비트 수준에서 다르다. 이것이 Phase 4 가 규명·해결해야 할 문제의 정확한 형태다.
+:::
+
+또한 skip 항목 중 다음이 관찰된다.
+
+```
+22. Step 8.5 error snapshot traceability statuses are synchronized
+    ('test-traceability.R:149:3')
+    - Reason: Development-only traceability ledgers are not shipped in the package tarball.
+```
+
+## B.4 로컬 테스트 실행 ① — 기본 환경
+
+```
+$ Rscript -e 'devtools::load_all("."); testthat::test_local(".", reporter="summary")'
+```
+
+결과: **실패 0, skip 30**, 종료 코드 0, `💅 Your tests are beautiful 💅`
+
+skip 사유별 집계:
+
+| 사유 | 건수 |
+|---|---:|
+| `Set MULTISITEDGP_RUN_SLOW=true to run slow multisiteDGP tests.` | 22 |
+| `Set MULTISITEDGP_RUN_PROPERTY=true to run multisiteDGP property tests.` | 7 |
+| `Strict canonical_hash equality is Linux x86_64/amd64 baseline only.` | 1 |
+
+skip 된 테스트 (전체 30 건):
+
+| # | 테스트 | 파일 |
+|---:|---|---|
+| 1 | Gaussian/Student-t large-sample z_j moments | `test-gen-effects-gaussian-studentt.R:105` |
+| 2 | T14a raw legacy mixture variance | `test-gen-effects-mixture.R:50` |
+| 3 | T14b standardized mixture unit variance | `test-gen-effects-mixture.R:64` |
+| 4 | T17 PMSlab standardization + zero mass | `test-gen-effects-pmslab-user-dpm.R:34` |
+| 5 | SkewN standardization + skewness sign (T16) | `test-gen-effects-skewn-ald.R:45` |
+| 6 | ALD standardization (T13, Yu-Zhang 변환) | `test-gen-effects-skewn-ald.R:66` |
+| 7–18 | P01–P12 core invariants | `test-property-core-invariants.R:57–265` |
+| 19 | T10 nj_min truncation + multi-rep mean | `test-T10-n-min-truncation.R:3` |
+| 20 | T11 JEBS Paradigm A I-envelope | `test-T11-jebs-I-grid.R:3` |
+| 21 | T13 ALD standardization (Yu-Zhang moment) | `test-T13-ALD-standardization.R:3` |
+| 22 | T14a legacy raw mixture variance == 7.15 | `test-T14-mixture-ups.R:3` |
+| 23 | T14b standardized Mixture unit variance | `test-T14-mixture-ups.R:19` |
+| 24 | T15 Student-t standardization (nu grid) | `test-T15-studentt-standardization.R:3` |
+| 25 | T16 Skew-Normal standardization | `test-T16-skewn-standardization.R:3` |
+| 26 | T17 PMSlab standardization + point-mass | `test-T17-pmslab-standardization.R:3` |
+| 27 | **T1a Engine A1 Mixture == JEBS golden fixtures** | `test-T1a-jebs-bit-identical.R:3` |
+| 28 | T1b Engine A2 Gaussian KS binomial gate | `test-T1b-A2-distributional.R:3` |
+| 29 | T4 dependence none Spearman envelope | `test-T4-independence.R:3` |
+| 30 | T9 default true_dist Gaussian (Shapiro) | `test-T9-default-G.R:3` |
+
+## B.5 로컬 테스트 실행 ② — slow + property 게이트 on
+
+```
+$ MULTISITEDGP_RUN_SLOW=true MULTISITEDGP_RUN_PROPERTY=true \
+  Rscript -e 'devtools::load_all("."); testthat::test_local(".", reporter="summary")'
+```
+
+결과: **실패 0, skip 1**, 종료 코드 0
+
+```
+══ Skipped ═════════════════════════════════════════════════════════════════════
+1. T1a Engine A1 Mixture matches JEBS appendix golden fixtures
+   ('test-T1a-jebs-bit-identical.R:3:3')
+   - Reason: Strict canonical_hash equality is Linux x86_64/amd64 baseline only.
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+💅 Your tests are beautiful 💅
+```
+
+**통계 커널이 건강하다는 핵심 증거.** 게이트를 켜면 전부 통과하며, 유일한 skip 은 플랫폼 정책에 의한 것이다.
+
+## B.6 `R CMD check --as-cran` (vignette 제외)
+
+```
+$ Rscript -e 'devtools::check(".", document=FALSE, vignettes=FALSE,
+                              args=c("--no-manual","--as-cran"), error_on="never")'
+```
+
+```
+0 errors ✔ | 0 warnings ✔ | 2 notes ✖
+```
+
+NOTE 중 하나는 `man/*.Rd` 의 상대 URL(`../articles/*.html`) 관련이다. vignette 를 빌드하지 않은 실행이라 해당 대상이 없어서 발생한 것으로 보이며, **vignette 포함 full check 로 재확인이 필요하다** (Phase 1 Step 1.5).
+
+영향받는 Rd 파일 (일부): `gen_effects_skewn.Rd`, `gen_effects_studentt.Rd`, `gen_effects_user.Rd`, `gen_se_direct.Rd`, `gen_site_sizes.Rd`, `heterogeneity_ratio.Rd`, `informativeness.Rd`, `ks_distance.Rd`, `mean_shrinkage.Rd`, `multisiteDGP-package.Rd` (16 개 vignette 전부 참조), `multisitedgp_design.Rd`, `plots.Rd`, `presets.Rd`, `provenance_string.Rd`, `realized_rank_corr.Rd`, `realized_rank_corr_marginal.Rd`, `scenario_audit.Rd`, `sim_meta.Rd`, `sim_multisite.Rd`
+
+## B.7 의존성 설치 상태
+
+R 4.6.0 (2026-04-24), aarch64-apple-darwin 기준.
+
+| package | 역할 | 상태 |
+|---|---|---|
+| **multisiteDGP** | 대상 package | **0.0.0.9000 (stale — 소스는 0.1.1)** |
+| stats · tibble 3.3.1 · dplyr 1.2.1 · tidyr 1.3.2 · withr 3.0.2 · cli 3.6.6 · rlang 1.2.0 · nleqslv 3.3.7 · ggplot2 4.0.3 · digest 0.6.39 · RColorBrewer 1.1.3 · viridisLite 0.4.3 | Imports | 전부 설치됨 |
+| sn 2.1.3 | SkewN | 설치됨 |
+| LaplacesDemon 16.1.8 | ALD | 설치됨 |
+| **copula** | Gaussian copula dependence | **MISSING** |
+| metafor 5.0.1 · baggr 0.8 | adapter | 설치됨 |
+| **multisitepower** | adapter | **MISSING** (CRAN 미배포 — 문서화된 예외) |
+| deconvolveR 1.2.1 · furrr 0.4.0 · yaml 2.3.12 · arrow 24.0.0 · moments 0.14.1 | Suggests | 설치됨 |
+| **hedgehog** | property-based test | **MISSING** |
+| testthat 3.3.2 · knitr 1.51 · rmarkdown 2.31 · covr 3.6.5 · gridExtra 2.3 · patchwork 1.3.2 | Suggests | 설치됨 |
+| devtools 2.5.2 · roxygen2 8.0.0 · pkgdown 2.2.0 · lintr 3.3.0.1 · cyclocomp 1.1.2 | 개발 도구 | 설치됨 |
+
+Quarto 1.9.37.
+
+## B.8 미구현 표면 (코드 grep)
+
+```
+$ grep -rn "not implemented\|reserved and is not" R/
+R/layer1-gen_effects.R:191:      "`upstream` is reserved and is not implemented yet.",
+R/layer1-gen_effects.R:293:    sprintf("`true_dist = \"%s\"` is not implemented.", true_dist),
+R/class-multisitedgp_design.R:77:#'   target; not implemented in the current release.
+R/layer1-gen_effects_dpm.R:127:    "`true_dist = \"DPM\"` is not implemented in multisiteDGP v1.",
+```
+
+`DESCRIPTION` Description 필드 (해당 부분):
+
+> generates latent site effects under a catalog of **eight** distribution shapes (Gaussian, Student-t, skew-normal, asymmetric Laplace, two-component mixture, point-mass slab, user callback, **and a Dirichlet-process-mixture bridge**)
+
+## B.9 저장소 위생
+
+| 항목 | 크기 / 상태 |
+|---|---|
+| `..Rcheck/` | 존재. `00check.log` 에 `Required fields missing or empty: 'Author' 'Maintainer'` (다른 경로에서 실행된 잔재) |
+| `multisiteDGP.Rcheck/` | 존재 |
+| `multisiteDGP_0.0.0.9000.tar.gz` | 421,058 bytes |
+| `multisiteDGP_0.1.0.tar.gz` | 421,308 bytes |
+| `blueprint-multisiteDGP-book-v1.0-20260507.zip` | 41,478,339 bytes (41 MB) |
+| `Library/`, `Outputs/` | 빈 디렉터리 |
+| `.DS_Store` | 존재 |
+
+## B.10 package 규모
+
+| 영역 | 규모 |
+|---|---|
+| `R/` | 35 파일, 10,287 줄. 최대: `class-multisitedgp_design.R` (826), `layer2-diagnostics.R` (820), `diagnostics-core.R` (779) |
+| `tests/testthat/` | 71 파일, 7,836 줄 |
+| `man/` | 47 Rd |
+| `vignettes/` | 16 Rmd (A1–A8, M1–M8) + `.html` |
+| NAMESPACE | 53 export + 28 S3 method |
+| `inst/cookbook/` | 9 recipe (R5-1 ~ R5-9) + manifest |
+| `tools/traceability/` | ledger CSV 8 종 + conflict-checklist |
+| `tools/validation/generated/` | ~180 결과 파일 (2026-05) |
+| blueprint book | 25 장 + 부록 3 |
+| build-implementation book | log 127 건 |
+| documentation-updates | log 99 건 |
+
+## B.11 이번 감사에서 실행한 명령 전체
+
+Phase 1 Step 1.5 가 베이스라인을 재측정할 때 참조한다.
+
+```bash
+# 저장소 상태
+git rev-parse --is-inside-work-tree
+gh repo view joonho112/multisiteDGP --json name,visibility,pushedAt
+gh run list --repo joonho112/multisiteDGP --limit 15
+gh run view 29247044931 --repo joonho112/multisiteDGP --log-failed
+
+# 테스트 (기본)
+Rscript -e 'suppressMessages(devtools::load_all(".", quiet=TRUE));
+            testthat::test_local(".", reporter="summary", stop_on_failure=FALSE)'
+
+# 테스트 (확장)
+MULTISITEDGP_RUN_SLOW=true MULTISITEDGP_RUN_PROPERTY=true \
+Rscript -e 'suppressMessages(devtools::load_all(".", quiet=TRUE));
+            testthat::test_local(".", reporter="summary", stop_on_failure=FALSE)'
+
+# check
+Rscript -e 'devtools::check(".", document=FALSE, vignettes=FALSE,
+                            args=c("--no-manual","--as-cran"), error_on="never")'
+
+# 의존성
+Rscript -e 'inst <- rownames(installed.packages()); ...'
+```

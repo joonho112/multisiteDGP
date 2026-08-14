@@ -47,18 +47,18 @@ in multisite trials. \emph{Journal of Educational and Behavioral Statistics},
 the \href{../articles/a3-diagnostics-in-practice.html}{A3 Diagnostics
 in practice} vignette.
 
-Other family-diagnostics: 
-\code{\link{bhattacharyya_coef}()},
-\code{\link{compute_I}()},
-\code{\link{compute_kappa}()},
-\code{\link{compute_shrinkage}()},
-\code{\link{default_thresholds}()},
-\code{\link{feasibility_index}()},
-\code{\link{informativeness}()},
-\code{\link{ks_distance}()},
-\code{\link{mean_shrinkage}()},
-\code{\link{realized_rank_corr}()},
-\code{\link{realized_rank_corr_marginal}()},
-\code{\link{scenario_audit}()}
+Other family-diagnostics:
+\code{\link[=bhattacharyya_coef]{bhattacharyya_coef()}},
+\code{\link[=compute_I]{compute_I()}},
+\code{\link[=compute_kappa]{compute_kappa()}},
+\code{\link[=compute_shrinkage]{compute_shrinkage()}},
+\code{\link[=default_thresholds]{default_thresholds()}},
+\code{\link[=feasibility_index]{feasibility_index()}},
+\code{\link[=informativeness]{informativeness()}},
+\code{\link[=ks_distance]{ks_distance()}},
+\code{\link[=mean_shrinkage]{mean_shrinkage()}},
+\code{\link[=realized_rank_corr]{realized_rank_corr()}},
+\code{\link[=realized_rank_corr_marginal]{realized_rank_corr_marginal()}},
+\code{\link[=scenario_audit]{scenario_audit()}}
 }
 \concept{family-diagnostics}

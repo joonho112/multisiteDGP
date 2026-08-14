@@ -1,0 +1,61 @@
+id,function,group,owner_phase,owner_step,blueprint_ref,status,unresolved_conflict
+API001,multisitedgp_design,config,Phase 2,Step 2.1,ch10 sec10.2,implemented,Gate C Step 1.2 adds hybrid_init and hybrid_polish to dependence_spec
+API002,is_multisitedgp_design,config,Phase 2,Step 2.1,ch10 sec10.2.3,implemented,none
+API003,validate_multisitedgp_design,config,Phase 2,Step 2.2,ch10 sec10.2.3,implemented,none
+API004,update_multisitedgp_design,config,Phase 2,Step 2.2,ch10 sec10.2.3,implemented,none
+API005,sim_multisite,wrapper,Phase 6,Step 6.1,ch10 sec10.3.1,implemented,Gate C Step 1.2 forwards hybrid_init and hybrid_polish through the wrapper path
+API006,sim_meta,wrapper,Phase 6,Step 6.2,ch10 sec10.3.2; ch09 sec9.4.2a,implemented,multisitedgp_meta class implemented in Step 2.3; sim_meta front door implemented in Step 6.2; Gate C Step 1.2 forwards hybrid controls through shared dispatch
+API007,gen_effects,layer1,Phase 3,Step 3.6,ch10 sec10.4.1,implemented,dispatcher supports all catalog routes; DPM remains v1 stub unless bridged through g_fn
+API008,gen_effects_gaussian,layer1,Phase 3,Step 3.2,ch10 sec10.4.2,implemented,unit-variance residual contract locks variance = 1
+API009,gen_effects_studentt,layer1,Phase 3,Step 3.2,ch10 sec10.4.2,implemented,nu > 2 hard validation and nu < 4 warning
+API010,gen_effects_skewn,layer1,Phase 3,Step 3.3,ch10 sec10.4.2,implemented,soft dependency sn hard-reject guard
+API011,gen_effects_ald,layer1,Phase 3,Step 3.3,ch10 sec10.4.2,implemented,soft dependency LaplacesDemon hard-reject guard and Yu-Zhang conversion
+API012,gen_effects_mixture,layer1,Phase 3,Step 3.4,ch10 sec10.4.2,implemented,legacy ups SD-ratio matches ch05 and ch23; latent_component retained
+API013,gen_effects_pmslab,layer1,Phase 3,Step 3.5,ch10 sec10.4.2,implemented,pi0 naming locked by R2-F03b and R2-F16
+API014,gen_effects_user,layer1,Phase 3,Step 3.5,ch10 sec10.4.2,implemented,g_fn convention supports standardized and raw paths
+API015,gen_effects_dpm,layer1,Phase 3,Step 3.5,ch10 sec10.4.2,implemented,v1 stub hard-aborts unless g_fn bridge supplied
+API016,gen_site_sizes,layer2,Phase 4,Step 4.5,ch10 sec10.5.1,implemented,A1 and A2 engine split is hard contract
+API017,gen_se_direct,layer2,Phase 4,Step 4.6,ch10 sec10.5.2,implemented,none
+API018,align_rank_corr,layer3,Phase 5,Step 5.2,ch10 sec10.6.1,implemented,residual z_j targeting required
+API019,align_copula_corr,layer3,Phase 5,Step 5.3,ch10 sec10.6.2,implemented,empirical-rank Gaussian copula pairing preserves se2_j multiset
+API020,align_hybrid_corr,layer3,Phase 5,Step 5.4,ch10 sec10.6.3,implemented,Luke default hybrid policy; Gate C Step 1.2 exposes init and polish via design/wrapper controls
+API021,gen_observations,layer4,Phase 5,Step 5.6,ch10 sec10.7,implemented,Gaussian observation only and non-Gaussian deferred to v2
+API022,as_metafor,adapter,Phase 7,Step 7.3,ch10 sec10.9.1,implemented,R2-F18 rejection keeps hard soft-dep guard
+API023,as_baggr,adapter,Phase 7,Step 7.3,ch10 sec10.9.2,implemented,soft dependency baggr guard required
+API024,as_multisitepower,adapter,Phase 7,Step 7.3,ch10 sec10.9.3,implemented,soft dependency multisitepower guard required; missing-package abort covered by shared adapter soft-dependency policy; no E31
+API025,as_tibble.multisitedgp_data,adapter,Phase 2,Step 2.3,ch10 sec10.9.4,implemented,adapter escape-hatch contract; S3 registration tracked separately in API058
+API026,compute_I,diagnostic,Phase 4,Step 4.2,ch10 sec10.10.1,implemented,geometric mean formula locked by T8
+API027,compute_shrinkage,diagnostic,Phase 4,Step 4.2,ch10 sec10.10.2,implemented,retention-proportion convention shared with mean_shrinkage
+API028,feasibility_index,diagnostic,Phase 6,Step 6.4,ch10 sec10.10.3,implemented,E28 warn-not-abort path
+API029,informativeness,diagnostic,Phase 4,Step 4.2,ch10 sec10.10.4,implemented,wrapper of compute_I
+API030,heterogeneity_ratio,diagnostic,Phase 6,Step 6.3,ch10 sec10.10.5,implemented,max/min and trimmed quantile ratio; accepts multisitedgp_data; Gate C Step 1.3 clarifies trimmed 5th/95th warning rationale
+API031,canonical_hash,reproducibility,Phase 6,Step 6.5,ch10 sec10.10.7,implemented,closure exclusion policy and wrapper provenance integration locked
+API032,provenance_string,reproducibility,Phase 6,Step 6.5,ch10 sec10.10.8,implemented,IRB-ready one-line data/design/default provenance helper
+API033,mean_shrinkage,diagnostic,Phase 4,Step 4.2,ch10 sec10.10.9,implemented,PA-5 helper signoff and F4-M05 named closed-form path
+API034,realized_rank_corr,diagnostic,Phase 6,Step 6.3,ch10 sec10.10.10,implemented,residual and marginal Spearman helper; Gate C Step 1.1 calibrates zero-target diagnostic status as sampling drift
+API035,realized_rank_corr_marginal,diagnostic,Phase 6,Step 6.3,ch10 sec10.10.11,implemented,alias for marginal-basis realized_rank_corr
+API036,scenario_audit,diagnostic-grid,Phase 7,Step 7.6,ch10 sec10.10.12,implemented,PA-5 helper signoff; cell-level summary with M replicate driver
+API037,default_thresholds,diagnostic-grid,Phase 6,Step 6.4,ch10 sec10.10.13,implemented,public five-gate scenario-audit defaults; private full diagnostic rubric drives table status; Gate C Step 1.1 adds sampling_drift rank-correlation bands
+API038,bhattacharyya_coef,diagnostic-distance,Phase 6,Step 6.3,ch10 sec10.10.14,implemented,numeric two-sample plus deterministic supported-G data path
+API039,ks_distance,diagnostic-distance,Phase 6,Step 6.3,ch10 sec10.10.15,implemented,numeric two-sample plus deterministic supported-G data path
+API040,plot_effects,plot,Phase 7,Step 7.4,ch10 sec10.11.1,implemented,none
+API041,plot_funnel,plot,Phase 7,Step 7.4,ch10 sec10.11.2,implemented,none
+API042,plot_dependence,plot,Phase 7,Step 7.4,ch10 sec10.11.3,implemented,none
+API043,preset_education_small,preset,Phase 7,Step 7.1,ch10 sec10.12 and ch13,implemented,none
+API044,preset_education_modest,preset,Phase 7,Step 7.1,ch10 sec10.12 and ch13,implemented,none
+API045,preset_education_substantial,preset,Phase 7,Step 7.1,ch10 sec10.12 and ch13,implemented,persona attribution refined Priya or Chen primary
+API046,preset_jebs_paper,preset,Phase 7,Step 7.1,ch10 sec10.12 and ch13,implemented,UX sigma_tau 0.20 not strict parity
+API047,preset_jebs_strict,preset,Phase 7,Step 7.1,ch10 sec10.12 and ch13,implemented,T1a strict sigma_tau 0.15 anchor
+API048,preset_walters_2024,preset,Phase 7,Step 7.2,ch10 sec10.12 and ch13,implemented,sparse Walters motif deferred to v1.1
+API049,preset_twin_towers,preset,Phase 7,Step 7.2,ch10 sec10.12 and ch13,implemented,Q13 paradigm A vs B reversal cost noted
+API050,preset_meta_modest,preset,Phase 7,Step 7.2,ch10 sec10.12 and ch13,implemented,none
+API051,preset_small_area_estimation,preset,Phase 7,Step 7.2,ch10 sec10.12 and ch13,implemented,none
+API052,design_grid,wrapper,Phase 7,Step 7.5,ch10 sec10.13,implemented,reps argument removed and scenario_audit owns replication
+API053,print.multisitedgp_data,S3,Phase 6,Step 6.6,ch10 sec10.14.1,implemented,compact headline report; Gate C Step 1.3 fixes no-target headline wording; Step 8.6 owns exact snapshots
+API054,print.multisitedgp_design,S3,Phase 6,Step 6.6,ch10 sec10.14.0,implemented,multi-line design summary
+API055,summary.multisitedgp_data,S3,Phase 6,Step 6.6,ch10 sec10.14.2,implemented,direct print and invisible object; Gate C Step 1.3 makes summary title preset-aware without stale custom suffix
+API056,format.multisitedgp_design,S3,Phase 6,Step 6.6,ch10 sec10.14.3,implemented,multi-line ch17-style design summary
+API057,[.multisitedgp_data,S3,Phase 2,Step 2.3,ch10 sec10.14.4,implemented,row subset stale diagnostics rule
+API058,as_tibble.multisitedgp_data,S3,Phase 2,Step 2.3,ch10 sec10.14.5,implemented,S3 method registration row for the API025 adapter contract
+API059,is_multisitedgp_data,predicate,Phase 2,Step 2.3,ch10 sec10.14.5,implemented,none
+API060,compute_kappa,diagnostic,Phase 4,Step 4.2,ch04 sec3 and ch06 sec2.2,implemented,Gate E Q16 amendment keeps kappa primitive public and ch10 inventory now includes it

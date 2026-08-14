@@ -1,0 +1,123 @@
+=== 테스트 스위트 skip 매트릭스 ===
+테스트 파일: 64  | test_that 블록: 393 
+기본 실행: 363  | 기본 게이트됨: 30 
+
+=== 게이트 유형별 test_that 수 ===
+  skip_if_not_slow                  17
+  skip_if_not_property              12
+  skip_if_not_linux_strict_hash      1
+  skip_if_not_installed             10
+
+=== 게이트된 테스트 (파일별) ===
+
+     test-property-core-invariants.R           test-gen-effects-mixture.R 
+                                  12                                    2 
+        test-gen-effects-skewn-ald.R               test-T14-mixture-ups.R 
+                                   2                                    2 
+test-gen-effects-gaussian-studentt.R   test-gen-effects-pmslab-user-dpm.R 
+                                   1                                    1 
+         test-T10-n-min-truncation.R               test-T11-jebs-I-grid.R 
+                                   1                                    1 
+      test-T13-ALD-standardization.R  test-T15-studentt-standardization.R 
+                                   1                                    1 
+    test-T16-skewn-standardization.R    test-T17-pmslab-standardization.R 
+                                   1                                    1 
+       test-T1a-jebs-bit-identical.R         test-T1b-A2-distributional.R 
+                                   1                                    1 
+              test-T4-independence.R                  test-T9-default-G.R 
+                                   1                                    1 
+
+=== 게이트된 테스트 전체 목록 ===
+                                 file line
+ test-gen-effects-gaussian-studentt.R  104
+           test-gen-effects-mixture.R   49
+           test-gen-effects-mixture.R   63
+   test-gen-effects-pmslab-user-dpm.R   33
+         test-gen-effects-skewn-ald.R   44
+         test-gen-effects-skewn-ald.R   65
+      test-property-core-invariants.R   56
+      test-property-core-invariants.R   66
+      test-property-core-invariants.R   76
+      test-property-core-invariants.R   98
+      test-property-core-invariants.R  117
+      test-property-core-invariants.R  139
+      test-property-core-invariants.R  163
+      test-property-core-invariants.R  181
+      test-property-core-invariants.R  197
+      test-property-core-invariants.R  220
+      test-property-core-invariants.R  242
+      test-property-core-invariants.R  264
+          test-T10-n-min-truncation.R    2
+               test-T11-jebs-I-grid.R    2
+       test-T13-ALD-standardization.R    2
+               test-T14-mixture-ups.R    2
+               test-T14-mixture-ups.R   18
+  test-T15-studentt-standardization.R    2
+     test-T16-skewn-standardization.R    2
+    test-T17-pmslab-standardization.R    2
+        test-T1a-jebs-bit-identical.R    2
+         test-T1b-A2-distributional.R    2
+               test-T4-independence.R    2
+                  test-T9-default-G.R    2
+                                                                          title
+ Gaussian and Student-t large-sample z_j moments match standardization contract
+                       T14a raw legacy mixture variance matches R2-F06 baseline
+                             T14b standardized mixture output has unit variance
+                        T17 PMSlab standardization and zero mass match contract
+                              SkewN standardization and skewness sign match T16
+             ALD standardization matches T13 with Yu-Zhang parameter conversion
+                       P01 Var(z_j) approaches one for finite-variance G shapes
+                     P02 Mean(z_j) approaches zero for finite-variance G shapes
+                     P03 se2_j is positive for random Paradigm A and B fixtures
+                       P04 Layer 3 rank dependence preserves the se2_j multiset
+                  P05 rank dependence achieves random feasible Spearman targets
+                          P06 layer functions return one row per requested site
+                             P07 final wrappers preserve canonical column types
+             P08 realized informativeness remains inside the open unit interval
+                  P09 covariate-off path is identical to beta-zero formula path
+                      P10 random A2 fixtures are bit-identical at the same seed
+             P11 dependence none records identity permutation for random shapes
+                    P12 every public preset returns a valid multisitedgp_design
+                T10 nj_min truncation and multi-rep mean hold in wrapper output
+                    T11 full JEBS Paradigm A grid spans the intended I envelope
+                       T13 ALD standardization matches Yu-Zhang moment contract
+                                   T14a legacy raw mixture variance equals 7.15
+                             T14b standardized Mixture output has unit variance
+                             T15 Student-t standardization holds across nu grid
+                         T16 Skew-Normal standardization and skewness sign hold
+                        T17 PMSlab standardization and point-mass fraction hold
+                    T1a Engine A1 Mixture matches JEBS appendix golden fixtures
+                    T1b Engine A2 Gaussian distribution clears KS binomial gate
+        T4 dependence none empirical Spearman stays within permutation envelope
+                   T9 default true_dist is Gaussian under Shapiro binomial gate
+                                                                           gates
+                                                                skip_if_not_slow
+                                                                skip_if_not_slow
+                                                                skip_if_not_slow
+                                                                skip_if_not_slow
+ skip_if_not_slow; skip_if_not_installed("sn"); skip_if_not_installed("moments")
+                        skip_if_not_slow; skip_if_not_installed("LaplacesDemon")
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                            skip_if_not_property
+                                                                skip_if_not_slow
+                                                                skip_if_not_slow
+                        skip_if_not_slow; skip_if_not_installed("LaplacesDemon")
+                                                                skip_if_not_slow
+                                                                skip_if_not_slow
+                                                                skip_if_not_slow
+ skip_if_not_slow; skip_if_not_installed("sn"); skip_if_not_installed("moments")
+                                                                skip_if_not_slow
+                                                   skip_if_not_linux_strict_hash
+                                                                skip_if_not_slow
+                                                                skip_if_not_slow
+                                                                skip_if_not_slow

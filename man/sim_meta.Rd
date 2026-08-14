@@ -149,7 +149,7 @@ generator;
 the \href{../articles/a7-case-study-meta-analysis.html}{meta-analysis
 case study} vignette.
 
-Other family-wrappers: 
-\code{\link{sim_multisite}()}
+Other family-wrappers:
+\code{\link[=sim_multisite]{sim_multisite()}}
 }
 \concept{family-wrappers}

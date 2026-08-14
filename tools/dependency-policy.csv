@@ -1,0 +1,41 @@
+type,package,min_version,role,policy
+Imports,stats,,random draws and distribution utilities,hard dependency
+Imports,tibble,,multisitedgp_data tibble inheritance,hard dependency
+Imports,dplyr,1.0.0,data manipulation in generator layers,hard dependency
+Imports,tidyr,1.2.0,design grid expansion,hard dependency
+Imports,withr,2.5.0,local seed scopes and reproducibility,hard dependency
+Imports,cli,3.6.0,classed errors warnings and messages,hard dependency
+Imports,rlang,1.1.0,argument matching and tidy error support,hard dependency
+Imports,nleqslv,,truncated gamma moment solver,hard dependency
+Imports,ggplot2,3.4.0,plot helpers,hard dependency
+Imports,digest,0.6.30,canonical hash backend,hard dependency
+Imports,RColorBrewer,,discrete colorblind-safe palettes,hard dependency
+Imports,viridisLite,,continuous palettes and n-greater-than-8 fallback,hard dependency
+Suggests,sn,,Skew-Normal effect generation,soft dependency with hard reject
+Suggests,LaplacesDemon,,asymmetric Laplace effect generation,soft dependency with hard reject
+Suggests,copula,,optional copula examples and user hooks,soft dependency with guard
+Suggests,metafor,,metafor adapter,soft dependency with hard reject
+Suggests,baggr,,baggr adapter,soft dependency with hard reject
+not-declared,multisitepower,,multisitepower adapter,off-CRAN (github.com/jche/multisitepower); deliberately NOT in Suggests since v0.2.0 because an unresolvable Suggests entry breaks pak on macOS/Windows (D-025); runtime guard names the install command
+Suggests,deconvolveR,,Twin Towers preset,soft dependency with hard reject
+Suggests,furrr,,parallel design-grid examples,soft dependency for examples
+Suggests,yaml,,cookbook manifest examples,docs-only soft dependency
+Suggests,arrow,,parquet cookbook examples,docs-only soft dependency
+Suggests,moments,,skewness property tests,testing-only soft dependency
+Suggests,hedgehog,,property tests,testing-only soft dependency
+Suggests,testthat,3.0.0,test suite,dev-only soft dependency
+Suggests,knitr,,vignette rendering,docs-only soft dependency
+Suggests,rmarkdown,,vignette rendering,docs-only soft dependency
+Suggests,covr,,coverage reports,CI-only soft dependency
+Tooling,roxygen2,,reference documentation generation,Config/Needs/documentation
+Tooling,pkgdown,,website build,Config/Needs/website
+Tooling,lintr,,lint package,Config/Needs/lint
+Tooling,cyclocomp,,cyclomatic-complexity lint backend,Config/Needs/lint
+Removed,bayesplot,,Stan posterior visualization,forbidden from multisiteDGP v1
+Removed,Rcpp,,C++ binding,forbidden from multisiteDGP v1
+Removed,RcppParallel,,parallel C++,forbidden from multisiteDGP v1
+Removed,RcppEigen,,Eigen C++ matrix operations,forbidden from multisiteDGP v1
+Removed,BH,,Boost headers,forbidden from multisiteDGP v1
+Removed,rstan,,Stan inference,forbidden from multisiteDGP v1
+Removed,rstantools,,Stan package tooling,forbidden from multisiteDGP v1
+Removed,StanHeaders,,Stan compile-time headers,forbidden from multisiteDGP v1

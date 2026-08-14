@@ -1,0 +1,9 @@
+"run_id","experiment_id","mode","shape","reps","completed","failed","I_pass_rate","sigma_tau_pass_rate","R_pass_rate","GM_se2_pass_rate","mean_I","mean_R","mean_sigma_tau","mean_GM_se2","acceptance_pass"
+"step9-2-v0-subset","V0","subset","ALD",2,2,0,0.5,0,0,0.5,0.310878624956601,7.74871794871795,0.194991155690471,0.0887942509480606,FALSE
+"step9-2-v0-subset","V0","subset","Gaussian",2,2,0,1,0.5,0,0.5,0.302007362049878,8.20769230769231,0.188905601291049,0.0925417106182862,FALSE
+"step9-2-v0-subset","V0","subset","Mixture",2,2,0,1,1,0,0,0.284258466092689,10.6681818181818,0.207542787250174,0.100718200456609,FALSE
+"step9-2-v0-subset","V0","subset","PointMassSlab",2,2,0,0.5,0,0,0,0.307413002323406,6.82539682539683,0.197644461787752,0.0905081131170068,FALSE
+"step9-2-v0-subset","V0","subset","SkewN",2,2,0,1,1,0,0,0.291490994763728,11.9294871794872,0.206143304670791,0.0972401310790364,FALSE
+"step9-2-v0-subset","V0","subset","StudentT",2,2,0,1,0.5,0,0.5,0.313731453372056,10.3,0.193183466924659,0.0875295593218898,FALSE
+"step9-2-v0-subset","V0","subset","User",2,2,0,1,1,0,1,0.313663097770737,9.22142857142857,0.199479977681812,0.0875257467543187,FALSE
+"step9-2-v0-subset","V0","subset","DPM",0,0,0,NA,NA,NA,NA,NA,NA,NA,NA,NA

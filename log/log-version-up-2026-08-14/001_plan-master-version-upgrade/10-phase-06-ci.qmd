@@ -1,0 +1,244 @@
+---
+title: "Phase 6 — CI 복구"
+---
+
+## 목표
+
+**5 개 workflow 를 전부 green 으로 만들고, 그 상태가 유지되게 만든다.** 성공 기준 **G2** 를 달성한다.
+
+CI 가 3 개월간 red 였던 것은 단순히 "고치지 않아서" 가 아니다. red 인 CI 는 신호를 주지 않으므로, red 상태가 길어질수록 아무도 보지 않게 되고 결국 없는 것과 같아진다. 이 Phase 의 진짜 목표는 green 을 한 번 만드는 것이 아니라 **red 가 다시 방치되지 않는 구조** 를 만드는 것이다.
+
+| | |
+|---|---|
+| **Step 수** | 6 (6.1 – 6.6) |
+| **누적 시간** | ~110 분 (+ CI 실행 대기 상당) |
+| **선행 Phase** | Phase 4, Phase 5, Phase 7 **전부** |
+| **종료 로그** | `007_phase06-ci-restoration.qmd` |
+
+::: {.callout-important title="선행 조건이 엄격한 이유"}
+Phase 4/5/7 이 끝나기 전에 CI 를 고치면 **두더지잡기**가 된다. 아직 고치는 중인 코드를 대상으로 workflow 를 조정하면 무엇이 workflow 문제이고 무엇이 코드 문제인지 구별되지 않는다. Phase 6 은 "코드는 이미 로컬에서 옳다" 를 전제로 **환경 차이만** 다룬다.
+:::
+
+---
+
+## Step 6.1 — workflow 감사 및 수정 계획
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | Phase 4, 5, 7 |
+
+**목표.** Step 2.1 의 포렌식 결과와 Phase 4/5/7 의 수정 내용을 대조해서, **아직 남아 있는 CI 문제만** 골라낸다.
+
+**작업.**
+
+1. Step 2.1 의 실패 원인 분류표를 다시 연다. 각 원인에 대해:
+   - **코드 문제** → Phase 4/5/7 이 고쳤는가? 확인
+   - **아티팩트 문제** → Phase 4 가 고쳤는가? 확인
+   - **환경 문제 / 설정 문제** → 이 Phase 가 처리. 남은 목록
+2. 5 개 workflow YAML 재정독 — Phase 4/5 의 변경(확장 스위트 정의, 환경 변수, 새 의존성)이 workflow 에 반영되어야 하는 부분 식별
+3. **현재 상태 실측** — Phase 4/5/7 이 병합된 브랜치를 push 해서 5 개 workflow 를 실제로 태운다. 지금 무엇이 실패하는지가 이 Phase 의 실제 작업 목록
+4. 수정 계획 작성 — workflow 별 수정 항목
+
+**산출물.**
+
+- `evidence/phase06/ci-remaining-issues.md` — 남은 문제 × workflow
+- `evidence/phase06/ci-baseline-run.md` — Phase 4/5/7 이후 첫 CI 실행 결과 (run ID 포함)
+- workflow 별 수정 계획
+
+**완료 조건.**
+
+- Phase 4/5/7 이후 CI 를 한 번 태웠고 결과가 기록되어 있다
+- 남은 실패가 workflow 별로 정리되어 있다
+- 각 실패에 수정 방향이 배정되어 있다
+
+---
+
+## Step 6.2 — `R-CMD-check` workflow 복구
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 (+ 실행 대기) |
+| **의존** | 6.1 |
+
+**목표.** 5-cell 매트릭스(`linux-release`, `linux-devel`, `linux-oldrel`, `macos-release`, `windows-release`)를 전부 green 으로 만든다.
+
+**작업.**
+
+1. 매트릭스 정의가 `tools/cross-os-reproducibility-policy.md` 의 요구 매트릭스와 일치하는지 확인. Phase 4 에서 정책이 개정됐으면 그에 맞춘다
+2. 환경 변수 확인
+   - `_R_CHECK_FORCE_SUGGESTS_=false`
+   - `MULTISITEDGP_REPRODUCIBILITY_POLICY` (Phase 4 개정 반영)
+   - `MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN=false`
+3. 의존성 설치 — `multisitepower` 가 CRAN 에 없으므로 특별 처리 필요. 2026-05-10 의 취소된 run 제목이 "ci: pin Suggests explicitly (multisitepower not on CRAN/r-universe)" 인 것으로 보아 이미 시도된 이력이 있다. 그 접근이 왜 실패했는지 확인
+4. vignette 빌드 포함 여부 — `--as-cran` 은 vignette 를 빌드한다. knit 시간(Step 2.8 측정)이 CI 시간에 미치는 영향 확인
+5. 실패 cell 을 하나씩 처리. **매트릭스 전체를 한 번에 고치려 하지 않는다** — Linux release 부터 green 으로 만들고 순차 확장
+6. NOTE 처리 — 성공 기준 G6 은 "문서화된 NOTE 만" 이다. 각 NOTE 를 제거하거나, 제거 불가하면 사유를 문서화
+
+**산출물.**
+
+- 수정된 `.github/workflows/R-CMD-check.yaml`
+- `evidence/phase06/r-cmd-check-matrix-status.md` — cell 별 상태 + 최종 run ID
+- NOTE 처리 기록
+
+**완료 조건.**
+
+- 5 cell 전부 green
+- 각 cell 의 E/W/N 이 기록되어 있고, NOTE 는 전부 문서화되어 있다
+- T1a 가 Linux cell 에서 **실제로 실행**된다 (Phase 4 Step 4.6 과 정합)
+
+---
+
+## Step 6.3 — `lint` workflow 복구
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | 6.1 |
+
+**목표.** lint workflow 를 green 으로 만든다.
+
+**작업.**
+
+1. 로컬에서 `lintr::lint_package()` 실행 — Step 1.5 베이스라인 대비 Phase 4/5/7 이후 위반이 늘었는지 확인
+2. 위반을 분류
+   - **코드 수정으로 해결** — 대부분. 스타일 위반
+   - **`.lintr` 설정 조정** — 규칙이 이 package 에 부적합한 경우. 근거 필요
+   - **`# nolint` 주석** — 정당한 예외. 사유를 주석에 남긴다. 현재 `R/utils-rng.R`, `R/wrapper-sim_multisite.R` 등에 `# nolint start/end` 사용 이력 있음
+3. `.lintr` 의 현재 설정 검토 — `cyclocomp_linter(20)`, `line_length_linter(120)`, `object_usage_linter = NULL`. `object_usage_linter` 를 끈 것이 정당한지 재검토 (이 linter 는 미사용 변수와 오타를 잡는다)
+4. workflow 자체의 문제(설치, 버전) 처리
+5. **점진 도입 옵션** — 위반이 많으면 신규 코드에만 적용하는 방식도 가능. 단 그 경우 기존 위반 목록을 원장에 남긴다
+
+**산출물.**
+
+- 수정된 코드 + `.lintr` (필요시)
+- 수정된 `.github/workflows/lint.yaml`
+- `evidence/phase06/lint-resolution.md` — 위반 × 처리
+
+**완료 조건.**
+
+- lint workflow 가 green
+- `# nolint` 사용 각각에 사유 주석이 있다
+- `.lintr` 변경이 있다면 근거가 기록되어 있다
+
+---
+
+## Step 6.4 — `test-coverage` workflow 복구
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~15 분 |
+| **의존** | 6.1 |
+
+**목표.** 커버리지 workflow 를 green 으로 만들고, 커버리지 추이가 보이게 한다.
+
+**작업.**
+
+1. 실패 원인 확인 — 흔한 원인: Codecov 토큰 만료/부재, `covr` 버전, 의존성 설치 실패
+2. 토큰이 문제면 **PI 에게 알린다.** secrets 설정은 agent 가 할 수 없다
+3. Codecov 를 계속 쓸지 결정 — 대안: 커버리지 리포트를 artifact 로 업로드만 하고 외부 서비스를 쓰지 않는 방식. 외부 의존을 줄이는 쪽이 유지보수에 유리
+4. Phase 5 에서 늘어난 테스트가 커버리지 측정 시간에 미치는 영향 확인
+5. 커버리지 배지가 README 에 있다면 갱신
+
+**산출물.**
+
+- 수정된 `.github/workflows/test-coverage.yaml`
+- `evidence/phase06/coverage-workflow.md`
+
+**완료 조건.**
+
+- workflow 가 green (또는 토큰 문제로 PI 조치 대기 — 그 경우 원장에 등재)
+- 커버리지 수치가 CI 에서 확인 가능하다
+
+---
+
+## Step 6.5 — `extended-tests` workflow 복구
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 (+ 실행 대기) |
+| **의존** | 6.1, Step 5.8 (확장 스위트 정의) |
+
+**목표.** 10 주 연속 실패한 workflow 를 green 으로 만든다.
+
+**작업.**
+
+1. Phase 5 Step 5.8 이 확정한 **확장 스위트 정의** 를 workflow 에 반영. 무엇이 확장 스위트에 남았는지에 따라 환경 변수와 실행 명령이 달라진다
+2. Phase 4 가 snapshot / fixture 를 고쳤으므로 원래 실패 항목은 해소되어 있어야 한다. 확인
+3. **실패 절단 해제** — testthat 이 10 건에서 절단하는 설정 때문에 전체 실패 목록을 볼 수 없었다. `--max-fails` 또는 reporter 설정 조정
+4. 스케줄 주기 검토 — 주간이 적절한가? PR 에서도 돌 필요가 있는가?
+5. **실패 알림** — 스케줄 실패가 10 주간 방치된 근본 원인은 알림이 없었다는 것이다. 실패 시 GitHub Issue 자동 생성 또는 다른 알림 경로를 추가한다. **이것이 이 Step 의 가장 중요한 산출물**
+6. 한 번 수동 실행(`workflow_dispatch`)해서 green 확인
+
+**산출물.**
+
+- 수정된 `.github/workflows/extended-tests.yaml`
+- 실패 알림 메커니즘
+- `evidence/phase06/extended-tests-recovery.md`
+
+**완료 조건.**
+
+- extended-tests 가 green
+- 전체 실패 목록이 절단 없이 보인다
+- **실패 시 알림 메커니즘이 동작한다** (의도적 실패로 검증)
+
+---
+
+## Step 6.6 — 매트릭스 최종 확인 및 유지 장치
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~15 분 (+ 실행 대기) |
+| **의존** | 6.2 – 6.5 |
+
+**목표.** 전체 CI 가 green 임을 확인하고, red 가 다시 방치되지 않는 장치를 넣는다.
+
+**작업.**
+
+1. **연속 3 회 green 확인** — 한 번의 green 은 우연일 수 있다. 세 번 연속 (push 2 회 + 스케줄 1 회 또는 수동 3 회) 확인
+2. **branch protection 제안** — `main` 에 대해 CI 통과를 병합 조건으로. 설정은 PI 권한이므로 **제안만 하고 PI 에게 요청**
+3. **README 배지** — CI 상태 배지 추가/갱신. 배지가 있으면 red 를 놓치기 어렵다
+4. `pkgdown-deploy` 도 확인 — 유일하게 green 이었지만 Phase 4/9 변경 후에도 그런지
+5. `pr-commands.yaml` 확인 — 사용 중인지, 아니면 제거 대상인지
+6. **CI 소요 시간 기록** — workflow 별 실행 시간. 너무 길면 개발 루프를 방해한다
+7. `.github/workflows/README.md` 갱신 — 각 workflow 의 역할과 실패 시 대응
+
+**산출물.**
+
+- README 배지
+- 갱신된 `.github/workflows/README.md`
+- `evidence/phase06/ci-final-status.md` — 연속 3 회 green 증거 (run ID) + 소요 시간
+- branch protection 요청 문서
+
+**완료 조건.**
+
+- 6 개 workflow 전부 green, 연속 3 회 (**성공 기준 G2**)
+- CI 상태 배지가 README 에 있다
+- branch protection 이 설정되어 있거나 PI 에게 요청되어 있다
+- 각 workflow 의 역할이 문서화되어 있다
+
+---
+
+## Phase 종료 조건
+
+- [ ] `R-CMD-check` 5 cell 전부 green
+- [ ] `lint`, `test-coverage`, `extended-tests`, `pkgdown-deploy` green
+- [ ] 연속 3 회 green 이 run ID 로 증명되어 있다
+- [ ] T1a 가 Linux cell 에서 실제로 실행된다
+- [ ] extended-tests 실패 시 알림이 동작한다 (검증 완료)
+- [ ] `R CMD check` NOTE 가 전부 문서화되어 있다
+- [ ] CI 배지가 README 에 있다
+- [ ] branch protection 설정 또는 PI 요청 완료
+- [ ] 원장의 CI 관련 P0 행이 전부 `fixed`
+
+## Phase 로그
+
+`007_phase06-ci-restoration.qmd` + `.html`.
+
+§4 에 **workflow 별 최종 run ID 와 URL** 을 남긴다. GitHub 로그는 90 일 후 만료되므로, 핵심 출력은 로그 안에 인용하거나 `evidence/` 에 보존한다 — 이번에 2026-05-10 로그가 만료되어 겪은 문제를 반복하지 않는다.

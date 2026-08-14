@@ -1,0 +1,40 @@
+    id                                    title                         file
+1 R5.1          Hello-world JEBS-style workflow           R5-1-hello-world.R
+2 R5.2 Custom calibration with sigma_tau and R2    R5-2-custom-calibration.R
+3 R5.3         Compare two presets side by side       R5-3-compare-presets.R
+4 R5.4            Bridge to downstream adapters   R5-4-downstream-adapters.R
+5 R5.5                       User g_fn callback             R5-5-user-g-fn.R
+6 R5.6                     Custom dependence_fn  R5-6-custom-dependence-fn.R
+7 R5.7           Design grid and scenario audit     R5-7-design-grid-audit.R
+8 R5.8           Canonical hash reproducibility  R5-8-reproducibility-hash.R
+9 R5.9        Debugging feasibility diagnostics R5-9-debugging-feasibility.R
+  parsed executed marker_found error output_lines
+1   TRUE     TRUE         TRUE  <NA>            1
+2   TRUE     TRUE         TRUE  <NA>            1
+3   TRUE     TRUE         TRUE  <NA>            1
+4   TRUE     TRUE         TRUE  <NA>            1
+5   TRUE     TRUE         TRUE  <NA>            1
+6   TRUE     TRUE         TRUE  <NA>            1
+7   TRUE     TRUE         TRUE  <NA>            1
+8   TRUE     TRUE         TRUE  <NA>            1
+9   TRUE     TRUE         TRUE  <NA>            1
+    id                                    title                         file
+1 R5.1          Hello-world JEBS-style workflow           R5-1-hello-world.R
+2 R5.2 Custom calibration with sigma_tau and R2    R5-2-custom-calibration.R
+3 R5.3         Compare two presets side by side       R5-3-compare-presets.R
+4 R5.4            Bridge to downstream adapters   R5-4-downstream-adapters.R
+5 R5.5                       User g_fn callback             R5-5-user-g-fn.R
+6 R5.6                     Custom dependence_fn  R5-6-custom-dependence-fn.R
+7 R5.7           Design grid and scenario audit     R5-7-design-grid-audit.R
+8 R5.8           Canonical hash reproducibility  R5-8-reproducibility-hash.R
+9 R5.9        Debugging feasibility diagnostics R5-9-debugging-feasibility.R
+  parsed executed marker_found error output_lines
+1   TRUE     TRUE         TRUE  <NA>            1
+2   TRUE     TRUE         TRUE  <NA>            1
+3   TRUE     TRUE         TRUE  <NA>            1
+4   TRUE     TRUE         TRUE  <NA>            1
+5   TRUE     TRUE         TRUE  <NA>            1
+6   TRUE     TRUE         TRUE  <NA>            1
+7   TRUE     TRUE         TRUE  <NA>            1
+8   TRUE     TRUE         TRUE  <NA>            1
+9   TRUE     TRUE         TRUE  <NA>            1

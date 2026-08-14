@@ -111,8 +111,8 @@ in multisite trials. \emph{Journal of Educational and Behavioral Statistics},
 the \href{../articles/m4-precision-dependence-theory.html}{M4
 Precision dependence theory} vignette.
 
-Other family-dependence: 
-\code{\link{align_copula_corr}()},
-\code{\link{align_rank_corr}()}
+Other family-dependence:
+\code{\link[=align_copula_corr]{align_copula_corr()}},
+\code{\link[=align_rank_corr]{align_rank_corr()}}
 }
 \concept{family-dependence}

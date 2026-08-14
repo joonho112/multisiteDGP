@@ -1,0 +1,10 @@
+id,fixture_file,fixture_type,owner_phase,owner_step,blueprint_ref,status,unresolved_conflict
+F01,jebs_appendix_mixture_seed42.rds,JEBS appendix seed,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,Step 8.1 promoted RDS to tests/testthat/_snaps/golden; inst/extdata/golden ships manifest only; test tarball RDS is intentional small fixture tradeoff
+F02,jebs_appendix_mixture_seed1.rds,JEBS appendix seed,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,Step 8.1 promoted RDS to tests/testthat/_snaps/golden; inst/extdata/golden ships manifest only; test tarball RDS is intentional small fixture tradeoff
+F03,jebs_appendix_mixture_seed2024.rds,JEBS appendix seed,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,Step 8.1 promoted RDS to tests/testthat/_snaps/golden; inst/extdata/golden ships manifest only; test tarball RDS is intentional small fixture tradeoff
+F04,jebs_appendix_mixture_seed12345.rds,JEBS appendix seed,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,Step 8.1 promoted RDS to tests/testthat/_snaps/golden; inst/extdata/golden ships manifest only; test tarball RDS is intentional small fixture tradeoff
+F05,preset_jebs_paper.rds,preset output,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,UX sigma_tau 0.20 fixture generated under tests/testthat/_snaps/golden; intentional small test-only RDS fixture tradeoff
+F06,preset_jebs_strict.rds,preset output,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,T1a strict sigma_tau 0.15 fixture generated under tests/testthat/_snaps/golden; intentional small test-only RDS fixture tradeoff
+F07,preset_education_modest.rds,preset output,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,V0 hello-world fixture generated under tests/testthat/_snaps/golden; intentional small test-only RDS fixture tradeoff
+F08,preset_walters_2024.rds,preset output,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,Walters Gaussian v1 fixture generated under tests/testthat/_snaps/golden; intentional small test-only RDS fixture tradeoff
+F09,preset_small_area_estimation.rds,preset output,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,Paradigm B SAE fixture generated under tests/testthat/_snaps/golden; intentional small test-only RDS fixture tradeoff

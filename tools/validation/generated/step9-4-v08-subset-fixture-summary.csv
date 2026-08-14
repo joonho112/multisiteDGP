@@ -1,0 +1,11 @@
+"run_id","experiment_id","mode","fixture_id","reruns","completed","failed","unique_hashes","local_hash_identical","rng_preserved","provenance_hash_match"
+"step9-4-v08-subset","V08","subset",1,3,3,0,1,TRUE,TRUE,TRUE
+"step9-4-v08-subset","V08","subset",2,3,3,0,1,TRUE,TRUE,TRUE
+"step9-4-v08-subset","V08","subset",3,3,3,0,1,TRUE,TRUE,TRUE
+"step9-4-v08-subset","V08","subset",4,3,3,0,1,TRUE,TRUE,TRUE
+"step9-4-v08-subset","V08","subset",5,3,3,0,1,TRUE,TRUE,TRUE
+"step9-4-v08-subset","V08","subset",6,3,3,0,1,TRUE,TRUE,TRUE
+"step9-4-v08-subset","V08","subset",7,3,3,0,1,TRUE,TRUE,TRUE
+"step9-4-v08-subset","V08","subset",8,3,3,0,1,TRUE,TRUE,TRUE
+"step9-4-v08-subset","V08","subset",9,3,3,0,1,TRUE,TRUE,TRUE
+"step9-4-v08-subset","V08","subset",10,3,3,0,1,TRUE,TRUE,TRUE

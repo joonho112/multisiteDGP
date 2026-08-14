@@ -54,7 +54,6 @@ property_rank_upstream <- function(case) {
 }
 
 test_that("P01 Var(z_j) approaches one for finite-variance G shapes", {
-  skip_if_not_property()
 
   shapes <- property_shape_specs()
   for (idx in seq_along(shapes)) {
@@ -64,7 +63,6 @@ test_that("P01 Var(z_j) approaches one for finite-variance G shapes", {
 })
 
 test_that("P02 Mean(z_j) approaches zero for finite-variance G shapes", {
-  skip_if_not_property()
 
   shapes <- property_shape_specs()
   for (idx in seq_along(shapes)) {
@@ -74,7 +72,6 @@ test_that("P02 Mean(z_j) approaches zero for finite-variance G shapes", {
 })
 
 test_that("P03 se2_j is positive for random Paradigm A and B fixtures", {
-  skip_if_not_property()
 
   cases <- property_site_cases()
   for (idx in seq_len(nrow(cases))) {
@@ -96,7 +93,6 @@ test_that("P03 se2_j is positive for random Paradigm A and B fixtures", {
 })
 
 test_that("P04 Layer 3 rank dependence preserves the se2_j multiset", {
-  skip_if_not_property()
 
   cases <- subset(property_site_cases(24L), cv > 0)
   cases <- cases[seq_len(12L), , drop = FALSE]
@@ -115,7 +111,6 @@ test_that("P04 Layer 3 rank dependence preserves the se2_j multiset", {
 })
 
 test_that("P05 rank dependence achieves random feasible Spearman targets", {
-  skip_if_not_property()
 
   cases <- subset(property_site_cases(24L), cv > 0)
   cases <- cases[seq_len(12L), , drop = FALSE]
@@ -137,7 +132,6 @@ test_that("P05 rank dependence achieves random feasible Spearman targets", {
 })
 
 test_that("P06 layer functions return one row per requested site", {
-  skip_if_not_property()
 
   cases <- subset(property_site_cases(24L), cv > 0)
   cases <- cases[seq_len(10L), , drop = FALSE]
@@ -161,7 +155,6 @@ test_that("P06 layer functions return one row per requested site", {
 })
 
 test_that("P07 final wrappers preserve canonical column types", {
-  skip_if_not_property()
 
   cases <- property_site_cases(20L)
   for (idx in seq_len(nrow(cases))) {
@@ -179,7 +172,6 @@ test_that("P07 final wrappers preserve canonical column types", {
 })
 
 test_that("P08 realized informativeness remains inside the open unit interval", {
-  skip_if_not_property()
 
   cases <- property_site_cases(20L)
   for (idx in seq_len(nrow(cases))) {
@@ -195,7 +187,6 @@ test_that("P08 realized informativeness remains inside the open unit interval", 
 })
 
 test_that("P09 covariate-off path is identical to beta-zero formula path", {
-  skip_if_not_property()
 
   cases <- property_site_cases(12L)
   for (idx in seq_len(nrow(cases))) {
@@ -218,7 +209,6 @@ test_that("P09 covariate-off path is identical to beta-zero formula path", {
 })
 
 test_that("P10 random A2 fixtures are bit-identical at the same seed", {
-  skip_if_not_property()
 
   cases <- property_site_cases(12L)
   for (idx in seq_len(nrow(cases))) {
@@ -240,7 +230,6 @@ test_that("P10 random A2 fixtures are bit-identical at the same seed", {
 })
 
 test_that("P11 dependence none records identity permutation for random shapes", {
-  skip_if_not_property()
 
   shapes <- property_shape_specs()
   shapes <- shapes[intersect(names(shapes), c("Gaussian", "Mixture", "PointMassSlab"))]
@@ -262,7 +251,6 @@ test_that("P11 dependence none records identity permutation for random shapes", 
 })
 
 test_that("P12 every public preset returns a valid multisitedgp_design", {
-  skip_if_not_property()
 
   preset_names <- c(
     "preset_education_small",

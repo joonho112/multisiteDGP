@@ -130,7 +130,7 @@ constant;
 the \href{../articles/m3-margin-se-models.html}{M3 Margin and SE
 models} vignette.
 
-Other family-margins: 
-\code{\link{gen_se_direct}()}
+Other family-margins:
+\code{\link[=gen_se_direct]{gen_se_direct()}}
 }
 \concept{family-margins}

@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>19&nbsp; 부록 B — 감사 원자료 – multisiteDGP Version Upgrade — Master Plan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./appendix-a-defect-ledger.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-676a5d7ec044db2339335543664513bd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-df430a3b89f676b22d1da82ae4649026.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-676a5d7ec044db2339335543664513bd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./appendix-a-defect-ledger.html">부록</a></li><li class="breadcrumb-item"><a href="./appendix-b-evidence.html"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">부록 B — 감사 원자료</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">multisiteDGP Version Upgrade — Master Plan</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Preface</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text">진단</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-current-state-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">현재 상태 감사</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-goals-and-scope.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">목표와 범위</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">실행 규약</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-operating-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">실행 규약</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-log-protocol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">로그 규약</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Phase 로드맵</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-phase-01-foundation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Phase 1 — 작업 기반 복구</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-phase-02-defect-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Phase 2 — 결함 인벤토리 감사</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-phase-03-scope-decisions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Phase 3 — v0.2.0 범위 결정</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-phase-04-reproducibility.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Phase 4 — 재현성 계약 재구축</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-phase-05-test-suite.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phase 5 — 테스트 스위트 재구축</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-phase-06-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Phase 6 — CI 복구</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-phase-07-remediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Phase 7 — 기능 결함 수정</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-phase-08-revalidation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Phase 8 — 통계 검증 재실행</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-phase-09-documentation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Phase 9 — 문서 델타 동기화</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-phase-10-external-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Phase 10 — 외부 리뷰 게이트</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-phase-11-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Phase 11 — v0.2.0 릴리스</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">인수</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-acceptance-criteria.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">인수 기준</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">부록</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix-a-defect-ledger.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">부록 A — 결함 원장 스키마</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix-b-evidence.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">부록 B — 감사 원자료</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#b.1-저장소-상태" id="toc-b.1-저장소-상태" class="nav-link active" data-scroll-target="#b.1-저장소-상태"><span class="header-section-number">19.1</span> B.1 저장소 상태</a></li>
+  <li><a href="#b.2-ci-실행-이력" id="toc-b.2-ci-실행-이력" class="nav-link" data-scroll-target="#b.2-ci-실행-이력"><span class="header-section-number">19.2</span> B.2 CI 실행 이력</a></li>
+  <li><a href="#b.3-extended-tests-실패-상세-2026-07-13-run-29247044931" id="toc-b.3-extended-tests-실패-상세-2026-07-13-run-29247044931" class="nav-link" data-scroll-target="#b.3-extended-tests-실패-상세-2026-07-13-run-29247044931"><span class="header-section-number">19.3</span> B.3 extended-tests 실패 상세 (2026-07-13, run 29247044931)</a></li>
+  <li><a href="#b.4-로컬-테스트-실행-①-기본-환경" id="toc-b.4-로컬-테스트-실행-①-기본-환경" class="nav-link" data-scroll-target="#b.4-로컬-테스트-실행-①-기본-환경"><span class="header-section-number">19.4</span> B.4 로컬 테스트 실행 ① — 기본 환경</a></li>
+  <li><a href="#b.5-로컬-테스트-실행-②-slow-property-게이트-on" id="toc-b.5-로컬-테스트-실행-②-slow-property-게이트-on" class="nav-link" data-scroll-target="#b.5-로컬-테스트-실행-②-slow-property-게이트-on"><span class="header-section-number">19.5</span> B.5 로컬 테스트 실행 ② — slow + property 게이트 on</a></li>
+  <li><a href="#b.6-r-cmd-check---as-cran-vignette-제외" id="toc-b.6-r-cmd-check---as-cran-vignette-제외" class="nav-link" data-scroll-target="#b.6-r-cmd-check---as-cran-vignette-제외"><span class="header-section-number">19.6</span> B.6 <code>R CMD check --as-cran</code> (vignette 제외)</a></li>
+  <li><a href="#b.7-의존성-설치-상태" id="toc-b.7-의존성-설치-상태" class="nav-link" data-scroll-target="#b.7-의존성-설치-상태"><span class="header-section-number">19.7</span> B.7 의존성 설치 상태</a></li>
+  <li><a href="#b.8-미구현-표면-코드-grep" id="toc-b.8-미구현-표면-코드-grep" class="nav-link" data-scroll-target="#b.8-미구현-표면-코드-grep"><span class="header-section-number">19.8</span> B.8 미구현 표면 (코드 grep)</a></li>
+  <li><a href="#b.9-저장소-위생" id="toc-b.9-저장소-위생" class="nav-link" data-scroll-target="#b.9-저장소-위생"><span class="header-section-number">19.9</span> B.9 저장소 위생</a></li>
+  <li><a href="#b.10-package-규모" id="toc-b.10-package-규모" class="nav-link" data-scroll-target="#b.10-package-규모"><span class="header-section-number">19.10</span> B.10 package 규모</a></li>
+  <li><a href="#b.11-이번-감사에서-실행한-명령-전체" id="toc-b.11-이번-감사에서-실행한-명령-전체" class="nav-link" data-scroll-target="#b.11-이번-감사에서-실행한-명령-전체"><span class="header-section-number">19.11</span> B.11 이번 감사에서 실행한 명령 전체</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./appendix-a-defect-ledger.html">부록</a></li><li class="breadcrumb-item"><a href="./appendix-b-evidence.html"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">부록 B — 감사 원자료</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">부록 B — 감사 원자료</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><a href="./01-current-state-audit.html">Ch.1</a> 의 근거가 된 실행 결과다. <strong>2026-08-14 실측.</strong> 이 부록은 Phase 2 가 재감사할 때의 출발점이자, 감사 결론을 나중에 재확인할 수 있게 하는 원본이다.</p>
+<section id="b.1-저장소-상태" class="level2" data-number="19.1">
+<h2 data-number="19.1" class="anchored" data-anchor-id="b.1-저장소-상태"><span class="header-section-number">19.1</span> B.1 저장소 상태</h2>
+<pre><code>$ cd "multisiteDGP-R-package" &amp;&amp; git rev-parse --is-inside-work-tree
+fatal: not a git repository (or any of the parent directories): .git
+
+$ cd "00_IES Multisite Trial Project" &amp;&amp; git rev-parse --is-inside-work-tree
+fatal: not a git repository (or any of the parent directories): .git
+
+$ gh repo view joonho112/multisiteDGP --json name,visibility,pushedAt
+{"name":"multisiteDGP","pushedAt":"2026-05-10T04:41:33Z","visibility":"PUBLIC"}
+
+$ gh release list --repo joonho112/multisiteDGP
+(빈 출력 — 릴리스 0 건)
+
+$ gh issue list --repo joonho112/multisiteDGP --limit 10
+(빈 출력 — 이슈 0 건)</code></pre>
+</section>
+<section id="b.2-ci-실행-이력" class="level2" data-number="19.2">
+<h2 data-number="19.2" class="anchored" data-anchor-id="b.2-ci-실행-이력"><span class="header-section-number">19.2</span> B.2 CI 실행 이력</h2>
+<p><code>gh run list --repo joonho112/multisiteDGP --limit 15</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>상태</th>
+<th>workflow</th>
+<th>branch</th>
+<th>trigger</th>
+<th>run ID</th>
+<th>소요</th>
+<th>시각</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>29247044931</td>
+<td>6m46s</td>
+<td>2026-07-13T11:40:11Z</td>
+</tr>
+<tr class="even">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>28783281261</td>
+<td>6m50s</td>
+<td>2026-07-06T09:56:56Z</td>
+</tr>
+<tr class="odd">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>28364523378</td>
+<td>5m44s</td>
+<td>2026-06-29T10:09:16Z</td>
+</tr>
+<tr class="even">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>27946333441</td>
+<td>6m21s</td>
+<td>2026-06-22T10:29:49Z</td>
+</tr>
+<tr class="odd">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>27540776185</td>
+<td>6m21s</td>
+<td>2026-06-15T10:42:13Z</td>
+</tr>
+<tr class="even">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>27130475464</td>
+<td>5m44s</td>
+<td>2026-06-08T10:06:56Z</td>
+</tr>
+<tr class="odd">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>26749251340</td>
+<td>6m4s</td>
+<td>2026-06-01T10:25:17Z</td>
+</tr>
+<tr class="even">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>26394630128</td>
+<td>5m49s</td>
+<td>2026-05-25T09:56:49Z</td>
+</tr>
+<tr class="odd">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>26026458795</td>
+<td>6m10s</td>
+<td>2026-05-18T09:56:52Z</td>
+</tr>
+<tr class="even">
+<td>failure</td>
+<td>extended-tests</td>
+<td>main</td>
+<td>schedule</td>
+<td>25663155660</td>
+<td>6m1s</td>
+<td>2026-05-11T09:54:52Z</td>
+</tr>
+<tr class="odd">
+<td>failure</td>
+<td>R-CMD-check</td>
+<td>main</td>
+<td>push</td>
+<td>25620008533</td>
+<td>34m3s</td>
+<td>2026-05-10T04:41:35Z</td>
+</tr>
+<tr class="even">
+<td>failure</td>
+<td>lint</td>
+<td>main</td>
+<td>push</td>
+<td>25620008532</td>
+<td>1m58s</td>
+<td>2026-05-10T04:41:35Z</td>
+</tr>
+<tr class="odd">
+<td>failure</td>
+<td>test-coverage</td>
+<td>main</td>
+<td>push</td>
+<td>25620008531</td>
+<td>2m44s</td>
+<td>2026-05-10T04:41:35Z</td>
+</tr>
+<tr class="even">
+<td><strong>success</strong></td>
+<td><strong>pkgdown-deploy</strong></td>
+<td>main</td>
+<td>push</td>
+<td>25620008530</td>
+<td>4m43s</td>
+<td>2026-05-10T04:41:35Z</td>
+</tr>
+<tr class="odd">
+<td>cancelled</td>
+<td>R-CMD-check</td>
+<td>main</td>
+<td>push</td>
+<td>25619715961</td>
+<td>17m25s</td>
+<td>2026-05-10T04:24:14Z</td>
+</tr>
+</tbody>
+</table>
+<p>마지막 push 커밋 제목: <code>fix(index): flatten HTML feature-card indentation so pandoc treats th…</code> 취소된 run 의 커밋 제목: <code>ci: pin Suggests explicitly (multisitepower not on CRAN/r-universe)</code></p>
+<div class="callout callout-style-simple callout-warning callout-titled" title="로그 만료">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>로그 만료
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>R-CMD-check</code>, <code>lint</code>, <code>test-coverage</code> (2026-05-10) 의 로그는 GitHub 보존 기간(90 일)을 넘겨 <code>HTTP 410</code> 을 반환한다. <strong>Phase 2 Step 2.1 은 재현으로 원인을 규명해야 한다.</strong></p>
+</div>
+</div>
+</section>
+<section id="b.3-extended-tests-실패-상세-2026-07-13-run-29247044931" class="level2" data-number="19.3">
+<h2 data-number="19.3" class="anchored" data-anchor-id="b.3-extended-tests-실패-상세-2026-07-13-run-29247044931"><span class="header-section-number">19.3</span> B.3 extended-tests 실패 상세 (2026-07-13, run 29247044931)</h2>
+<p><code>gh run view 29247044931 --log-failed</code> 발췌. testthat 이 10 건에서 절단했다.</p>
+<p><strong>실패 1 — <code>test-generated-print-examples-step8-6.R:77:3</code></strong></p>
+<pre><code>Expected `read_print_example("ch14_ch17_irb_template.txt")` to be identical to
+         `capture_generated_print(summary(irb))`.
+Differences: actual[23:26] vs expected[23:26]
+  "   feasibility_index:          14.431  (target N/A)  WARN  [no target]"
+  "------------------------------------------------------------"
+  "Overall: 3 PASS, 3 WARN, 2 FAIL."
+- "Provenance: multisiteDGP &lt;VERSION&gt; | paradigm=site_size | seed=12345 |
+   canonical_hash=128c43fb9cfc4416 | design_hash=db50cfd4e1659537 |
+   hash_algo=xxhash64 | R=&lt;R&gt; | hooks=none"
++ "Provenance: multisiteDGP &lt;VERSION&gt; | paradigm=site_size | seed=12345 |
+   canonical_hash=7b960a5122df9c88 | design_hash=db50cfd4e1659537 |
+   hash_algo=xxhash64 | R=&lt;R&gt; | hooks=none"</code></pre>
+<p><strong>실패 2 — <code>test-generated-print-examples-step8-6.R:83:3</code></strong></p>
+<pre><code>  "   feasibility_index:           6.153  (target N/A)  WARN  [no target]"
+  "Overall: 5 PASS, 3 WARN, 3 FAIL."
+- canonical_hash=c743272c10cf35c6 | design_hash=23d5c64c78ea3137
++ canonical_hash=c37d52c8b467bceb | design_hash=23d5c64c78ea3137</code></pre>
+<p><strong>실패 3–7 — <code>test-snapshot-print.R:87:5</code></strong> (<code>summary.multisitedgp_data</code> snapshot, seed 별)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>seed</th>
+<th>표시 수치</th>
+<th>design_hash</th>
+<th>canonical_hash (기대)</th>
+<th>canonical_hash (Linux)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>4719</td>
+<td><code>feasibility_index: 13.755</code> / <code>3 PASS, 2 WARN, 1 FAIL</code></td>
+<td><code>b1891bd7d287895f</code></td>
+<td><code>a96eaabd1c022e32</code></td>
+<td><code>4b148f68942b0c8b</code></td>
+</tr>
+<tr class="even">
+<td>4719</td>
+<td><code>28.883</code> / <code>2 PASS, 3 WARN, 1 FAIL</code></td>
+<td><code>5eda5659b1ad514d</code></td>
+<td><code>871d0fa960030a02</code></td>
+<td><code>9c71c21dc178cb97</code></td>
+</tr>
+<tr class="odd">
+<td>12345</td>
+<td><code>14.431</code> / <code>3 PASS, 3 WARN, 2 FAIL</code></td>
+<td><code>db50cfd4e1659537</code></td>
+<td><code>128c43fb9cfc4416</code></td>
+<td><code>7b960a5122df9c88</code></td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><code>35.828</code> / <code>5 PASS, 1 WARN, 2 FAIL</code></td>
+<td><code>3f1b3fa764d5ec00</code></td>
+<td><code>461c8b7f4ff83ec7</code></td>
+<td><code>d6fd7082ad0e865f</code></td>
+</tr>
+<tr class="odd">
+<td>—</td>
+<td><code>5 PASS, 3 WARN, 3 FAIL</code></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>실패 8–10</strong> — <code>test-snapshot-print.R:102:3</code> (direct paradigm), <code>:110:3</code> (covariate), <code>:118:3</code> (row-subset)</p>
+<pre><code>Maximum number of 10 failures reached, some test results may be missing.
+Error: ! Test failures.
+##[error]Process completed with exit code 1.</code></pre>
+<div class="callout callout-style-simple callout-important callout-titled" title="핵심 관찰">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>핵심 관찰
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>모든 실패에서 <code>design_hash</code> 는 일치하고 <code>canonical_hash</code> 만 다르다. 표시되는 수치(feasibility_index, PASS/WARN/FAIL 카운트)도 전부 일치한다.</strong> 즉 생성된 데이터가 표시 정밀도까지는 같으나 비트 수준에서 다르다. 이것이 Phase 4 가 규명·해결해야 할 문제의 정확한 형태다.</p>
+</div>
+</div>
+<p>또한 skip 항목 중 다음이 관찰된다.</p>
+<pre><code>22. Step 8.5 error snapshot traceability statuses are synchronized
+    ('test-traceability.R:149:3')
+    - Reason: Development-only traceability ledgers are not shipped in the package tarball.</code></pre>
+</section>
+<section id="b.4-로컬-테스트-실행-①-기본-환경" class="level2" data-number="19.4">
+<h2 data-number="19.4" class="anchored" data-anchor-id="b.4-로컬-테스트-실행-①-기본-환경"><span class="header-section-number">19.4</span> B.4 로컬 테스트 실행 ① — 기본 환경</h2>
+<pre><code>$ Rscript -e 'devtools::load_all("."); testthat::test_local(".", reporter="summary")'</code></pre>
+<p>결과: <strong>실패 0, skip 30</strong>, 종료 코드 0, <code>💅 Your tests are beautiful 💅</code></p>
+<p>skip 사유별 집계:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>사유</th>
+<th style="text-align: right;">건수</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Set MULTISITEDGP_RUN_SLOW=true to run slow multisiteDGP tests.</code></td>
+<td style="text-align: right;">22</td>
+</tr>
+<tr class="even">
+<td><code>Set MULTISITEDGP_RUN_PROPERTY=true to run multisiteDGP property tests.</code></td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr class="odd">
+<td><code>Strict canonical_hash equality is Linux x86_64/amd64 baseline only.</code></td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>skip 된 테스트 (전체 30 건):</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 30%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">#</th>
+<th>테스트</th>
+<th>파일</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Gaussian/Student-t large-sample z_j moments</td>
+<td><code>test-gen-effects-gaussian-studentt.R:105</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>T14a raw legacy mixture variance</td>
+<td><code>test-gen-effects-mixture.R:50</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>T14b standardized mixture unit variance</td>
+<td><code>test-gen-effects-mixture.R:64</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td>T17 PMSlab standardization + zero mass</td>
+<td><code>test-gen-effects-pmslab-user-dpm.R:34</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td>SkewN standardization + skewness sign (T16)</td>
+<td><code>test-gen-effects-skewn-ald.R:45</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td>ALD standardization (T13, Yu-Zhang 변환)</td>
+<td><code>test-gen-effects-skewn-ald.R:66</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7–18</td>
+<td>P01–P12 core invariants</td>
+<td><code>test-property-core-invariants.R:57–265</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">19</td>
+<td>T10 nj_min truncation + multi-rep mean</td>
+<td><code>test-T10-n-min-truncation.R:3</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">20</td>
+<td>T11 JEBS Paradigm A I-envelope</td>
+<td><code>test-T11-jebs-I-grid.R:3</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">21</td>
+<td>T13 ALD standardization (Yu-Zhang moment)</td>
+<td><code>test-T13-ALD-standardization.R:3</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">22</td>
+<td>T14a legacy raw mixture variance == 7.15</td>
+<td><code>test-T14-mixture-ups.R:3</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">23</td>
+<td>T14b standardized Mixture unit variance</td>
+<td><code>test-T14-mixture-ups.R:19</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">24</td>
+<td>T15 Student-t standardization (nu grid)</td>
+<td><code>test-T15-studentt-standardization.R:3</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">25</td>
+<td>T16 Skew-Normal standardization</td>
+<td><code>test-T16-skewn-standardization.R:3</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">26</td>
+<td>T17 PMSlab standardization + point-mass</td>
+<td><code>test-T17-pmslab-standardization.R:3</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">27</td>
+<td><strong>T1a Engine A1 Mixture == JEBS golden fixtures</strong></td>
+<td><code>test-T1a-jebs-bit-identical.R:3</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">28</td>
+<td>T1b Engine A2 Gaussian KS binomial gate</td>
+<td><code>test-T1b-A2-distributional.R:3</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">29</td>
+<td>T4 dependence none Spearman envelope</td>
+<td><code>test-T4-independence.R:3</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">30</td>
+<td>T9 default true_dist Gaussian (Shapiro)</td>
+<td><code>test-T9-default-G.R:3</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="b.5-로컬-테스트-실행-②-slow-property-게이트-on" class="level2" data-number="19.5">
+<h2 data-number="19.5" class="anchored" data-anchor-id="b.5-로컬-테스트-실행-②-slow-property-게이트-on"><span class="header-section-number">19.5</span> B.5 로컬 테스트 실행 ② — slow + property 게이트 on</h2>
+<pre><code>$ MULTISITEDGP_RUN_SLOW=true MULTISITEDGP_RUN_PROPERTY=true \
+  Rscript -e 'devtools::load_all("."); testthat::test_local(".", reporter="summary")'</code></pre>
+<p>결과: <strong>실패 0, skip 1</strong>, 종료 코드 0</p>
+<pre><code>══ Skipped ═════════════════════════════════════════════════════════════════════
+1. T1a Engine A1 Mixture matches JEBS appendix golden fixtures
+   ('test-T1a-jebs-bit-identical.R:3:3')
+   - Reason: Strict canonical_hash equality is Linux x86_64/amd64 baseline only.
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+💅 Your tests are beautiful 💅</code></pre>
+<p><strong>통계 커널이 건강하다는 핵심 증거.</strong> 게이트를 켜면 전부 통과하며, 유일한 skip 은 플랫폼 정책에 의한 것이다.</p>
+</section>
+<section id="b.6-r-cmd-check---as-cran-vignette-제외" class="level2" data-number="19.6">
+<h2 data-number="19.6" class="anchored" data-anchor-id="b.6-r-cmd-check---as-cran-vignette-제외"><span class="header-section-number">19.6</span> B.6 <code>R CMD check --as-cran</code> (vignette 제외)</h2>
+<pre><code>$ Rscript -e 'devtools::check(".", document=FALSE, vignettes=FALSE,
+                              args=c("--no-manual","--as-cran"), error_on="never")'</code></pre>
+<pre><code>0 errors ✔ | 0 warnings ✔ | 2 notes ✖</code></pre>
+<p>NOTE 중 하나는 <code>man/*.Rd</code> 의 상대 URL(<code>../articles/*.html</code>) 관련이다. vignette 를 빌드하지 않은 실행이라 해당 대상이 없어서 발생한 것으로 보이며, <strong>vignette 포함 full check 로 재확인이 필요하다</strong> (Phase 1 Step 1.5).</p>
+<p>영향받는 Rd 파일 (일부): <code>gen_effects_skewn.Rd</code>, <code>gen_effects_studentt.Rd</code>, <code>gen_effects_user.Rd</code>, <code>gen_se_direct.Rd</code>, <code>gen_site_sizes.Rd</code>, <code>heterogeneity_ratio.Rd</code>, <code>informativeness.Rd</code>, <code>ks_distance.Rd</code>, <code>mean_shrinkage.Rd</code>, <code>multisiteDGP-package.Rd</code> (16 개 vignette 전부 참조), <code>multisitedgp_design.Rd</code>, <code>plots.Rd</code>, <code>presets.Rd</code>, <code>provenance_string.Rd</code>, <code>realized_rank_corr.Rd</code>, <code>realized_rank_corr_marginal.Rd</code>, <code>scenario_audit.Rd</code>, <code>sim_meta.Rd</code>, <code>sim_multisite.Rd</code></p>
+</section>
+<section id="b.7-의존성-설치-상태" class="level2" data-number="19.7">
+<h2 data-number="19.7" class="anchored" data-anchor-id="b.7-의존성-설치-상태"><span class="header-section-number">19.7</span> B.7 의존성 설치 상태</h2>
+<p>R 4.6.0 (2026-04-24), aarch64-apple-darwin 기준.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>package</th>
+<th>역할</th>
+<th>상태</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>multisiteDGP</strong></td>
+<td>대상 package</td>
+<td><strong>0.0.0.9000 (stale — 소스는 0.1.1)</strong></td>
+</tr>
+<tr class="even">
+<td>stats · tibble 3.3.1 · dplyr 1.2.1 · tidyr 1.3.2 · withr 3.0.2 · cli 3.6.6 · rlang 1.2.0 · nleqslv 3.3.7 · ggplot2 4.0.3 · digest 0.6.39 · RColorBrewer 1.1.3 · viridisLite 0.4.3</td>
+<td>Imports</td>
+<td>전부 설치됨</td>
+</tr>
+<tr class="odd">
+<td>sn 2.1.3</td>
+<td>SkewN</td>
+<td>설치됨</td>
+</tr>
+<tr class="even">
+<td>LaplacesDemon 16.1.8</td>
+<td>ALD</td>
+<td>설치됨</td>
+</tr>
+<tr class="odd">
+<td><strong>copula</strong></td>
+<td>Gaussian copula dependence</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr class="even">
+<td>metafor 5.0.1 · baggr 0.8</td>
+<td>adapter</td>
+<td>설치됨</td>
+</tr>
+<tr class="odd">
+<td><strong>multisitepower</strong></td>
+<td>adapter</td>
+<td><strong>MISSING</strong> (CRAN 미배포 — 문서화된 예외)</td>
+</tr>
+<tr class="even">
+<td>deconvolveR 1.2.1 · furrr 0.4.0 · yaml 2.3.12 · arrow 24.0.0 · moments 0.14.1</td>
+<td>Suggests</td>
+<td>설치됨</td>
+</tr>
+<tr class="odd">
+<td><strong>hedgehog</strong></td>
+<td>property-based test</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr class="even">
+<td>testthat 3.3.2 · knitr 1.51 · rmarkdown 2.31 · covr 3.6.5 · gridExtra 2.3 · patchwork 1.3.2</td>
+<td>Suggests</td>
+<td>설치됨</td>
+</tr>
+<tr class="odd">
+<td>devtools 2.5.2 · roxygen2 8.0.0 · pkgdown 2.2.0 · lintr 3.3.0.1 · cyclocomp 1.1.2</td>
+<td>개발 도구</td>
+<td>설치됨</td>
+</tr>
+</tbody>
+</table>
+<p>Quarto 1.9.37.</p>
+</section>
+<section id="b.8-미구현-표면-코드-grep" class="level2" data-number="19.8">
+<h2 data-number="19.8" class="anchored" data-anchor-id="b.8-미구현-표면-코드-grep"><span class="header-section-number">19.8</span> B.8 미구현 표면 (코드 grep)</h2>
+<pre><code>$ grep -rn "not implemented\|reserved and is not" R/
+R/layer1-gen_effects.R:191:      "`upstream` is reserved and is not implemented yet.",
+R/layer1-gen_effects.R:293:    sprintf("`true_dist = \"%s\"` is not implemented.", true_dist),
+R/class-multisitedgp_design.R:77:#'   target; not implemented in the current release.
+R/layer1-gen_effects_dpm.R:127:    "`true_dist = \"DPM\"` is not implemented in multisiteDGP v1.",</code></pre>
+<p><code>DESCRIPTION</code> Description 필드 (해당 부분):</p>
+<blockquote class="blockquote">
+<p>generates latent site effects under a catalog of <strong>eight</strong> distribution shapes (Gaussian, Student-t, skew-normal, asymmetric Laplace, two-component mixture, point-mass slab, user callback, <strong>and a Dirichlet-process-mixture bridge</strong>)</p>
+</blockquote>
+</section>
+<section id="b.9-저장소-위생" class="level2" data-number="19.9">
+<h2 data-number="19.9" class="anchored" data-anchor-id="b.9-저장소-위생"><span class="header-section-number">19.9</span> B.9 저장소 위생</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>크기 / 상태</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>..Rcheck/</code></td>
+<td>존재. <code>00check.log</code> 에 <code>Required fields missing or empty: 'Author' 'Maintainer'</code> (다른 경로에서 실행된 잔재)</td>
+</tr>
+<tr class="even">
+<td><code>multisiteDGP.Rcheck/</code></td>
+<td>존재</td>
+</tr>
+<tr class="odd">
+<td><code>multisiteDGP_0.0.0.9000.tar.gz</code></td>
+<td>421,058 bytes</td>
+</tr>
+<tr class="even">
+<td><code>multisiteDGP_0.1.0.tar.gz</code></td>
+<td>421,308 bytes</td>
+</tr>
+<tr class="odd">
+<td><code>blueprint-multisiteDGP-book-v1.0-20260507.zip</code></td>
+<td>41,478,339 bytes (41 MB)</td>
+</tr>
+<tr class="even">
+<td><code>Library/</code>, <code>Outputs/</code></td>
+<td>빈 디렉터리</td>
+</tr>
+<tr class="odd">
+<td><code>.DS_Store</code></td>
+<td>존재</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="b.10-package-규모" class="level2" data-number="19.10">
+<h2 data-number="19.10" class="anchored" data-anchor-id="b.10-package-규모"><span class="header-section-number">19.10</span> B.10 package 규모</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>영역</th>
+<th>규모</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>R/</code></td>
+<td>35 파일, 10,287 줄. 최대: <code>class-multisitedgp_design.R</code> (826), <code>layer2-diagnostics.R</code> (820), <code>diagnostics-core.R</code> (779)</td>
+</tr>
+<tr class="even">
+<td><code>tests/testthat/</code></td>
+<td>71 파일, 7,836 줄</td>
+</tr>
+<tr class="odd">
+<td><code>man/</code></td>
+<td>47 Rd</td>
+</tr>
+<tr class="even">
+<td><code>vignettes/</code></td>
+<td>16 Rmd (A1–A8, M1–M8) + <code>.html</code></td>
+</tr>
+<tr class="odd">
+<td>NAMESPACE</td>
+<td>53 export + 28 S3 method</td>
+</tr>
+<tr class="even">
+<td><code>inst/cookbook/</code></td>
+<td>9 recipe (R5-1 ~ R5-9) + manifest</td>
+</tr>
+<tr class="odd">
+<td><code>tools/traceability/</code></td>
+<td>ledger CSV 8 종 + conflict-checklist</td>
+</tr>
+<tr class="even">
+<td><code>tools/validation/generated/</code></td>
+<td>~180 결과 파일 (2026-05)</td>
+</tr>
+<tr class="odd">
+<td>blueprint book</td>
+<td>25 장 + 부록 3</td>
+</tr>
+<tr class="even">
+<td>build-implementation book</td>
+<td>log 127 건</td>
+</tr>
+<tr class="odd">
+<td>documentation-updates</td>
+<td>log 99 건</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="b.11-이번-감사에서-실행한-명령-전체" class="level2" data-number="19.11">
+<h2 data-number="19.11" class="anchored" data-anchor-id="b.11-이번-감사에서-실행한-명령-전체"><span class="header-section-number">19.11</span> B.11 이번 감사에서 실행한 명령 전체</h2>
+<p>Phase 1 Step 1.5 가 베이스라인을 재측정할 때 참조한다.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 저장소 상태</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rev-parse <span class="at">--is-inside-work-tree</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> repo view joonho112/multisiteDGP <span class="at">--json</span> name,visibility,pushedAt</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> run list <span class="at">--repo</span> joonho112/multisiteDGP <span class="at">--limit</span> 15</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> run view 29247044931 <span class="at">--repo</span> joonho112/multisiteDGP <span class="at">--log-failed</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 테스트 (기본)</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'suppressMessages(devtools::load_all(".", quiet=TRUE));</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="st">            testthat::test_local(".", reporter="summary", stop_on_failure=FALSE)'</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 테스트 (확장)</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="va">MULTISITEDGP_RUN_SLOW</span><span class="op">=</span>true <span class="va">MULTISITEDGP_RUN_PROPERTY</span><span class="op">=</span>true <span class="dt">\</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'suppressMessages(devtools::load_all(".", quiet=TRUE));</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="st">            testthat::test_local(".", reporter="summary", stop_on_failure=FALSE)'</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co"># check</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'devtools::check(".", document=FALSE, vignettes=FALSE,</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="st">                            args=c("--no-manual","--as-cran"), error_on="never")'</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 의존성</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'inst &lt;- rownames(installed.packages()); ...'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./appendix-a-defect-ledger.html" class="pagination-link" aria-label="부록 A — 결함 원장 스키마">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">부록 A — 결함 원장 스키마</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

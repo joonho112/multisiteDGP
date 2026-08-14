@@ -1,0 +1,232 @@
+총 위반: 65 
+
+=== linter 유형별 ===
+
+  infix_spaces_linter    object_name_linter    line_length_linter 
+                   22                    22                    11 
+         brace_linter      semicolon_linter commented_code_linter 
+                    6                     2                     1 
+   indentation_linter 
+                    1 
+
+=== 파일별 (상위 15) ===
+
+               vignettes/m3-margin-se-models.Rmd 
+                                              20 
+                        R/multisitedgp-package.R 
+                                              11 
+                vignettes/m1-statistical-dgp.Rmd 
+                                               9 
+                       vignettes/a8-cookbook.Rmd 
+                                               8 
+    vignettes/m4-precision-dependence-theory.Rmd 
+                                               6 
+        vignettes/a3-diagnostics-in-practice.Rmd 
+                                               3 
+          vignettes/a5-calibrating-real-data.Rmd 
+                                               2 
+         vignettes/m2-g-distribution-catalog.Rmd 
+                                               2 
+         vignettes/m5-custom-g-distributions.Rmd 
+                                               2 
+                vignettes/a1-getting-started.Rmd 
+                                               1 
+vignettes/a4-covariates-precision-dependence.Rmd 
+                                               1 
+
+=== 전체 목록 ===
+R/multisitedgp-package.R:74:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 124 characters.
+#'       \item \href{../articles/a4-covariates-precision-dependence.html}{A4 \enc{·}{.} Covariates and precision dependence}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+R/multisitedgp-package.R:83:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 123 characters.
+#'       \item \href{../articles/m1-statistical-dgp.html}{M1 \enc{·}{.} The two-stage DGP \enc{—}{--} formal specification}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+R/multisitedgp-package.R:84:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 122 characters.
+#'       \item \href{../articles/m2-g-distribution-catalog.html}{M2 \enc{·}{.} G-distribution catalog and standardization}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+R/multisitedgp-package.R:85:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 143 characters.
+#'       \item \href{../articles/m3-margin-se-models.html}{M3 \enc{·}{.} Margin and SE models \enc{—}{--} site-size and direct-precision paths}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+R/multisitedgp-package.R:86:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 141 characters.
+#'       \item \href{../articles/m4-precision-dependence-theory.html}{M4 \enc{·}{.} Precision dependence \enc{—}{--} three injection methods}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+R/multisitedgp-package.R:98:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 294 characters.
+#'   \item{Design and data objects}{\code{\link{multisitedgp_design}} constructor with \code{\link{validate_multisitedgp_design}}, \code{\link{update_multisitedgp_design}}, \code{\link{is_multisitedgp_design}}, \code{\link{is_multisitedgp_data}}, and \code{\link{as_tibble.multisitedgp_data}}.}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+R/multisitedgp-package.R:99:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 388 characters.
+#'   \item{Effect distributions (Layer 1)}{\code{\link{gen_effects}} dispatcher and the eight shape-specific generators \code{\link{gen_effects_gaussian}}, \code{\link{gen_effects_studentt}}, \code{\link{gen_effects_skewn}}, \code{\link{gen_effects_ald}}, \code{\link{gen_effects_mixture}}, \code{\link{gen_effects_pmslab}}, \code{\link{gen_effects_user}}, \code{\link{gen_effects_dpm}}.}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+R/multisitedgp-package.R:100:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 162 characters.
+#'   \item{Margin / SE models (Layer 2)}{\code{\link{gen_site_sizes}} for the site-size margin; \code{\link{gen_se_direct}} for the direct standard-error margin.}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+R/multisitedgp-package.R:101:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 140 characters.
+#'   \item{Precision dependence (Layer 3)}{\code{\link{align_rank_corr}}, \code{\link{align_copula_corr}}, \code{\link{align_hybrid_corr}}.}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+R/multisitedgp-package.R:103:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 581 characters.
+#'   \item{Diagnostics}{Group A precision and feasibility scalars (\code{\link{compute_kappa}}, \code{\link{compute_I}}, \code{\link{informativeness}}, \code{\link{compute_shrinkage}}, \code{\link{mean_shrinkage}}, \code{\link{feasibility_index}}, \code{\link{default_thresholds}}, \code{\link{heterogeneity_ratio}}); Group B realized dependence (\code{\link{realized_rank_corr}}, \code{\link{realized_rank_corr_marginal}}); Group C distributional fidelity (\code{\link{bhattacharyya_coef}}, \code{\link{ks_distance}}); top-of-funnel scenario sweep (\code{\link{scenario_audit}}).}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+R/multisitedgp-package.R:104:121: style: [line_length_linter] Lines should not be more than 120 characters. This line is 355 characters.
+#'   \item{Presets}{\code{\link{preset_education_small}}, \code{\link{preset_education_modest}}, \code{\link{preset_education_substantial}}, \code{\link{preset_jebs_paper}}, \code{\link{preset_jebs_strict}}, \code{\link{preset_meta_modest}}, \code{\link{preset_small_area_estimation}}, \code{\link{preset_twin_towers}}, \code{\link{preset_walters_2024}}.}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vignettes/a1-getting-started.Rmd:89:3: style: [commented_code_linter] Remove commented code.
+# install.packages("remotes")
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+vignettes/a3-diagnostics-in-practice.Rmd:142:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+.preset_I_grid <- function() {
+^~~~~~~~~~~~~~
+vignettes/a3-diagnostics-in-practice.Rmd:160:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+groupA_df <- .preset_I_grid()
+^~~~~~~~~
+vignettes/a3-diagnostics-in-practice.Rmd:436:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+groupD_df <- .feasibility_grid()
+^~~~~~~~~
+vignettes/a4-covariates-precision-dependence.Rmd:111:2: style: [indentation_linter] Indentation should be 7 spaces but is 2 spaces.
+  c("site_index", "x_site", "z_j", "tau_j", "tau_j_hat", "se2_j")
+ ^~~~~~
+vignettes/a5-calibrating-real-data.Rmd:202:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+I_grid     <- vapply(
+^~~~~~
+vignettes/a5-calibrating-real-data.Rmd:208:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+guess_I <- vapply(
+^~~~~~~
+vignettes/a8-cookbook.Rmd:342:27: style: [infix_spaces_linter] Put spaces around all infix operators.
+  labs(x = expression(y[i]~"(estimate)"),
+                          ^
+vignettes/a8-cookbook.Rmd:343:24: style: [infix_spaces_linter] Put spaces around all infix operators.
+       y = expression(s*e[i]~"(reverse axis)")) +
+                       ^
+vignettes/a8-cookbook.Rmd:343:29: style: [infix_spaces_linter] Put spaces around all infix operators.
+       y = expression(s*e[i]~"(reverse axis)")) +
+                            ^
+vignettes/a8-cookbook.Rmd:405:27: style: [infix_spaces_linter] Put spaces around all infix operators.
+  labs(x = expression(z[j]~"(standardized site effect)"),
+                          ^
+vignettes/a8-cookbook.Rmd:496:52: style: [infix_spaces_linter] Put spaces around all infix operators.
+  labs(x = expression(rank(z[j])), y = expression(s*e[j])) +
+                                                   ^
+vignettes/a8-cookbook.Rmd:588:3: style: [brace_linter] Wrap multi-line function bodies in curly braces.
+  function(i) canonical_hash(
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+vignettes/a8-cookbook.Rmd:627:5: style: [brace_linter] Wrap multi-line function bodies in curly braces.
+    function(s) canonical_hash(
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+vignettes/a8-cookbook.Rmd:690:5: style: [brace_linter] Wrap multi-line function bodies in curly braces.
+    function(s) feasibility_index(
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vignettes/m1-statistical-dgp.Rmd:154:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+design_M1 <- multisitedgp_design(
+^~~~~~~~~
+vignettes/m1-statistical-dgp.Rmd:166:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+dat_M1 <- sim_multisite(design_M1, seed = 1L)
+^~~~~~
+vignettes/m1-statistical-dgp.Rmd:196:33: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x        = expression(tau[j]~"  /  "~hat(tau)[j]),
+                                ^
+vignettes/m1-statistical-dgp.Rmd:196:41: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x        = expression(tau[j]~"  /  "~hat(tau)[j]),
+                                        ^
+vignettes/m1-statistical-dgp.Rmd:466:7: style: [semicolon_linter] Replace compound semicolons by a newline.
+sd_tau; gm_se2; range_se2
+      ^
+vignettes/m1-statistical-dgp.Rmd:466:15: style: [semicolon_linter] Replace compound semicolons by a newline.
+sd_tau; gm_se2; range_se2
+              ^
+vignettes/m1-statistical-dgp.Rmd:479:26: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x = expression(tau[j]~"  (latent effect)"),
+                         ^
+vignettes/m1-statistical-dgp.Rmd:480:35: style: [brace_linter] Opening curly braces should never go on their own line and should always be followed by a new line.
+    y = expression(widehat(se)[j]^{2}~"  (sampling variance)")
+                                  ^
+vignettes/m1-statistical-dgp.Rmd:480:38: style: [infix_spaces_linter] Put spaces around all infix operators.
+    y = expression(widehat(se)[j]^{2}~"  (sampling variance)")
+                                     ^
+vignettes/m2-g-distribution-catalog.Rmd:739:26: style: [infix_spaces_linter] Put spaces around all infix operators.
+      y = expression(z[j]~"  sample quantile"),
+                         ^
+vignettes/m2-g-distribution-catalog.Rmd:812:31: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x        = expression(z[j]~"  (standardized residual)"),
+                              ^
+vignettes/m3-margin-se-models.Rmd:168:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+dat_A <- sim_multisite(preset_education_modest(), seed = 1L)
+^~~~~
+vignettes/m3-margin-se-models.Rmd:264:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+dat_B <- sim_meta(J = 50L, I = 0.30, R = 2, sigma_tau = 0.20, seed = 1L)
+^~~~~
+vignettes/m3-margin-se-models.Rmd:279:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+diag_B <- attr(dat_B, "diagnostics")
+^~~~~~
+vignettes/m3-margin-se-models.Rmd:353:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+dat_A <- sim_multisite(preset_education_modest(), seed = 1L)
+^~~~~
+vignettes/m3-margin-se-models.Rmd:354:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+kappa_A <- compute_kappa(p = 0.5, R2 = 0, var_outcome = 1)
+^~~~~~~
+vignettes/m3-margin-se-models.Rmd:355:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+df_A <- tibble::tibble(
+^~~~
+vignettes/m3-margin-se-models.Rmd:379:24: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x = expression(n[j]~"  (per-site sample size)"),
+                       ^
+vignettes/m3-margin-se-models.Rmd:380:35: style: [brace_linter] Opening curly braces should never go on their own line and should always be followed by a new line.
+    y = expression(widehat(se)[j]^{2}~"  (sampling variance)")
+                                  ^
+vignettes/m3-margin-se-models.Rmd:380:38: style: [infix_spaces_linter] Put spaces around all infix operators.
+    y = expression(widehat(se)[j]^{2}~"  (sampling variance)")
+                                     ^
+vignettes/m3-margin-se-models.Rmd:421:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+dat_B <- sim_meta(J = 50L, I = 0.30, R = 2, sigma_tau = 0.20, seed = 1L)
+^~~~~
+vignettes/m3-margin-se-models.Rmd:422:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+sigma_tau_B <- 0.20
+^~~~~~~~~~~
+vignettes/m3-margin-se-models.Rmd:423:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+I_B <- 0.30
+^~~
+vignettes/m3-margin-se-models.Rmd:424:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+R_B <- 2
+^~~
+vignettes/m3-margin-se-models.Rmd:425:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+GM_target <- sigma_tau_B^2 * (1 - I_B) / I_B
+^~~~~~~~~
+vignettes/m3-margin-se-models.Rmd:426:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+df_B <- tibble::tibble(se2_j = dat_B$se2_j)
+^~~~
+vignettes/m3-margin-se-models.Rmd:427:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+GM_realized <- exp(mean(log(df_B$se2_j)))
+^~~~~~~~~~~
+vignettes/m3-margin-se-models.Rmd:428:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+range_B <- range(df_B$se2_j)
+^~~~~~~
+vignettes/m3-margin-se-models.Rmd:459:42: style: [brace_linter] Opening curly braces should never go on their own line and should always be followed by a new line.
+    x        = expression(widehat(se)[j]^{2}~"  (sampling variance)"),
+                                         ^
+vignettes/m3-margin-se-models.Rmd:459:45: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x        = expression(widehat(se)[j]^{2}~"  (sampling variance)"),
+                                            ^
+vignettes/m3-margin-se-models.Rmd:530:1: style: [object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+des_A <- multisitedgp_design(
+^~~~~
+vignettes/m4-precision-dependence-theory.Rmd:474:24: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x = expression(z[j]~"(standardized residual effect)"),
+                       ^
+vignettes/m4-precision-dependence-theory.Rmd:475:36: style: [infix_spaces_linter] Put spaces around all infix operators.
+    y = expression(widehat(se)[j]^2~"(sampling variance)")
+                                   ^
+vignettes/m4-precision-dependence-theory.Rmd:488:24: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x = expression(z[j]~"(standardized residual effect)"),
+                       ^
+vignettes/m4-precision-dependence-theory.Rmd:489:36: style: [infix_spaces_linter] Put spaces around all infix operators.
+    y = expression(widehat(se)[j]^2~"(sampling variance)")
+                                   ^
+vignettes/m4-precision-dependence-theory.Rmd:502:24: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x = expression(z[j]~"(standardized residual effect)"),
+                       ^
+vignettes/m4-precision-dependence-theory.Rmd:503:36: style: [infix_spaces_linter] Put spaces around all infix operators.
+    y = expression(widehat(se)[j]^2~"(sampling variance)")
+                                   ^
+vignettes/m5-custom-g-distributions.Rmd:423:31: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x        = expression(z[j]~"  (standardized residual)"),
+                              ^
+vignettes/m5-custom-g-distributions.Rmd:440:33: style: [infix_spaces_linter] Put spaces around all infix operators.
+    x        = expression(tau[j]~"  (response-scale effect)"),
+                                ^

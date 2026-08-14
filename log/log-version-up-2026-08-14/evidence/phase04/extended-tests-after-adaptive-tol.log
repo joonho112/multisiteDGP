@@ -1,0 +1,207 @@
+extended-tests	Run slow and property tests	﻿2026-08-14T17:32:37.2169211Z ##[group]Run testthat::test_local(".", reporter = "summary")
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2169904Z [36;1mtestthat::test_local(".", reporter = "summary")[0m
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2177046Z shell: /usr/local/bin/Rscript {0}
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2177324Z env:
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2177532Z   _R_CHECK_FORCE_SUGGESTS_: false
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2177788Z   NOT_CRAN: true
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2177985Z   TZ: UTC
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2178183Z   MULTISITEDGP_RUN_SLOW: true
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2178440Z   MULTISITEDGP_RUN_PROPERTY: true
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2179005Z   MULTISITEDGP_RUN_VALIDATION: false
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2179461Z   MULTISITEDGP_REPRODUCIBILITY_POLICY: linux-strict-hash-cross-os-demoted
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2179899Z   MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN: false
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2180235Z   R_LIBS_USER: /home/runner/work/_temp/Library
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2180527Z   _R_CHECK_SYSTEM_CLOCK_: FALSE
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2180882Z   RSPM: https://packagemanager.posit.co/cran/__linux__/noble/latest
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2181426Z   RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/noble/latest
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2181875Z   R_LIB_FOR_PAK: /opt/R/4.6.1/lib/R/site-library
+extended-tests	Run slow and property tests	2026-08-14T17:32:37.2182160Z ##[endgroup]
+extended-tests	Run slow and property tests	2026-08-14T17:32:40.2078087Z adapters-step7-3: ................................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:41.7794028Z cookbook-audit-step10-4: ......
+extended-tests	Run slow and property tests	2026-08-14T17:32:42.2528031Z cross-os-reproducibility-policy-step10-7: ...................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:42.6992664Z data-classes: ...............................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:43.1094198Z design-constructor: ...........................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:43.5720419Z design-grid-step7-5: .................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:44.2382709Z design-validation-update: ...........................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:45.0360982Z diagnostic-thresholds: .......................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:45.4097753Z effects-common-frame: ...................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:46.0560333Z errors-validation-foundation: .....................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:47.4190963Z gen-effects-gaussian-studentt: .....................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:49.5070576Z gen-effects-mixture: ...............................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:51.0242841Z gen-effects-pmslab-user-dpm: ..........................................................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:53.3496918Z gen-effects-skewn-ald: ..............................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:53.7053369Z gen-effects: ..........................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:54.0791316Z generated-print-examples-step8-6: ........12.....
+extended-tests	Run slow and property tests	2026-08-14T17:32:54.2724328Z golden-fixtures-step8-1: ...........................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:54.2909361Z golden: ..........
+extended-tests	Run slow and property tests	2026-08-14T17:32:54.4579286Z harness: .....................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:55.8079897Z layer2-diagnostics: ...................................................................................................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:56.0184226Z layer2-engine-a1: ................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:56.5315406Z layer2-engine-a2-edges: ..................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:57.1233732Z layer2-engine-a2: ...........................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:57.8100477Z layer2-gen-se-direct: ...............................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:58.5812884Z layer2-gen-site-sizes: .........................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:58.8874041Z layer3-align-copula-corr: ..................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:59.4100691Z layer3-align-hybrid-corr: ........................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:32:59.9142530Z layer3-align-rank-corr: ..........................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:00.2460357Z layer3-custom-dependence-fn: ..................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:00.9056463Z layer3-rank-permutation-helpers: ................................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:01.4101444Z layer4-gen-observations: .......................................................3...4...5...6..
+extended-tests	Run slow and property tests	2026-08-14T17:33:04.4691888Z plots-step7-4: ............................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:05.0674944Z presets-step7-1: ...................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:05.6153404Z presets-step7-2: ...................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:05.6263549Z print-examples: .....
+extended-tests	Run slow and property tests	2026-08-14T17:33:06.2025894Z print-summary: ....................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:17.1318468Z property-core-invariants: ..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:18.0764248Z rng-hash-policy: .....................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:19.2433303Z scenario-audit-step7-6: ..........................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:33:20.7209850Z snapshot-errors: ..............7...............
+extended-tests	Run slow and property tests	2026-08-14T17:33:22.2534542Z snapshot-print: ..............89abc.d.ef
+extended-tests	Run slow and property tests	2026-08-14T17:34:06.3516309Z T10-n-min-truncation: .........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:34:25.6400032Z T11-jebs-I-grid: .....
+extended-tests	Run slow and property tests	2026-08-14T17:34:26.1465914Z T12-A1-rng-order: .........
+extended-tests	Run slow and property tests	2026-08-14T17:34:26.5477683Z T13-ALD-standardization: ......
+extended-tests	Run slow and property tests	2026-08-14T17:34:28.3048377Z T14-mixture-ups: .........
+extended-tests	Run slow and property tests	2026-08-14T17:34:29.0927396Z T15-studentt-standardization: ......
+extended-tests	Run slow and property tests	2026-08-14T17:34:30.4740040Z T16-skewn-standardization: ...............
+extended-tests	Run slow and property tests	2026-08-14T17:34:31.4069503Z T17-pmslab-standardization: ........................
+extended-tests	Run slow and property tests	2026-08-14T17:34:31.5476308Z T18-covariate-decomp: ..........
+extended-tests	Run slow and property tests	2026-08-14T17:34:31.6839376Z T19-ties: ......
+extended-tests	Run slow and property tests	2026-08-14T17:34:32.0953645Z T1a-jebs-bit-identical: ghij
+extended-tests	Run slow and property tests	2026-08-14T17:35:12.7007633Z T1b-A2-distributional: ....
+extended-tests	Run slow and property tests	2026-08-14T17:35:12.7551973Z T2-kappa: ..
+extended-tests	Run slow and property tests	2026-08-14T17:35:13.2151016Z T20-A2-reproducibility: ...
+extended-tests	Run slow and property tests	2026-08-14T17:35:13.3926118Z T3-rate-form: ........
+extended-tests	Run slow and property tests	2026-08-14T17:35:54.3999851Z T4-independence: .
+extended-tests	Run slow and property tests	2026-08-14T17:35:54.5013612Z T5-covariate-off: ........
+extended-tests	Run slow and property tests	2026-08-14T17:35:54.5600253Z T6-resid-eq-marg: ..
+extended-tests	Run slow and property tests	2026-08-14T17:35:54.6125492Z T7-dep-none: ....
+extended-tests	Run slow and property tests	2026-08-14T17:35:54.6221907Z T8-informativeness: ..
+extended-tests	Run slow and property tests	2026-08-14T17:36:34.7564352Z T9-default-G: ..
+extended-tests	Run slow and property tests	2026-08-14T17:36:34.9919665Z traceability: ....................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:36:35.2714156Z utils-reproducibility-canonicalization: ........................................
+extended-tests	Run slow and property tests	2026-08-14T17:36:36.6227978Z wrapper-sim-meta: .........................................................................................................................
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.5889888Z wrapper-sim-multisite: ....................................................................................k.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.5891237Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.5969136Z ══ Failed ══════════════════════════════════════════════════════════════════════
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7130630Z ── 1. Failure ('test-generated-print-examples-step8-6.R:77:3'): Step 8.6 generat
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7132764Z Expected `read_print_example("ch14_ch17_irb_template.txt")` to be identical to `capture_generated_print(summary(irb))`.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7133795Z Differences:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7134340Z actual[23:26] vs expected[23:26]
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7135066Z   "   feasibility_index:          14.431  (target N/A)  WARN  [no target]"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7135821Z   "------------------------------------------------------------"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7136384Z   "Overall: 3 PASS, 3 WARN, 2 FAIL."
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7137812Z - "Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 | canonical_hash=128c43fb9cfc4416 | design_hash=db50cfd4e1659537 | hash_algo=xxhash64 | R=<R> | hooks=none"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7140225Z + "Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 | canonical_hash=7b960a5122df9c88 | design_hash=db50cfd4e1659537 | hash_algo=xxhash64 | R=<R> | hooks=none"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7141249Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7141260Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7141904Z ── 2. Failure ('test-generated-print-examples-step8-6.R:83:3'): Step 8.6 generat
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7142739Z Expected `read_print_example("ch14_ch17_sae_summary.txt")` to be identical to `capture_generated_print(summary(sae))`.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7143253Z Differences:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7143506Z actual[23:26] vs expected[23:26]
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7143929Z   "   feasibility_index:           6.153  (target N/A)  WARN  [no target]"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7144389Z   "------------------------------------------------------------"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7145151Z   "Overall: 5 PASS, 3 WARN, 3 FAIL."
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7145991Z - "Provenance: multisiteDGP <VERSION> | paradigm=direct | seed=42 | canonical_hash=c743272c10cf35c6 | design_hash=23d5c64c78ea3137 | hash_algo=xxhash64 | R=<R> | hooks=none"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7147205Z + "Provenance: multisiteDGP <VERSION> | paradigm=direct | seed=42 | canonical_hash=c37d52c8b467bceb | design_hash=23d5c64c78ea3137 | hash_algo=xxhash64 | R=<R> | hooks=none"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7147772Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7147778Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7148178Z ── 3. Failure ('test-layer4-gen-observations.R:154:5'): A1 legacy default path m
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7149085Z Expected `canonical_hash(raw_observed)` to be identical to `manifest_row$component_observed_raw_hash`.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7149584Z Differences:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7149830Z `actual`:   "6867d7a1b7c703db"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7150101Z `expected`: "63914d87a145f031"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7150243Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7150249Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7150638Z ── 4. Failure ('test-layer4-gen-observations.R:154:5'): A1 legacy default path m
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7151332Z Expected `canonical_hash(raw_observed)` to be identical to `manifest_row$component_observed_raw_hash`.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7151791Z Differences:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7152025Z `actual`:   "d5586502ee68a8cd"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7152629Z `expected`: "7e70175e8a116069"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7152776Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7152781Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7153158Z ── 5. Failure ('test-layer4-gen-observations.R:154:5'): A1 legacy default path m
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7153845Z Expected `canonical_hash(raw_observed)` to be identical to `manifest_row$component_observed_raw_hash`.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7154315Z Differences:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7154562Z `actual`:   "166d8c00cf8b5a55"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7154844Z `expected`: "f3a18adfaeb0ed24"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7155003Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7155008Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7155378Z ── 6. Failure ('test-layer4-gen-observations.R:154:5'): A1 legacy default path m
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7156058Z Expected `canonical_hash(raw_observed)` to be identical to `manifest_row$component_observed_raw_hash`.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7156529Z Differences:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7156765Z `actual`:   "30b16e3cab336f62"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7157032Z `expected`: "f44590ab3a70754a"
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7157178Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7157192Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7157550Z ── 7. Failure ('test-snapshot-errors.R:144:3'): E15 snapshot records A2 truncate
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7157964Z Snapshot of code has changed:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7158224Z old[4:8] vs new[4:8]
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7158445Z   Condition
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7158872Z     Error in `.abort_multisitedgp()`:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7159276Z     x Engine A2 truncated-Gamma post-solve verification failed.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7160039Z -   i Maximum scaled residual was <residual> against an effective tolerance of 1e-06 (requested 1e-06, evaluation noise floor 1.81e-13).
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7161020Z +   i Maximum scaled residual was <residual> against an effective tolerance of 1e-06 (requested 1e-06, evaluation noise floor 1.86e-13).
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7161724Z     > Try a less extreme site-size design or increase `tol` slightly.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7162285Z * Run `testthat::snapshot_accept("snapshot-errors")` to accept the change.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7162820Z * Run `testthat::snapshot_review("snapshot-errors")` to review the change.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7163185Z Backtrace:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7163399Z     ▆
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7163788Z  1. └─expect_snapshot(...) at test-snapshot-errors.R:144:3
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7164526Z  2.   └─testthat::expect_snapshot(..., cran = cran) at tests/testthat/helper-snapshots.R:4:3
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7164857Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7165239Z ── 8. Failure ('test-snapshot-print.R:87:5'): summary.multisitedgp_data snapshot
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7165668Z Snapshot of code has changed:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7165942Z old[30:33] vs new[30:33]
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7166329Z        feasibility_index:          13.755  (target N/A)  WARN  [no target]
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7166941Z     ------------------------------------------------------------
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7167296Z     Overall: 3 PASS, 2 WARN, 1 FAIL.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7168153Z -   Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=4719 | canonical_hash=a96eaabd1c022e32 | design_hash=b1891bd7d287895f | hash_algo=xxhash64 | R=<R> | hooks=none
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7169634Z +   Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=4719 | canonical_hash=4b148f68942b0c8b | design_hash=b1891bd7d287895f | hash_algo=xxhash64 | R=<R> | hooks=none
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7170479Z * Run `testthat::snapshot_accept("snapshot-print")` to accept the change.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7171012Z * Run `testthat::snapshot_review("snapshot-print")` to review the change.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7171370Z Backtrace:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7171578Z     ▆
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7171935Z  1. └─expect_snapshot(...) at test-snapshot-print.R:87:5
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7174331Z  2.   └─testthat::expect_snapshot(..., cran = cran) at tests/testthat/helper-snapshots.R:4:3
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7174925Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7175525Z ── 9. Failure ('test-snapshot-print.R:87:5'): summary.multisitedgp_data snapshot
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7176145Z Snapshot of code has changed:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7176539Z old[30:33] vs new[30:33]
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7177379Z        feasibility_index:          28.883  (target N/A)  WARN  [no target]
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7178022Z     ------------------------------------------------------------
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7178520Z     Overall: 2 PASS, 3 WARN, 1 FAIL.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7180059Z -   Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=4719 | canonical_hash=871d0fa960030a02 | design_hash=5eda5659b1ad514d | hash_algo=xxhash64 | R=<R> | hooks=none
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7182163Z +   Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=4719 | canonical_hash=9c71c21dc178cb97 | design_hash=5eda5659b1ad514d | hash_algo=xxhash64 | R=<R> | hooks=none
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7183122Z * Run `testthat::snapshot_accept("snapshot-print")` to accept the change.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7183678Z * Run `testthat::snapshot_review("snapshot-print")` to review the change.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7184044Z Backtrace:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7184291Z     ▆
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7184679Z  1. └─expect_snapshot(...) at test-snapshot-print.R:87:5
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7185380Z  2.   └─testthat::expect_snapshot(..., cran = cran) at tests/testthat/helper-snapshots.R:4:3
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7185718Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7186094Z ── 10. Failure ('test-snapshot-print.R:87:5'): summary.multisitedgp_data snapsho
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7186525Z Snapshot of code has changed:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7186800Z old[30:33] vs new[30:33]
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7187187Z        feasibility_index:          14.431  (target N/A)  WARN  [no target]
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7187654Z     ------------------------------------------------------------
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7188008Z     Overall: 3 PASS, 3 WARN, 2 FAIL.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7189107Z -   Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 | canonical_hash=128c43fb9cfc4416 | design_hash=db50cfd4e1659537 | hash_algo=xxhash64 | R=<R> | hooks=none
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7190392Z +   Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 | canonical_hash=7b960a5122df9c88 | design_hash=db50cfd4e1659537 | hash_algo=xxhash64 | R=<R> | hooks=none
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7191248Z * Run `testthat::snapshot_accept("snapshot-print")` to accept the change.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7191781Z * Run `testthat::snapshot_review("snapshot-print")` to review the change.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7192138Z Backtrace:
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7192348Z     ▆
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7192707Z  1. └─expect_snapshot(...) at test-snapshot-print.R:87:5
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7193366Z  2.   └─testthat::expect_snapshot(..., cran = cran) at tests/testthat/helper-snapshots.R:4:3
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7193800Z   ... and 10 more
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7193922Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7193928Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7194191Z Maximum number of 10 failures reached, some test results may be missing.
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7194691Z 
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7195066Z ══ DONE ════════════════════════════════════════════════════════════════════════
+extended-tests	Run slow and property tests	2026-08-14T17:36:37.7195500Z Frustration is a natural part of programming :)
+extended-tests	Run slow and property tests	2026-08-14T17:36:38.1990599Z Error:
+extended-tests	Run slow and property tests	2026-08-14T17:36:38.1991088Z ! Test failures.
+extended-tests	Run slow and property tests	2026-08-14T17:36:38.1995537Z Execution halted
+extended-tests	Run slow and property tests	2026-08-14T17:36:38.2146404Z ##[error]Process completed with exit code 1.

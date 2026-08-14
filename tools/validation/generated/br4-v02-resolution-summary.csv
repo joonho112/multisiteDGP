@@ -1,0 +1,2 @@
+"blocker_id","experiment_id","resolution_status","full_run_id","subset_run_id","rows","completed","failed","min_I","max_I","max_seed_range_reporting","cell_seed_range_q95","cell_seed_range_over_0_02","legacy_cell_range_gate","seed_grid_mean_range","seed_grid_mean_stability_gate","anchor_hash_pass","acceptance_pass"
+"P0-V02-001","V02","resolved_full_pass","br4-v02-full-stability-reframed","br4-v02-subset-postpatch-v2",2000,2000,0,0.00469705683041657,0.71954390403987,0.0637583540957534,0.0381814549981524,0.164,FALSE,0.00355474212359955,TRUE,TRUE,TRUE

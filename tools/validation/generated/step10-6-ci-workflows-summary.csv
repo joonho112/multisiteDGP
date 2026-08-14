@@ -1,0 +1,2 @@
+"step","workflow_count","workflows","yaml_parse","lint_status","exported_line_coverage","coverage_gate","r_cmd_check_as_cran_status","r_cmd_check_note","pkgdown_check","no_compiled_boundary"
+"10.6",6,"extended-tests.yaml;lint.yaml;pkgdown-deploy.yaml;pr-commands.yaml;R-CMD-check.yaml;test-coverage.yaml",TRUE,"pass",91.39,"pass","1 NOTE","CRAN incoming only: dev version, non-mainstream multisitepower Suggests, pkgdown URL 404 until Pages deploy","pass",TRUE

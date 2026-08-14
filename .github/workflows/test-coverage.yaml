@@ -21,7 +21,7 @@ env:
   MULTISITEDGP_RUN_SLOW: "false"
   MULTISITEDGP_RUN_PROPERTY: "false"
   MULTISITEDGP_RUN_VALIDATION: "false"
-  MULTISITEDGP_REPRODUCIBILITY_POLICY: "linux-strict-hash-cross-os-demoted"
+  MULTISITEDGP_REPRODUCIBILITY_POLICY: "portable-hash-v3"
   MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN: "false"
 
 jobs:
@@ -43,6 +43,7 @@ jobs:
           dependencies: '"hard"'
           extra-packages: |
             any::covr
+            any::xml2
             any::pkgload
             any::testthat
             any::knitr

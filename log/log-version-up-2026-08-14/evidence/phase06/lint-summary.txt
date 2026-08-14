@@ -1,0 +1,43 @@
+총 위반: 77 
+
+=== linter 유형별 ===
+
+   object_name_linter   infix_spaces_linter    line_length_linter 
+                   23                    22                    11 
+   indentation_linter          brace_linter      semicolon_linter 
+                    8                     6                     4 
+commented_code_linter 
+                    3 
+
+=== 파일별 ===
+
+                           vignettes/m3-margin-se-models.Rmd 
+                                                          20 
+                                    R/multisitedgp-package.R 
+                                                          11 
+                            vignettes/m1-statistical-dgp.Rmd 
+                                                           9 
+                tests/testthat/test-layer2-engine-a2-edges.R 
+                                                           8 
+                                   vignettes/a8-cookbook.Rmd 
+                                                           8 
+                vignettes/m4-precision-dependence-theory.Rmd 
+                                                           6 
+                    vignettes/a3-diagnostics-in-practice.Rmd 
+                                                           3 
+tests/testthat/test-utils-reproducibility-canonicalization.R 
+                                                           2 
+                      vignettes/a5-calibrating-real-data.Rmd 
+                                                           2 
+                     vignettes/m2-g-distribution-catalog.Rmd 
+                                                           2 
+                     vignettes/m5-custom-g-distributions.Rmd 
+                                                           2 
+                                    R/00-errors-validation.R 
+                                                           1 
+                         tests/testthat/helper-skip-policy.R 
+                                                           1 
+                            vignettes/a1-getting-started.Rmd 
+                                                           1 
+            vignettes/a4-covariates-precision-dependence.Rmd 
+                                                           1 

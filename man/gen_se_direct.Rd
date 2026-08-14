@@ -120,7 +120,7 @@ the realized informativeness from the result;
 the \href{../articles/m3-margin-se-models.html}{M3 Margin and SE
 models} vignette.
 
-Other family-margins: 
-\code{\link{gen_site_sizes}()}
+Other family-margins:
+\code{\link[=gen_site_sizes]{gen_site_sizes()}}
 }
 \concept{family-margins}

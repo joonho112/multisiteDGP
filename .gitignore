@@ -32,3 +32,21 @@ vignettes/*_files/
 
 # IDE / linter caches
 .lintr-cache/
+
+# ── v0.2.0 upgrade: 추적 범위 (Step 1.2, PI 승인 2026-08-14) ───────────
+# 추적함  : R/ tests/ man/ vignettes/ inst/ pkgdown/ .github/ 루트 메타데이터
+#           tools/ (traceability ledger · validation 결과 · 정책)
+#           log/   (작업 계획 · Phase 로그 · 증거 · 결정)
+#           dev/ .lintr .pre-commit-config.yaml
+# 추적안함: docs/ (gh-pages 배포), 아래 이력 book 3종, 빌드 잔재
+
+# 설계·구현·문서 이력 book (별도 아카이브 저장소로 분리 예정)
+/blueprint-multisiteDGP-book/
+/multisiteDGP-build-implementation-book/
+/documentation-updates/
+/blueprint-multisiteDGP-book-v*.zip
+
+# 빈 디렉터리 및 되돌리기용 보존 아티팩트
+/Library/
+/Outputs/
+/log/log-version-up-2026-08-14/artifacts/

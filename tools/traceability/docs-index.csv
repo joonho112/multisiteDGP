@@ -1,0 +1,23 @@
+id,item,doc_type,owner_phase,owner_step,blueprint_ref,status,unresolved_conflict
+D01,roxygen docs for current export inventory,reference,Phase 10,Step 10.1,ch22 sec22.1,completed,Gate C roxygen patches closed by step10.1 generated complete Rd examples/family/concept coverage
+D02,pkgdown reference grouping,website,Phase 10,Step 10.2,ch22 sec22.1.2,completed,_pkgdown reference groups cover all Rd topics
+D03,NEWS.md semver changelog,release-doc,Phase 10,Step 10.5,ch22 sec22.1.3,completed,NEWS.md added and rendered by pkgdown
+D04,V1 Getting Started,vignette,Phase 10,Step 10.3,ch22 sec22.2,completed,depends on preset_jebs_paper and sim_multisite
+D05,V2 Choosing a Preset,vignette,Phase 10,Step 10.3,ch22 sec22.2,completed,depends on all 9 presets
+D06,V3 Diagnostics in Practice,vignette,Phase 10,Step 10.3,ch22 sec22.2,completed,depends on summary and diagnostics
+D07,V4 Covariates and Precision Dependence,vignette,Phase 10,Step 10.3,ch22 sec22.2,completed,depends on z_j and two-number reporting
+D08,V5 Custom G-distributions,vignette,Phase 10,Step 10.4,ch22 sec22.2,completed,DPM bridge documented as v1 stub with g_fn path
+D09,V6 Plugging into metafor and multisitepower,vignette,Phase 10,Step 10.4,ch22 sec22.2,completed,soft dependency guards and adapter collision demo
+D10,V7 Calibrating to Real Data,vignette,Phase 10,Step 10.4,ch22 sec22.2,completed,depends on design_grid scenario_audit canonical_hash
+D11,R5.1 Hello-world,cookbook,Phase 10,Step 10.4,ch21 sec21.1 and ch22 sec22.3,completed,cookbook audit marker verified
+D12,R5.2 Custom calibration,cookbook,Phase 10,Step 10.4,ch21 sec21.2 and ch22 sec22.3,completed,cookbook audit marker verified
+D13,R5.3 Two presets side by side,cookbook,Phase 10,Step 10.4,ch21 sec21.3 and ch22 sec22.3,completed,cookbook audit marker verified
+D14,R5.4 Bridge to lme4 and baggr,cookbook,Phase 10,Step 10.4,ch21 sec21.4 and ch22 sec22.3,completed,adapter round-trip T8 verified in recipe
+D15,R5.5 User g_fn callback,cookbook,Phase 10,Step 10.4,ch21 sec21.5 and ch22 sec22.3,completed,callback validation recipe verified
+D16,R5.6 Custom dependence_fn,cookbook,Phase 10,Step 10.4,ch21 sec21.6 and ch22 sec22.3,completed,E25 marginal preservation recipe verified
+D17,R5.7 design_grid scenario_audit,cookbook,Phase 10,Step 10.4,ch21 sec21.7 and ch22 sec22.3,completed,reps removed from design_grid and audit recipe verified
+D18,R5.8 canonical_hash reproducibility,cookbook,Phase 10,Step 10.4,ch21 sec21.8 and ch22 sec22.3,completed,canonical hash recipe verified
+D19,R5.9 Debugging diagnostic surprise,cookbook,Phase 10,Step 10.4,ch21 sec21.9 and ch22 sec22.3,completed,feasibility diagnostic recipe verified
+D20,migration guide and shims,migration-doc,Phase 10,Step 10.5,ch23,completed,no Stan code in multisiteDGP v1; legacy shims documented as siteBayes2 patch-package scope
+D21,CI workflow docs,tooling-doc,Phase 10,Step 10.6,ch20,completed,lean CI policy uses hard dependencies plus targeted test/docs tooling with force-suggests=false
+D22,cross-OS reproducibility policy,tooling-doc,Phase 10,Step 10.7,ch18 and ch20,completed,Linux strict hash baseline and macOS Windows distributional demotion documented in tools/cross-os-reproducibility-policy.md

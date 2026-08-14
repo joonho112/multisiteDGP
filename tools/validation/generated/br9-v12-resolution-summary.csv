@@ -1,0 +1,2 @@
+"blocker_id","experiment_id","run_id","rows","lee_seed","canonical_hash","hash_matches_expected","pattern_evidence_pass","lme4_status","lee_figure_numeric_reference_available","lee_figure_numeric_reference_gate","external_reference_deferred","figure_render_pass","acceptance_pass","tests","resolution"
+"P2-V12-001","V12","br9-v12-full-pattern-evidence",50,4719,"a96eaabd1c022e32",TRUE,TRUE,"not_applicable_site_summary_no_ipd",FALSE,"deferred_external_reference",TRUE,TRUE,TRUE,"presets_step7_1;golden_fixtures_step8_1;traceability;snapshot_print","resolved_pattern_evidence_pass"

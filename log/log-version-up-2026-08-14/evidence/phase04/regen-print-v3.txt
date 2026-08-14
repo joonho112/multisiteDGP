@@ -1,0 +1,3 @@
+Warning message:
+Non-Linux print-example regeneration is exploratory only; canonical_hash/design_hash diffs should not be committed. 
+Ran 9/9 deferred expressions

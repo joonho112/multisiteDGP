@@ -1,0 +1,23 @@
+id,claim,layer,owner_phase,owner_step,test_file,blueprint_ref,status,unresolved_conflict
+T1a,JEBS bit-identical Engine A1 Mixture,L2,Phase 8,Step 8.2,test-T1a-jebs-bit-identical.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Four-seed wrapper output matches Step 8.1 JEBS golden fixtures after canonical plain-frame normalization
+T1b,Engine A2 Gaussian distributional parity,L2,Phase 8,Step 8.2,test-T1b-A2-distributional.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Slow wrapper-level KS binomial gate implemented with fixed seed stream
+T2,Default kappa equals 4,L2,Phase 8,Step 8.2,test-T2-kappa.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Wrapper output carries default kappa equals 4 exactly
+T3,se2_j times n_j equals kappa,L2,Phase 8,Step 8.2,test-T3-rate-form.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Wrapper CV grid preserves se2_j times n_j equals kappa
+T4,Stage-2 independence preservation,L3,Phase 8,Step 8.2,test-T4-independence.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Slow fixed-seed Spearman envelope regression implemented
+T5,Covariate-off equivalence,L1,Phase 8,Step 8.2,test-T5-covariate-off.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Wrapper formula NULL and beta zero paths match on common simulation columns
+T6,Residual equals marginal sigma_tau in covariate-off mode,L1,Phase 8,Step 8.2,test-T6-resid-eq-marg.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Wrapper diagnostics assert residual and marginal sigma_tau equality
+T7,dependence none identity permutation,L3,Phase 8,Step 8.2,test-T7-dep-none.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Wrapper diagnostics record dependence none and identity permutation
+T8,Informativeness formula,L5,Phase 8,Step 8.2,test-T8-informativeness.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Regression file locks geometric-mean informativeness formula
+T9,Default G equals Gaussian with binomial gate,L1,Phase 8,Step 8.2,test-T9-default-G.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Slow Shapiro binomial gate implemented on default wrapper output
+T10,nj_min truncation,L2,Phase 8,Step 8.2,test-T10-n-min-truncation.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Slow wrapper-level nj_min and multi-rep mean check implemented
+T11,Paradigm A JEBS I range full grid,L2,Phase 8,Step 8.2,test-T11-jebs-I-grid.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Slow full-grid A1 legacy envelope implemented with documented lower-tail tolerance
+T12,Engine A1 RNG isolation,L2+L4,Phase 8,Step 8.2,test-T12-A1-rng-order.R,ch04 sec7 and ch18 sec18.3,regression-implemented,Full A1 path traces runif-rnorm-rnorm-rgamma-sample.int-rnorm sequence
+T13,ALD standardization,L1,Phase 8,Step 8.3,test-T13-ALD-standardization.R,ch04 sec7 and ch18 sec18.4,regression-implemented,Slow formal T-suite file covers rho 0.25 0.5 0.7 when LaplacesDemon is installed
+T14a,Legacy raw mixture variance equals 7.15,L1 internal,Phase 8,Step 8.3,test-T14-mixture-ups.R,ch18 sec18.3 and sec18.4,regression-implemented,Slow formal T-suite file covers raw legacy variance for three seeds
+T14b,Standardized mixture output var z_j equals 1,L1,Phase 8,Step 8.3,test-T14-mixture-ups.R,ch18 sec18.3 and sec18.4,regression-implemented,Slow formal T-suite file covers standardized mixture mean and variance
+T15,Student-t standardization,L1,Phase 8,Step 8.3,test-T15-studentt-standardization.R,ch04 sec7 and ch18 sec18.4,regression-implemented,Slow formal T-suite file covers nu 3 5 10
+T16,Skew-Normal standardization and skewness sign,L1,Phase 8,Step 8.3,test-T16-skewn-standardization.R,ch04 sec7 and ch18 sec18.4,regression-implemented,Slow formal T-suite file covers slant -4 -1 0 1 4 when sn and moments are installed
+T17,PointMassSlab standardization and zero-mean slab,L1,Phase 8,Step 8.3,test-T17-pmslab-standardization.R,ch04 sec7 and ch18 sec18.4,regression-implemented,Slow formal T-suite file covers pi0 grid and Gaussian/Laplace slabs
+T18,Covariate decomposition with z_j canonical column,L1+L4,Phase 8,Step 8.3,test-T18-covariate-decomp.R,ch04 sec7 and ch18 sec18.4,regression-implemented,Wrapper-level public z_j decomposition and two-number diagnostics are tested
+T19,Spearman ties PMSlab A2_modern,L3,Phase 8,Step 8.3,test-T19-ties.R,ch04 sec7 and ch18 sec18.4,regression-implemented,A2_modern PMSlab rank-dependence tie handling tested with relaxed Spearman tolerance
+T20,Engine A2 reproducibility,L5,Phase 8,Step 8.3,test-T20-A2-reproducibility.R,ch04 sec7 and ch18 sec18.4,regression-implemented,Public wrapper canonical hash stability and caller RNG preservation are tested

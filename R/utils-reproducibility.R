@@ -322,6 +322,9 @@ provenance_string.default <- function(x, ...) {
   if (is.atomic(x)) {
     out <- unname(x)
     attributes(out) <- NULL
+    if (is.double(out)) {
+      out <- signif(out, .HASH_SIGNIF_DIGITS)
+    }
     return(out)
   }
   unname(x)
@@ -360,13 +363,15 @@ provenance_string.default <- function(x, ...) {
   lapply(selected[numeric_scalar], unname)
 }
 
+# Empty since schema v3. The diagnostics these named are derived from the
+# hashed data and the hashed design, so they added no provenance — only the
+# platform-dependent accumulation noise of `cor()` and `sd()`.
+#
+# `canonical_hash(x, diagnostics_to_include = ...)` still accepts an explicit
+# set for callers who want a diagnostic pinned deliberately; they just are not
+# part of the default contract any more.
 .canonical_diagnostics_allowlist <- function() {
-  c(
-    "I_hat", "R_hat",
-    "rho_S_residual", "rho_S_marginal",
-    "rho_P_residual", "rho_P_marginal",
-    "sigma_tau_resid", "sigma_tau_marg"
-  )
+  character()
 }
 
 .custom_hook_names <- function(design) {
@@ -393,8 +398,47 @@ provenance_string.default <- function(x, ...) {
   "callback bodies, bytecode, and environments are excluded; presence sentinels are hashed"
 }
 
+# Hash schema v3 — the hash covers the simulated data and the design, and
+# nothing derived from them.
+#
+# v1 hashed raw IEEE-754 doubles including a set of derived diagnostics, and a
+# single ULP flipped the hash. That made the cross-platform contract
+# unachievable, but not for the reason it looked like: the *data* is platform
+# stable, and only the diagnostics were not.
+#
+#   data columns  `n_j` is rounded to an integer; `z_j` and `tau_j` come from
+#                 R's own RNG; `se_j`, `se2_j` and `tau_j_hat` follow by IEEE
+#                 arithmetic from those. All bit-identical across platforms,
+#                 confirmed by byte-comparing the golden .rds fixtures on
+#                 macOS, Linux and Windows.
+#   diagnostics   `I_hat`, `R_hat`, `rho_*` and `sigma_tau_*` are computed with
+#                 `cor()`, `sd()` and `mean()`, whose accumulation order varies
+#                 by platform. The gap shows even on one machine, where
+#                 `rho_P_marginal` and `rho_P_residual` are mathematically
+#                 identical for a covariate-free design yet differ in their
+#                 last digits.
+#
+# v2 papered over this by rounding every hashed double to nine significant
+# digits. That worked, but the nine was arbitrary and it blunted the hash
+# against genuine regressions below 1e-9.
+#
+# v3 does both. It drops the diagnostics, which are computed from the data and
+# from a design already covered by `design_hash`, so they added no provenance —
+# only noise. And it keeps the rounding for what remains.
+#
+# The rounding is still needed. An earlier v3 attempt dropped the diagnostics
+# and hashed the rest exactly, on the reasoning that the data must be portable
+# because the nine golden .rds fixtures compare byte-identical across macOS,
+# Linux and Windows. CI disproved it: other designs — the print examples and
+# the snapshot presets — still drifted below 1e-9, so byte-identity holds for
+# those nine fixtures but does not generalise.
+#
+# Nine significant digits sits far above that drift and far below anything a
+# numerical regression would produce. Defect ledger D-002.
+.HASH_SIGNIF_DIGITS <- 9L
+
 .hash_schema_version <- function() {
-  "multisiteDGP-canonical-hash-v1"
+  "multisiteDGP-canonical-hash-v3"
 }
 
 .hash_manifest_version <- function(x) {

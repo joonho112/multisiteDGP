@@ -420,7 +420,7 @@ ggplot(df_a, aes(x = z)) +
             linetype = "dashed", colour = "grey40", linewidth = 0.6) +
   geom_vline(xintercept = 0, linetype = "dotted", colour = "grey50") +
   labs(
-    x        = expression(z[j]~"  (standardized residual)"),
+    x        = expression(z[j] ~ "  (standardized residual)"),
     y        = "density",
     title    = "Convention A — standardized residual from beta_diff_g",
     subtitle = "User callback returns z_j with mean 0 and variance 1; package owns the wrapper."
@@ -437,7 +437,7 @@ ggplot(df_b, aes(x = tau_j)) +
   geom_vline(xintercept = 0,    linetype = "dashed", colour = "grey20") +
   geom_vline(xintercept = 0.30, linetype = "dashed", colour = "#1B4965") +
   labs(
-    x        = expression(tau[j]~"  (response-scale effect)"),
+    x        = expression(tau[j] ~ "  (response-scale effect)"),
     y        = "count",
     title    = "Convention B — raw response-scale draw from sparse_g",
     subtitle = "User callback returns tau_j directly; spike at zero, slab around tau = 0.30."

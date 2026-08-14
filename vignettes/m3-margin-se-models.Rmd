@@ -376,8 +376,8 @@ p_bottom <- ggplot(df_A, aes(x = n_j, y = se2_j)) +
             colour = "grey40", linewidth = 0.6) +
   geom_point(alpha = 0.85, size = 2, colour = "#1B4965") +
   labs(
-    x = expression(n[j]~"  (per-site sample size)"),
-    y = expression(widehat(se)[j]^{2}~"  (sampling variance)")
+    x = expression(n[j] ~ "  (per-site sample size)"),
+    y = expression(widehat(se)[j]^2 ~ "  (sampling variance)")
   ) +
   theme_minimal(base_size = 11) +
   theme(panel.grid.minor = element_blank())
@@ -456,7 +456,7 @@ ggplot(df_B, aes(x = se2_j)) +
   annotate("text", x = GM_target * sqrt(R_B), y = Inf, vjust = 1.4,
            label = "GM * sqrt(R)", colour = "grey30", size = 3.0) +
   labs(
-    x        = expression(widehat(se)[j]^{2}~"  (sampling variance)"),
+    x        = expression(widehat(se)[j]^2 ~ "  (sampling variance)"),
     y        = "count",
     title    = "Paradigm B — direct-precision SE marginal at J = 50",
     subtitle = "I = 0.30, R = 2, sigma_tau = 0.20  ->  GM = 0.0933, range = [0.0660, 0.1320]"

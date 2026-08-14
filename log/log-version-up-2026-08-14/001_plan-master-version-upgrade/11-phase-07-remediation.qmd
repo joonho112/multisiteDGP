@@ -1,0 +1,281 @@
+---
+title: "Phase 7 — 기능 결함 수정"
+---
+
+## 목표
+
+**원장의 P0 를 전부 소진하고, v0.2.0 범위의 P1 을 처리한다.** 성공 기준 **G5 — 광고 표면 == 구현 표면** 을 달성한다.
+
+Phase 4 (재현성) 와 Phase 5 (테스트) 가 다루지 않는 결함이 이 Phase 의 대상이다. 원장 내용은 Phase 2 가 끝나야 알 수 있으므로, 아래 Step 구성은 **범주 기반 골격**이다. Phase 3 Step 3.4 (D4) 가 원장을 Phase 별로 배정하면 그에 맞게 Step 을 채운다.
+
+| | |
+|---|---|
+| **Step 수** | 7 (7.1 – 7.7) |
+| **누적 시간** | ~135 분 |
+| **선행 Phase** | Phase 3 (D2, D4 결정) |
+| **종료 로그** | `008_phase07-defect-remediation.qmd` |
+| **병렬 가능** | Phase 4, Phase 5 와 병렬 진행 가능 |
+
+::: {.callout-note title="Step 배정 원칙"}
+원장의 P0 개수가 Step 7.1–7.2, 7.6 의 용량을 넘으면 Phase 3 D4 가 이미 조정했어야 한다. 그럼에도 넘치면 **Step 을 늘리지 말고 Phase 를 늘린다** — Phase 7 을 7-A / 7-B 로 쪼개고 로그도 둘로 나눈다. 한 Phase 가 비대해지면 로그가 감사 추적으로서 쓸모없어진다.
+:::
+
+---
+
+## Step 7.1 — P0 결함 배치 ①
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | Phase 3 |
+
+**목표.** 원장 P0 중 **통계 커널 관련** 결함을 처리한다. Step 2.5 · 2.6 이 찾은 것들.
+
+**작업.**
+
+1. 원장에서 이 Step 배정분을 연다
+2. 각 결함에 대해:
+   - Phase 5 Step 5.8 이 이미 실패하는 회귀 테스트를 써 두었는지 확인. 없으면 **먼저 쓴다**
+   - 수정
+   - 회귀 테스트가 통과하는지 확인
+   - **golden fixture 영향 확인** — 수치 동작이 바뀌면 fixture 가 바뀐다. 바뀌면 Phase 4 Step 4.4 로 되돌아가거나, 이 Step 에서 fixture 를 재생성하고 로그에 명시
+3. 각 수정을 별도 커밋. 메시지에 원장 ID
+4. **수치 동작 변경은 반드시 로그 §5 에 기록** — 지도 원칙 5
+
+**산출물.**
+
+- 수정된 `R/` 파일들 + 커밋
+- 원장 status 갱신
+- 수치 동작 변경이 있으면 그 목록
+
+**완료 조건.**
+
+- 배정된 P0 전부가 `fixed` 또는 `wont-fix (근거)` 이다
+- 각 수정에 통과하는 회귀 테스트가 있다
+- 수치 동작 변경이 전부 기록되어 있다
+
+---
+
+## Step 7.2 — P0 결함 배치 ②
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | 7.1 |
+
+**목표.** 원장 P0 중 **API · 오류 처리 · 진단 함수** 관련 결함을 처리한다. Step 2.7 이 찾은 것들.
+
+**작업.** Step 7.1 과 동일 절차. 추가로:
+
+1. **오류 메시지 변경 시 snapshot 영향** — `test-snapshot-errors.R` 가 깨진다. 함께 갱신
+2. **도달 불가 오류 코드** — Step 2.7 이 도달 불가로 판정한 E-코드는 제거 후보. 단 blueprint ch.16 이 forward-compatible 로 예약한 것(E24 등)은 **제거하지 않는다.** 근거를 확인하고 판단
+3. **진단 함수 수식 수정** 은 특히 조심 — `compute_kappa` 는 2026-05 에 이미 한 번 R² 공식이 수정된 이력이 있다. 수정 시 blueprint 정의를 인용하고 validation experiment 영향을 Phase 8 로 넘긴다
+
+**산출물.**
+
+- 수정된 파일 + 커밋
+- 갱신된 오류 snapshot
+- 원장 status 갱신
+
+**완료 조건.**
+
+- 배정된 P0 전부 처리
+- 오류 snapshot 이 정합한다
+- 진단 함수 수정이 있으면 blueprint 정의 인용이 있다
+
+---
+
+## Step 7.3 — D2 실행 ①: DPM 처리
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | D2 결정 |
+
+**목표.** Phase 3 D2 가 DPM 에 배정한 선택지를 실행한다.
+
+**선택지별 작업.**
+
+**A — 구현 (D2 가 선택했다면).** blueprint §24.2.1 의 blocker 두 개를 해결해야 한다: `dirichletprocess` 의 수치 안정성, sample-dependent 한 표준화 recipe. **이 경우 Step 하나로 부족하다.** Phase 3 이 A 를 선택했다면 Step 을 7.3a/7.3b/7.3c 로 확장하고 시간을 재추정한다.
+
+**B — 광고 축소 (권고 기본).**
+
+1. `DESCRIPTION` Description 수정 — "eight distribution shapes ... and a Dirichlet-process-mixture bridge" → 실제를 반영. 예: "seven distribution shapes ... plus a reserved Dirichlet-process-mixture slot (not yet implemented)"
+2. `NEWS.md` v0.1.0 항목의 8 shape 목록 — **과거 항목은 수정하지 않는다** (이력이므로). v0.2.0 항목에서 정정을 명시
+3. `README.Rmd` / `index.md` / `_pkgdown.yml` 의 shape 개수 언급 전수 수정
+4. `gen_effects_dpm()` roxygen — `@description` 첫 문장에 미구현 명시. `lifecycle` 배지 검토
+5. `vignette("m2-g-distribution-catalog")` — DPM 절 갱신
+6. E22 오류 메시지 검토 — 사용자에게 v2 계획을 안내하는가?
+7. `tools/traceability/api-index.csv` 갱신
+
+**C — 명시적 실험 기능.** B 와 유사하되 export 를 유지하고 `lifecycle::badge("experimental")` 를 추가.
+
+**산출물.**
+
+- 수정된 문서/코드
+- `evidence/phase07/dpm-surface-changes.md` — 바꾼 위치 전수
+
+**완료 조건.**
+
+- D2 선택지가 실행되어 있다
+- Step 2.4 가 열거한 DPM 언급 위치가 **전부** 처리되어 있다 (누락 하나면 갭이 남는다)
+- `grep -ri "dpm\|dirichlet" ` 로 잔여 언급을 확인했다
+
+---
+
+## Step 7.4 — D2 실행 ②: marginal target 및 `upstream`
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | D2 결정 |
+
+**목표.** `target_marginal_rho` 와 `upstream` 예약 인자를 D2 결정대로 처리한다.
+
+**작업.**
+
+1. **`target_marginal_rho`**
+   - 광고 축소 → `multisitedgp_design()` 의 인자 문서에서 "v2 예정" 을 명확히. E23 메시지에 blueprint §24.2.7 의 blocker 요약 포함
+   - 인자 제거 → NAMESPACE 영향 없음 (인자이므로). 단 기존 사용자 코드가 이 인자를 넘기면 "인식되지 않는 인자" 오류가 난다. E23 을 유지하는 편이 안내가 낫다. **제거보다 유지+명확화를 권고**
+2. **`upstream`** — 용도를 blueprint 에서 확인. Layer 간 데이터 전달 hook 으로 예약된 것이라면 문서에서 숨기고, 아니면 제거
+3. 두 인자의 `@param` 문서를 실제 동작과 일치시킨다
+4. 관련 오류 snapshot 갱신
+
+**산출물.**
+
+- 수정된 `R/class-multisitedgp_design.R`, `R/layer1-gen_effects.R`
+- 갱신된 roxygen + snapshot
+- `evidence/phase07/reserved-args-resolution.md`
+
+**완료 조건.**
+
+- 두 인자의 문서가 실제 동작과 일치한다
+- 오류 메시지가 사용자에게 대안을 안내한다
+- 관련 snapshot 이 통과한다
+
+---
+
+## Step 7.5 — SkewN `scenario_audit()` resolver
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | D2 결정 |
+
+**목표.** punch list P1-1 을 종결한다. `R/diagnostics-core.R` 의 Group C reference resolver 가 SkewN target 을 지원하지 않는 문제.
+
+**작업.**
+
+D2 가 선택한 대로:
+
+**옵션 (a) — resolver 확장 (punch list 추정 60–90 분).** Step 하나를 넘길 수 있으므로, 이 옵션이면 7.5a/7.5b 로 분할한다.
+
+1. Group C resolver 의 현재 구조 파악 — 어느 shape 에 대해 auto-target 을 해결하는가
+2. SkewN 의 reference 분포를 어떻게 정의할지 결정. `sn` package 의 모수화와 표준화 규약을 반영
+3. 구현 + 테스트
+4. `scenario_audit()` 출력이 SkewN 설계에서 의미 있는 판정을 내는지 확인
+
+**옵션 (b) — 문서화 (punch list 기본안, ~10 분).**
+
+1. `vignette("m2-g-distribution-catalog")` 에 한계 명시
+2. `scenario_audit()` roxygen 의 `@details` 에 지원 shape 명시
+3. SkewN 설계에서 `scenario_audit()` 호출 시 나오는 출력이 오해를 부르지 않는지 확인. "target N/A" 로 나온다면 그것으로 충분한가?
+
+**산출물.**
+
+- 옵션에 따라: 수정된 `R/diagnostics-core.R` + 테스트, 또는 문서 수정
+- `evidence/phase07/skewn-resolver.md`
+
+**완료 조건.**
+
+- punch list P1-1 이 종결되어 있다
+- SkewN 설계에서 `scenario_audit()` 을 호출했을 때의 동작이 문서와 일치한다
+
+---
+
+## Step 7.6 — P1 결함 배치
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | 7.1 – 7.5 |
+
+**목표.** D4 가 v0.2.0 범위로 배정한 P1 결함을 처리한다.
+
+**작업.**
+
+1. 원장의 v0.2.0 범위 P1 을 연다
+2. 각각 Step 7.1 과 동일 절차로 처리
+3. **시간이 부족하면 처리하지 못한 것을 v0.3 으로 넘긴다.** P1 은 릴리스를 막지 않는다. 넘길 때는 원장 status 를 `deferred-v0.3` 으로 바꾸고 사유를 남긴다
+4. 남은 punch list 항목(P1-2 T13–T20 cross-reference, P1-3 `on=` 인자 언급, P2-1~P2-3) 처리 여부 판단
+
+**산출물.**
+
+- 수정된 파일 + 커밋
+- 원장 status 갱신
+- v0.3 이월 목록
+
+**완료 조건.**
+
+- v0.2.0 범위 P1 이 전부 `fixed` 또는 `deferred-v0.3 (사유)` 이다
+- 이월분이 GitHub Issues 로 이관되어 있다
+
+---
+
+## Step 7.7 — 오류 카탈로그 및 traceability 정합성
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~15 분 |
+| **의존** | 7.1 – 7.6 |
+
+**목표.** Phase 7 의 수정이 오류 카탈로그와 traceability ledger 에 반영되게 한다.
+
+**작업.**
+
+1. `?multisiteDGP` 의 Error catalog 절 갱신 — 이번 Phase 에서 추가/제거/변경된 오류 반영
+2. `tools/traceability/error-index.csv` 갱신
+3. `tools/traceability/api-index.csv` 갱신 — API 표면 변경 반영
+4. `tools/traceability/decision-index.csv` 에 Phase 3 D1–D4 결정 등재
+5. `tools/traceability/conflict-checklist.csv` — 해소된 항목 종결
+6. `test-traceability.R` 실행 — ledger 와 코드의 일치를 검사하는 테스트가 통과하는지
+7. `devtools::document()` + 전체 테스트 실행
+
+**산출물.**
+
+- 갱신된 traceability CSV 4–5 종
+- 갱신된 package-level roxygen
+
+**완료 조건.**
+
+- `test-traceability.R` 이 통과한다
+- 오류 카탈로그가 실제 오류 집합과 일치한다
+- 전체 테스트 스위트가 통과한다
+
+---
+
+## Phase 종료 조건
+
+- [ ] 원장의 P0 전건이 `fixed` 또는 `wont-fix (근거)` 이다
+- [ ] v0.2.0 범위 P1 이 전부 처리되었거나 사유와 함께 이월되었다
+- [ ] D2 결정이 전부 실행되었고 잔여 언급이 없다 (grep 확인)
+- [ ] 각 수정에 통과하는 회귀 테스트가 있다
+- [ ] 수치 동작 변경이 전부 기록되어 있다 (Phase 8 이 검증할 목록)
+- [ ] `test-traceability.R` 통과
+- [ ] 전체 테스트 스위트 통과 (기본 + 확장)
+- [ ] 이월분이 GitHub Issues 로 이관되어 있다
+
+## Phase 로그
+
+`008_phase07-defect-remediation.qmd` + `.html`.
+
+§6 (원장 변경) 이 이 로그의 핵심이다. 원장의 모든 P0/P1 행에 대해 **이전 status → 이후 status → 커밋 SHA** 를 표로 남긴다.
+
+§5 에는 **수치 동작이 바뀐 목록**을 별도 절로 만든다. Phase 8 이 이 목록을 받아 통계 검증을 재실행한다.

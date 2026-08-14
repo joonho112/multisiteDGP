@@ -1,0 +1,5 @@
+"experiment_id","run_id","priority","status","completed","failed_rows","key_result","evidence"
+"V06","step9-4-v06-full","P1","fail",35,0,"35 active rows completed plus 5 DPM skips; all means passed; StudentT nu=3 variance error 0.0116 exceeded 0.01 gate, so active pass rate was 0.9714.","tools/validation/generated/step9-4-v06-full-summary.csv"
+"V07","step9-4-v07-full","P1","pass",500,0,"100 fixtures x 5 seeds completed; exact I/R recovery passed 500/500 with max I error 1.11e-16 and max R error 1.78e-15.","tools/validation/generated/step9-4-v07-full-summary.csv"
+"V08","step9-4-v08-full","P1","pass-local",250,0,"Darwin local evidence passed: 50 fixtures x 5 reruns had identical canonical_hash, RNG preservation, and provenance hash matches; cross-OS matrix not run locally.","tools/validation/generated/step9-4-v08-full-summary.csv"
+"V09","step9-4-v09-full","P1","fail",3600,0,"3600 rows completed; nonzero rho cells passed but all rho=0 core cells failed pass-rate gates, with cell pass rates 0.10-0.29 vs required 0.95.","tools/validation/generated/step9-4-v09-full-summary.csv"

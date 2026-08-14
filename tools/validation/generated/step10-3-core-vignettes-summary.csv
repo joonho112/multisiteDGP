@@ -1,0 +1,2 @@
+"step","vignette_sources","article_html","build_vignettes","pkgdown_build","pkgdown_check","r_cmd_check_status","check_note","files","articles"
+"10.3",4,4,"pass","pass","pass","1 NOTE","unused lifecycle import; pre-existing C09","v1-getting-started.Rmd;v2-choosing-a-preset.Rmd;v3-diagnostics-in-practice.Rmd;v4-covariates-precision-dependence.Rmd","v1-getting-started.html;v2-choosing-a-preset.html;v3-diagnostics-in-practice.html;v4-covariates-precision-dependence.html"

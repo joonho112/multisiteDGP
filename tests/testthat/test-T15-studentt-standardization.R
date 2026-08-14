@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T15 Student-t standardization holds across nu grid", {
-  skip_if_not_slow()
 
   for (nu in c(3, 5, 10)) {
     z_j <- withr::with_seed(831500L + nu, suppressWarnings(

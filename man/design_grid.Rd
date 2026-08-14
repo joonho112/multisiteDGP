@@ -92,14 +92,14 @@ feasibility sweep;
 the \href{../articles/a6-case-study-multisite.html}{A6 Case study —
 multisite trial} vignette.
 
-Other family-design: 
-\code{\link{as_tibble.multisitedgp_data}()},
-\code{\link{is_multisitedgp_data}()},
-\code{\link{is_multisitedgp_design}()},
-\code{\link{multisitedgp_design}()},
-\code{\link{print.multisitedgp_data}()},
-\code{\link{summary.multisitedgp_data}()},
-\code{\link{update_multisitedgp_design}()},
-\code{\link{validate_multisitedgp_design}()}
+Other family-design:
+\code{\link[=as_tibble.multisitedgp_data]{as_tibble.multisitedgp_data()}},
+\code{\link[=is_multisitedgp_data]{is_multisitedgp_data()}},
+\code{\link[=is_multisitedgp_design]{is_multisitedgp_design()}},
+\code{\link[=multisitedgp_design]{multisitedgp_design()}},
+\code{\link[=print.multisitedgp_data]{print.multisitedgp_data()}},
+\code{\link[=summary.multisitedgp_data]{summary.multisitedgp_data()}},
+\code{\link[=update_multisitedgp_design]{update_multisitedgp_design()}},
+\code{\link[=validate_multisitedgp_design]{validate_multisitedgp_design()}}
 }
 \concept{family-design}

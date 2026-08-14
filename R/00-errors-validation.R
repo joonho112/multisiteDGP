@@ -93,12 +93,35 @@
   requireNamespace(package, quietly = TRUE)
 }
 
+# Optional packages that are not on CRAN. `install.packages()` cannot reach
+# these, so the guard has to name the actual source instead.
+.off_cran_sources <- c(
+  multisitepower = "remotes::install_github(\"jche/multisitepower\")"
+)
+
 .require_soft_dependency <- function(package, context) {
   if (!.require_namespace(package)) {
+    # `[[` on a named character vector throws for an absent name, so look the
+    # key up first rather than relying on a NULL return.
+    off_cran <- if (package %in% names(.off_cran_sources)) {
+      .off_cran_sources[[package]]
+    } else {
+      NULL
+    }
+    if (is.null(off_cran)) {
+      .abort_arg(
+        sprintf("Package `%s` is required for `%s()`.", package, context),
+        sprintf("`%s` is a multisiteDGP Suggests dependency for this distribution.", package),
+        sprintf("Use `install.packages(\"%s\")` and try again.", package)
+      )
+    }
     .abort_arg(
       sprintf("Package `%s` is required for `%s()`.", package, context),
-      sprintf("`%s` is a multisiteDGP Suggests dependency for this distribution.", package),
-      sprintf("Use `install.packages(\"%s\")` and try again.", package)
+      sprintf(
+        "`%s` is optional and is not on CRAN, so it is not a declared Suggests dependency.",
+        package
+      ),
+      sprintf("Use `%s` to install it from source, then try again.", off_cran)
     )
   }
   invisible(TRUE)

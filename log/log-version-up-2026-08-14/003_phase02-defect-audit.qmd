@@ -1,0 +1,329 @@
+---
+title: "Phase 2 — 결함 인벤토리 감사"
+subtitle: "red CI 4개를 근본 원인 2개로 환원하고, 재현성 계약이 달성 불가능함을 규명 — 결함 원장 20행 확정"
+author: "Claude Opus 5"
+date: "2026-08-14"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+## 요약
+
+증거 기반으로 결함 원장 **20 행**을 확정했다 (P0 9 · P1 5 · P2 6, 그중 2 건은 Phase 1 에서 이미 해소). Phase 2 는 계획대로 **어떤 코드도 수정하지 않았다.**
+
+가장 중요한 결과는 두 가지다.
+
+**첫째, red 인 workflow 4 개가 근본 원인 2 개로 전부 설명된다.** ① macOS 에서 생성된 golden fixture · snapshot 이 체크인되어 있는데 이를 검증하는 테스트 5 개 파일이 게이트 없이 모든 플랫폼에서 실행된다 → `extended-tests`·`R-CMD-check`·`test-coverage`. ② `lint` 는 위반 1 건도 허용하지 않는데 위반이 존재한다 → `lint`. `.lintr` 이 원격에 추적되지 않았던 탓에 CI 는 프로젝트 설정 없이 돌았고 위반 수가 65 가 아니라 **440** 이었다.
+
+**둘째, `canonical_hash()` 의 cross-platform 계약은 버그가 아니라 달성 불가능한 계약이다.** 기본 engine A2 가 `nleqslv` 를 `ftol = 1e-12` 로 돌리는데, 5 개 시작점이 모두 수렴 조건을 만족하면서도 서로 **약 5,000 ULP(상대오차 ~1e-12)** 떨어진 점에 안착한다. 반면 해시는 double 을 반올림하지 않아 **1 ULP** 차이에도 뒤집힌다. 계약이 요구하는 정밀도가 계산이 제공하는 정밀도보다 3~4 자릿수 엄격하다. 어느 플랫폼에서 재생성해도 다른 플랫폼에서는 반드시 깨진다.
+
+세 번째로, 통계 커널은 건강하다. 표준화 계약을 17 개 파라미터 셀에서 확인해 16 셀이 통과했고, dependence 3 방식 모두 목표를 달성했으며, design/flat 경로 동치성과 RNG 상태 보존도 성립한다.
+
+**Phase 3 진입 가능하나, P0 하나(D-019)가 Phase 4 를 막는다** — Linux 검증 수단이 없다.
+
+## Step 실행 기록
+
+| Step | 제목 | 상태 | 계획 | 실제 | 비고 |
+|---|---|---|--:|--:|---|
+| 2.1 | CI 실패 포렌식 | **partial** | ~20 분 | ~35 분 | Docker·push 모두 불가 → 분석적 재현으로 전환. `lint` 는 확정, 나머지는 추론 |
+| 2.2 | 테스트 스위트 무결성 감사 | done | ~20 분 | ~15 분 | 393 개 `test_that` 전수 스캔 |
+| 2.3 | 재현성 계약 감사 | **partial** | ~20 분 | ~40 분 | Linux 이분 탐색 불가 → solver 결정도 실험으로 대체. 발생 지점은 확정 |
+| 2.4 | 광고-구현 갭 감사 | done | ~20 분 | ~15 분 | |
+| 2.5 | 통계 커널 감사 ① Layer 1 | done | ~20 분 | ~25 분 | 스크립트 2 회 재작성 |
+| 2.6 | 통계 커널 감사 ② Layer 2–4 | done | ~20 분 | (2.5 와 통합) | |
+| 2.7 | API · UX 감사 | done | ~20 분 | ~10 분 | (2.4 와 통합 실행) |
+| 2.8 | 의존성 및 성능 감사 | done | ~15 분 | ~20 분 | vignette knit 측정 1 회 실패 후 재실행 |
+| 2.9 | 결함 원장 종합 | done | ~20 분 | ~20 분 | |
+
+**계획 대비 차이.** Step 2.1 과 2.3 이 `partial` 이다. 계획서는 두 Step 모두 Linux 접근(경로 A = push 후 CI, 경로 B = Docker)을 전제했으나 **둘 다 사용할 수 없었다** — Docker 미설치이고 원격 push 는 PI 가 보류했다. 분석적 재현으로 상당 부분을 확정했으나 §7 에 남은 항목이 있다.
+
+Step 2.5 와 2.6, 2.4 와 2.7 은 대상이 겹쳐 각각 하나의 스크립트로 통합 실행했다.
+
+## 산출물
+
+### 증거 문서
+
+| 경로 | 내용 |
+|---|---|
+| `evidence/phase02/ci-forensics.md` | **Step 2.1** — workflow 4 개 실패 원인 분류, 근본 원인 2 개 |
+| `evidence/phase02/reproducibility-contract-audit.md` | **Step 2.3** — 해시 스키마, solver 결정도, 정책 3 중 불일치, D1 함의 |
+| `evidence/phase02/hash-drift-analysis.txt` | solver 결정도 실험 원자료 |
+| `evidence/phase02/test-skip-matrix.csv` / `.txt` | **Step 2.2** — 393 `test_that` × 게이트 |
+| `evidence/phase02/surface-audit.txt` | **Step 2.4 · 2.7** — 광고 위치, shape 실행, 예약 인자, 오류 카탈로그 |
+| `evidence/phase02/true-dist-implementation.csv` | 8 shape 실행 검증 |
+| `evidence/phase02/kernel-audit.txt` | **Step 2.5 · 2.6** |
+| `evidence/phase02/layer1-standardization-grid.csv` | 표준화 계약 17 셀 |
+| `evidence/phase02/solver-feasible-region.csv` | A2 실현 가능 영역 48 셀 |
+| `evidence/phase02/dependence-achievement.csv` | dependence 3 × 7 목표 × 5 시드 |
+| `evidence/phase02/studentt-heavy-tail-check.txt` | StudentT 작은 `nu` 정밀 조사 |
+| `evidence/phase02/ci-coverage-repro.txt` / `ci-coverage-by-file.csv` | CI 커버리지 게이트 재현 |
+| `evidence/phase02/vignette-knit-timing.csv` / `.txt` | **Step 2.8** — 16 편 knit 시간 |
+| `evidence/phase02/scripts/` | 재실행 가능한 감사 스크립트 7 종 |
+
+### 원장
+
+`log/log-version-up-2026-08-14/defect-ledger.csv` — **20 행 × 17 열**
+
+| | fixed | open |
+|---|--:|--:|
+| **P0** | 2 | 7 |
+| **P1** | 0 | 5 |
+| **P2** | 0 | 6 |
+
+영역별: infra 8 · surface 3 · test 3 · docs 2 · repro 2 · kernel 1 · perf 1
+
+담당 Phase: phase06 5 · phase07 5 · phase05 3 · phase04 2 · phase09 2 · phase01 2(해소) · phase03 1
+
+## 근거와 실행 결과
+
+### Step 2.1 — 근본 원인 2 개
+
+| 근본 원인 | 영향 workflow | 확신도 |
+|---|---|---|
+| **RC-1** macOS 생성 아티팩트를 게이트 없는 테스트가 전 플랫폼에서 검증 | `extended-tests`, `R-CMD-check`, `test-coverage` | 확정 / 높음 / 유력 |
+| **RC-2** lint 무관용 게이트에 위반 존재 | `lint` | **확정** |
+
+`pkgdown-deploy` 만 green 인 이유도 설명된다 — 테스트도 lint 도 돌리지 않는다.
+
+**lint 정량화 (확정):**
+
+| 조건 | 위반 수 |
+|---|---:|
+| `.lintr` 있음 (로컬) | 65 |
+| **`.lintr` 없음 (CI 조건)** | **440** |
+
+`.lintr` 없을 때 `line_length_linter` 332 (기본 80 vs 프로젝트 120), `object_usage_linter` 45 (프로젝트는 비활성). Step 1.2 에서 `.lintr` 을 추적에 넣어 440 → 65 로 줄였고, 남은 65 는 Phase 6 이 처리한다.
+
+**게이트 없는 아티팩트 검증 테스트 5 개** — RC-1 의 노출 범위:
+
+| 파일 | 게이트 | 위험 |
+|---|--:|---|
+| `test-snapshot-print.R` | 0 | provenance 문자열에 `canonical_hash` 포함 |
+| `test-generated-print-examples-step8-6.R` | 0 | 동일 |
+| **`test-golden.R`** | **0** | `.rds` 9 개를 `compare_file_binary` 로 **바이너리 비교** |
+| `test-print-examples.R` | 0 | |
+| `test-snapshot-errors.R` | 0 | 해시 무관 → 영향 없음 |
+
+`test-golden.R` 이 특히 문제다. 정책은 macOS/Windows 를 strict hash 에서 면제하지만, 이 테스트가 게이트 없이 같은 성격의 바이너리 비교를 수행해 **면제를 무력화한다** (원장 D-007).
+
+**`test-coverage` 는 원인 미확정.** CI 조건(게이트 off, exported-only)을 그대로 재현한 결과 **91.36% 로 게이트(≥90%)를 통과**한다. 즉 커버리지는 원인이 아니다. 남은 후보는 ① Linux 에서 snapshot 실패가 `covr` 로 전파, ② `CODECOV_TOKEN` 만료. ①이 유력하다 (원장 D-009).
+
+**pure-R 경계 검사는 통과.** Step 1.2 가 `tools/`·`log/` 를 추적에 넣었으므로 회귀 가능성을 확인했다 — 위반 0 건.
+
+### Step 2.2 — skip 매트릭스
+
+```
+테스트 파일 64 | test_that 블록 393
+기본 실행 363 | 기본 게이트됨 30
+```
+
+| 게이트 | 건수 |
+|---|--:|
+| `skip_if_not_slow` | 17 |
+| `skip_if_not_property` | 12 |
+| `skip_if_not_linux_strict_hash` | 1 |
+| `skip_if_not_installed` | 10 (soft-dep guard, 정상) |
+
+`skip_if_not_validation()` 과 `skip_if_api_missing()` 은 정의되어 있으나 **0 회 사용** — 잔재다 (원장 D-016).
+
+Phase 1 Step 1.5 의 타이밍과 합치면 **게이트를 전부 켜는 비용은 +94.6 초** (18.1 s → 112.7 s). D3 의 유력한 답은 "축소 없이 그대로 켜기" 다.
+
+### Step 2.3 — 재현성 계약
+
+::: {.callout-important title="핵심 발견"}
+계약이 요구하는 정밀도(1 ULP)가 계산이 제공하는 정밀도(~5,000 ULP)보다 3~4 자릿수 엄격하다.
+:::
+
+| 측정 | 값 |
+|---|---|
+| 해시의 double 반올림 | **없음** — 2 ULP 섭동으로 해시 변경 |
+| 기본 engine | `A2_modern` |
+| `sim_multisite()` 1 회당 `nleqslv` 호출 | **5 회** |
+| 5 개 시작점의 해 차이 | **alpha 5,230 ULP · beta 5,930 ULP** |
+| 잔차 노름 범위 | 1.11e-15 ~ 6.38e-13 (`ftol` = 1e-12) |
+| `ftol` 1e-12→1e-13 시 해 이동 | **3,720 ULP** |
+| same-machine 재현성 (T20) | **성립** |
+
+`design_hash` 가 일치하고 `canonical_hash` 만 불일치한 이유도 설명된다 — design 객체는 사용자 입력만 담고 solver 출력이 들어가지 않는다.
+
+`nleqslv` 는 **`layer2-engine-a2.R` 에서만** 쓰이며 다른 layer 는 `uniroot`/`optimize`/`optim`/`integrate` 를 전혀 쓰지 않는다. 따라서 드리프트 발생 지점은 **Layer 2 의 engine A2** 로 확정된다 — Linux 없이도 좁힐 수 있었다.
+
+**정책 3 중 불일치**를 문서화했다: 정책은 Linux 를 authoritative 로 규정하나 아티팩트는 macOS 산출물이고, 면제 조항은 `test-golden.R` 이 무력화하며, "숨길 수 없는 수치 차이" 라는 전제 자체가 문제의 성격을 오인한다.
+
+### Step 2.4 · 2.7 — 표면
+
+**"eight distribution shapes" 주장이 18 곳**에 있다 — `DESCRIPTION` 1, `NEWS.md` 2, `README.md` 5, `README.Rmd` 5, `index.md` 3, `_pkgdown.yml` 2.
+
+실행 검증:
+
+| `true_dist` | 결과 |
+|---|---|
+| Gaussian · StudentT · SkewN · ALD · Mixture · PointMassSlab | **OK** (6) |
+| User | `g_fn` 필요 — **설계상 정상** |
+| **DPM** | **ABORT** — `not implemented in multisiteDGP v1` |
+
+즉 사용 가능한 shape 는 7 인데 8 로 광고한다.
+
+예약 인자: `target_marginal_rho` → E23 abort, `upstream` → "reserved and is not implemented yet" abort (원장 D-018).
+
+오류 카탈로그: 타입드 클래스 7 종, abort helper 7 개(`.abort_arg` 192 회 등 총 228 회 호출), `error-index.csv` 30 항목(implemented 17 · validator-implemented 10 · snapshot-implemented 2 · planned 1). 구조가 잘 유지되고 있다.
+
+export 53 개 / Rd 45 개 — `@family`·`@rdname` 로 묶인 결과이며 정상이다.
+
+### Step 2.5 · 2.6 — 통계 커널
+
+**표준화 계약 (N = 200,000, 17 셀):** 16 셀 통과, 1 셀 이탈.
+
+| shape | `var(z_j)` |
+|---|--:|
+| Gaussian, StudentT(3/5/30), SkewN(0.5/3/20), ALD(0.1/0.5/0.9), Mixture ×3, PMSlab(0.05/0.5/0.95) | 0.989 ~ 1.026 |
+| **StudentT(nu = 2.1)** | **0.438** |
+
+`nu = 2.1` 을 12 개 시드로 정밀 조사한 결과 **MC 잡음이 아니라 계통적 편의**였다.
+
+| `nu` | median `var(z_j)` | IQR |
+|---|--:|--:|
+| 2.1 | **0.418** | 0.056 |
+| 2.5 | 0.911 | 0.045 |
+| 3.0 | 0.986 | 0.041 |
+| ≥ 4 | 1.000 | ≤ 0.013 |
+
+원인이 확인됐다 — t(2.1) 의 이론 분산은 21.0 인데 200,000 draw 의 **표본** 분산은 8.02 에 불과하다. 표준화 상수 √(ν/(ν−2)) 자체는 옳으나, 무한 첨도 영역에서는 실현 분산이 이론값에 도달하지 않아 `var(z_j) ≈ 8.02/21 ≈ 0.42` 가 된다. 현재 경고는 "Monte Carlo moment checks may be noisy" 라고만 말해 **재현적인 계통 편의를 잡음으로 오도한다** (원장 D-011).
+
+**Engine A2 실현 가능 영역 (48 셀):** 43 성공 / 5 실패.
+
+```
+       cv  0.05 0.1 0.25 0.4 0.6 0.8 1.0 1.3
+nj_mean 10    1   1    1   1   0   0   0   0
+        25    1   1    1   1   1   1   1   0
+        50+   1   1    1   1   1   1   1   1
+```
+
+실패는 전부 `nj_mean = 10, cv ≥ 0.6` 과 `(25, 1.3)` 이며 `Engine A2 truncated-Gamma post-solve verification failed.` 로 **fail-fast** 한다 — 조용히 틀린 값을 주지 않는다. 다만 이 영역이 roxygen 에 문서화되어 있지 않다 (원장 D-012).
+
+**dependence 목표 달성 (3 방식 × 7 목표 × 5 시드):**
+
+| 방식 | 최대 절대오차 | 판정 |
+|---|--:|---|
+| `rank` | 0.0127 | 우수 (hill-climb 로 목표에 수렴) |
+| `hybrid` | 0.0534 | 양호 |
+| `copula` | 0.1029 | **정상** |
+
+::: {.callout-note title="자체 정정 — 하마터면 거짓 결함을 등재할 뻔했다"}
+`copula` 를 처음 측정할 때 `pearson_corr` 를 실현 Pearson 상관과 직접 비교해 최대오차 0.20 을 얻었다. roxygen 을 확인하니 `pearson_corr` 는 **잠재 Gaussian copula 상관**이고 실현 Spearman 의 기대값은 ρ_S ≈ (6/π)·arcsin(ρ_P/2) 이다. 올바른 대조로 다시 측정하니 평균 실현값이 기대값을 정확히 따라갔다(예: 인자 −0.60 → 기대 −0.5819, 실현 −0.5754). **패키지가 아니라 측정이 틀렸다.**
+
+원장 원칙 3("P0 는 재현 절차가 실제로 실행되어 확인된 것만")이 실제로 작동한 사례다.
+:::
+
+**wrapper 계약:** design 객체 경로와 flat 인자 경로의 `canonical_hash` 동일, `seed` 지정 시 caller `.Random.seed` 보존 — 둘 다 성립.
+
+### Step 2.8 — 의존성 · 성능
+
+**vignette knit: 16 편 전부 성공, 총 25.9 초.**
+
+| vignette | 초 |
+|---|--:|
+| a8-cookbook | 3.8 |
+| a6-case-study-multisite | 3.6 |
+| a3-diagnostics-in-practice | 2.8 |
+| a1-getting-started | 2.2 |
+| m2-g-distribution-catalog | 2.1 |
+| 나머지 11 편 | 0.8 ~ 1.3 |
+
+**2026-05 punch list P0-2 가 종결된다.** 당시 기준은 "총합이 5 분을 넘으면 캐싱 도입" 이었는데 26 초이므로 **캐싱이 필요 없다.** 다만 knit 중 경고 16 건이 발생하며 내용은 미확인이다 (원장 D-020).
+
+의존성은 Phase 1 Step 1.3 에서 처리했고, `multisitepower` 의 설치 경로가 문서 어디에도 없다는 점을 원장에 등재했다 (D-010).
+
+## 결정 사항
+
+**감사 중 발견한 것을 고치지 않았다.** 계획서 Phase 2 의 원칙대로 원장 등재만 하고 지나갔다. 이 분리가 없으면 감사가 임기응변 수정으로 흩어져 원장이 완성되지 않는다. `git diff` 로 `R/`·`tests/`·`man/` 에 변경이 없음을 확인했다.
+
+**Step 2.1·2.3 을 `partial` 로 남기고 진행했다.** Linux 접근을 기다리며 Phase 2 를 멈추는 대신, 분석적으로 확정 가능한 부분을 최대한 확정하고 남은 항목을 §7 과 원장 D-019 로 명시했다. 결과적으로 두 Step 의 핵심 질문(실패 원인, 드리프트 발생 지점)에는 답했다.
+
+**`copula` 측정 오류를 자체 발견해 정정했다.** 위 callout 참조.
+
+**원장을 20 행에서 닫았다.** 더 팔 수 있는 영역(개별 fixture 재생성 이력, vignette 경고 16 건의 내용, Windows 동작)이 있으나 계획서의 "감사 마비 방지" 원칙에 따라 Step 2.9 에서 닫고 미확인 항목을 원장 행으로 남겼다.
+
+## 원장 변경
+
+Phase 2 가 원장을 **신규 생성**했다. Phase 1 의 원장 후보 C-01 ~ C-06 을 흡수해 D-001 ~ D-020 으로 재편했다.
+
+| ID | 요약 | 등급 | 담당 | 상태 |
+|---|---|:--:|---|---|
+| D-001 | 로컬 작업본이 git 밖 | P0 | phase01 | **fixed** |
+| D-002 | `canonical_hash` 플랫폼 불일치 | P0 | phase04 | open |
+| D-003 | 기본 테스트가 불변량 30 건 skip | P0 | phase05 | open |
+| D-004 | DESCRIPTION 이 미구현 DPM 광고 | P0 | phase07 | open |
+| D-005 | `.lintr` 미추적 → CI 440 위반 | P0 | phase01 | **fixed** |
+| D-006 | lint 위반 65 건 | P0 | phase06 | open |
+| D-007 | `test-golden.R` 이 cross-OS 면제 무력화 | P0 | phase04 | open |
+| D-008 | CI 실패 알림 부재 → 10 주 방치 | P0 | phase06 | open |
+| D-009 | `test-coverage` 실패 원인 미확정 | P1 | phase06 | open |
+| D-010 | `multisitepower` 설치 경로 미문서화 | P1 | phase07 | open |
+| D-011 | StudentT 작은 `nu` 경고 오도 | P1 | phase07 | open |
+| D-012 | A2 실현 가능 영역 미문서화 | P2 | phase07 | open |
+| D-013 | tarball 9.2 MB | P2 | phase09 | open |
+| D-014 | check NOTE `README.Rmd` | P2 | phase06 | open |
+| D-015 | `layer2-engine-a2.R` 커버리지 84.8 % | P1 | phase05 | open |
+| D-016 | 미사용 skip helper 2 개 | P2 | phase05 | open |
+| D-017 | testthat 10 건 절단 | P2 | phase06 | open |
+| D-018 | 예약 인자 `target_marginal_rho`·`upstream` | P1 | phase07 | open |
+| **D-019** | **Linux 검증 수단 없음** | **P0** | **phase03** | **open** |
+| D-020 | vignette knit 경고 16 건 | P2 | phase09 | open |
+
+**원장에 올리지 않은 것** — 확인 결과 결함이 아니었다.
+
+- `copula` 의 목표 달성 (위 callout)
+- `theta_G` 검증 오류가 shape 별 필수 파라미터를 이름으로 지목한다
+- A2 solver 의 실현 불가능 영역에서 **fail-fast 한다** — 동작 자체는 옳다 (문서화만 결함)
+- `User` shape 가 `g_fn` 을 요구한다 — 설계상 정상
+
+## 미해결 및 이월
+
+| 항목 | 상태 | 어디로 |
+|---|---|---|
+| `R-CMD-check` 5 cell 각각의 실제 실패 내용 | Linux 필요 | D-019 해소 후 Phase 6 |
+| `test-coverage` 실패 원인 (B-1 vs B-2) | Linux 또는 secrets 확인 필요 | D-009 |
+| Windows cell 동작 | Linux/CI 필요 | Phase 6 |
+| `extended-tests` 절단된 실패 목록 전체 | Linux 필요 | D-017 |
+| 드리프트 크기의 **플랫폼 간** 실측 | Linux 필요 | Phase 4 Step 4.1 |
+| golden fixture 개별 파일 재생성 이력 | 미확인 | Phase 4 Step 4.4 |
+| vignette knit 경고 16 건 내용 | 미확인 | D-020 |
+
+::: {.callout-important title="D-019 가 Phase 4 를 막는다"}
+Linux 검증 수단이 없다. Docker/podman/colima 가 설치되어 있지 않고, 원격 push 는 PI 가 보류했다.
+
+이 상태로는 **Phase 4 (재현성 계약 재구축) 를 완료할 수 없다.** Step 4.3 (Linux 베이스라인 생성 파이프라인), Step 4.4 (fixture 재생성), Step 4.5 (snapshot 재생성)가 전부 Linux 실행을 요구한다. Phase 6 (CI green 확인)도 마찬가지다.
+
+**해소 경로 2 개** — 어느 쪽이든 PI 결정이 필요하다.
+
+1. **원격 push 승인** — 작업 브랜치를 push 하면 CI 가 5-cell 매트릭스를 돌려 즉시 Linux 결과를 준다. 아티팩트도 `upload-artifact` 로 회수할 수 있다. 추가 설치 불필요
+2. **Docker 설치** — `rocker/r-ver` 로 로컬 반복 실험이 가능해진다. push 없이 진행 가능하나 설치가 필요하고 CI 자체의 green 확인은 여전히 push 를 요구한다
+
+권고는 **1** 이다. Phase 6 이 어차피 CI green 을 요구하므로 push 는 언젠가 필요하고, 지금 승인하면 Phase 4 와 6 이 동시에 풀린다.
+:::
+
+## 다음 Phase 진입 조건
+
+계획서 Ch.6 의 Phase 2 종료 조건 대조.
+
+| # | 조건 | 결과 |
+|---|---|---|
+| 1 | Step 2.1–2.8 각각의 증거 파일 존재 | **충족** — `evidence/phase02/` 14 파일 + 스크립트 7 |
+| 2 | `defect-ledger.csv` 존재, 필수 필드 채움 | **충족** — 20 행 × 17 열, CSV 유효성 검증 완료 |
+| 3 | P0 전건 재현 확인 | **부분** — 7 건 중 6 건 재현 확인. D-019 는 "재현" 대상이 아니라 환경 부재 자체 |
+| 4 | Ch.1 미확인 U-1 ~ U-9 해소 | **부분** — U-1(CI 원인) 부분 확정, U-2·U-3·U-5·U-6·U-7·U-8·U-9 해소, U-4(드리프트 지점) 확정 |
+| 5 | 코드 파일 미수정 | **충족** — `git diff` 가 `R/`·`tests/`·`man/` 에 대해 비어 있음 |
+
+**판정: Phase 3 진입 가능.** Phase 3 은 결정 문서 작성이므로 Linux 가 필요 없다. 오히려 D-019 를 PI 결정 항목으로 승격시켜 Phase 3 의 승인 패킷에 포함하는 것이 옳다.
+
+**Phase 4 는 D-019 해소 없이 진입 불가.**

@@ -1,0 +1,8 @@
+"run_id","experiment_id","mode","shape","rows","completed","acceptance_pass_rate","mean_pass_rate","var_pass_rate","max_abs_mean","max_abs_var_delta"
+"step9-4-v06-subset","V06","subset","ALD",5,5,0,0.6,0,0.0140554685264023,0.0357777130197811
+"step9-4-v06-subset","V06","subset","Gaussian",5,5,0,0.2,0.6,0.0171085466877804,0.0161444369878512
+"step9-4-v06-subset","V06","subset","Mixture",5,5,0.2,0.4,0.4,0.012751108377162,0.0203099316926892
+"step9-4-v06-subset","V06","subset","PointMassSlab",5,5,0.2,0.4,0.6,0.0151795234387731,0.0610689193667573
+"step9-4-v06-subset","V06","subset","SkewN",5,5,0.6,0.6,0.6,0.0117140416381788,0.0298037058011378
+"step9-4-v06-subset","V06","subset","StudentT",5,5,0,0.2,0.2,0.0189389565195825,0.0213533568374107
+"step9-4-v06-subset","V06","subset","User",5,5,1,1,1,4.78284079008517e-17,3.1912424997449e-05

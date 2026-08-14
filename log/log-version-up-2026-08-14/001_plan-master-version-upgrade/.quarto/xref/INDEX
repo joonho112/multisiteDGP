@@ -1,0 +1,59 @@
+{
+  "index.qmd": {
+    "index.html": "6c4e8559"
+  },
+  "01-current-state-audit.qmd": {
+    "01-current-state-audit.html": "e4e459e0"
+  },
+  "02-goals-and-scope.qmd": {
+    "02-goals-and-scope.html": "1efb49d3"
+  },
+  "03-operating-model.qmd": {
+    "03-operating-model.html": "c81e751c"
+  },
+  "04-log-protocol.qmd": {
+    "04-log-protocol.html": "d350da21"
+  },
+  "05-phase-01-foundation.qmd": {
+    "05-phase-01-foundation.html": "b5145ce2"
+  },
+  "06-phase-02-defect-audit.qmd": {
+    "06-phase-02-defect-audit.html": "f806ca8a"
+  },
+  "07-phase-03-scope-decisions.qmd": {
+    "07-phase-03-scope-decisions.html": "4e43df50"
+  },
+  "08-phase-04-reproducibility.qmd": {
+    "08-phase-04-reproducibility.html": "8d99ea03"
+  },
+  "09-phase-05-test-suite.qmd": {
+    "09-phase-05-test-suite.html": "d075c9bd"
+  },
+  "10-phase-06-ci.qmd": {
+    "10-phase-06-ci.html": "1cfb6385"
+  },
+  "11-phase-07-remediation.qmd": {
+    "11-phase-07-remediation.html": "87a89b83"
+  },
+  "12-phase-08-revalidation.qmd": {
+    "12-phase-08-revalidation.html": "51e585cd"
+  },
+  "13-phase-09-documentation.qmd": {
+    "13-phase-09-documentation.html": "9990261d"
+  },
+  "14-phase-10-external-review.qmd": {
+    "14-phase-10-external-review.html": "6015184e"
+  },
+  "15-phase-11-release.qmd": {
+    "15-phase-11-release.html": "472f9a4c"
+  },
+  "16-acceptance-criteria.qmd": {
+    "16-acceptance-criteria.html": "088997fb"
+  },
+  "appendix-a-defect-ledger.qmd": {
+    "appendix-a-defect-ledger.html": "881bc989"
+  },
+  "appendix-b-evidence.qmd": {
+    "appendix-b-evidence.html": "ef344530"
+  }
+}

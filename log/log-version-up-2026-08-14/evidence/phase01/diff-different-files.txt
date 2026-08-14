@@ -1,0 +1,7 @@
+.Rbuildignore
+.github/workflows/R-CMD-check.yaml
+.github/workflows/pkgdown-deploy.yaml
+.github/workflows/test-coverage.yaml
+CONTRIBUTING.md
+NEWS.md
+vignettes/references.bib

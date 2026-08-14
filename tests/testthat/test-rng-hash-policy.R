@@ -93,7 +93,12 @@ test_that("canonical hash column ordering is locale independent", {
   )
 })
 
-test_that("canonical hash uses only allowlisted numeric diagnostics", {
+test_that("canonical hash ignores diagnostics entirely under schema v3", {
+  # v1 and v2 hashed an allowlist of numeric diagnostics. v3 drops them: they
+  # are derived from the hashed data and the hashed design, so they carry no
+  # provenance the hash lacks, and their cor()/sd() accumulation order varies
+  # by platform, which is what made the cross-platform contract unachievable
+  # (defect ledger D-002).
   dat <- new_hash_data()
   extra <- dat
   attr(extra, "diagnostics")$elapsed <- Sys.time()
@@ -102,6 +107,28 @@ test_that("canonical hash uses only allowlisted numeric diagnostics", {
   attr(changed, "diagnostics")$I_hat <- 0.21
 
   expect_identical(canonical_hash(dat), canonical_hash(extra))
+  expect_identical(canonical_hash(dat), canonical_hash(changed))
+})
+
+test_that("a diagnostic still moves the hash when the caller asks for it", {
+  # Opting in explicitly is the escape hatch for anyone who wants a particular
+  # diagnostic pinned; it is simply not part of the default contract.
+  dat <- new_hash_data()
+  changed <- dat
+  attr(changed, "diagnostics")$I_hat <- 0.21
+
+  expect_false(identical(
+    canonical_hash(dat, diagnostics_to_include = "I_hat"),
+    canonical_hash(changed, diagnostics_to_include = "I_hat")
+  ))
+})
+
+test_that("data still drives the hash", {
+  dat <- new_hash_data()
+  changed <- dat
+  # Above the nine-digit rounding, so a genuine numerical change is still seen.
+  changed$tau_j_hat[1] <- changed$tau_j_hat[1] * (1 + 1e-6)
+
   expect_false(identical(canonical_hash(dat), canonical_hash(changed)))
 })
 

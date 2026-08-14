@@ -47,7 +47,6 @@ test_that("Mixture generator preserves covariate decomposition", {
 })
 
 test_that("T14a raw legacy mixture variance matches R2-F06 baseline", {
-  skip_if_not_slow()
 
   for (seed in c(42L, 1L, 2024L)) {
     raw <- .legacy_mixture_raw_draw(delta = 5, eps = 0.3, ups = 2, J = default_n_property_large, seed = seed)
@@ -61,7 +60,6 @@ test_that("T14a raw legacy mixture variance matches R2-F06 baseline", {
 })
 
 test_that("T14b standardized mixture output has unit variance", {
-  skip_if_not_slow()
 
   for (seed in c(42L, 1L, 2024L)) {
     out <- withr::with_seed(

@@ -1,0 +1,65 @@
+"result_schema_version","run_id","experiment_id","mode","cell_id","row_id","fixture_id","seed","status","construction_path","J","sigma_tau","nj_mean","cv","nj_min","engine","dependence","rank_corr","pearson_corr","accepted","expected_error_class","class_pass","rng_unchanged","error_class","error_message"
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","constructor_rank",1,1,1292261554,"completed","constructor",92,0.103084233705886,62.8749076556414,0.429426350514404,20,"A1_legacy","rank",0.159202209953219,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""rank""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""rank"", rank_corr =
+  0.159202209953219`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","constructor_copula",2,2,14908704,"completed","constructor",113,0.284062738670036,44.1419510217384,0.0442498427582905,7,"A1_legacy","copula",0,-0.3,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""copula""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""copula"", rank_corr = 0`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","constructor_hybrid",3,3,276515606,"completed","constructor",35,0.171176248800475,89.9529327685013,0.556727251969278,1,"A1_legacy","hybrid",-0.62544098990038,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""hybrid""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""hybrid"", rank_corr =
+  -0.62544098990038`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","constructor_rank",4,4,1269133260,"completed","constructor",27,0.352007883437909,100.031027086079,0.274135410552844,5,"A1_legacy","rank",0.626328668370843,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""rank""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""rank"", rank_corr =
+  0.626328668370843`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","constructor_copula",5,5,612899326,"completed","constructor",112,0.119593985157553,40.3022441128269,0.59557402896462,2,"A1_legacy","copula",0,0.239837516658008,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""copula""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""copula"", rank_corr = 0`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","constructor_hybrid",6,6,1195595383,"completed","constructor",55,0.362144556397107,43.0513009941205,0.500460443319753,16,"A1_legacy","hybrid",0.130255829449743,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""hybrid""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""hybrid"", rank_corr =
+  0.130255829449743`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","constructor_rank",7,7,52694927,"completed","constructor",86,0.388347594090737,31.0187665792182,0.679760801314842,10,"A1_legacy","rank",0.646449322020635,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""rank""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""rank"", rank_corr =
+  0.646449322020635`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","constructor_copula",8,8,1248571288,"completed","constructor",75,0.0882290110224858,55.8608648879454,0.138624541810714,13,"A1_legacy","copula",0,0.315451302938163,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""copula""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""copula"", rank_corr = 0`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","constructor_hybrid",9,9,1842598909,"completed","constructor",95,0.398614512698259,84.5235583884642,0.20911981043173,29,"A1_legacy","hybrid",-0.3,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""hybrid""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""hybrid"", rank_corr = -0.3`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","wrapper_rank",10,1,1292261554,"completed","wrapper",92,0.103084233705886,62.8749076556414,0.429426350514404,20,"A1_legacy","rank",0.159202209953219,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""rank""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""rank"", rank_corr =
+  0.159202209953219`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","wrapper_copula",11,2,14908704,"completed","wrapper",113,0.284062738670036,44.1419510217384,0.0442498427582905,7,"A1_legacy","copula",0,-0.3,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""copula""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""copula"", rank_corr = 0`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","wrapper_hybrid",12,3,276515606,"completed","wrapper",35,0.171176248800475,89.9529327685013,0.556727251969278,1,"A1_legacy","hybrid",-0.62544098990038,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""hybrid""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""hybrid"", rank_corr =
+  -0.62544098990038`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","wrapper_rank",13,4,1269133260,"completed","wrapper",27,0.352007883437909,100.031027086079,0.274135410552844,5,"A1_legacy","rank",0.626328668370843,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""rank""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""rank"", rank_corr =
+  0.626328668370843`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","wrapper_copula",14,5,612899326,"completed","wrapper",112,0.119593985157553,40.3022441128269,0.59557402896462,2,"A1_legacy","copula",0,0.239837516658008,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""copula""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""copula"", rank_corr = 0`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","wrapper_hybrid",15,6,1195595383,"completed","wrapper",55,0.362144556397107,43.0513009941205,0.500460443319753,16,"A1_legacy","hybrid",0.130255829449743,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""hybrid""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""hybrid"", rank_corr =
+  0.130255829449743`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","wrapper_rank",16,7,52694927,"completed","wrapper",86,0.388347594090737,31.0187665792182,0.679760801314842,10,"A1_legacy","rank",0.646449322020635,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""rank""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""rank"", rank_corr =
+  0.646449322020635`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","wrapper_copula",17,8,1248571288,"completed","wrapper",75,0.0882290110224858,55.8608648879454,0.138624541810714,13,"A1_legacy","copula",0,0.315451302938163,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""copula""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""copula"", rank_corr = 0`."
+"phase9-validation-v1","step9-3-v05-subset","V05","subset","wrapper_hybrid",18,9,1842598909,"completed","wrapper",95,0.398614512698259,84.5235583884642,0.20911981043173,29,"A1_legacy","hybrid",-0.3,0,FALSE,"multisitedgp_engine_dependence_error",TRUE,TRUE,"multisitedgp_engine_dependence_error/multisitedgp_error/rlang_error/error/condition","✖ Engine `A1_legacy` is not compatible with `dependence = ""hybrid""`.
+ℹ Engine A1 is reserved for JEBS legacy bit-identical reproduction.
+→ Use `engine = ""A2_modern"", dependence = ""hybrid"", rank_corr = -0.3`."

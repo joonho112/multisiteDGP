@@ -1,6 +1,5 @@
 # nolint start: object_usage_linter
 test_that("T11 full JEBS Paradigm A grid spans the intended I envelope", {
-  skip_if_not_slow()
 
   J_grid <- c(25L, 50L, 100L, 200L, 300L)
   nj_mean_grid <- c(10, 20, 40, 80, 160)

@@ -150,17 +150,24 @@ test_that("all adapter soft-dependency guards hard-reject missing packages", {
   dat <- sim_multisite(J = 25L, seed = 7309L)
   local_mocked_bindings(.require_namespace = function(package) FALSE, .package = "multisiteDGP")
 
+  # `install_hint` is what the guard should point the user at. CRAN packages
+  # get install.packages(); multisitepower is off-CRAN and gets its source
+  # (D-010/D-025), so a single expected string per package will not do.
   cases <- list(
-    list(call = function() as_metafor(dat), package = "metafor", context = "as_metafor"),
-    list(call = function() as_baggr(dat), package = "baggr", context = "as_baggr"),
-    list(call = function() as_multisitepower(dat), package = "multisitepower", context = "as_multisitepower")
+    list(call = function() as_metafor(dat), package = "metafor", context = "as_metafor",
+         install_hint = "install.packages(\"metafor\")"),
+    list(call = function() as_baggr(dat), package = "baggr", context = "as_baggr",
+         install_hint = "install.packages(\"baggr\")"),
+    list(call = function() as_multisitepower(dat), package = "multisitepower",
+         context = "as_multisitepower",
+         install_hint = "remotes::install_github(\"jche/multisitepower\")")
   )
 
   for (case in cases) {
     err <- expect_multisitedgp_error(case$call(), "multisitedgp_arg_error")
     expect_match(conditionMessage(err), sprintf("Package `%s` is required", case$package), fixed = TRUE)
     expect_match(conditionMessage(err), sprintf("`%s()`", case$context), fixed = TRUE)
-    expect_match(conditionMessage(err), sprintf("install.packages(\"%s\")", case$package), fixed = TRUE)
+    expect_match(conditionMessage(err), case$install_hint, fixed = TRUE)
   }
 })
 

@@ -1,0 +1,291 @@
+5239cf525680e27480caeeed405afd5b6ed5fa0f
+  date:   2026-05-09 23:41:31 -0500
+  author: JoonHo Lee <jlee296@ua.edu>
+  subject:fix(index): flatten HTML feature-card indentation so pandoc treats them as raw HTML
+
+5d4e4fc4e311d142225c131e801cdcbdefb8c0ba
+  date:   2026-05-09 23:24:11 -0500
+  author: JoonHo Lee <jlee296@ua.edu>
+  subject:ci: pin Suggests explicitly (multisitepower not on CRAN/r-universe)
+
+a9f3c7c5547e5fd904c5dcfadfe5339e7d321b7a
+  date:   2026-05-09 23:22:20 -0500
+  author: JoonHo Lee <jlee296@ua.edu>
+  subject:ci: install Suggests for R-CMD-check and test-coverage too
+
+8f64a1497b0b1a75127656a6ec394f27d59bd567
+  date:   2026-05-09 23:21:07 -0500
+  author: JoonHo Lee <jlee296@ua.edu>
+  subject:ci(pkgdown-deploy): install Suggests so vignette site builds
+
+bf2961ee07a0ef97a693130d73d55100f6d82462
+  date:   2026-05-09 23:16:25 -0500
+  author: JoonHo Lee <jlee296@ua.edu>
+  subject:multisiteDGP v0.1.1 — initial public release
+
+a8b419908627d47463c1c9f00a27058bcbb92d30
+  date:   2026-05-09 22:47:50 -0500
+  author: JoonHo Lee <joonho112@users.noreply.github.com>
+  subject:Initial commit
+
+5239cf5 2026-05-09 fix(index): flatten HTML feature-card indentation so pandoc treats them as raw HTML
+ index.md | 54 +++++++++++++++++++++++++++---------------------------
+ 1 file changed, 27 insertions(+), 27 deletions(-)
+
+5d4e4fc 2026-05-09 ci: pin Suggests explicitly (multisitepower not on CRAN/r-universe)
+ .github/workflows/R-CMD-check.yaml    | 11 ++++++++++-
+ .github/workflows/pkgdown-deploy.yaml | 11 ++++++++++-
+ .github/workflows/test-coverage.yaml  | 11 ++++++++++-
+ 3 files changed, 30 insertions(+), 3 deletions(-)
+
+a9f3c7c 2026-05-09 ci: install Suggests for R-CMD-check and test-coverage too
+ .github/workflows/R-CMD-check.yaml   | 2 +-
+ .github/workflows/test-coverage.yaml | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+8f64a14 2026-05-09 ci(pkgdown-deploy): install Suggests so vignette site builds
+ .github/workflows/pkgdown-deploy.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+bf2961e 2026-05-09 multisiteDGP v0.1.1 — initial public release
+ .Rbuildignore                                      |   21 +
+ .github/ISSUE_TEMPLATE/bug_report.md               |   37 +
+ .github/ISSUE_TEMPLATE/feature_request.md          |   33 +
+ .github/PULL_REQUEST_TEMPLATE.md                   |   29 +
+ .github/workflows/R-CMD-check.yaml                 |   67 +
+ .github/workflows/README.md                        |   20 +
+ .github/workflows/extended-tests.yaml              |   80 +
+ .github/workflows/lint.yaml                        |   78 +
+ .github/workflows/pkgdown-deploy.yaml              |   64 +
+ .github/workflows/pr-commands.yaml                 |   94 +
+ .github/workflows/test-coverage.yaml               |   95 +
+ .gitignore                                         |   34 +
+ CONTRIBUTING.md                                    |   31 +
+ DESCRIPTION                                        |   67 +
+ LICENSE                                            |   23 +-
+ LICENSE.md                                         |   21 +
+ NAMESPACE                                          |   85 +
+ NEWS.md                                            |  201 ++
+ R/00-errors-validation.R                           |  274 +++
+ R/adapters.R                                       |  218 ++
+ R/class-multisitedgp_data.R                        |  516 +++++
+ R/class-multisitedgp_design.R                      |  826 +++++++
+ R/design_grid.R                                    |  195 ++
+ R/diagnostics-core.R                               |  779 +++++++
+ R/layer1-effects-common.R                          |  261 +++
+ R/layer1-gen_effects.R                             |  318 +++
+ R/layer1-gen_effects_ald.R                         |  152 ++
+ R/layer1-gen_effects_dpm.R                         |  132 ++
+ R/layer1-gen_effects_gaussian.R                    |  113 +
+ R/layer1-gen_effects_mixture.R                     |  240 +++
+ R/layer1-gen_effects_pmslab.R                      |  215 ++
+ R/layer1-gen_effects_skewn.R                       |  159 ++
+ R/layer1-gen_effects_studentt.R                    |  122 ++
+ R/layer1-gen_effects_user.R                        |  252 +++
+ R/layer2-diagnostics.R                             |  820 +++++++
+ R/layer2-engine-a1.R                               |   36 +
+ R/layer2-engine-a2.R                               |  345 +++
+ R/layer2-gen_se_direct.R                           |  306 +++
+ R/layer2-gen_site_sizes.R                          |  254 +++
+ R/layer3-align_copula_corr.R                       |  195 ++
+ R/layer3-align_hybrid_corr.R                       |  277 +++
+ R/layer3-align_rank_corr.R                         |  303 +++
+ R/layer3-dependence-custom.R                       |  109 +
+ R/layer3-dependence-helpers.R                      |  133 ++
+ R/layer4-gen_observations.R                        |  182 ++
+ R/multisitedgp-package.R                           |  178 ++
+ R/plots.R                                          |  456 ++++
+ R/presets.R                                        |  347 +++
+ R/scenario_audit.R                                 |  396 ++++
+ R/utils-reproducibility.R                          |  507 +++++
+ R/utils-rng.R                                      |   21 +
+ R/wrapper-sim_meta.R                               |  305 +++
+ R/wrapper-sim_multisite.R                          |  345 +++
+ README.Rmd                                         |  318 +++
+ README.md                                          |  304 ++-
+ _pkgdown.yml                                       |  266 +++
+ index.md                                           |  142 ++
+ inst/CITATION                                      |   43 +
+ inst/REPRODUCIBILITY.md                            |  138 ++
+ inst/cookbook/R5-1-hello-world.R                   |   19 +
+ inst/cookbook/R5-2-custom-calibration.R            |   22 +
+ inst/cookbook/R5-3-compare-presets.R               |   19 +
+ inst/cookbook/R5-4-downstream-adapters.R           |   40 +
+ inst/cookbook/R5-5-user-g-fn.R                     |   29 +
+ inst/cookbook/R5-6-custom-dependence-fn.R          |   47 +
+ inst/cookbook/R5-7-design-grid-audit.R             |   26 +
+ inst/cookbook/R5-8-reproducibility-hash.R          |   21 +
+ inst/cookbook/R5-9-debugging-feasibility.R         |   28 +
+ inst/cookbook/cookbook-manifest.csv                |   10 +
+ inst/extdata/golden/README.md                      |   33 +
+ inst/extdata/golden/golden-fixture-manifest.csv    |   10 +
+ inst/scripts/cookbook_audit.R                      |   86 +
+ man/adapters.Rd                                    |   98 +
+ man/align_copula_corr.Rd                           |  103 +
+ man/align_hybrid_corr.Rd                           |  118 +
+ man/align_rank_corr.Rd                             |  130 ++
+ man/as_tibble.multisitedgp_data.Rd                 |   61 +
+ man/bhattacharyya_coef.Rd                          |   65 +
+ man/canonical_hash.Rd                              |   84 +
+ man/compute_I.Rd                                   |   74 +
+ man/compute_kappa.Rd                               |   73 +
+ man/compute_shrinkage.Rd                           |   97 +
+ man/default_thresholds.Rd                          |  112 +
+ man/design_grid.Rd                                 |  105 +
+ man/feasibility_index.Rd                           |  126 ++
+ man/figures/logo.png                               |  Bin 0 -> 22939 bytes
+ man/figures/logo.svg                               |   95 +
+ man/gen_effects.Rd                                 |  201 ++
+ man/gen_effects_ald.Rd                             |  111 +
+ man/gen_effects_dpm.Rd                             |  114 +
+ man/gen_effects_gaussian.Rd                        |   93 +
+ man/gen_effects_mixture.Rd                         |  117 +
+ man/gen_effects_pmslab.Rd                          |  115 +
+ man/gen_effects_skewn.Rd                           |  112 +
+ man/gen_effects_studentt.Rd                        |  101 +
+ man/gen_effects_user.Rd                            |  139 ++
+ man/gen_observations.Rd                            |  100 +
+ man/gen_se_direct.Rd                               |  126 ++
+ man/gen_site_sizes.Rd                              |  136 ++
+ man/heterogeneity_ratio.Rd                         |   64 +
+ man/informativeness.Rd                             |  102 +
+ man/is_multisitedgp_data.Rd                        |   37 +
+ man/is_multisitedgp_design.Rd                      |   58 +
+ man/ks_distance.Rd                                 |   61 +
+ man/mean_shrinkage.Rd                              |  123 ++
+ man/multisiteDGP-package.Rd                        |  196 ++
+ man/multisitedgp_design.Rd                         |  214 ++
+ man/plots.Rd                                       |  111 +
+ man/presets.Rd                                     |  163 ++
+ man/print.multisitedgp_data.Rd                     |   54 +
+ man/provenance_string.Rd                           |   54 +
+ man/realized_rank_corr.Rd                          |   64 +
+ man/realized_rank_corr_marginal.Rd                 |   77 +
+ man/scenario_audit.Rd                              |  102 +
+ man/sim_meta.Rd                                    |  155 ++
+ man/sim_multisite.Rd                               |  129 ++
+ man/summary.multisitedgp_data.Rd                   |   52 +
+ man/update_multisitedgp_design.Rd                  |   75 +
+ man/validate_multisitedgp_design.Rd                |   65 +
+ pkgdown/favicon/apple-touch-icon.png               |  Bin 0 -> 4808 bytes
+ pkgdown/favicon/favicon-96x96.png                  |  Bin 0 -> 2472 bytes
+ pkgdown/favicon/favicon.ico                        |  Bin 0 -> 15086 bytes
+ pkgdown/favicon/favicon.svg                        |   62 +
+ pkgdown/favicon/site.webmanifest                   |   21 +
+ pkgdown/favicon/web-app-manifest-192x192.png       |  Bin 0 -> 5149 bytes
+ pkgdown/favicon/web-app-manifest-512x512.png       |  Bin 0 -> 14844 bytes
+ tests/data-raw/generate_golden_fixtures.R          |  303 +++
+ tests/data-raw/generate_print_examples.R           |   96 +
+ tests/testthat.R                                   |    4 +
+ tests/testthat/_snaps/golden/README.md             |   32 +
+ .../_snaps/golden/jebs_appendix_mixture_seed1.rds  |  Bin 0 -> 3962 bytes
+ .../golden/jebs_appendix_mixture_seed12345.rds     |  Bin 0 -> 3908 bytes
+ .../golden/jebs_appendix_mixture_seed2024.rds      |  Bin 0 -> 3969 bytes
+ .../_snaps/golden/jebs_appendix_mixture_seed42.rds |  Bin 0 -> 3891 bytes
+ .../_snaps/golden/preset_education_modest.rds      |  Bin 0 -> 4643 bytes
+ tests/testthat/_snaps/golden/preset_jebs_paper.rds |  Bin 0 -> 4584 bytes
+ .../testthat/_snaps/golden/preset_jebs_strict.rds  |  Bin 0 -> 6536 bytes
+ .../_snaps/golden/preset_small_area_estimation.rds |  Bin 0 -> 4062 bytes
+ .../testthat/_snaps/golden/preset_walters_2024.rds |  Bin 0 -> 4652 bytes
+ .../print-examples/ch12_hello_world_print.txt      |   19 +
+ .../print-examples/ch14_ch17_irb_template.txt      |   26 +
+ .../print-examples/ch14_ch17_sae_summary.txt       |   26 +
+ .../print-examples/ch14_group_a_diagnostics.txt    |    4 +
+ .../_snaps/print-examples/ch17_print_design.txt    |   32 +
+ tests/testthat/_snaps/snapshot-errors.md           |  304 +++
+ tests/testthat/_snaps/snapshot-print.md            |  824 +++++++
+ tests/testthat/helper-T-invariants.R               |   46 +
+ tests/testthat/helper-errors.R                     |   22 +
+ tests/testthat/helper-golden.R                     |    5 +
+ tests/testthat/helper-policy.R                     |   97 +
+ tests/testthat/helper-skip-policy.R                |   36 +
+ tests/testthat/helper-snapshots.R                  |   10 +
+ tests/testthat/helper-tolerances.R                 |   19 +
+ tests/testthat/test-T10-n-min-truncation.R         |   15 +
+ tests/testthat/test-T11-jebs-I-grid.R              |   32 +
+ tests/testthat/test-T12-A1-rng-order.R             |   56 +
+ tests/testthat/test-T13-ALD-standardization.R      |   16 +
+ tests/testthat/test-T14-mixture-ups.R              |   32 +
+ tests/testthat/test-T15-studentt-standardization.R |   15 +
+ tests/testthat/test-T16-skewn-standardization.R    |   23 +
+ tests/testthat/test-T17-pmslab-standardization.R   |   24 +
+ tests/testthat/test-T18-covariate-decomp.R         |   39 +
+ tests/testthat/test-T19-ties.R                     |   28 +
+ tests/testthat/test-T1a-jebs-bit-identical.R       |   16 +
+ tests/testthat/test-T1b-A2-distributional.R        |   28 +
+ tests/testthat/test-T2-kappa.R                     |    8 +
+ tests/testthat/test-T20-A2-reproducibility.R       |   29 +
+ tests/testthat/test-T3-rate-form.R                 |   11 +
+ tests/testthat/test-T4-independence.R              |   22 +
+ tests/testthat/test-T5-covariate-off.R             |   12 +
+ tests/testthat/test-T6-resid-eq-marg.R             |    9 +
+ tests/testthat/test-T7-dep-none.R                  |   11 +
+ tests/testthat/test-T8-informativeness.R           |   13 +
+ tests/testthat/test-T9-default-G.R                 |   16 +
+ tests/testthat/test-adapters-step7-3.R             |  183 ++
+ tests/testthat/test-cookbook-audit-step10-4.R      |   14 +
+ ...test-cross-os-reproducibility-policy-step10-7.R |  103 +
+ tests/testthat/test-data-classes.R                 |  228 ++
+ tests/testthat/test-design-constructor.R           |  122 ++
+ tests/testthat/test-design-grid-step7-5.R          |  161 ++
+ tests/testthat/test-design-validation-update.R     |  160 ++
+ tests/testthat/test-diagnostic-thresholds.R        |  185 ++
+ tests/testthat/test-effects-common-frame.R         |  105 +
+ tests/testthat/test-errors-validation-foundation.R |  115 +
+ .../testthat/test-gen-effects-gaussian-studentt.R  |  136 ++
+ tests/testthat/test-gen-effects-mixture.R          |  146 ++
+ tests/testthat/test-gen-effects-pmslab-user-dpm.R  |  326 +++
+ tests/testthat/test-gen-effects-skewn-ald.R        |  166 ++
+ tests/testthat/test-gen-effects.R                  |  230 ++
+ .../test-generated-print-examples-step8-6.R        |  116 +
+ tests/testthat/test-golden-fixtures-step8-1.R      |  117 +
+ tests/testthat/test-golden.R                       |   20 +
+ tests/testthat/test-harness.R                      |  113 +
+ tests/testthat/test-layer2-diagnostics.R           |  302 +++
+ tests/testthat/test-layer2-engine-a1.R             |  100 +
+ tests/testthat/test-layer2-engine-a2.R             |  143 ++
+ tests/testthat/test-layer2-gen-se-direct.R         |  209 ++
+ tests/testthat/test-layer2-gen-site-sizes.R        |  250 +++
+ tests/testthat/test-layer3-align-copula-corr.R     |  167 ++
+ tests/testthat/test-layer3-align-hybrid-corr.R     |  143 ++
+ tests/testthat/test-layer3-align-rank-corr.R       |  174 ++
+ tests/testthat/test-layer3-custom-dependence-fn.R  |  154 ++
+ .../test-layer3-rank-permutation-helpers.R         |  167 ++
+ tests/testthat/test-layer4-gen-observations.R      |  159 ++
+ tests/testthat/test-plots-step7-4.R                |  103 +
+ tests/testthat/test-presets-step7-1.R              |  124 ++
+ tests/testthat/test-presets-step7-2.R              |  133 ++
+ tests/testthat/test-print-examples.R               |   14 +
+ tests/testthat/test-print-summary.R                |  110 +
+ tests/testthat/test-property-core-invariants.R     |  287 +++
+ tests/testthat/test-rng-hash-policy.R              |  259 +++
+ tests/testthat/test-scenario-audit-step7-6.R       |  250 +++
+ tests/testthat/test-snapshot-errors.R              |  293 +++
+ tests/testthat/test-snapshot-print.R               |  120 ++
+ tests/testthat/test-traceability.R                 |  313 +++
+ tests/testthat/test-wrapper-sim-meta.R             |  234 ++
+ tests/testthat/test-wrapper-sim-multisite.R        |  192 ++
+ vignettes/a1-getting-started.Rmd                   |  358 +++
+ vignettes/a2-choosing-a-preset.Rmd                 |  480 +++++
+ vignettes/a3-diagnostics-in-practice.Rmd           |  601 ++++++
+ vignettes/a4-covariates-precision-dependence.Rmd   |  377 ++++
+ vignettes/a5-calibrating-real-data.Rmd             |  500 +++++
+ vignettes/a6-case-study-multisite.Rmd              |  619 ++++++
+ vignettes/a7-case-study-meta-analysis.Rmd          |  681 ++++++
+ vignettes/a8-cookbook.Rmd                          |  785 +++++++
+ vignettes/apa.csl                                  | 2273 ++++++++++++++++++++
+ vignettes/m1-statistical-dgp.Rmd                   |  885 ++++++++
+ vignettes/m2-g-distribution-catalog.Rmd            |  865 ++++++++
+ vignettes/m3-margin-se-models.Rmd                  |  617 ++++++
+ vignettes/m4-precision-dependence-theory.Rmd       |  638 ++++++
+ vignettes/m5-custom-g-distributions.Rmd            |  523 +++++
+ vignettes/m6-adapters-downstream.Rmd               |  460 ++++
+ vignettes/m7-reproducibility-provenance.Rmd        |  500 +++++
+ vignettes/m8-migration-from-siteBayes2.Rmd         |  453 ++++
+ vignettes/references.bib                           |   53 +
+ 235 files changed, 38964 insertions(+), 23 deletions(-)
+
+a8b4199 2026-05-09 Initial commit
+ LICENSE   | 21 +++++++++++++++++++++
+ README.md |  2 ++
+ 2 files changed, 23 insertions(+)

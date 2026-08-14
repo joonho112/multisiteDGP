@@ -1,0 +1,2 @@
+"step","migration_vignette","migration_article","news_md","news_article","shims_in_multisiteDGP","lifecycle_import_removed","no_stan_boundary","r_cmd_check_status","pkgdown_check"
+"10.5",TRUE,TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,"OK","pass"

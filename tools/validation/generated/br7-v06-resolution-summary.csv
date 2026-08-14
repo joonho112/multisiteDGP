@@ -1,0 +1,2 @@
+"blocker_id","experiment_id","resolution_status","full_run_id","subset_run_id","subset_acceptance_pass","active_rows","completed","failed","skipped","max_abs_mean","max_abs_var_delta","max_var_tolerance","heavy_tail_tolerance_rows","studentt_acceptance_pass_rate","studentt_max_abs_var_delta","all_acceptance_pass"
+"P1-V06-001","V06","resolved_full_pass","br7-v06-full-heavy-tail-tolerance","br7-v06-subset-heavy-tail-tolerance",FALSE,35,35,0,5,0.00276424083083951,0.0115971291758372,0.05,1,1,0.0115971291758372,TRUE

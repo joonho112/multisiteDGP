@@ -1,0 +1,241 @@
+---
+title: "Phase 9 — 문서 델타 동기화"
+---
+
+## 목표
+
+**v0.2.0 에서 실제로 바뀐 것만 문서에 반영한다.** 2026-05 문서 오버홀의 결과물은 그대로 두고, Phase 4 · 7 의 동작 변경과 Phase 3 의 결정만 반영한다.
+
+::: {.callout-warning title="이 Phase 의 실패 모드"}
+Phase 9 가 **세 번째 문서 오버홀**이 되는 것. 문서를 읽다 보면 개선하고 싶은 곳이 계속 보이지만, 이 Phase 는 **델타만** 만진다. "이왕 여는 김에" 를 금지한다. 개선 아이디어는 v0.3 백로그(GitHub Issues)로 보낸다.
+:::
+
+| | |
+|---|---|
+| **Step 수** | 5 (9.1 – 9.5) |
+| **누적 시간** | ~90 분 (+ vignette knit 시간) |
+| **선행 Phase** | Phase 8 |
+| **종료 로그** | `010_phase09-documentation-sync.qmd` |
+
+---
+
+## Step 9.1 — 델타 목록 확정 및 `DESCRIPTION` / `NEWS.md`
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | Phase 8 |
+
+**목표.** 문서에 반영해야 할 변경 목록을 확정하고, 최상위 메타데이터를 갱신한다.
+
+**작업.**
+
+1. **델타 목록 작성** — Phase 4 · 7 의 로그 §5 와 원장에서 사용자에게 보이는 변경을 추출
+   - 동작 변경 (수치, 오류, 출력)
+   - API 표면 변경 (인자, 함수, 문서화 상태)
+   - 재현성 계약 변경
+   - 광고 축소 (D2 결정)
+   - 테스트 게이트 변경 (개발자 대상 — CONTRIBUTING 에 반영)
+2. **`DESCRIPTION`**
+   - `Version` — D4 가 정한 번호
+   - `Description` — D2 가 광고 축소를 선택했으면 반영 (Step 7.3 에서 이미 했다면 확인만)
+   - `Imports` / `Suggests` — Phase 5/7 에서 변경됐으면 반영
+   - `RoxygenNote` — `document()` 후 자동
+3. **`NEWS.md` v0.2.0 항목 작성**
+   - **사용자 목소리로.** 내부 Phase/Step 번호를 쓰지 않는다
+   - 구조: 무엇이 바뀌었나 / 왜 / 사용자가 해야 할 일
+   - **breaking change 를 맨 위에** — 재현성 계약 변경, 광고 축소는 사용자에게 영향이 있다
+   - 이전 NEWS 항목은 수정하지 않는다 (이력)
+   - "Known limitations" 갱신 — 해소된 것 제거, 남은 것 갱신. 특히 "The Linux x86_64 baseline is pending the first continuous-integration run" 은 해소됐어야 한다
+4. `inst/CITATION` 확인 — 버전은 `packageVersion()` 으로 자동이므로 수정 불필요
+
+**산출물.**
+
+- `evidence/phase09/documentation-delta.md` — 반영해야 할 변경 목록
+- 갱신된 `DESCRIPTION`, `NEWS.md`
+
+**완료 조건.**
+
+- 델타 목록이 Phase 4·7 로그와 원장을 근거로 작성되어 있다
+- NEWS v0.2.0 항목이 사용자 목소리로 쓰여 있다
+- breaking change 가 맨 위에 있다
+- "Known limitations" 가 현재 상태를 반영한다
+
+---
+
+## Step 9.2 — roxygen 델타 동기화
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 |
+| **의존** | 9.1 |
+
+**목표.** 델타 목록에 해당하는 함수의 roxygen 만 갱신한다.
+
+**작업.**
+
+1. 델타 목록에서 영향받는 함수 식별
+2. 각 함수의 roxygen 갱신 — **2026-05 의 canonical template 을 그대로 따른다** (applied-first opener, motivation-style `@param`, 전체 `@return` 열거, 실행 가능한 `@examples`, `@seealso`, `@references`). `documentation-updates/working/05-roxygen-template.md` 참조
+3. 특히 확인할 것
+   - `canonical_hash()` / `provenance_string()` — 재현성 계약 변경
+   - (O3 인 경우) `stable_hash()` — 신규
+   - `gen_effects_dpm()` — D2 결정
+   - `multisitedgp_design()` — `target_marginal_rho` 문서
+   - `scenario_audit()` — SkewN 지원 범위
+   - `?multisiteDGP` package-level — Error catalog 절 (Step 7.7 에서 했으면 확인만)
+4. `@examples` 가 실제로 실행되는지 확인 — 동작이 바뀐 함수의 예제가 깨졌을 수 있다
+5. `devtools::document()` → `man/` 갱신
+6. `R CMD check` 의 Rd 관련 검사 통과 확인
+
+**산출물.**
+
+- 갱신된 roxygen + `man/`
+- `evidence/phase09/roxygen-delta.md` — 수정한 함수 목록
+
+**완료 조건.**
+
+- 델타 목록의 모든 함수가 처리되어 있다
+- 수정한 함수의 `@examples` 가 전부 실행된다
+- `devtools::document()` 후 `man/` 이 최신이고 check 가 통과한다
+- **델타 목록 밖의 함수는 수정되지 않았다** (`git diff --stat` 로 확인)
+
+---
+
+## Step 9.3 — vignette 델타 동기화
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~20 분 (+ knit 시간) |
+| **의존** | 9.2 |
+
+**목표.** 16 편 중 델타의 영향을 받는 것만 갱신한다.
+
+**작업.**
+
+1. 영향 판정 — 각 vignette 이 델타 목록의 어느 항목을 다루는가
+   - `m7-reproducibility-provenance` — 재현성 계약 (Phase 4 Step 4.7 에서 했으면 확인만)
+   - `m2-g-distribution-catalog` — DPM, SkewN
+   - `m4-precision-dependence-theory` — marginal target
+   - `a3-diagnostics-in-practice` — `scenario_audit()` 변경, `on=` 인자 (punch list P1-3)
+   - 나머지 — 출력 수치가 바뀌었으면 재knit 만 필요할 수 있다
+2. **전체 재knit 필요성 판단** — 수치 동작이 바뀌었으면 모든 vignette 의 출력이 바뀐다. 이 경우 내용 수정은 영향받는 것만, 재knit 는 전체
+3. 내용 수정 — 최소한으로
+4. 전체 재knit + 시간 측정 (Step 2.8 의 baseline 대비)
+5. 각 vignette 의 출력이 실제 동작과 일치하는지 스팟 체크
+
+**산출물.**
+
+- 갱신된 vignette `.Rmd` + `.html`
+- `evidence/phase09/vignette-delta.md` — 수정한 것 × 이유, 재knit 시간
+
+**완료 조건.**
+
+- 영향받는 vignette 이 전부 갱신되어 있다
+- 전체 vignette 이 오류 없이 knit 된다
+- knit 시간이 baseline 대비 크게 늘지 않았다 (늘었으면 사유)
+- **영향받지 않는 vignette 의 본문은 수정되지 않았다**
+
+---
+
+## Step 9.4 — README · pkgdown · 개발자 문서
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~15 분 |
+| **의존** | 9.3 |
+
+**목표.** 사용자 진입점과 개발자 문서를 갱신한다.
+
+**작업.**
+
+1. **`README.Rmd`**
+   - Quick start 의 출력이 실제와 일치하는가 (수치 변경 시 재생성)
+   - **결정론적 hash check** — README 에 hash 확인 예제가 있다. Phase 4 의 계약 변경 반영 필수
+   - CI 배지 (Phase 6 Step 6.6 에서 했으면 확인만)
+   - `devtools::build_readme()` 로 재생성
+2. **`index.md`** — pkgdown 홈. shape 개수 등 D2 영향 반영
+3. **`_pkgdown.yml`** — 신규 export 가 있으면 reference index 에 추가. `stable_hash()` 등
+4. **`CONTRIBUTING.md`** — Phase 5 의 테스트 게이트 변경, Phase 4 의 fixture 재생성 절차를 개발자에게 안내. **이것이 이번 Phase 의 실질적 신규 내용**
+5. **`.github/workflows/README.md`** — Phase 6 에서 했으면 확인만
+6. `pkgdown::build_site()` 실행 → 오류 없이 빌드되는지
+7. `docs/` 커밋 여부 확인 — `.Rbuildignore` 에 있으나 git 에는 들어간다. pkgdown-deploy workflow 가 배포하므로 커밋 방침 확인
+
+**산출물.**
+
+- 갱신된 `README.Rmd` / `README.md`, `index.md`, `_pkgdown.yml`, `CONTRIBUTING.md`
+- 빌드된 pkgdown 사이트
+
+**완료 조건.**
+
+- README 의 hash check 예제가 실제로 동작한다
+- `pkgdown::build_site()` 가 오류 없이 완료된다
+- CONTRIBUTING 에 새 테스트/fixture 절차가 있다
+
+---
+
+## Step 9.5 — traceability ledger 최종 갱신
+
+| 항목 | 값 |
+|---|---|
+| **모드** | 단일 |
+| **소요** | ~15 분 |
+| **의존** | 9.4 |
+
+**목표.** `tools/traceability/` 의 8 개 ledger 를 v0.2.0 상태로 맞춘다.
+
+**작업.**
+
+1. 8 개 CSV 각각 갱신
+   - `api-index.csv` — API 표면 (Step 7.7 에서 일부 했으면 확인 + 보완)
+   - `decision-index.csv` — D1–D4 등재
+   - `docs-index.csv` — vignette / roxygen 매핑
+   - `error-index.csv` — 오류 카탈로그
+   - `fixture-index.csv` — Phase 4 재생성 반영
+   - `invariant-index.csv` — T/P 불변량 (Phase 5 변경 반영)
+   - `preset-index.csv` — preset 9 종
+   - `validation-index.csv` — Phase 8 에서 했으면 확인만
+   - `conflict-checklist.csv` — 해소 항목 종결
+2. `test-traceability.R` 실행 — ledger 와 코드의 일치 검사
+3. `tools/traceability/README.md` 갱신
+4. 정책 문서 최종 확인 — `dependency-policy.csv`, `no-compiled-code-policy.md`, `cross-os-reproducibility-policy.md`
+5. **전체 문서 정합성 스팟 체크** — `grep` 으로 다음을 확인
+   - 옛 버전 번호(`0.1.1`) 잔여 언급
+   - D2 로 제거된 기능의 잔여 언급
+   - 옛 재현성 정책 서술의 잔여
+
+**산출물.**
+
+- 갱신된 traceability CSV 9 종 + README
+- `evidence/phase09/consistency-scan.md` — grep 스캔 결과
+
+**완료 조건.**
+
+- `test-traceability.R` 통과
+- 9 개 ledger 가 v0.2.0 상태를 반영한다
+- grep 스캔에서 잔여 불일치가 없다
+
+---
+
+## Phase 종료 조건
+
+- [ ] `DESCRIPTION` Version 이 D4 결정과 일치한다
+- [ ] `NEWS.md` v0.2.0 항목이 사용자 목소리로 작성되고 breaking change 가 명시되어 있다
+- [ ] "Known limitations" 가 현재 상태를 반영한다 (해소된 것 제거)
+- [ ] 델타 목록의 모든 roxygen 이 갱신되고 `@examples` 가 실행된다
+- [ ] 영향받는 vignette 이 갱신되고 전체가 knit 된다
+- [ ] README 의 hash check 예제가 동작한다
+- [ ] `pkgdown::build_site()` 성공
+- [ ] CONTRIBUTING 에 새 테스트/fixture 절차가 있다
+- [ ] traceability ledger 9 종이 갱신되고 `test-traceability.R` 통과
+- [ ] grep 스캔에서 잔여 불일치 없음
+- [ ] **델타 목록 밖의 문서가 수정되지 않았다** (`git diff --stat` 로 확인)
+
+## Phase 로그
+
+`010_phase09-documentation-sync.qmd` + `.html`.
+
+§3 (산출물) 에 **수정한 파일과 수정하지 않은 파일**을 모두 적는다. 후자가 중요하다 — 이 Phase 가 델타만 만졌다는 증거이며, 다음 사람이 "왜 이건 안 고쳤지?" 를 묻지 않게 한다.

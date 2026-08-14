@@ -1,0 +1,4 @@
+"experiment_id","run_id","priority","status","completed","failed_rows","key_result","evidence"
+"V03","step9-3-v03-full","P0","fail",200,0,"I gate passed 200/200; literal ch19 RMSE ratio gate failed with mean ratio 0.8826 and pass rate 0.005; mean MSE reduction 0.2163 vs 0.36 target.","tools/validation/generated/step9-3-v03-full-summary.csv"
+"V04","step9-3-v04-full","P0","fail",91,9,"A2 solver completed 91/100 fixtures; 9 classed solver errors on high-CV/high-n_min valid-range fixtures; completed fixtures passed post-solve residual gates.","tools/validation/generated/step9-3-v04-full-summary.csv"
+"V05","step9-3-v05-full","P0","pass",200,0,"Decision C enforcement passed 200/200 constructor and wrapper attempts; no A1+dependence design was accepted and RNG stayed unchanged.","tools/validation/generated/step9-3-v05-full-summary.csv"

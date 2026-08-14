@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; Phase 1 — 작업 기반 복구 – multisiteDGP Version Upgrade — Master Plan</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./06-phase-02-defect-audit.html" rel="next">
+<link href="./04-log-protocol.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-676a5d7ec044db2339335543664513bd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-df430a3b89f676b22d1da82ae4649026.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-676a5d7ec044db2339335543664513bd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./05-phase-01-foundation.html">Phase 로드맵</a></li><li class="breadcrumb-item"><a href="./05-phase-01-foundation.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Phase 1 — 작업 기반 복구</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">multisiteDGP Version Upgrade — Master Plan</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Preface</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text">진단</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-current-state-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">현재 상태 감사</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-goals-and-scope.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">목표와 범위</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">실행 규약</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-operating-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">실행 규약</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-log-protocol.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">로그 규약</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Phase 로드맵</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-phase-01-foundation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Phase 1 — 작업 기반 복구</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-phase-02-defect-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Phase 2 — 결함 인벤토리 감사</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-phase-03-scope-decisions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Phase 3 — v0.2.0 범위 결정</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-phase-04-reproducibility.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Phase 4 — 재현성 계약 재구축</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-phase-05-test-suite.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Phase 5 — 테스트 스위트 재구축</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-phase-06-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Phase 6 — CI 복구</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-phase-07-remediation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Phase 7 — 기능 결함 수정</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-phase-08-revalidation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Phase 8 — 통계 검증 재실행</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-phase-09-documentation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Phase 9 — 문서 델타 동기화</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-phase-10-external-review.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Phase 10 — 외부 리뷰 게이트</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-phase-11-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Phase 11 — v0.2.0 릴리스</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">인수</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-acceptance-criteria.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">인수 기준</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">부록</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix-a-defect-ledger.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">부록 A — 결함 원장 스키마</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix-b-evidence.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">부록 B — 감사 원자료</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#목표" id="toc-목표" class="nav-link active" data-scroll-target="#목표"><span class="header-section-number">6.1</span> 목표</a></li>
+  <li><a href="#step-1.1-로컬-작업본과-원격-main-의-차이-확정" id="toc-step-1.1-로컬-작업본과-원격-main-의-차이-확정" class="nav-link" data-scroll-target="#step-1.1-로컬-작업본과-원격-main-의-차이-확정"><span class="header-section-number">6.2</span> Step 1.1 — 로컬 작업본과 원격 <code>main</code> 의 차이 확정</a></li>
+  <li><a href="#step-1.2-git-복구-및-브랜치-전략-확정" id="toc-step-1.2-git-복구-및-브랜치-전략-확정" class="nav-link" data-scroll-target="#step-1.2-git-복구-및-브랜치-전략-확정"><span class="header-section-number">6.3</span> Step 1.2 — git 복구 및 브랜치 전략 확정</a></li>
+  <li><a href="#step-1.3-개발-환경-고정" id="toc-step-1.3-개발-환경-고정" class="nav-link" data-scroll-target="#step-1.3-개발-환경-고정"><span class="header-section-number">6.4</span> Step 1.3 — 개발 환경 고정</a></li>
+  <li><a href="#step-1.4-저장소-위생-정리" id="toc-step-1.4-저장소-위생-정리" class="nav-link" data-scroll-target="#step-1.4-저장소-위생-정리"><span class="header-section-number">6.5</span> Step 1.4 — 저장소 위생 정리</a></li>
+  <li><a href="#step-1.5-베이스라인-측정" id="toc-step-1.5-베이스라인-측정" class="nav-link" data-scroll-target="#step-1.5-베이스라인-측정"><span class="header-section-number">6.6</span> Step 1.5 — 베이스라인 측정</a></li>
+  <li><a href="#phase-종료-조건" id="toc-phase-종료-조건" class="nav-link" data-scroll-target="#phase-종료-조건"><span class="header-section-number">6.7</span> Phase 종료 조건</a></li>
+  <li><a href="#phase-로그" id="toc-phase-로그" class="nav-link" data-scroll-target="#phase-로그"><span class="header-section-number">6.8</span> Phase 로그</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./05-phase-01-foundation.html">Phase 로드맵</a></li><li class="breadcrumb-item"><a href="./05-phase-01-foundation.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Phase 1 — 작업 기반 복구</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Phase 1 — 작업 기반 복구</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="목표" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="목표"><span class="header-section-number">6.1</span> 목표</h2>
+<p><strong>버전 관리와 실행 환경을 복구해서, 이후 모든 작업이 diff 기반으로 진행되고 되돌릴 수 있게 만든다.</strong> Phase 1 은 package 의 동작을 전혀 바꾸지 않는다 — 오직 그것을 안전하게 만질 수 있는 기반을 만든다.</p>
+<p>이 Phase 가 첫 번째인 이유는 단순하다. <a href="./01-current-state-audit.html">Ch.1 A-1</a> 이 확인했듯 로컬 작업본은 git repository 가 아니고, 원격 <code>main</code> 과 3 개월의 미확인 격차가 있다. 이 상태에서 코드를 고치면 무엇이 원래 상태였는지 영원히 알 수 없게 된다.</p>
+<table class="caption-top table">
+<tbody>
+<tr class="odd">
+<td><strong>Step 수</strong></td>
+<td>5 (1.1 – 1.5)</td>
+</tr>
+<tr class="even">
+<td><strong>누적 시간</strong></td>
+<td>~85 분</td>
+</tr>
+<tr class="odd">
+<td><strong>선행 Phase</strong></td>
+<td>없음 (계획 승인 G-A)</td>
+</tr>
+<tr class="even">
+<td><strong>종료 로그</strong></td>
+<td><code>002_phase01-foundation-recovery.qmd</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="step-1.1-로컬-작업본과-원격-main-의-차이-확정" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="step-1.1-로컬-작업본과-원격-main-의-차이-확정"><span class="header-section-number">6.2</span> Step 1.1 — 로컬 작업본과 원격 <code>main</code> 의 차이 확정</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>없음 (계획 승인 후 첫 Step)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> 원격 <code>joonho112/multisiteDGP</code> 의 <code>main</code> 을 스크래치 영역에 클론하고, 로컬 작업본과 파일 단위로 비교해서 <strong>3 개월 격차의 정체를 확정</strong>한다. 어느 쪽이 최신인지, 로컬에만 있는 변경이 무엇인지, 원격에만 있는 변경이 무엇인지를 목록으로 만든다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li>스크래치에 원격 클론 (<code>log/log-version-up-2026-08-14/artifacts/remote-main-clone/</code> 이 아니라 세션 스크래치 — 저장소를 오염시키지 않는다)</li>
+<li><code>diff -rq</code> 로 파일 단위 비교. <code>.Rbuildignore</code> 대상, <code>docs/</code>, <code>_files/</code>, 빌드 산출물은 제외</li>
+<li>차이 나는 파일을 3 분류: <strong>로컬만 있음</strong> / <strong>원격만 있음</strong> / <strong>양쪽 다 있으나 내용 다름</strong></li>
+<li>세 번째 분류의 각 파일에 대해 어느 쪽이 최신인지 판정 (mtime + 내용 검토)</li>
+<li>원격 <code>main</code> 의 최근 커밋 20 개 로그 확보 — 로컬 상태가 어느 커밋에 대응하는지 추정</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>log/log-version-up-2026-08-14/evidence/phase01/local-vs-remote-diff.md</code> — 3 분류 표 + 판정 근거</li>
+<li><code>log/log-version-up-2026-08-14/evidence/phase01/remote-main-log.txt</code> — 원격 커밋 로그</li>
+<li>판정 결론 한 문장: “로컬이 원격의 superset / subset / 분기” 중 하나</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>차이 나는 모든 파일이 3 분류 중 하나에 배정되어 있다</li>
+<li>“양쪽 다 있으나 내용 다름” 분류의 각 파일에 최신 판정과 근거가 있다</li>
+<li>로컬이 원격보다 앞서는지 뒤처지는지가 한 문장으로 결론 나 있다</li>
+</ul>
+<div class="callout callout-style-simple callout-caution">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>이 Step 은 <strong>읽기 전용</strong>이다. 어떤 파일도 복사하거나 덮어쓰지 않는다. Step 1.2 가 판정에 따라 조치한다.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="step-1.2-git-복구-및-브랜치-전략-확정" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="step-1.2-git-복구-및-브랜치-전략-확정"><span class="header-section-number">6.3</span> Step 1.2 — git 복구 및 브랜치 전략 확정</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>1.1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> 로컬 작업본을 git 관리 하에 두고 원격과 연결한다. Step 1.1 의 판정에 따라 복구 경로가 갈린다.</p>
+<p><strong>복구 경로 (1.1 판정에 따라 택일).</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>1.1 판정</th>
+<th>경로</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>로컬 == 원격</td>
+<td>원격을 클론한 뒤 로컬 고유 파일을 얹는다. 가장 단순</td>
+</tr>
+<tr class="even">
+<td>로컬이 원격의 superset (로컬이 앞섬)</td>
+<td>원격 클론 → 로컬 상태를 작업 트리에 반영 → <code>chore: restore local working state</code> 단일 커밋</td>
+</tr>
+<tr class="odd">
+<td>로컬이 원격보다 뒤처짐</td>
+<td><strong>PI 확인 필요.</strong> 로컬에서만 한 작업이 있는지 물어보고 진행</td>
+</tr>
+<tr class="even">
+<td>분기 (양쪽 고유 변경 존재)</td>
+<td><strong>PI 확인 필요.</strong> 병합 방침 결정 후 진행</td>
+</tr>
+</tbody>
+</table>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li>복구 경로 실행 — <code>.git</code> 이 로컬 작업 디렉터리에 존재하고 <code>origin</code> 이 연결된 상태를 만든다</li>
+<li><code>git status</code> 가 깨끗한지 확인. 안 깨끗하면 <code>.gitignore</code> / <code>.Rbuildignore</code> 를 점검 (Step 1.4 와 조율)</li>
+<li>브랜치 전략 확정 및 문서화 — 기본안은 <a href="./03-operating-model.html">Ch.3</a> 의 <code>upgrade/phase-NN-&lt;slug&gt;</code></li>
+<li>Phase 1 작업 브랜치 생성: <code>upgrade/phase-01-foundation</code></li>
+<li>복구 시점 상태를 태그: <code>pre-upgrade-baseline</code></li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li>git 관리 하의 작업 디렉터리 (<code>.git</code> 존재, <code>origin</code> 연결, 작업 트리 clean)</li>
+<li><code>pre-upgrade-baseline</code> 태그 (로컬 + 원격 push)</li>
+<li><code>upgrade/phase-01-foundation</code> 브랜치</li>
+<li><code>log/log-version-up-2026-08-14/decisions/branch-strategy.md</code></li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li><code>git rev-parse --is-inside-work-tree</code> → <code>true</code></li>
+<li><code>git remote -v</code> 가 <code>joonho112/multisiteDGP</code> 를 가리킨다</li>
+<li><code>git status --porcelain</code> 출력이 비어 있다</li>
+<li><code>pre-upgrade-baseline</code> 태그가 원격에 있다</li>
+</ul>
+<div class="callout callout-style-simple callout-important callout-titled" title="되돌릴 수 없는 Step">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>되돌릴 수 없는 Step
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>이 Step 전에 <strong>작업 디렉터리 전체를 압축 백업</strong>한다. 경로: <code>log/log-version-up-2026-08-14/artifacts/pre-git-recovery-backup.tar.gz</code> (<code>.Rbuildignore</code> 에 추가). git 복구 중 사고가 나면 여기서 복구한다.</p>
+</div>
+</div>
+<hr>
+</section>
+<section id="step-1.3-개발-환경-고정" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="step-1.3-개발-환경-고정"><span class="header-section-number">6.4</span> Step 1.3 — 개발 환경 고정</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~15 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>1.2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> 누락된 Suggests 의존성을 설치하고, 이후 모든 Phase 가 동일한 환경에서 실행되도록 환경을 기록한다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li>누락 3 종 설치 시도
+<ul>
+<li><code>copula</code> — CRAN. 설치</li>
+<li><code>hedgehog</code> — CRAN. 설치</li>
+<li><code>multisitepower</code> — CRAN 미배포. 개발 소스에서 설치 시도, 실패 시 사유 기록</li>
+</ul></li>
+<li>설치 후 <code>Imports</code> 13 + <code>Suggests</code> 18 전수 재확인</li>
+<li>stale install 정리 — 설치된 <code>multisiteDGP</code> 0.0.0.9000 제거 또는 <code>devtools::install()</code> 로 갱신. 이후 <code>library(multisiteDGP)</code> 대신 <code>load_all()</code> 사용 원칙 확인</li>
+<li>환경 스냅샷 기록 — <code>sessionInfo()</code>, R 버전, 플랫폼, 주요 package 버전, Quarto 버전</li>
+<li>CI 매트릭스가 쓰는 R 버전과 로컬 R 4.6.0 의 차이 확인 (<code>R-CMD-check.yaml</code> 의 release/devel/oldrel 정의)</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>log/log-version-up-2026-08-14/evidence/phase01/environment-snapshot.txt</code></li>
+<li><code>log/log-version-up-2026-08-14/evidence/phase01/dependency-status.csv</code> — package / 역할 / 요구 버전 / 설치 버전 / 상태</li>
+<li><code>multisitepower</code> 설치 실패 시 그 영향 범위 한 단락</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li><code>copula</code> 와 <code>hedgehog</code> 가 설치되어 있고 <code>requireNamespace()</code> 가 <code>TRUE</code></li>
+<li>의존성 상태 CSV 에 31 개 package 전부 행이 있다</li>
+<li>환경 스냅샷이 기록되어 있다</li>
+</ul>
+<hr>
+</section>
+<section id="step-1.4-저장소-위생-정리" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="step-1.4-저장소-위생-정리"><span class="header-section-number">6.5</span> Step 1.4 — 저장소 위생 정리</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~15 분</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>1.2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> 빌드 산출물과 잔재를 제거해서 이후 진단이 가짜 신호로 오염되지 않게 한다. <a href="./01-current-state-audit.html">Ch.1 A-3</a> 의 목록을 처리한다.</p>
+<p><strong>작업.</strong></p>
+<ol type="1">
+<li>제거 대상 처리 — 각각 <strong>삭제 전에 내용을 확인</strong>하고, 원격에 없는 고유 정보가 있으면 보존
+<ul>
+<li><code>..Rcheck/</code>, <code>multisiteDGP.Rcheck/</code> — check 잔재. 삭제</li>
+<li><code>multisiteDGP_0.0.0.9000.tar.gz</code>, <code>multisiteDGP_0.1.0.tar.gz</code> — 과거 빌드. <code>artifacts/</code> 로 이동 후 작업 루트에서 제거</li>
+<li><code>Library/</code>, <code>Outputs/</code> — 빈 디렉터리. 삭제</li>
+<li><code>.DS_Store</code> — 삭제 + <code>.gitignore</code> 등재</li>
+<li><code>blueprint-multisiteDGP-book-v1.0-20260507.zip</code> (41 MB) — 원본 book 폴더가 존재하므로 중복. <code>artifacts/</code> 이동 또는 삭제 (PI 확인)</li>
+</ul></li>
+<li><code>.gitignore</code> 작성 또는 갱신 — 위 패턴 + <code>_book/</code>, <code>_files/</code>, <code>*.Rcheck/</code>, <code>.quarto/</code></li>
+<li><code>.Rbuildignore</code> 점검 — 새 log 폴더 <code>^log$</code> 가 이미 등재되어 있는지 확인 (등재되어 있음)</li>
+<li>정리 후 <code>R CMD build</code> 로 tarball 을 만들어 크기와 포함 파일 확인</li>
+</ol>
+<p><strong>산출물.</strong></p>
+<ul>
+<li>정리된 작업 디렉터리</li>
+<li><code>.gitignore</code> (신규 또는 갱신)</li>
+<li><code>log/log-version-up-2026-08-14/evidence/phase01/cleanup-manifest.md</code> — 무엇을 어디로 보냈는지</li>
+<li>tarball 크기 before/after</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>위 7 개 항목이 전부 처리되어 있다 (삭제 / 이동 / 보존 중 하나로, 각각 근거 기록)</li>
+<li><code>git status --porcelain</code> 이 깨끗하다</li>
+<li><code>R CMD build</code> 가 성공하고 tarball 에 불필요한 파일이 없다</li>
+</ul>
+<hr>
+</section>
+<section id="step-1.5-베이스라인-측정" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="step-1.5-베이스라인-측정"><span class="header-section-number">6.6</span> Step 1.5 — 베이스라인 측정</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>모드</strong></td>
+<td>단일</td>
+</tr>
+<tr class="even">
+<td><strong>소요</strong></td>
+<td>~20 분 (백그라운드 실행 시간 별도)</td>
+</tr>
+<tr class="odd">
+<td><strong>의존</strong></td>
+<td>1.3, 1.4</td>
+</tr>
+</tbody>
+</table>
+<p><strong>목표.</strong> v0.2.0 작업 시작 시점의 정량 상태를 고정한다. Phase 11 에서 이 수치와 비교해 개선을 증명한다.</p>
+<p><strong>작업.</strong> 아래를 전부 실행하고 출력을 그대로 보존한다. 시간이 걸리는 것은 백그라운드로 병행.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>측정</th>
+<th>명령</th>
+<th>기록</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>기본 테스트</td>
+<td><code>testthat::test_local(".")</code></td>
+<td>PASS / FAIL / SKIP 수, 소요 시간</td>
+</tr>
+<tr class="even">
+<td>확장 테스트</td>
+<td>위 + <code>MULTISITEDGP_RUN_SLOW=true MULTISITEDGP_RUN_PROPERTY=true</code></td>
+<td>동일</td>
+</tr>
+<tr class="odd">
+<td>check (기본)</td>
+<td><code>devtools::check(vignettes = FALSE, args = "--as-cran")</code></td>
+<td>E/W/N 수 + NOTE 전문</td>
+</tr>
+<tr class="even">
+<td>check (전체)</td>
+<td><code>devtools::check(args = "--as-cran")</code> — vignette 포함</td>
+<td>동일 + vignette knit 시간</td>
+</tr>
+<tr class="odd">
+<td>커버리지</td>
+<td><code>covr::package_coverage()</code></td>
+<td>전체 % + 파일별 %</td>
+</tr>
+<tr class="even">
+<td>lint</td>
+<td><code>lintr::lint_package()</code></td>
+<td>위반 수 + 유형별 분포</td>
+</tr>
+<tr class="odd">
+<td>성능</td>
+<td><code>sim_multisite(preset_education_modest(), seed=1)</code> 실행 시간, <code>design_grid()</code> 소규모 sweep</td>
+<td>벤치마크</td>
+</tr>
+</tbody>
+</table>
+<p><strong>산출물.</strong></p>
+<ul>
+<li><code>log/log-version-up-2026-08-14/evidence/phase01/baseline-metrics.md</code> — 위 7 개 측정의 요약 표</li>
+<li><code>evidence/phase01/baseline-raw/</code> — 각 실행의 원본 출력 7 개 파일</li>
+<li>특히 <strong>full check 의 NOTE 2 건 정체</strong> 를 확정 (<a href="./01-current-state-audit.html">Ch.1 U-6</a>)</li>
+</ul>
+<p><strong>완료 조건.</strong></p>
+<ul>
+<li>7 개 측정이 전부 실행되고 원본 출력이 보존되어 있다</li>
+<li>요약 표에 각 수치가 있고, <code>R CMD check</code> NOTE 의 내용이 기록되어 있다</li>
+<li>Phase 11 Step 11.1 이 같은 명령으로 재측정할 수 있게 명령 전문이 기록되어 있다</li>
+</ul>
+<hr>
+</section>
+<section id="phase-종료-조건" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="phase-종료-조건"><span class="header-section-number">6.7</span> Phase 종료 조건</h2>
+<p>Phase 1 로그(<code>002</code>)를 쓰기 전에 아래를 실제로 확인한다.</p>
+<ul class="task-list">
+<li><label><input type="checkbox">로컬 작업 디렉터리가 git repository 이고 <code>origin</code> 이 연결되어 있다</label></li>
+<li><label><input type="checkbox"><code>pre-upgrade-baseline</code> 태그가 로컬과 원격에 있다</label></li>
+<li><label><input type="checkbox"><code>git status --porcelain</code> 이 비어 있다</label></li>
+<li><label><input type="checkbox">로컬 vs 원격 차이 판정이 문서로 남아 있다</label></li>
+<li><label><input type="checkbox"><code>copula</code>, <code>hedgehog</code> 설치 완료 (<code>multisitepower</code> 는 실패해도 사유 기록으로 충족)</label></li>
+<li><label><input type="checkbox">저장소 위생 7 개 항목 처리 완료</label></li>
+<li><label><input type="checkbox">베이스라인 측정 7 종 원본 출력 보존</label></li>
+<li><label><input type="checkbox">Phase 1 브랜치가 <code>main</code> 에 병합되고 push 되어 CI 가 실행됐다 (실패해도 무방 — Phase 6 가 담당)</label></li>
+</ul>
+</section>
+<section id="phase-로그" class="level2" data-number="6.8">
+<h2 data-number="6.8" class="anchored" data-anchor-id="phase-로그"><span class="header-section-number">6.8</span> Phase 로그</h2>
+<p><code>002_phase01-foundation-recovery.qmd</code> + <code>.html</code>. <a href="./04-log-protocol.html">Ch.4</a> 의 8 절 구조를 따른다.</p>
+<p>§4 (근거와 실행 결과) 에는 반드시 다음을 포함한다.</p>
+<ul>
+<li>로컬 vs 원격 diff 요약 표</li>
+<li>git 복구 경로와 실행한 명령</li>
+<li>베이스라인 측정 7 종 요약 표 — <strong>이 표가 Phase 11 의 비교 기준</strong>이 되므로 형식을 정확히 맞춘다</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./04-log-protocol.html" class="pagination-link" aria-label="로그 규약">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">로그 규약</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./06-phase-02-defect-audit.html" class="pagination-link" aria-label="Phase 2 — 결함 인벤토리 감사">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Phase 2 — 결함 인벤토리 감사</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
