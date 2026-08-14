@@ -322,6 +322,9 @@ provenance_string.default <- function(x, ...) {
   if (is.atomic(x)) {
     out <- unname(x)
     attributes(out) <- NULL
+    if (is.double(out)) {
+      out <- signif(out, .HASH_SIGNIF_DIGITS)
+    }
     return(out)
   }
   unname(x)
@@ -419,15 +422,20 @@ provenance_string.default <- function(x, ...) {
 # digits. That worked, but the nine was arbitrary and it blunted the hash
 # against genuine regressions below 1e-9.
 #
-# v3 drops the diagnostics instead. They are computed from the data, and the
-# design is already covered by `design_hash` in the manifest, so they carry no
-# provenance the hash does not already have — only accumulation noise. What
-# remains is hashed exactly. Defect ledger D-002.
+# v3 does both. It drops the diagnostics, which are computed from the data and
+# from a design already covered by `design_hash`, so they added no provenance —
+# only noise. And it keeps the rounding for what remains.
 #
-# This makes the contract depend on every hashed column staying platform
-# stable. A future change that puts a libm-dependent quantity into a data
-# column would break it, and the symptom would again be a cross-platform hash
-# mismatch, so weigh that before adding one.
+# The rounding is still needed. An earlier v3 attempt dropped the diagnostics
+# and hashed the rest exactly, on the reasoning that the data must be portable
+# because the nine golden .rds fixtures compare byte-identical across macOS,
+# Linux and Windows. CI disproved it: other designs — the print examples and
+# the snapshot presets — still drifted below 1e-9, so byte-identity holds for
+# those nine fixtures but does not generalise.
+#
+# Nine significant digits sits far above that drift and far below anything a
+# numerical regression would produce. Defect ledger D-002.
+.HASH_SIGNIF_DIGITS <- 9L
 
 .hash_schema_version <- function() {
   "multisiteDGP-canonical-hash-v3"

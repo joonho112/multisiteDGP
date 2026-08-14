@@ -96,13 +96,22 @@ test_that("atomic vectors are stripped of names and attributes", {
   expect_identical(canon(x), c(1, 2))
 })
 
-test_that("doubles enter the hash exactly — the schema does not round", {
-  # v2 rounded to nine significant digits to absorb cross-platform noise. v3
-  # drops the noisy part instead (the derived diagnostics), so what is left is
-  # hashed exactly and a real regression cannot hide under a rounding step.
+test_that("doubles are rounded so sub-1e-9 drift cannot move the hash", {
+  # v3 drops the derived diagnostics *and* rounds what is left. An earlier
+  # attempt dropped the diagnostics only, on the reasoning that the data must
+  # be portable since the golden .rds fixtures compare byte-identical across
+  # platforms. CI disproved it — other designs still drift below 1e-9.
   x1 <- c(1.2345678901234, 2, 3)
   x2 <- x1
   x2[1] <- x2[1] * (1 + 2 * .Machine$double.eps)
+
+  expect_identical(canon(x1), canon(x2))
+})
+
+test_that("rounding keeps enough resolution to catch a real regression", {
+  x1 <- c(1.2345678901234, 2, 3)
+  x2 <- x1
+  x2[1] <- x2[1] * (1 + 1e-8)
 
   expect_false(identical(canon(x1), canon(x2)))
 })

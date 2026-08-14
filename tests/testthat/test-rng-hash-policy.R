@@ -126,7 +126,8 @@ test_that("a diagnostic still moves the hash when the caller asks for it", {
 test_that("data still drives the hash", {
   dat <- new_hash_data()
   changed <- dat
-  changed$tau_j_hat[1] <- changed$tau_j_hat[1] + 1e-12
+  # Above the nine-digit rounding, so a genuine numerical change is still seen.
+  changed$tau_j_hat[1] <- changed$tau_j_hat[1] * (1 + 1e-6)
 
   expect_false(identical(canonical_hash(dat), canonical_hash(changed)))
 })
