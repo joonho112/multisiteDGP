@@ -23,4 +23,4 @@ D. Operational feasibility
    feasibility_index:          14.431  (target N/A)  WARN  [no target]
 ------------------------------------------------------------
 Overall: 3 PASS, 3 WARN, 2 FAIL.
-Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 | canonical_hash=ce2157243af3f1b8 | design_hash=02bf5e4c5066a2ae | hash_algo=xxhash64 | R=<R> | hooks=none
+Provenance: multisiteDGP <VERSION> | paradigm=site_size | seed=12345 | canonical_hash=90efcf4ca0d96e41 | design_hash=fdb28e88485639da | hash_algo=xxhash64 | R=<R> | hooks=none

@@ -322,9 +322,6 @@ provenance_string.default <- function(x, ...) {
   if (is.atomic(x)) {
     out <- unname(x)
     attributes(out) <- NULL
-    if (is.double(out)) {
-      out <- signif(out, .HASH_SIGNIF_DIGITS)
-    }
     return(out)
   }
   unname(x)
@@ -360,22 +357,18 @@ provenance_string.default <- function(x, ...) {
   numeric_scalar <- vapply(selected, function(x) {
     is.numeric(x) && length(x) == 1L && is.finite(x)
   }, logical(1))
-  # Diagnostics do not pass through `.canonicalize_for_hash()`, so the rounding
-  # has to be applied here too. These are the payload's most drift-prone
-  # entries — cor(), sd() and mean() accumulate in an order that varies across
-  # platforms, and the gap shows even on one machine, where `rho_P_marginal`
-  # and `rho_P_residual` differ in their last digits for a design where they
-  # are mathematically identical.
-  lapply(selected[numeric_scalar], function(x) signif(unname(x), .HASH_SIGNIF_DIGITS))
+  lapply(selected[numeric_scalar], unname)
 }
 
+# Empty since schema v3. The diagnostics these named are derived from the
+# hashed data and the hashed design, so they added no provenance — only the
+# platform-dependent accumulation noise of `cor()` and `sd()`.
+#
+# `canonical_hash(x, diagnostics_to_include = ...)` still accepts an explicit
+# set for callers who want a diagnostic pinned deliberately; they just are not
+# part of the default contract any more.
 .canonical_diagnostics_allowlist <- function() {
-  c(
-    "I_hat", "R_hat",
-    "rho_S_residual", "rho_S_marginal",
-    "rho_P_residual", "rho_P_marginal",
-    "sigma_tau_resid", "sigma_tau_marg"
-  )
+  character()
 }
 
 .custom_hook_names <- function(design) {
@@ -402,22 +395,42 @@ provenance_string.default <- function(x, ...) {
   "callback bodies, bytecode, and environments are excluded; presence sentinels are hashed"
 }
 
-# Significant digits every double is rounded to before it enters the hash.
+# Hash schema v3 — the hash covers the simulated data and the design, and
+# nothing derived from them.
 #
-# v1 hashed raw IEEE-754 doubles, so a single ULP flipped the hash. That made
-# the cross-platform contract unachievable: the derived diagnostics carried in
-# the payload are computed by `cor()`, `sd()` and `mean()`, whose accumulation
-# order differs between platforms. The gap is visible even on one machine —
-# `rho_P_marginal` and `rho_P_residual` are mathematically identical for a
-# covariate-free design yet differ in their last two digits.
+# v1 hashed raw IEEE-754 doubles including a set of derived diagnostics, and a
+# single ULP flipped the hash. That made the cross-platform contract
+# unachievable, but not for the reason it looked like: the *data* is platform
+# stable, and only the diagnostics were not.
 #
-# Nine digits sits far below anything a numerical regression would produce and
-# far above the accumulation noise, so the same design and seed now hash the
-# same everywhere. Defect ledger D-002.
-.HASH_SIGNIF_DIGITS <- 9L
+#   data columns  `n_j` is rounded to an integer; `z_j` and `tau_j` come from
+#                 R's own RNG; `se_j`, `se2_j` and `tau_j_hat` follow by IEEE
+#                 arithmetic from those. All bit-identical across platforms,
+#                 confirmed by byte-comparing the golden .rds fixtures on
+#                 macOS, Linux and Windows.
+#   diagnostics   `I_hat`, `R_hat`, `rho_*` and `sigma_tau_*` are computed with
+#                 `cor()`, `sd()` and `mean()`, whose accumulation order varies
+#                 by platform. The gap shows even on one machine, where
+#                 `rho_P_marginal` and `rho_P_residual` are mathematically
+#                 identical for a covariate-free design yet differ in their
+#                 last digits.
+#
+# v2 papered over this by rounding every hashed double to nine significant
+# digits. That worked, but the nine was arbitrary and it blunted the hash
+# against genuine regressions below 1e-9.
+#
+# v3 drops the diagnostics instead. They are computed from the data, and the
+# design is already covered by `design_hash` in the manifest, so they carry no
+# provenance the hash does not already have — only accumulation noise. What
+# remains is hashed exactly. Defect ledger D-002.
+#
+# This makes the contract depend on every hashed column staying platform
+# stable. A future change that puts a libm-dependent quantity into a data
+# column would break it, and the symptom would again be a cross-platform hash
+# mismatch, so weigh that before adding one.
 
 .hash_schema_version <- function() {
-  "multisiteDGP-canonical-hash-v2"
+  "multisiteDGP-canonical-hash-v3"
 }
 
 .hash_manifest_version <- function(x) {
