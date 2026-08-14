@@ -111,7 +111,7 @@ grep -rni "dpm\|dirichlet" DESCRIPTION README.Rmd index.md _pkgdown.yml R/ vigne
 
 **IES 보고서·발표 자료에 "eight distribution shapes" 언급이 있는가?**
 
-- [ ] 없음 — 권고대로 축소 진행
+- [x] **없음 — 권고대로 7 로 축소 진행**
 - [ ] 있음 — 갭 1 을 선택지 C(실험 기능 명시, 개수 8 유지)로 전환
 - [ ] 확인 필요 — Step 7.3 을 보류
 
@@ -120,4 +120,4 @@ grep -rni "dpm\|dirichlet" DESCRIPTION README.Rmd index.md _pkgdown.yml R/ vigne
 - [ ] 제거
 - [ ] `@keywords internal` 로 숨김 (용도가 확인되는 경우)
 
-**서명:** ______________  **일자:** __________
+**결정:** JoonHo Lee (PI)  **일자:** 2026-08-14  — 기록: `001-pi-decisions-gate-B.md`
