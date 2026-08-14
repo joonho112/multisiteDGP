@@ -1,0 +1,4 @@
+Warning message:
+Non-Linux golden-fixture regeneration is exploratory only; canonical_hash/design_hash diffs should not be committed. 
+Wrote 9 golden RDS files to: tests/testthat/_snaps/golden
+Wrote manifest to: inst/extdata/golden/golden-fixture-manifest.csv

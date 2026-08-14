@@ -1,0 +1,2 @@
+Wrote JEBS golden fixture manifest to: tools/jebs-golden-fixtures/jebs-golden-fixture-manifest.csv
+Did not write RDS files. Pass --write-rds for dev-only generated references.

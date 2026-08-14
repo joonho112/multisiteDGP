@@ -111,7 +111,17 @@ solve_trunc_gamma <- function(
     )
   }
 
-  best <- verified[[which.min(vapply(verified, `[[`, numeric(1), "residual_norm"))]]
+  # Pick the best start on a coarsened score. The residual is evaluated with
+  # lgamma and pgamma, so two starts that fit equally well can order
+  # differently on different platforms; comparing at full precision would let
+  # that reorder the winner and undo the quantisation above. Rounding first
+  # means near-ties fall through to `which.min`'s first-index rule, which is
+  # platform independent.
+  scores <- signif(
+    vapply(verified, `[[`, numeric(1), "residual_norm"),
+    .TRUNC_GAMMA_SELECTION_DIGITS
+  )
+  best <- verified[[which.min(scores)]]
   noise_floor <- .trunc_gamma_residual_floor(best$alpha, cv)
   tol_effective <- max(tol, noise_floor)
   if (any(abs(best$residual) > tol_effective)) {
@@ -180,6 +190,16 @@ solve_trunc_gamma <- function(
 # Measurement: log/log-version-up-2026-08-14/evidence/phase04/residual-noise-floor.csv
 .TRUNC_GAMMA_FLOOR_SCALE <- 8
 .TRUNC_GAMMA_FLOOR_BASE <- 256
+
+# Significant digits kept from the nleqslv solution. The solver itself is only
+# determinate to about 1e-12 relative, so 10 digits sits two orders inside its
+# own noise while being far finer than any difference that matters to the fit.
+.TRUNC_GAMMA_SOLUTION_DIGITS <- 10L
+
+# Significant digits used when comparing starts. Coarse enough that libm-level
+# differences in the residual evaluation cannot reorder near-ties, fine enough
+# to still prefer a genuinely better fit.
+.TRUNC_GAMMA_SELECTION_DIGITS <- 6L
 
 .trunc_gamma_residual_floor <- function(alpha, cv) {
   if (!is.finite(alpha) || !is.finite(cv) || cv <= 0) {
@@ -333,9 +353,28 @@ rtrunc_gamma <- function(n, alpha, beta, n_min) {
     return(.failed_trunc_gamma_fit(message = conditionMessage(fit), start_id = start_id))
   }
 
-  alpha <- exp(fit$x[[1L]])
-  beta <- exp(fit$x[[2L]])
-  residual <- .trunc_gamma_residual(fit$x, n_bar = n_bar, cv = cv, n_min = n_min)
+  # Quantise the solver's answer before anything downstream sees it.
+  #
+  # nleqslv stops at ftol = 1e-12, so its solution is only pinned to about
+  # 1e-12 relative — the five starting points land roughly 5,000 ULP apart and
+  # still all satisfy the tolerance. Which point a platform reaches depends on
+  # its libm, so leaving the raw value in place makes every downstream draw,
+  # and therefore canonical_hash(), platform dependent (defect ledger D-002).
+  #
+  # Rounding to `.TRUNC_GAMMA_SOLUTION_DIGITS` significant digits is two orders
+  # coarser than the solver's own indeterminacy, so the same design lands on
+  # the same (alpha, beta) everywhere, while staying far finer than any
+  # numerically meaningful difference in the fit.
+  alpha <- signif(exp(fit$x[[1L]]), .TRUNC_GAMMA_SOLUTION_DIGITS)
+  beta <- signif(exp(fit$x[[2L]]), .TRUNC_GAMMA_SOLUTION_DIGITS)
+
+  # Score the quantised pair, not the raw one, so the residual reported and
+  # the residual used for start selection both describe the answer actually
+  # returned.
+  residual <- .trunc_gamma_residual(
+    c(log(alpha), log(beta)),
+    n_bar = n_bar, cv = cv, n_min = n_min
+  )
   list(
     alpha = alpha,
     beta = beta,

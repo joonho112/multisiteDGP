@@ -60,8 +60,14 @@ withr::local_options(list(
   pillar.sigfig = 3L
 ))
 
+# Must stay in step with `normalize_generated_print_lines()` in
+# tests/testthat/test-generated-print-examples-step8-6.R. The generator used to
+# mask only the R version, so every regeneration wrote a literal package
+# version where the test expected <VERSION> and the comparison failed
+# (defect ledger D-026).
 normalize_print_lines <- function(lines) {
-  gsub("R=[0-9.]+", "R=<R>", lines)
+  lines <- gsub("R=[0-9.]+", "R=<R>", lines)
+  gsub("multisiteDGP [0-9.]+", "multisiteDGP <VERSION>", lines)
 }
 
 write_example <- function(filename, lines) {

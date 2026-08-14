@@ -1,0 +1,16 @@
+fixture                                    컬럼값      진단       provenance 해시
+jebs_appendix_mixture_seed1.rds            비트 동일  동일       동일
+jebs_appendix_mixture_seed12345.rds        비트 동일  동일       동일
+jebs_appendix_mixture_seed2024.rds         비트 동일  동일       동일
+jebs_appendix_mixture_seed42.rds           비트 동일  동일       동일
+preset_education_modest.rds                비트 동일  동일       변경
+preset_jebs_paper.rds                      비트 동일  동일       변경
+preset_jebs_strict.rds                     비트 동일  동일       변경
+preset_small_area_estimation.rds           비트 동일  동일       변경
+preset_walters_2024.rds                    비트 동일  동일       변경
+
+모든 fixture 의 컬럼값이 비트 동일: TRUE
+
+── attributes 중 무엇이 달라졌나 (첫 preset) ──
+  변경: multisitedgp_version 
+  변경: provenance 

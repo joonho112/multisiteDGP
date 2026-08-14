@@ -94,15 +94,33 @@ test_that("atomic vectors are stripped of names and attributes", {
   expect_identical(canon(x), c(1, 2))
 })
 
-test_that("doubles are NOT rounded — one ULP changes the canonical form", {
-  # 이것이 cross-platform 해시가 깨지는 이유다 (결함 원장 D-002).
-  # Phase 4 가 D1 에 따라 이 동작을 바꾸면 이 테스트도 함께 갱신해야 한다.
-  x1 <- c(1, 2, 3)
+test_that("doubles are rounded so ULP-level noise cannot move the hash", {
+  # 해시 스키마 v2 (D-002). v1 은 원시 IEEE-754 를 해시해서 1 ULP 에도
+  # 뒤집혔고, 그래서 cross-platform 계약이 달성 불가능했다.
+  x1 <- c(1.2345678901234, 2, 3)
   x2 <- x1
-  x2[2] <- x2[2] + .Machine$double.eps * 2
+  x2[1] <- x2[1] * (1 + 2 * .Machine$double.eps)
+
+  expect_identical(canon(x1), canon(x2))
+  expect_identical(digest::digest(canon(x1)), digest::digest(canon(x2)))
+})
+
+test_that("rounding keeps enough resolution to catch a real regression", {
+  # 반올림이 검출력을 없애면 안 된다. 실제 수치 회귀는 1e-9 보다 훨씬 크다.
+  x1 <- c(1.2345678901234, 2, 3)
+  x2 <- x1
+  x2[1] <- x2[1] * (1 + 1e-8)
 
   expect_false(identical(canon(x1), canon(x2)))
-  expect_false(identical(digest::digest(canon(x1)), digest::digest(canon(x2))))
+})
+
+test_that("integer and logical columns are not coerced by the rounding", {
+  expect_identical(canon(1:5), 1:5)
+  expect_identical(canon(c(TRUE, FALSE, NA)), c(TRUE, FALSE, NA))
+})
+
+test_that("the hash schema version records the rounding change", {
+  expect_identical(.hash_schema_version(), "multisiteDGP-canonical-hash-v2")
 })
 
 # ── payload 조립 ──────────────────────────────────────────────────────
