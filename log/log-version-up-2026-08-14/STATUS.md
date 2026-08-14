@@ -80,7 +80,7 @@ push 직후 첫 Linux CI 가 Phase 5 에서 추가한 테스트로 이것을 잡
 | `layer2-engine-a2.R` | 84.8 % | **95.5 %** |
 | `utils-reproducibility.R` | 91.0 % | **95.5 %** |
 | 작업 디렉터리 | 462 MB | 417 MB |
-| 결함 원장 | 없음 | **25 행** (P0 12 · P1 6 · P2 7), 5 건 해소 |
+| 결함 원장 | 없음 | **25 행** (P0 12 · P1 6 · P2 7), **7 건 해소** |
 
 `R CMD check --as-cran` (vignette 포함)은 시작 시점부터 **0 error / 0 warning / 1 note** 였습니다. NOTE 는 `README.Rmd` 가 최상위에 있다는 것뿐입니다.
 
