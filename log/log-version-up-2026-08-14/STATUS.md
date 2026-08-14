@@ -29,7 +29,7 @@
 | 1 작업 기반 복구 | **완료** | [`002_phase01-foundation-recovery.html`](002_phase01-foundation-recovery.html) |
 | 2 결함 인벤토리 감사 | **완료** | [`003_phase02-defect-audit.html`](003_phase02-defect-audit.html) |
 | 3 v0.2.0 범위 결정 | **완료 — 게이트 G-B 대기** | [`004_phase03-scope-decisions.html`](004_phase03-scope-decisions.html) |
-| 4 재현성 계약 | **막힘** (D-019) | — |
+| 4 재현성 계약 + solver 견고화 | **부분** — Step 4.1b 완료 | [`006_phase04-solver-hardening-partial.html`](006_phase04-solver-hardening-partial.html) |
 | 5 테스트 스위트 | **부분 (4/6 Step)** | [`005_phase05-test-suite-rebuild-partial.html`](005_phase05-test-suite-rebuild-partial.html) |
 | 6–11 | 미착수 | — |
 
@@ -80,7 +80,7 @@ push 직후 첫 Linux CI 가 Phase 5 에서 추가한 테스트로 이것을 잡
 | `layer2-engine-a2.R` | 84.8 % | **95.5 %** |
 | `utils-reproducibility.R` | 91.0 % | **95.5 %** |
 | 작업 디렉터리 | 462 MB | 417 MB |
-| 결함 원장 | 없음 | **25 행** (P0 12 · P1 6 · P2 7), **7 건 해소** |
+| 결함 원장 | 없음 | **25 행**, **9 건 해소** (P0 6 · P1 3) |
 
 `R CMD check --as-cran` (vignette 포함)은 시작 시점부터 **0 error / 0 warning / 1 note** 였습니다. NOTE 는 `README.Rmd` 가 최상위에 있다는 것뿐입니다.
 
