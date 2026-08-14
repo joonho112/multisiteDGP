@@ -1,0 +1,52 @@
+Step 2.3 — canonical_hash 드리프트 규명
+R version 4.6.0 (2026-04-24) | aarch64-apple-darwin23 
+============================================================================== 
+
+── 1. 해시가 double 을 반올림하는가 ──
+  1 값에 2 ULP 섭동 → canonical 표현 동일?  FALSE 
+  digest 동일?  FALSE 
+  → 반올림 없음. 최하위 비트가 곧 해시.
+
+── 2. 기본 경로가 nleqslv 를 타는가 ──
+  기본 engine: A2_modern 
+[1] "nleqslv"
+  sim_multisite() 1 회 호출 중 nleqslv 호출 횟수: 5 
+  → 기본 경로가 반복 solver 를 탄다. 
+
+── 3. solver 해의 결정도(determinacy) ──
+  수렴한 시작점: 5 / 5
+  alpha  범위: [6.249980880736187, 6.2499808807434469]
+  beta   범위: [0.062499836366643323, 0.06249983636672559]
+  시작점에 따른 해 차이: alpha 5.23e+03 ULP, beta 5.93e+03 ULP
+  잔차 노름 범위: [1.11e-15, 6.38e-13]  (ftol = 1e-12)
+  → 해는 ftol 수준까지만 결정된다. 비트 수준으로 결정되지 않는다.
+
+── 4. tolerance 섭동 = 플랫폼 차이의 대리 실험 ──
+  ftol=1e-12   alpha=6.2499808807366311  base 대비        0 ULP
+  ftol=1e-13   alpha=6.2499808807417967  base 대비 3.72e+03 ULP
+  ftol=1e-11   alpha=6.2499808807366311  base 대비        0 ULP
+  ftol=1e-10   alpha=6.2499808807366311  base 대비        0 ULP
+  → tolerance 를 1 자릿수만 바꿔도 해의 최하위 비트가 달라진다.
+    플랫폼별 libm/컴파일러 차이도 동일한 효과를 낸다.
+
+── 5. solver 출력 → 데이터 컬럼 전파 경로 ──
+  컬럼: site_index, z_j, tau_j, tau_j_hat, se_j, se2_j, n_j 
+  수치 컬럼: site_index, z_j, tau_j, tau_j_hat, se_j, se2_j, n_j 
+
+── 6. 해시 구성요소 민감도 ──
+  payload 최상위 키: hash_schema_version, object_type, columns_sorted, data_canonical, diagnostics_numeric, manifest 
+  해시 대상 컬럼 수: 7 
+  해시 대상 진단 스칼라: I_hat, R_hat, rho_P_marginal, rho_P_residual, rho_S_marginal, rho_S_residual, sigma_tau_marg, sigma_tau_resid 
+
+  기준 해시: ee1e18af8bd9b8e0 
+  site_index       1 ULP 섭동 → 55edd8a26e2b9aa8  (변경: TRUE)
+  z_j              1 ULP 섭동 → ec3f254186b441c7  (변경: TRUE)
+  tau_j            1 ULP 섭동 → 982612454d2eca0c  (변경: TRUE)
+  diagnostics      1 ULP 섭동 → ba12c56effd5ec7f  (변경: TRUE)
+
+  → 데이터 컬럼과 진단 스칼라 어느 쪽이든 1 ULP 로 해시가 뒤집힌다.
+
+── 7. same-machine 재현성 (T20 계약) ──
+  동일 머신 2 회: ee1e18af8bd9b8e0 / ee1e18af8bd9b8e0 → TRUE 
+
+완료: 2026-08-14 10:27:34 

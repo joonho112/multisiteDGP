@@ -1,0 +1,87 @@
+Step 2.5 / 2.6 — 통계 커널 감사
+============================================================================== 
+
+── L1. 표준화 계약 (mean(z_j)=0, var(z_j)=1), N = 200,000 ──
+  Gaussian                           OK     mean  -0.00281  var  1.00552  
+  StudentT(nu=2.1)                   OK     mean  +0.00206  var  0.43842  
+  StudentT(nu=3)                     OK     mean  +0.00227  var  1.01438  
+  StudentT(nu=5)                     OK     mean  +0.00199  var  1.00152  
+  StudentT(nu=30)                    OK     mean  +0.00271  var  1.00110  
+  SkewN(slant=0.5)                   OK     mean  +0.00137  var  0.99582  
+  SkewN(slant=3)                     OK     mean  +0.00298  var  0.99914  
+  SkewN(slant=20)                    OK     mean  +0.00316  var  1.00417  
+  ALD(rho=0.1)                       OK     mean  +0.00037  var  1.00887  
+  ALD(rho=0.5)                       OK     mean  -0.00128  var  1.00909  
+  ALD(rho=0.9)                       OK     mean  -0.00236  var  1.00712  
+  Mixture(delta=0.5,eps=0.05,ups=1)  OK     mean  -0.00148  var  1.00023  
+  Mixture(delta=1.5,eps=0.3,ups=2)   OK     mean  -0.00026  var  0.99755  
+  Mixture(delta=3,eps=0.5,ups=5)     OK     mean  -0.00276  var  0.98872  
+  PointMassSlab(pi0=0.05)            OK     mean  -0.00032  var  1.00361  
+  PointMassSlab(pi0=0.5)             OK     mean  -0.00114  var  1.00325  
+  PointMassSlab(pi0=0.95)            OK     mean  +0.00010  var  1.02557  
+Warning messages:
+1: ! `nu = 2.1` has non-finite kurtosis.
+ℹ The Student-t residual variance is finite, but Monte Carlo moment checks may
+  be noisy.
+→ Use `nu >= 4` for more stable finite-sample variance diagnostics. 
+2: ! `nu = 3` has non-finite kurtosis.
+ℹ The Student-t residual variance is finite, but Monte Carlo moment checks may
+  be noisy.
+→ Use `nu >= 4` for more stable finite-sample variance diagnostics. 
+
+  격자 17 셀 | 실행 17 | 계약 이탈 1
+  이탈:
+            shape      mean_z     var_z
+ StudentT(nu=2.1) 0.002061608 0.4384171
+
+── L2. Engine A2 solver 실현 가능 영역 (nj_mean x cv) ──
+  격자 48 셀 | 성공 43 | 실패 5 | 경고 동반 0 
+
+  성공 여부 (행 nj_mean, 열 cv):
+       cv
+nj_mean 0.05 0.1 0.25 0.4 0.6 0.8 1 1.3
+   10      1   1    1   1   0   0 0   0
+   25      1   1    1   1   1   1 1   0
+   50      1   1    1   1   1   1 1   1
+   100     1   1    1   1   1   1 1   1
+   250     1   1    1   1   1   1 1   1
+   1000    1   1    1   1   1   1 1   1
+
+  실패 셀:
+ nj_mean  cv                                                         msg
+      10 0.6 ✖ Engine A2 truncated-Gamma post-solve verification failed.
+      10 0.8 ✖ Engine A2 truncated-Gamma post-solve verification failed.
+      10 1.0 ✖ Engine A2 truncated-Gamma post-solve verification failed.
+      10 1.3 ✖ Engine A2 truncated-Gamma post-solve verification failed.
+      25 1.3 ✖ Engine A2 truncated-Gamma post-solve verification failed.
+
+── L3. dependence 목표 달성 오차 (J = 200, 시드 5개) ──
+  rank    arg -0.90  기대 rho_S -0.9000  실현 -0.9000  최대오차  0.0001  실패 0  
+  rank    arg -0.60  기대 rho_S -0.6000  실현 -0.6087  최대오차  0.0089  실패 0  
+  rank    arg -0.30  기대 rho_S -0.3000  실현 -0.2949  최대오차  0.0127  실패 0  
+  rank    arg +0.00  기대 rho_S +0.0000  실현 -0.0017  최대오차  0.0085  실패 0  
+  rank    arg +0.30  기대 rho_S +0.3000  실현 +0.2987  최대오차  0.0039  실패 0  
+  rank    arg +0.60  기대 rho_S +0.6000  실현 +0.6087  최대오차  0.0089  실패 0  
+  rank    arg +0.90  기대 rho_S +0.9000  실현 +0.9000  최대오차  0.0001  실패 0  
+  copula  arg -0.90  기대 rho_S -0.8915  실현 -0.8865  최대오차  0.0252  실패 0  
+  copula  arg -0.60  기대 rho_S -0.5819  실현 -0.5754  최대오차  0.0635  실패 0  
+  copula  arg -0.30  기대 rho_S -0.2876  실현 -0.2909  최대오차  0.0908  실패 0  
+  copula  arg +0.00  기대 rho_S +0.0000  실현 -0.0130  최대오차  0.1029  실패 0  
+  copula  arg +0.30  기대 rho_S +0.2876  실현 +0.2749  최대오차  0.0779  실패 0  
+  copula  arg +0.60  기대 rho_S +0.5819  실현 +0.5768  최대오차  0.0414  실패 0  
+  copula  arg +0.90  기대 rho_S +0.8915  실현 +0.8898  최대오차  0.0131  실패 0  
+  hybrid  arg -0.90  기대 rho_S -0.9000  실현 -0.8989  최대오차  0.0099  실패 0  
+  hybrid  arg -0.60  기대 rho_S -0.6000  실현 -0.5906  최대오차  0.0200  실패 0  
+  hybrid  arg -0.30  기대 rho_S -0.3000  실현 -0.2949  최대오차  0.0117  실패 0  
+  hybrid  arg +0.00  기대 rho_S +0.0000  실현 -0.0107  최대오차  0.0534  실패 0  
+  hybrid  arg +0.30  기대 rho_S +0.3000  실현 +0.3037  최대오차  0.0125  실패 0  
+  hybrid  arg +0.60  기대 rho_S +0.6000  실현 +0.6014  최대오차  0.0138  실패 0  
+  hybrid  arg +0.90  기대 rho_S +0.9000  실현 +0.8988  최대오차  0.0113  실패 0  
+
+── L4. design 객체 경로 vs flat 인자 경로 동치성 ──
+  canonical_hash 동일: TRUE 
+
+── L4. seed 지정 시 caller RNG 상태 보존 (T20) ──
+  RNG 상태 보존: TRUE 
+
+완료: 2026-08-14 10:32:27 

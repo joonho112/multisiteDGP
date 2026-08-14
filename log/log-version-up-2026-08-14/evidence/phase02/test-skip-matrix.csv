@@ -1,0 +1,394 @@
+"file","line","title","gates","n_gates","runs_by_default"
+"test-adapters-step7-3.R",1,"Step 7.3 adapters are exported","",0,TRUE
+"test-adapters-step7-3.R",6,"adapter rename helpers preserve values and strip multisiteDGP attributes","",0,TRUE
+"test-adapters-step7-3.R",40,"as_multisitepower omits n for direct meta outputs","",0,TRUE
+"test-adapters-step7-3.R",49,"adapter public methods work when soft dependencies are installed","",0,TRUE
+"test-adapters-step7-3.R",72,"as_multisitepower public path covers rename and reserved-name checks when dependency is av","",0,TRUE
+"test-adapters-step7-3.R",93,"adapter defaults reject non multisitedgp_data inputs with classed errors","",0,TRUE
+"test-adapters-step7-3.R",99,"adapter reserved-name collision checks protect covariates","",0,TRUE
+"test-adapters-step7-3.R",142,"adapter helper validation exposes soft dependency errors","",0,TRUE
+"test-adapters-step7-3.R",149,"all adapter soft-dependency guards hard-reject missing packages","",0,TRUE
+"test-adapters-step7-3.R",167,"Step 7.3 adapter traceability statuses are synchronized","",0,TRUE
+"test-cookbook-audit-step10-4.R",1,"cookbook audit parses and runs standalone recipes","",0,TRUE
+"test-cross-os-reproducibility-policy-step10-7.R",1,"Step 10.7 policy document records OS-specific hash contract","",0,TRUE
+"test-cross-os-reproducibility-policy-step10-7.R",16,"Step 10.7 CI workflows advertise the reproducibility policy","",0,TRUE
+"test-cross-os-reproducibility-policy-step10-7.R",29,"Step 10.7 R-CMD-check matrix locks the five OS/R cells","skip_if_not_installed(""yaml"")",1,TRUE
+"test-cross-os-reproducibility-policy-step10-7.R",57,"Step 10.7 strict hash helper requires Linux x86_64 or amd64","",0,TRUE
+"test-cross-os-reproducibility-policy-step10-7.R",66,"Step 10.7 golden fixture generator blocks non-Linux authoritative regeneration","",0,TRUE
+"test-cross-os-reproducibility-policy-step10-7.R",76,"Step 10.7 same-machine seed reproducibility is stable","",0,TRUE
+"test-cross-os-reproducibility-policy-step10-7.R",85,"Step 10.7 active RNG reproducibility is stable from the same state","",0,TRUE
+"test-cross-os-reproducibility-policy-step10-7.R",97,"Step 10.7 provenance hash matches canonical hash on generated data","",0,TRUE
+"test-data-classes.R",13,"multisitedgp_data constructor creates canonical tibble subclass","",0,TRUE
+"test-data-classes.R",38,"multisitedgp_meta inherits from multisitedgp_data","",0,TRUE
+"test-data-classes.R",53,"data constructor rejects schema-breaking inputs","",0,TRUE
+"test-data-classes.R",83,"data constructors infer paradigms without an attached design","",0,TRUE
+"test-data-classes.R",93,"data constructors reject mismatched design paradigms","",0,TRUE
+"test-data-classes.R",108,"row subset preserves class and design but drops stale diagnostics","",0,TRUE
+"test-data-classes.R",134,"row subset preserves multisitedgp_meta subclass","",0,TRUE
+"test-data-classes.R",154,"canonical column subset preserves data class and diagnostics","",0,TRUE
+"test-data-classes.R",170,"summary formatter reports unavailable diagnostics for bare data objects","",0,TRUE
+"test-data-classes.R",178,"schema-breaking column subset demotes to plain tibble","",0,TRUE
+"test-data-classes.R",194,"as_tibble strips multisiteDGP class and attributes by default","",0,TRUE
+"test-data-classes.R",213,"dplyr row slicing drops stale diagnostics","",0,TRUE
+"test-design-constructor.R",1,"multisitedgp_design creates the default immutable config record","",0,TRUE
+"test-design-constructor.R",35,"record_permutation default follows dependence mode","",0,TRUE
+"test-design-constructor.R",45,"constructor uses classed validation for early scalar and matching errors","",0,TRUE
+"test-design-constructor.R",68,"constructor exposes hybrid dependence controls in the design spec","",0,TRUE
+"test-design-constructor.R",82,"constructor rejects dependence targets that the selected method ignores","",0,TRUE
+"test-design-constructor.R",101,"format and print provide a readable design summary","",0,TRUE
+"test-design-grid-step7-5.R",1,"Step 7.5 design_grid is exported and returns a classed cell grid","",0,TRUE
+"test-design-grid-step7-5.R",30,"design_grid seed stream is deterministic and does not touch caller RNG","",0,TRUE
+"test-design-grid-step7-5.R",47,"design_grid can be used without a seed stream","",0,TRUE
+"test-design-grid-step7-5.R",64,"design_grid updates a base design without mutating it","",0,TRUE
+"test-design-grid-step7-5.R",84,"design_grid supports constructor list arguments as single grid columns","",0,TRUE
+"test-design-grid-step7-5.R",96,"design_grid reps warning strips replication from row count","",0,TRUE
+"test-design-grid-step7-5.R",112,"design_grid validates seed stream and argument shape with classed errors","",0,TRUE
+"test-design-grid-step7-5.R",151,"Step 7.5 design_grid traceability status is synchronized","",0,TRUE
+"test-design-validation-update.R",1,"validate_multisitedgp_design accepts complete designs and rejects malformed objects","",0,TRUE
+"test-design-validation-update.R",32,"update_multisitedgp_design is functional and understands flat nested fields","",0,TRUE
+"test-design-validation-update.R",64,"update_multisitedgp_design uses value-based record_permutation semantics","",0,TRUE
+"test-design-validation-update.R",77,"update_multisitedgp_design rejects unknown fields","",0,TRUE
+"test-design-validation-update.R",84,"direct designs require I and reject explicit site-size margin args","",0,TRUE
+"test-design-validation-update.R",100,"site-size designs reject direct precision hooks","",0,TRUE
+"test-design-validation-update.R",111,"constructor validates key Tier 2 ranges","",0,TRUE
+"test-design-validation-update.R",130,"g_fn defaults true_dist to User but rejects explicit ambiguity","",0,TRUE
+"test-design-validation-update.R",140,"StudentT design validates theta_G nu at the public boundary","",0,TRUE
+"test-design-validation-update.R",151,"target_marginal_rho is an explicit v1 abort","",0,TRUE
+"test-diagnostic-thresholds.R",2,"feasibility_index is exported and computes Efron and Morris conventions","",0,TRUE
+"test-diagnostic-thresholds.R",19,"feasibility_index validates arguments and E28 is warn-not-abort","",0,TRUE
+"test-diagnostic-thresholds.R",49,"default_thresholds returns the Step 6.4 public audit gates","",0,TRUE
+"test-diagnostic-thresholds.R",63,"diagnostic threshold boundary helpers classify exact edges","",0,TRUE
+"test-diagnostic-thresholds.R",101,"wrapper diagnostics table includes threshold status metadata","",0,TRUE
+"test-diagnostic-thresholds.R",125,"independence rank-correlation diagnostics use finite-J drift bands","",0,TRUE
+"test-diagnostic-thresholds.R",145,"zero residual rank targets use drift bands even through rank and hybrid modes","",0,TRUE
+"test-diagnostic-thresholds.R",163,"rank and hybrid correlation diagnostics record design tolerance","",0,TRUE
+"test-diagnostic-thresholds.R",180,"Step 6.4 threshold helper stays available after scenario audit lands","",0,TRUE
+"test-effects-common-frame.R",6,"common L1 frame creates canonical effect columns","",0,TRUE
+"test-effects-common-frame.R",19,"covariate-off path matches no-formula path exactly","",0,TRUE
+"test-effects-common-frame.R",36,"covariate decomposition preserves public z_j identity","",0,TRUE
+"test-effects-common-frame.R",56,"named beta supports explicit intercept and model columns","",0,TRUE
+"test-effects-common-frame.R",71,"common L1 frame validates residual and covariate inputs","",0,TRUE
+"test-errors-validation-foundation.R",5,"abort helper creates umbrella and specific classes","",0,TRUE
+"test-errors-validation-foundation.R",15,"E01 validates J lower bound","",0,TRUE
+"test-errors-validation-foundation.R",23,"E02 validates sigma_tau positivity","",0,TRUE
+"test-errors-validation-foundation.R",31,"E03 validates nj_mean and nj_min relation with deterministic equality exception","",0,TRUE
+"test-errors-validation-foundation.R",48,"E04 validates Engine A1 dependence rejection","",0,TRUE
+"test-errors-validation-foundation.R",56,"E05 validates direct designs reject site-size args internally","",0,TRUE
+"test-errors-validation-foundation.R",64,"E06 validates g_fn and true_dist coherence","",0,TRUE
+"test-errors-validation-foundation.R",77,"E07 validates StudentT theta_G nu","",0,TRUE
+"test-errors-validation-foundation.R",90,"E08 validates rank and Pearson correlation exclusivity","",0,TRUE
+"test-gen-effects-gaussian-studentt.R",2,"Gaussian generator returns canonical L1 schema and exact RNG stream","",0,TRUE
+"test-gen-effects-gaussian-studentt.R",13,"Gaussian generator enforces unit-variance residual contract","",0,TRUE
+"test-gen-effects-gaussian-studentt.R",24,"Gaussian generator preserves covariate decomposition","",0,TRUE
+"test-gen-effects-gaussian-studentt.R",43,"invalid shared Layer 1 arguments do not advance caller RNG","",0,TRUE
+"test-gen-effects-gaussian-studentt.R",78,"Student-t generator standardizes by sqrt((nu - 2) / nu)","",0,TRUE
+"test-gen-effects-gaussian-studentt.R",88,"Student-t generator validates nu and warns for non-finite kurtosis","",0,TRUE
+"test-gen-effects-gaussian-studentt.R",104,"Gaussian and Student-t large-sample z_j moments match standardization contract","skip_if_not_slow",1,FALSE
+"test-gen-effects-gaussian-studentt.R",122,"gen_effects dispatcher routes Gaussian and Student-t shapes","",0,TRUE
+"test-gen-effects-mixture.R",2,"Mixture generator returns schema, latent component, and exact JEBS stream","",0,TRUE
+"test-gen-effects-mixture.R",26,"Mixture generator preserves covariate decomposition","",0,TRUE
+"test-gen-effects-mixture.R",49,"T14a raw legacy mixture variance matches R2-F06 baseline","skip_if_not_slow",1,FALSE
+"test-gen-effects-mixture.R",63,"T14b standardized mixture output has unit variance","skip_if_not_slow",1,FALSE
+"test-gen-effects-mixture.R",78,"Mixture validation rejects missing and invalid parameters","",0,TRUE
+"test-gen-effects-mixture.R",115,"Mixture dispatcher and design validation are wired","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",11,"PMSlab generator returns schema and preserves decomposition","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",33,"T17 PMSlab standardization and zero mass match contract","skip_if_not_slow",1,FALSE
+"test-gen-effects-pmslab-user-dpm.R",53,"PMSlab validation rejects invalid boundaries and accepts supported slabs","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",76,"PMSlab dispatcher and design validation are wired","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",96,"User generator standardized convention applies shared wrapper","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",114,"User generator raw convention preserves final tau_j and derives z_j","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",138,"User generator validates callback output and warns on audit drift","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",158,"User generator audit preserves caller RNG after the main callback draw","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",177,"User generator audit still runs without advancing caller RNG","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",197,"User generator audit warning preserves caller RNG","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",215,"User generator preflights shared arguments before callback invocation","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",236,"User dispatcher uses theta_G as callback arguments","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",266,"User dispatcher exposes audit_g passthrough","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",281,"DPM bridge exposes audit_g passthrough","",0,TRUE
+"test-gen-effects-pmslab-user-dpm.R",296,"DPM stub hard-aborts unless bridged through g_fn","",0,TRUE
+"test-gen-effects-skewn-ald.R",2,"SkewN generator returns canonical schema and preserves decomposition","skip_if_not_installed(""sn"")",1,TRUE
+"test-gen-effects-skewn-ald.R",23,"ALD generator returns canonical schema and preserves decomposition","skip_if_not_installed(""LaplacesDemon"")",1,TRUE
+"test-gen-effects-skewn-ald.R",44,"SkewN standardization and skewness sign match T16","skip_if_not_slow; skip_if_not_installed(""sn""); skip_if_not_installed(""moments"")",3,FALSE
+"test-gen-effects-skewn-ald.R",65,"ALD standardization matches T13 with Yu-Zhang parameter conversion","skip_if_not_slow; skip_if_not_installed(""LaplacesDemon"")",2,FALSE
+"test-gen-effects-skewn-ald.R",79,"SkewN validation warns and aborts with classed errors","skip_if_not_installed(""sn"")",1,TRUE
+"test-gen-effects-skewn-ald.R",98,"ALD validation rejects boundary rho values","skip_if_not_installed(""LaplacesDemon"")",1,TRUE
+"test-gen-effects-skewn-ald.R",113,"SkewN and ALD soft dependencies hard-reject when unavailable","",0,TRUE
+"test-gen-effects-skewn-ald.R",129,"gen_effects dispatcher routes SkewN and ALD","skip_if_not_installed(""sn""); skip_if_not_installed(""LaplacesDemon"")",2,TRUE
+"test-gen-effects-skewn-ald.R",143,"design validation checks SkewN and ALD theta boundaries","",0,TRUE
+"test-gen-effects.R",2,"Layer 1 dispatcher exports all catalog routes","",0,TRUE
+"test-gen-effects.R",18,"Layer 1 dispatcher returns the canonical schema across available routes","",0,TRUE
+"test-gen-effects.R",59,"Layer 1 dispatcher preserves covariate decomposition across available routes","",0,TRUE
+"test-gen-effects.R",108,"Layer 1 dispatcher preserves g_fn auto-User and DPM stub contracts","",0,TRUE
+"test-gen-effects.R",124,"Layer 1 dispatcher forwards covariate and callback contracts","",0,TRUE
+"test-gen-effects.R",176,"Layer 1 dispatcher preserves DPM bridge forwarding","",0,TRUE
+"test-gen-effects.R",220,"Layer 1 dispatcher enforces dispatcher-specific validation","",0,TRUE
+"test-generated-print-examples-step8-6.R",38,"Step 8.6 generated print example inventory is present","",0,TRUE
+"test-generated-print-examples-step8-6.R",45,"Step 8.6 generated print hash policy is explicit","",0,TRUE
+"test-generated-print-examples-step8-6.R",67,"Step 8.6 generated print examples match current console output","",0,TRUE
+"test-generated-print-examples-step8-6.R",94,"Step 8.6 generated diagnostic example is numerically consistent","",0,TRUE
+"test-golden-fixtures-step8-1.R",26,"Step 8.1 golden fixture inventory matches the shipped manifest","",0,TRUE
+"test-golden-fixtures-step8-1.R",45,"Step 8.1 golden RDS files match the manifest hashes","",0,TRUE
+"test-golden-fixtures-step8-1.R",61,"Step 8.1 golden fixtures preserve object classes and schema","",0,TRUE
+"test-golden-fixtures-step8-1.R",86,"Step 8.1 JEBS fixtures agree with the Step 4.1 provenance manifest","",0,TRUE
+"test-golden-fixtures-step8-1.R",104,"Step 8.1 golden fixture traceability is synchronized when ledgers are present","",0,TRUE
+"test-golden.R",2,"golden fixture files are registered as file snapshots","",0,TRUE
+"test-harness.R",1,"package test harness is active","",0,TRUE
+"test-harness.R",6,"DESCRIPTION locks testthat edition 3","",0,TRUE
+"test-harness.R",15,"DESCRIPTION records the approved maintainer email","",0,TRUE
+"test-harness.R",27,"Phase 1 unused Imports policy matches DESCRIPTION","",0,TRUE
+"test-harness.R",39,"Phase 1 used Imports policy is backed by R source references","",0,TRUE
+"test-harness.R",58,"tolerance constants match blueprint ch.18 policy","",0,TRUE
+"test-harness.R",68,"snapshot and golden policies track active Step 8.5 artifacts","",0,TRUE
+"test-harness.R",102,"property-test policy is opt-in and count-locked","",0,TRUE
+"test-harness.R",110,"Step 6.1 core wrapper API implementation status is synchronized","",0,TRUE
+"test-layer2-diagnostics.R",22,"T2 compute_kappa default equals four exactly","",0,TRUE
+"test-layer2-diagnostics.R",40,"T3 rate form preserves se2_j times n_j equals kappa","",0,TRUE
+"test-layer2-diagnostics.R",48,"T8 compute_I uses geometric mean of se2_j, not arithmetic mean","",0,TRUE
+"test-layer2-diagnostics.R",58,"compute_I validates inputs and supports zero sigma_tau diagnostic edge","",0,TRUE
+"test-layer2-diagnostics.R",81,"compute_shrinkage returns per-site retention proportions","",0,TRUE
+"test-layer2-diagnostics.R",95,"informativeness dispatches numeric and multisitedgp_data paths","",0,TRUE
+"test-layer2-diagnostics.R",119,"mean_shrinkage supports data, numeric, and named closed-form paths","",0,TRUE
+"test-layer2-diagnostics.R",147,"mean_shrinkage validates named closed-form path","",0,TRUE
+"test-layer2-diagnostics.R",178,"Step 6.3 diagnostic helpers are exported and validate inputs","",0,TRUE
+"test-layer2-diagnostics.R",201,"heterogeneity_ratio and rank-correlation helpers support wrapper objects","",0,TRUE
+"test-layer2-diagnostics.R",228,"distribution-distance helpers support numeric paths and preserve RNG on data paths","",0,TRUE
+"test-layer2-diagnostics.R",254,"core target-vs-realized diagnostics table is attached to wrapper output","",0,TRUE
+"test-layer2-diagnostics.R",289,"core diagnostics table keeps unsupported automatic G references as NA","",0,TRUE
+"test-layer2-engine-a1.R",27,"Engine A1 matches JEBS manifest hash after strict mixture stream","",0,TRUE
+"test-layer2-engine-a1.R",48,"Engine A1 performs lower-censor then round and preserves rate form inputs","",0,TRUE
+"test-layer2-engine-a1.R",59,"Engine A1 cv zero path is deterministic and RNG neutral","",0,TRUE
+"test-layer2-engine-a1.R",69,"Engine A1 consumes exactly one rgamma stream when cv is positive","",0,TRUE
+"test-layer2-engine-a1.R",82,"Engine A1 validates legacy site-size inputs","",0,TRUE
+"test-layer2-engine-a2.R",18,"Engine A2 solver matches truncated-Gamma conditional moments analytically","",0,TRUE
+"test-layer2-engine-a2.R",42,"Engine A2 accepts tiny positive CV without a false feasibility floor","",0,TRUE
+"test-layer2-engine-a2.R",50,"Engine A2 sampler respects lower truncation and is reproducible","",0,TRUE
+"test-layer2-engine-a2.R",62,"Engine A2 deterministic CV zero path consumes no RNG","",0,TRUE
+"test-layer2-engine-a2.R",74,"Engine A2 conditioning warnings are soft guidance","",0,TRUE
+"test-layer2-engine-a2.R",82,"Engine A2 accepts mocked solver term code when residuals verify","",0,TRUE
+"test-layer2-engine-a2.R",103,"Engine A2 solver failures use solver error class and never fallback silently","",0,TRUE
+"test-layer2-engine-a2.R",125,"Engine A2 validates internal inputs","",0,TRUE
+"test-layer2-gen-se-direct.R",14,"gen_se_direct is exported and appends Paradigm B schema","",0,TRUE
+"test-layer2-gen-se-direct.R",31,"gen_se_direct requires upstream, J, and I","",0,TRUE
+"test-layer2-gen-se-direct.R",46,"gen_se_direct exactly recovers target I and R","",0,TRUE
+"test-layer2-gen-se-direct.R",58,"gen_se_direct short-circuits homogeneous R equals one","",0,TRUE
+"test-layer2-gen-se-direct.R",68,"gen_se_direct shuffle permutes the same deterministic grid reproducibly","",0,TRUE
+"test-layer2-gen-se-direct.R",88,"gen_se_direct shuffle-free and homogeneous paths are RNG neutral","",0,TRUE
+"test-layer2-gen-se-direct.R",104,"gen_se_direct shuffle path follows active sample RNG policy","",0,TRUE
+"test-layer2-gen-se-direct.R",121,"gen_se_direct conditioning warnings are soft guidance","",0,TRUE
+"test-layer2-gen-se-direct.R",138,"gen_se_direct validates public Paradigm B inputs","",0,TRUE
+"test-layer2-gen-se-direct.R",173,"gen_se_direct supports direct custom se_fn hooks","",0,TRUE
+"test-layer2-gen-site-sizes.R",19,"gen_site_sizes is exported and appends the L2 schema","",0,TRUE
+"test-layer2-gen-site-sizes.R",39,"gen_site_sizes preserves kappa rate form for both engines","",0,TRUE
+"test-layer2-gen-site-sizes.R",57,"gen_site_sizes A1 path preserves legacy JEBS site-size stream","",0,TRUE
+"test-layer2-gen-site-sizes.R",76,"gen_site_sizes computes kappa from p, R2, and outcome variance","",0,TRUE
+"test-layer2-gen-site-sizes.R",98,"gen_site_sizes A2 path is reproducible under fixed seed","",0,TRUE
+"test-layer2-gen-site-sizes.R",114,"gen_site_sizes A2 stochastic integerization preserves mean in Monte Carlo smoke","",0,TRUE
+"test-layer2-gen-site-sizes.R",134,"gen_site_sizes CV zero path is deterministic and RNG neutral","",0,TRUE
+"test-layer2-gen-site-sizes.R",147,"stochastic rounding RNG policy is explicit","",0,TRUE
+"test-layer2-gen-site-sizes.R",172,"gen_site_sizes validates public L2 inputs","",0,TRUE
+"test-layer2-gen-site-sizes.R",235,"gen_site_sizes propagates A2 solver errors","",0,TRUE
+"test-layer3-align-copula-corr.R",49,"align_copula_corr is exported and preserves empirical margins","",0,TRUE
+"test-layer3-align-copula-corr.R",76,"align_copula_corr targets residual z_j rather than marginal tau_j","",0,TRUE
+"test-layer3-align-copula-corr.R",89,"align_copula_corr handles negative latent correlations","",0,TRUE
+"test-layer3-align-copula-corr.R",98,"align_copula_corr handles tied residual and precision ranks","",0,TRUE
+"test-layer3-align-copula-corr.R",111,"align_copula_corr is reproducible under fixed seed","",0,TRUE
+"test-layer3-align-copula-corr.R",121,"align_copula_corr RNG policy is explicit","",0,TRUE
+"test-layer3-align-copula-corr.R",140,"align_copula_corr target zero is random independent pairing, not identity","",0,TRUE
+"test-layer3-align-copula-corr.R",149,"align_copula_corr validates correlations and constant ranks","",0,TRUE
+"test-layer3-align-hybrid-corr.R",10,"spearman_to_pearson implements the Gaussian copula mapping","",0,TRUE
+"test-layer3-align-hybrid-corr.R",20,"align_hybrid_corr is exported and preserves empirical margins","",0,TRUE
+"test-layer3-align-hybrid-corr.R",48,"align_hybrid_corr with no polish reports honest copula initialization","",0,TRUE
+"test-layer3-align-hybrid-corr.R",69,"align_hybrid_corr init rank is deterministic and RNG neutral","",0,TRUE
+"test-layer3-align-hybrid-corr.R",84,"align_hybrid_corr init rank with no polish is explicit identity","",0,TRUE
+"test-layer3-align-hybrid-corr.R",98,"align_hybrid_corr RNG policy follows copula initialization","",0,TRUE
+"test-layer3-align-hybrid-corr.R",117,"align_hybrid_corr target zero is identity and RNG neutral","",0,TRUE
+"test-layer3-align-hybrid-corr.R",134,"align_hybrid_corr validates arguments","",0,TRUE
+"test-layer3-align-rank-corr.R",54,"align_rank_corr is exported and records residual-target diagnostics","",0,TRUE
+"test-layer3-align-rank-corr.R",76,"align_rank_corr targets residual z_j rather than marginal tau_j","",0,TRUE
+"test-layer3-align-rank-corr.R",89,"align_rank_corr handles negative targets and preserves paired columns","",0,TRUE
+"test-layer3-align-rank-corr.R",101,"align_rank_corr target zero is deterministic aligned and RNG neutral","",0,TRUE
+"test-layer3-align-rank-corr.R",128,"align_rank_corr uses average-rank tie policy with relaxed tolerance","",0,TRUE
+"test-layer3-align-rank-corr.R",137,"align_rank_corr handles PMSlab ties on the A2 modern path","",0,TRUE
+"test-layer3-align-rank-corr.R",147,"align_rank_corr solver error handles undefined rank correlations","",0,TRUE
+"test-layer3-align-rank-corr.R",154,"align_rank_corr validates inputs","",0,TRUE
+"test-layer3-custom-dependence-fn.R",30,"custom dependence_fn receives residual z_j and preserves paired columns","",0,TRUE
+"test-layer3-custom-dependence-fn.R",59,"custom dependence_fn is available from copula and hybrid aligners","",0,TRUE
+"test-layer3-custom-dependence-fn.R",73,"custom dependence_fn is called exactly once and owns its RNG use","",0,TRUE
+"test-layer3-custom-dependence-fn.R",94,"custom dependence_fn rejects numeric-only or incomplete returns","",0,TRUE
+"test-layer3-custom-dependence-fn.R",107,"custom dependence_fn rejects invalid permutations","",0,TRUE
+"test-layer3-custom-dependence-fn.R",127,"custom dependence_fn rejects marginal drift and perm inconsistency","",0,TRUE
+"test-layer3-rank-permutation-helpers.R",15,"mdgp rank uses average ties as the canonical Spearman policy","",0,TRUE
+"test-layer3-rank-permutation-helpers.R",23,"realized Spearman returns NA silently for constant margins","",0,TRUE
+"test-layer3-rank-permutation-helpers.R",33,"permutation validation accepts only complete 1:J permutations","",0,TRUE
+"test-layer3-rank-permutation-helpers.R",48,"reorder_for_spearman returns deterministic endpoint permutations","",0,TRUE
+"test-layer3-rank-permutation-helpers.R",77,"reorder_for_spearman preserves ties with the average-rank convention","",0,TRUE
+"test-layer3-rank-permutation-helpers.R",96,"Layer 3 permutation helper reorders paired precision columns only","",0,TRUE
+"test-layer3-rank-permutation-helpers.R",113,"Layer 3 permutation helper preserves duplicate precision pairings exactly","",0,TRUE
+"test-layer3-rank-permutation-helpers.R",133,"Layer 3 permutation helper accepts direct-meta NA integer n_j","",0,TRUE
+"test-layer3-rank-permutation-helpers.R",146,"Layer 3 upstream validation rejects noncanonical frames","",0,TRUE
+"test-layer4-gen-observations.R",46,"gen_observations is exported and appends the L4 schema","",0,TRUE
+"test-layer4-gen-observations.R",64,"default Gaussian path matches the active RNG stream","",0,TRUE
+"test-layer4-gen-observations.R",76,"obs_fn receives response-scale tau_j and se2_j by name","",0,TRUE
+"test-layer4-gen-observations.R",98,"obs_fn output validation implements E18","",0,TRUE
+"test-layer4-gen-observations.R",119,"gen_observations validates Layer 4 upstream inputs","",0,TRUE
+"test-layer4-gen-observations.R",129,"A1 legacy default path matches JEBS observation-component hashes","",0,TRUE
+"test-plots-step7-4.R",1,"Step 7.4 plot helpers are exported","",0,TRUE
+"test-plots-step7-4.R",6,"plot helpers return composable ggplot objects for site-size data","",0,TRUE
+"test-plots-step7-4.R",30,"plot helpers build for direct meta outputs","",0,TRUE
+"test-plots-step7-4.R",39,"plot options validate and change expected labels/layers","",0,TRUE
+"test-plots-step7-4.R",72,"plot helpers reject non multisitedgp_data inputs with classed errors","",0,TRUE
+"test-plots-step7-4.R",78,"plot palette and theme helpers follow accessibility policy","",0,TRUE
+"test-plots-step7-4.R",94,"Step 7.4 plot traceability statuses are synchronized","",0,TRUE
+"test-presets-step7-1.R",1,"Step 7.1 education and JEBS presets are exported","",0,TRUE
+"test-presets-step7-1.R",12,"education presets return the ch13 site-size designs","",0,TRUE
+"test-presets-step7-1.R",37,"JEBS presets keep UX and strict anchors separate","",0,TRUE
+"test-presets-step7-1.R",62,"preset named overrides replay through design validation","",0,TRUE
+"test-presets-step7-1.R",84,"Step 7.1 presets simulate and produce valid diagnostics","",0,TRUE
+"test-presets-step7-1.R",110,"Step 7.1 preset traceability statuses are synchronized","",0,TRUE
+"test-presets-step7-2.R",1,"Step 7.2 remaining presets are exported","",0,TRUE
+"test-presets-step7-2.R",11,"Walters and twin-towers presets return ch13 site-size designs","",0,TRUE
+"test-presets-step7-2.R",38,"direct presets return ch13 direct meta-analysis designs","",0,TRUE
+"test-presets-step7-2.R",61,"deterministic site-size presets may set nj_mean equal to nj_min only when cv is zero","",0,TRUE
+"test-presets-step7-2.R",75,"Step 7.2 presets use their intended front doors","",0,TRUE
+"test-presets-step7-2.R",111,"Step 7.2 preset traceability statuses and decisions are synchronized","",0,TRUE
+"test-print-examples.R",2,"generated print example files are registered as file snapshots","",0,TRUE
+"test-print-summary.R",2,"print.multisitedgp_data reports headline diagnostics and returns invisibly","",0,TRUE
+"test-print-summary.R",27,"print.multisitedgp_data works for direct meta-analysis objects","",0,TRUE
+"test-print-summary.R",38,"summary.multisitedgp_data prints the diagnostic report and returns invisibly","",0,TRUE
+"test-print-summary.R",56,"summary.multisitedgp_data title includes preset only when present","",0,TRUE
+"test-print-summary.R",71,"print.multisitedgp_data avoids awkward no-target headline wording","",0,TRUE
+"test-print-summary.R",91,"summary recomputes diagnostics for row-subset objects without stale hashes","",0,TRUE
+"test-print-summary.R",104,"print.multisitedgp_data validates the row display count","",0,TRUE
+"test-property-core-invariants.R",56,"P01 Var(z_j) approaches one for finite-variance G shapes","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",66,"P02 Mean(z_j) approaches zero for finite-variance G shapes","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",76,"P03 se2_j is positive for random Paradigm A and B fixtures","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",98,"P04 Layer 3 rank dependence preserves the se2_j multiset","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",117,"P05 rank dependence achieves random feasible Spearman targets","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",139,"P06 layer functions return one row per requested site","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",163,"P07 final wrappers preserve canonical column types","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",181,"P08 realized informativeness remains inside the open unit interval","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",197,"P09 covariate-off path is identical to beta-zero formula path","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",220,"P10 random A2 fixtures are bit-identical at the same seed","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",242,"P11 dependence none records identity permutation for random shapes","skip_if_not_property",1,FALSE
+"test-property-core-invariants.R",264,"P12 every public preset returns a valid multisitedgp_design","skip_if_not_property",1,FALSE
+"test-rng-hash-policy.R",28,"local seed stream is deterministic and restores caller RNG","",0,TRUE
+"test-rng-hash-policy.R",52,"design seed validation rejects out-of-range seeds","",0,TRUE
+"test-rng-hash-policy.R",59,"canonical hash is stable under column order row names and attrs","",0,TRUE
+"test-rng-hash-policy.R",84,"canonical hash column ordering is locale independent","",0,TRUE
+"test-rng-hash-policy.R",96,"canonical hash uses only allowlisted numeric diagnostics","",0,TRUE
+"test-rng-hash-policy.R",108,"canonical hash supports explicit column and diagnostic subsets","",0,TRUE
+"test-rng-hash-policy.R",124,"canonical design hashing excludes function bodies and environments","",0,TRUE
+"test-rng-hash-policy.R",168,"canonical hash is final wrapper provenance and same-seed stable","",0,TRUE
+"test-rng-hash-policy.R",196,"canonical_hash is the contract where raw digest is fragile","",0,TRUE
+"test-rng-hash-policy.R",214,"provenance_string is exported for data design and default paths","",0,TRUE
+"test-rng-hash-policy.R",238,"provenance_string records custom hook presence without hashing bodies","",0,TRUE
+"test-rng-hash-policy.R",248,"provenance_string recomputes row-subset hash instead of using stale provenance","",0,TRUE
+"test-scenario-audit-step7-6.R",40,"Step 7.6 scenario_audit is exported and summarizes cells","",0,TRUE
+"test-scenario-audit-step7-6.R",76,"scenario metric summarizer classifies PASS, WARN, and FAIL gates","",0,TRUE
+"test-scenario-audit-step7-6.R",134,"scenario_audit is deterministic and RNG-neutral","",0,TRUE
+"test-scenario-audit-step7-6.R",154,"scenario_audit routes both front-door paradigms","",0,TRUE
+"test-scenario-audit-step7-6.R",181,"scenario_audit can use fixed design seeds when grid seed stream is off","",0,TRUE
+"test-scenario-audit-step7-6.R",195,"scenario_audit validates inputs with classed errors","",0,TRUE
+"test-scenario-audit-step7-6.R",239,"Step 7.6 scenario_audit traceability status is synchronized","",0,TRUE
+"test-snapshot-errors.R",54,"E01 snapshot records J lower-bound abort","",0,TRUE
+"test-snapshot-errors.R",59,"E02 snapshot records sigma_tau positivity abort","",0,TRUE
+"test-snapshot-errors.R",64,"E03 snapshot records nj_mean and nj_min relation abort","",0,TRUE
+"test-snapshot-errors.R",69,"E04 snapshot records Engine A1 dependence abort","",0,TRUE
+"test-snapshot-errors.R",77,"E05 snapshot records direct-design site-size argument abort","",0,TRUE
+"test-snapshot-errors.R",85,"E06 snapshot records g_fn and true_dist coherence abort","",0,TRUE
+"test-snapshot-errors.R",93,"E07 snapshot records missing StudentT theta_G nu abort","",0,TRUE
+"test-snapshot-errors.R",101,"E08 snapshot records mutually exclusive correlation target abort","",0,TRUE
+"test-snapshot-errors.R",109,"E09 snapshot records sim_meta wrong-door argument abort","",0,TRUE
+"test-snapshot-errors.R",114,"E10 snapshot records sim_multisite direct-argument abort","",0,TRUE
+"test-snapshot-errors.R",119,"E11 snapshot records sim_meta missing-I abort","",0,TRUE
+"test-snapshot-errors.R",124,"E12 snapshot records ALD rho boundary abort","",0,TRUE
+"test-snapshot-errors.R",129,"E13 snapshot records Student-t nu boundary abort","",0,TRUE
+"test-snapshot-errors.R",134,"E14 snapshot records user g_fn wrong-length abort","",0,TRUE
+"test-snapshot-errors.R",142,"E15 snapshot records A2 truncated-Gamma solver abort","",0,TRUE
+"test-snapshot-errors.R",158,"E16 snapshot records direct-I boundary abort","",0,TRUE
+"test-snapshot-errors.R",166,"E17 snapshot records deterministic hill-climb sign-gate abort","",0,TRUE
+"test-snapshot-errors.R",179,"E18 snapshot records obs_fn wrong-length abort","",0,TRUE
+"test-snapshot-errors.R",190,"E19 snapshot records missing sn package abort","",0,TRUE
+"test-snapshot-errors.R",199,"E20 snapshot records missing LaplacesDemon package abort","",0,TRUE
+"test-snapshot-errors.R",208,"E21 snapshot records PointMassSlab pi0 boundary abort","",0,TRUE
+"test-snapshot-errors.R",213,"E22 snapshot records DPM v1 stub abort","",0,TRUE
+"test-snapshot-errors.R",218,"E23 snapshot records target_marginal_rho v1 abort","",0,TRUE
+"test-snapshot-errors.R",223,"E24 snapshot records deferred PSD placeholder","",0,TRUE
+"test-snapshot-errors.R",230,"E25 snapshot records custom dependence marginal violation abort","",0,TRUE
+"test-snapshot-errors.R",245,"E26 snapshot records missing metafor package abort","",0,TRUE
+"test-snapshot-errors.R",255,"E27 snapshot records missing baggr package abort","",0,TRUE
+"test-snapshot-errors.R",265,"E28 snapshot records feasibility warning-not-abort path","",0,TRUE
+"test-snapshot-errors.R",270,"E29 snapshot records site-size paradigm se_fn coherence abort","",0,TRUE
+"test-snapshot-errors.R",278,"E30 snapshot records adapter reserved-name collision abort","",0,TRUE
+"test-snapshot-print.R",55,"print.multisitedgp_design snapshots all preset designs","",0,TRUE
+"test-snapshot-print.R",67,"print.multisitedgp_data snapshots golden preset outputs","",0,TRUE
+"test-snapshot-print.R",82,"summary.multisitedgp_data snapshots golden preset outputs","",0,TRUE
+"test-snapshot-print.R",97,"print and summary snapshot a direct meta-analysis preset","",0,TRUE
+"test-snapshot-print.R",105,"print and summary snapshot covariate two-number reporting","",0,TRUE
+"test-snapshot-print.R",113,"summary snapshots row-subset diagnostic recomputation","",0,TRUE
+"test-T10-n-min-truncation.R",2,"T10 nj_min truncation and multi-rep mean hold in wrapper output","skip_if_not_slow",1,FALSE
+"test-T11-jebs-I-grid.R",2,"T11 full JEBS Paradigm A grid spans the intended I envelope","skip_if_not_slow",1,FALSE
+"test-T12-A1-rng-order.R",13,"T12 Engine A1 full path preserves contract-level RNG milestones","",0,TRUE
+"test-T12-A1-rng-order.R",44,"T12 Engine A1 seeded wrapper restores caller RNG state","",0,TRUE
+"test-T13-ALD-standardization.R",2,"T13 ALD standardization matches Yu-Zhang moment contract","skip_if_not_slow; skip_if_not_installed(""LaplacesDemon"")",2,FALSE
+"test-T14-mixture-ups.R",2,"T14a legacy raw mixture variance equals 7.15","skip_if_not_slow",1,FALSE
+"test-T14-mixture-ups.R",18,"T14b standardized Mixture output has unit variance","skip_if_not_slow",1,FALSE
+"test-T15-studentt-standardization.R",2,"T15 Student-t standardization holds across nu grid","skip_if_not_slow",1,FALSE
+"test-T16-skewn-standardization.R",2,"T16 Skew-Normal standardization and skewness sign hold","skip_if_not_slow; skip_if_not_installed(""sn""); skip_if_not_installed(""moments"")",3,FALSE
+"test-T17-pmslab-standardization.R",2,"T17 PMSlab standardization and point-mass fraction hold","skip_if_not_slow",1,FALSE
+"test-T18-covariate-decomp.R",2,"T18 covariate decomposition preserves public z_j identity","",0,TRUE
+"test-T18-covariate-decomp.R",18,"T18 print and summary report residual and marginal dependence","",0,TRUE
+"test-T19-ties.R",2,"T19 PMSlab ties preserve Spearman rank target on A2 modern path","",0,TRUE
+"test-T1a-jebs-bit-identical.R",2,"T1a Engine A1 Mixture matches JEBS appendix golden fixtures","skip_if_not_linux_strict_hash",1,FALSE
+"test-T1b-A2-distributional.R",2,"T1b Engine A2 Gaussian distribution clears KS binomial gate","skip_if_not_slow",1,FALSE
+"test-T2-kappa.R",2,"T2 default kappa equals four in the final wrapper output","",0,TRUE
+"test-T20-A2-reproducibility.R",2,"T20 Engine A2 wrapper is hash-stable at the same seed","",0,TRUE
+"test-T20-A2-reproducibility.R",10,"T20 Engine A2 active-RNG path is reproducible from the same RNG state","",0,TRUE
+"test-T20-A2-reproducibility.R",21,"T20 Engine A2 seed wrapper preserves caller RNG state","",0,TRUE
+"test-T3-rate-form.R",2,"T3 final wrapper preserves se2_j times n_j rate form across CV grid","",0,TRUE
+"test-T4-independence.R",2,"T4 dependence none empirical Spearman stays within permutation envelope","skip_if_not_slow",1,FALSE
+"test-T5-covariate-off.R",2,"T5 formula NULL matches beta zero covariate path in the wrapper","",0,TRUE
+"test-T6-resid-eq-marg.R",2,"T6 residual and marginal sigma_tau agree in covariate-off mode","",0,TRUE
+"test-T7-dep-none.R",2,"T7 dependence none records identity permutation contract","",0,TRUE
+"test-T8-informativeness.R",2,"T8 informativeness uses geometric mean of se2_j, not arithmetic mean","",0,TRUE
+"test-T9-default-G.R",2,"T9 default true_dist is Gaussian under Shapiro binomial gate","skip_if_not_slow",1,FALSE
+"test-traceability.R",1,"traceability ledgers preserve required counts when available","",0,TRUE
+"test-traceability.R",14,"traceability conflict ledger records known count conflicts","",0,TRUE
+"test-traceability.R",25,"validation traceability statuses match validation manifest","",0,TRUE
+"test-traceability.R",50,"Step 3.5 traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",63,"Step 3.6 traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",74,"Step 8.1 JEBS fixture manifest status is synchronized","",0,TRUE
+"test-traceability.R",100,"Step 4.2 diagnostic primitive traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",112,"Step 4.3 Engine A1 traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",121,"Step 4.4 Engine A2 traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",133,"Step 8.3 T13-T20 regression traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",147,"Step 8.5 error snapshot traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",159,"Step 4.5 gen_site_sizes traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",172,"Step 8.2 T1a-T12 regression traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",186,"Step 4.6 gen_se_direct traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",197,"Step 6.1 sim_multisite traceability status is synchronized","",0,TRUE
+"test-traceability.R",208,"Step 6.2 sim_meta traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",219,"Step 6.3 core diagnostic helper traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",230,"Step 6.4 threshold rubric traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",242,"Step 6.5 reproducibility helper traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",252,"Step 6.6 print and summary traceability statuses are synchronized","",0,TRUE
+"test-traceability.R",263,"Gate C remediation traceability decisions are synchronized","",0,TRUE
+"test-wrapper-sim-meta.R",2,"sim_meta is exported and returns canonical multisitedgp_meta","",0,TRUE
+"test-wrapper-sim-meta.R",34,"sim_meta flat args and design path agree under the same seed","",0,TRUE
+"test-wrapper-sim-meta.R",63,"sim_meta forwards hybrid controls from design and flat args","",0,TRUE
+"test-wrapper-sim-meta.R",99,"sim_meta seed override wins and integer seeds preserve global RNG state","",0,TRUE
+"test-wrapper-sim-meta.R",113,"sim_meta seed NULL uses active RNG stream without manufacturing a seed","",0,TRUE
+"test-wrapper-sim-meta.R",124,"sim_meta validates design and wrong-door calls","",0,TRUE
+"test-wrapper-sim-meta.R",143,"sim_meta supports custom direct se_fn hooks","",0,TRUE
+"test-wrapper-sim-meta.R",173,"sim_meta preserves covariates and targets residual dependence","",0,TRUE
+"test-wrapper-sim-meta.R",199,"sim_meta custom se_fn can use NA direct n_j through rank dependence","",0,TRUE
+"test-wrapper-sim-meta.R",221,"sim_meta final object strips layer-private attributes","",0,TRUE
+"test-wrapper-sim-multisite.R",2,"sim_multisite is exported and returns canonical multisitedgp_data","",0,TRUE
+"test-wrapper-sim-multisite.R",26,"sim_multisite final object strips layer-private attributes","",0,TRUE
+"test-wrapper-sim-multisite.R",40,"sim_multisite flat args and design path agree under the same seed","",0,TRUE
+"test-wrapper-sim-multisite.R",68,"sim_multisite forwards hybrid controls from design and flat args","",0,TRUE
+"test-wrapper-sim-multisite.R",98,"sim_multisite seed override wins and integer seeds preserve global RNG state","",0,TRUE
+"test-wrapper-sim-multisite.R",112,"sim_multisite seed NULL uses the active RNG stream without manufacturing a seed","",0,TRUE
+"test-wrapper-sim-multisite.R",123,"sim_multisite validates design and wrong-door calls","",0,TRUE
+"test-wrapper-sim-multisite.R",142,"sim_multisite preserves covariates and targets residual dependence","",0,TRUE
+"test-wrapper-sim-multisite.R",161,"sim_multisite A1 legacy path matches JEBS normalized fixture hash","",0,TRUE

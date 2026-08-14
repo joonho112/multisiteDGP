@@ -1,0 +1,87 @@
+Step 2.4 / 2.7 — 표면 감사
+============================================================================== 
+
+── A. 분포 shape 개수 주장 위치 ──
+         file line
+  DESCRIPTION    9
+      NEWS.md   96
+      NEWS.md   99
+    README.md    4
+    README.md   35
+    README.md  116
+    README.md  129
+    README.md  217
+   README.Rmd   19
+   README.Rmd   48
+   README.Rmd  129
+   README.Rmd  142
+   README.Rmd  230
+     index.md    1
+     index.md   14
+     index.md  120
+ _pkgdown.yml  113
+ _pkgdown.yml  163
+                                                                                                           text
+                                           site effects under a catalog of eight distribution shapes (Gaussian,
+                                                - **Eight latent-effect distributions** sharing a unit-variance
+                                                               - `gen_effects()` and the eight shape generators
+                            # multisiteDGP <img src="man/figures/logo.png" align="right" height="139" alt="" />
+                                          observed estimates — backed by a catalog of eight distribution shapes
+                                                                    ### 2. Catalog of eight distribution shapes
+                                       The eight shapes — Gaussian, Student-t, skew-normal, asymmetric Laplace,
+ | [M2 · G-distribution catalog](https://joonho112.github.io/multisiteDGP/articles/m2-g-distribution-catalog.ht
+                            # multisiteDGP <img src="man/figures/logo.png" align="right" height="139" alt="" />
+                                          observed estimates — backed by a catalog of eight distribution shapes
+                                                                    ### 2. Catalog of eight distribution shapes
+                                                The eight shapes — Gaussian, Student-t, skew-normal, asymmetric
+ | [M2 · G-distribution catalog](https://joonho112.github.io/multisiteDGP/articles/m2-g-distribution-catalog.ht
+                            # multisiteDGP <img src="man/figures/logo.png" align="right" height="139" alt="" />
+ <p class="card-text">Four generative layers — latent effects, site-size margins, precision dependence, observa
+ | [M2 · G-distribution catalog](articles/m2-g-distribution-catalog.html) | The eight built-in shapes, side by 
+                                                      the eight-shape G-distribution catalog with unit-variance
+                                                   of a multisite simulation. Eight built-in shapes — Gaussian,
+
+── B. true_dist 실행 검증 ──
+  Gaussian       OK     
+  StudentT       OK     
+  SkewN          OK     
+  ALD            OK     
+  Mixture        OK     
+  PointMassSlab  OK     
+  DPM            ABORT  ✖ `true_dist = "DPM"` is not implemented in multisiteDGP v1.
+  User           ABORT  ✖ `g_fn` is required when `true_dist = "User"`.
+
+  동작하는 shape: 6 / 8
+
+── C. 예약/미구현 인자 ──
+  target_marginal_rho      ABORT: ✖ `target_marginal_rho` is not supported in v1.0.
+  upstream (gen_effects)   ABORT: ✖ `upstream` is reserved and is not implemented yet.
+
+── D. 타입드 오류 클래스 ──
+  정의된 클래스: 7 
+   multisitedgp_error, multisitedgp_arg_error, multisitedgp_coherence_error, multisitedgp_engine_dependence_error, multisitedgp_solver_error, multisitedgp_dependence_solver_error, multisitedgp_marginal_violation_error 
+
+  abort helper: .abort_multisitedgp, .abort_arg, .abort_coherence, .abort_engine_dependence, .abort_solver, .abort_dependence_solver, .abort_marginal_violation 
+
+  helper 별 호출 횟수 (R/ 전체):
+    .abort_multisitedgp            6
+    .abort_arg                   192
+    .abort_coherence              13
+    .abort_engine_dependence       1
+    .abort_solver                  5
+    .abort_dependence_solver       4
+    .abort_marginal_violation      7
+
+── E. error-index.csv 대조 ──
+  등재된 오류: 30 | 열: id, scenario, class, active_v1, owner_phase, owner_step, blueprint_ref, status, unresolved_conflict, validator_owner_phase, validator_owner_step 
+
+          implemented               planned  snapshot-implemented 
+                   17                     1                     2 
+validator-implemented 
+                   10 
+
+── F. export 표면 ──
+  export 수: 53 
+  Rd 파일 수: 45 
+
+완료: 2026-08-14 10:28:50 
