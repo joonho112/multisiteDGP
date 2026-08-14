@@ -1,0 +1,94 @@
+lint	Lint package	﻿2026-08-14T16:25:26.3365862Z ##[group]Run lints <- lintr::lint_package()
+lint	Lint package	2026-08-14T16:25:26.3366160Z [36;1mlints <- lintr::lint_package()[0m
+lint	Lint package	2026-08-14T16:25:26.3366384Z [36;1mprint(lints)[0m
+lint	Lint package	2026-08-14T16:25:26.3366576Z [36;1mif (length(lints) > 0L) {[0m
+lint	Lint package	2026-08-14T16:25:26.3366788Z [36;1m  quit(status = 1L)[0m
+lint	Lint package	2026-08-14T16:25:26.3366978Z [36;1m}[0m
+lint	Lint package	2026-08-14T16:25:26.3370333Z shell: /usr/local/bin/Rscript {0}
+lint	Lint package	2026-08-14T16:25:26.3370542Z env:
+lint	Lint package	2026-08-14T16:25:26.3370696Z   TZ: UTC
+lint	Lint package	2026-08-14T16:25:26.3370955Z   MULTISITEDGP_REPRODUCIBILITY_POLICY: linux-strict-hash-cross-os-demoted
+lint	Lint package	2026-08-14T16:25:26.3371295Z   MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN: false
+lint	Lint package	2026-08-14T16:25:26.3371552Z   R_LIBS_USER: /home/runner/work/_temp/Library
+lint	Lint package	2026-08-14T16:25:26.3371788Z   _R_CHECK_SYSTEM_CLOCK_: FALSE
+lint	Lint package	2026-08-14T16:25:26.3371985Z   NOT_CRAN: true
+lint	Lint package	2026-08-14T16:25:26.3372245Z   RSPM: https://packagemanager.posit.co/cran/__linux__/noble/latest
+lint	Lint package	2026-08-14T16:25:26.3372663Z   RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/noble/latest
+lint	Lint package	2026-08-14T16:25:26.3373067Z   R_LIB_FOR_PAK: /opt/R/4.6.1/lib/R/site-library
+lint	Lint package	2026-08-14T16:25:26.3373294Z ##[endgroup]
+lint	Lint package	2026-08-14T16:25:52.9870953Z ##[warning]file=R/multisitedgp-package.R,line=74,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 124 characters.
+lint	Lint package	2026-08-14T16:25:52.9878545Z ##[warning]file=R/multisitedgp-package.R,line=83,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 123 characters.
+lint	Lint package	2026-08-14T16:25:52.9880456Z ##[warning]file=R/multisitedgp-package.R,line=84,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 122 characters.
+lint	Lint package	2026-08-14T16:25:52.9882356Z ##[warning]file=R/multisitedgp-package.R,line=85,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 143 characters.
+lint	Lint package	2026-08-14T16:25:52.9884778Z ##[warning]file=R/multisitedgp-package.R,line=86,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 141 characters.
+lint	Lint package	2026-08-14T16:25:52.9887173Z ##[warning]file=R/multisitedgp-package.R,line=98,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 294 characters.
+lint	Lint package	2026-08-14T16:25:52.9889511Z ##[warning]file=R/multisitedgp-package.R,line=99,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 388 characters.
+lint	Lint package	2026-08-14T16:25:52.9891972Z ##[warning]file=R/multisitedgp-package.R,line=100,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 162 characters.
+lint	Lint package	2026-08-14T16:25:52.9894386Z ##[warning]file=R/multisitedgp-package.R,line=101,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 140 characters.
+lint	Lint package	2026-08-14T16:25:52.9896683Z ##[warning]file=R/multisitedgp-package.R,line=103,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 581 characters.
+lint	Lint package	2026-08-14T16:25:52.9899361Z ##[warning]file=R/multisitedgp-package.R,line=104,col=121,[line_length_linter] Lines should not be more than 120 characters. This line is 355 characters.
+lint	Lint package	2026-08-14T16:25:52.9901575Z ##[warning]file=tests/testthat/helper-skip-policy.R,line=8,col=3,[commented_code_linter] Remove commented code.
+lint	Lint package	2026-08-14T16:25:52.9903710Z ##[warning]file=tests/testthat/test-layer2-engine-a2-edges.R,line=8,col=3,[commented_code_linter] Remove commented code.
+lint	Lint package	2026-08-14T16:25:52.9906227Z ##[warning]file=tests/testthat/test-layer2-engine-a2-edges.R,line=21,col=14,[indentation_linter] Hanging indent should be 15 spaces but is 14 spaces.
+lint	Lint package	2026-08-14T16:25:52.9908492Z ##[warning]file=tests/testthat/test-layer2-engine-a2-edges.R,line=23,col=14,[indentation_linter] Hanging indent should be 15 spaces but is 14 spaces.
+lint	Lint package	2026-08-14T16:25:52.9910914Z ##[warning]file=tests/testthat/test-layer2-engine-a2-edges.R,line=28,col=14,[indentation_linter] Hanging indent should be 15 spaces but is 14 spaces.
+lint	Lint package	2026-08-14T16:25:52.9913189Z ##[warning]file=tests/testthat/test-layer2-engine-a2-edges.R,line=123,col=14,[indentation_linter] Hanging indent should be 15 spaces but is 14 spaces.
+lint	Lint package	2026-08-14T16:25:52.9915653Z ##[warning]file=tests/testthat/test-layer2-engine-a2-edges.R,line=125,col=14,[indentation_linter] Hanging indent should be 15 spaces but is 14 spaces.
+lint	Lint package	2026-08-14T16:25:52.9918210Z ##[warning]file=tests/testthat/test-layer2-engine-a2-edges.R,line=197,col=14,[indentation_linter] Hanging indent should be 15 spaces but is 14 spaces.
+lint	Lint package	2026-08-14T16:25:52.9920641Z ##[warning]file=tests/testthat/test-layer2-engine-a2-edges.R,line=199,col=14,[indentation_linter] Hanging indent should be 15 spaces but is 14 spaces.
+lint	Lint package	2026-08-14T16:25:52.9923098Z ##[warning]file=tests/testthat/test-utils-reproducibility-canonicalization.R,line=31,col=18,[semicolon_linter] Replace compound semicolons by a newline.
+lint	Lint package	2026-08-14T16:25:52.9925611Z ##[warning]file=tests/testthat/test-utils-reproducibility-canonicalization.R,line=32,col=18,[semicolon_linter] Replace compound semicolons by a newline.
+lint	Lint package	2026-08-14T16:25:52.9928427Z ##[warning]file=vignettes/a3-diagnostics-in-practice.Rmd,line=142,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9931206Z ##[warning]file=vignettes/a3-diagnostics-in-practice.Rmd,line=160,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9933972Z ##[warning]file=vignettes/a3-diagnostics-in-practice.Rmd,line=436,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9936658Z ##[warning]file=vignettes/a4-covariates-precision-dependence.Rmd,line=111,col=2,[indentation_linter] Indentation should be 7 spaces but is 2 spaces.
+lint	Lint package	2026-08-14T16:25:52.9939231Z ##[warning]file=vignettes/a5-calibrating-real-data.Rmd,line=202,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9942153Z ##[warning]file=vignettes/a5-calibrating-real-data.Rmd,line=208,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9944581Z ##[warning]file=vignettes/a8-cookbook.Rmd,line=342,col=27,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9946652Z ##[warning]file=vignettes/a8-cookbook.Rmd,line=343,col=24,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9948705Z ##[warning]file=vignettes/a8-cookbook.Rmd,line=343,col=29,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9950761Z ##[warning]file=vignettes/a8-cookbook.Rmd,line=405,col=27,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9952723Z ##[warning]file=vignettes/a8-cookbook.Rmd,line=496,col=52,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9954888Z ##[warning]file=vignettes/a8-cookbook.Rmd,line=588,col=3,[brace_linter] Wrap multi-line function bodies in curly braces.
+lint	Lint package	2026-08-14T16:25:52.9957209Z ##[warning]file=vignettes/a8-cookbook.Rmd,line=627,col=5,[brace_linter] Wrap multi-line function bodies in curly braces.
+lint	Lint package	2026-08-14T16:25:52.9959253Z ##[warning]file=vignettes/a8-cookbook.Rmd,line=690,col=5,[brace_linter] Wrap multi-line function bodies in curly braces.
+lint	Lint package	2026-08-14T16:25:52.9961811Z ##[warning]file=vignettes/m1-statistical-dgp.Rmd,line=154,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9964481Z ##[warning]file=vignettes/m1-statistical-dgp.Rmd,line=166,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9966686Z ##[warning]file=vignettes/m1-statistical-dgp.Rmd,line=196,col=33,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9968624Z ##[warning]file=vignettes/m1-statistical-dgp.Rmd,line=196,col=41,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9970825Z ##[warning]file=vignettes/m1-statistical-dgp.Rmd,line=466,col=7,[semicolon_linter] Replace compound semicolons by a newline.
+lint	Lint package	2026-08-14T16:25:52.9972871Z ##[warning]file=vignettes/m1-statistical-dgp.Rmd,line=466,col=15,[semicolon_linter] Replace compound semicolons by a newline.
+lint	Lint package	2026-08-14T16:25:52.9974896Z ##[warning]file=vignettes/m1-statistical-dgp.Rmd,line=479,col=26,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9977445Z ##[warning]file=vignettes/m1-statistical-dgp.Rmd,line=480,col=35,[brace_linter] Opening curly braces should never go on their own line and should always be followed by a new line.
+lint	Lint package	2026-08-14T16:25:52.9979737Z ##[warning]file=vignettes/m1-statistical-dgp.Rmd,line=480,col=38,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9982071Z ##[warning]file=vignettes/m2-g-distribution-catalog.Rmd,line=739,col=26,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9984285Z ##[warning]file=vignettes/m2-g-distribution-catalog.Rmd,line=812,col=31,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:52.9986770Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=168,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9989380Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=264,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9991944Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=279,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9994372Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=353,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9997008Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=354,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:52.9999392Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=355,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0001260Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=379,col=24,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0002877Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=380,col=35,[brace_linter] Opening curly braces should never go on their own line and should always be followed by a new line.
+lint	Lint package	2026-08-14T16:25:53.0004354Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=380,col=38,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0005904Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=421,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0007741Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=422,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0009394Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=423,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0011227Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=424,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0012871Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=425,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0014524Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=426,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0016174Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=427,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0017889Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=428,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0019570Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=459,col=42,[brace_linter] Opening curly braces should never go on their own line and should always be followed by a new line.
+lint	Lint package	2026-08-14T16:25:53.0021402Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=459,col=45,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0022968Z ##[warning]file=vignettes/m3-margin-se-models.Rmd,line=530,col=1,[object_name_linter] Variable and function name style should match snake_case, dotted.case or /^[JIR]$/.
+lint	Lint package	2026-08-14T16:25:53.0024513Z ##[warning]file=vignettes/m4-precision-dependence-theory.Rmd,line=474,col=24,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0025991Z ##[warning]file=vignettes/m4-precision-dependence-theory.Rmd,line=475,col=36,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0027552Z ##[warning]file=vignettes/m4-precision-dependence-theory.Rmd,line=488,col=24,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0029005Z ##[warning]file=vignettes/m4-precision-dependence-theory.Rmd,line=489,col=36,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0030582Z ##[warning]file=vignettes/m4-precision-dependence-theory.Rmd,line=502,col=24,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0032095Z ##[warning]file=vignettes/m4-precision-dependence-theory.Rmd,line=503,col=36,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0033541Z ##[warning]file=vignettes/m5-custom-g-distributions.Rmd,line=423,col=31,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0034954Z ##[warning]file=vignettes/m5-custom-g-distributions.Rmd,line=440,col=33,[infix_spaces_linter] Put spaces around all infix operators.
+lint	Lint package	2026-08-14T16:25:53.0038137Z ##[error]Process completed with exit code 1.
