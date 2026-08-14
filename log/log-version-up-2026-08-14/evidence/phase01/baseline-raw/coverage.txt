@@ -1,0 +1,61 @@
+* installing *source* package ‘multisiteDGP’ ...
+** this is package ‘multisiteDGP’ version ‘0.1.1’
+** using non-staged installation
+** R
+** inst
+** tests
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+  converting help for package ‘multisiteDGP’
+    adapters                                example
+    align_copula_corr                       example
+    align_hybrid_corr                       example
+    align_rank_corr                         example
+    as_tibble.multisitedgp_data             example
+    bhattacharyya_coef                      example
+    canonical_hash                          example
+    compute_I                               example
+    compute_kappa                           example
+    compute_shrinkage                       example
+    default_thresholds                      example
+    design_grid                             example
+    feasibility_index                       example
+    gen_effects                             example
+    gen_effects_ald                         example
+    gen_effects_dpm                         example
+    gen_effects_gaussian                    example
+    gen_effects_mixture                     example
+    gen_effects_pmslab                      example
+    gen_effects_skewn                       example
+    gen_effects_studentt                    example
+    gen_effects_user                        example
+    gen_observations                        example
+    gen_se_direct                           example
+    gen_site_sizes                          example
+    heterogeneity_ratio                     example
+    informativeness                         example
+    is_multisitedgp_data                    example
+    is_multisitedgp_design                  example
+    ks_distance                             example
+    mean_shrinkage                          example
+    multisitedgp_design                     example
+    plots                                   example
+    presets                                 example
+    print.multisitedgp_data                 example
+    provenance_string                       example
+    realized_rank_corr                      example
+    realized_rank_corr_marginal             example
+    scenario_audit                          example
+    sim_meta                                example
+    sim_multisite                           example
+    summary.multisitedgp_data               example
+    update_multisitedgp_design              example
+    validate_multisitedgp_design            example
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+* DONE (multisiteDGP)
+Running specific tests for package ‘multisiteDGP’
+  Running ‘testthat.R’
