@@ -1,0 +1,42 @@
+multisiteDGP v0.2.0 업그레이드 — 성능 베이스라인
+Step 1.5, 2026-08-14 | R version 4.6.0 (2026-04-24) | aarch64-apple-darwin23 
+====================================================================================== 
+
+── 대표 시나리오 ──
+sim_multisite(preset_education_modest())        median   0.0160 s   min   0.0160   max   0.1250
+sim_multisite(preset_jebs_paper())              median   0.0320 s   min   0.0320   max   0.0440
+sim_meta(preset_meta_modest())                  median   0.0150 s   min   0.0150   max   0.0310
+
+── J 스케일링 (Gaussian, dependence = none) ──
+sim_multisite(J =    50)                        median   0.0160 s   min   0.0160   max   0.0190
+sim_multisite(J =   200)                        median   0.0170 s   min   0.0160   max   0.0170
+sim_multisite(J =  1000)                        median   0.0180 s   min   0.0170   max   0.0190
+sim_multisite(J =  5000)                        median   0.0230 s   min   0.0230   max   0.0240
+
+── dependence injection 3종 (J = 200, target = -0.4) ──
+dependence = rank                               median   0.2740 s   min   0.2700   max   0.2930
+dependence = copula                             median   0.0180 s   min   0.0170   max   0.0240
+dependence = hybrid                             median   0.0420 s   min   0.0410   max   0.0530
+
+── 분포 shape (J = 200) — theta_G 없이 호출 시 동작도 함께 확인 ──
+true_dist = Gaussian       (theta_G 지정)     median   0.0170 s   min   0.0160   max   0.0170
+true_dist = StudentT       (theta_G 지정)     median   0.0180 s   min   0.0170   max   0.0180
+true_dist = StudentT       (theta_G 생략)     ERROR: ✖ `theta_G` must be a named list.
+true_dist = SkewN          (theta_G 지정)     median   0.0450 s   min   0.0400   max   0.0850
+true_dist = SkewN          (theta_G 생략)     ERROR: ✖ `theta_G` must be a named list.
+true_dist = ALD            (theta_G 지정)     median   0.0400 s   min   0.0390   max   0.0450
+true_dist = ALD            (theta_G 생략)     ERROR: ✖ `theta_G` must be a named list.
+true_dist = Mixture        (theta_G 지정)     median   0.0400 s   min   0.0380   max   0.0420
+true_dist = Mixture        (theta_G 생략)     ERROR: ✖ `theta_G` must be a named list.
+true_dist = PointMassSlab  (theta_G 지정)     median   0.0410 s   min   0.0370   max   0.0460
+true_dist = PointMassSlab  (theta_G 생략)     ERROR: ✖ `theta_G` must be a named list.
+
+── 진단 · 후처리 (J = 200 fixture) ──
+scenario_audit(grid, M = 1L)                    median   0.0410 s   min   0.0410   max   0.0530
+canonical_hash()                                median   0.0000 s   min   0.0000   max   0.0010
+summary()                                       median   0.0030 s   min   0.0030   max   0.0140
+
+── design_grid() sweep ──
+design_grid(3 x 3 = 9 cells)                    median   0.0020 s   min   0.0010   max   0.0020
+
+완료: 2026-08-14 10:12:33 

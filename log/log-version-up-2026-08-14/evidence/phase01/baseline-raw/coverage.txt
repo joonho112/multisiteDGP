@@ -1,61 +1,63 @@
-* installing *source* package ‘multisiteDGP’ ...
-** this is package ‘multisiteDGP’ version ‘0.1.1’
-** using non-staged installation
-** R
-** inst
-** tests
-** byte-compile and prepare package for lazy loading
-** help
-*** installing help indices
-  converting help for package ‘multisiteDGP’
-    adapters                                example
-    align_copula_corr                       example
-    align_hybrid_corr                       example
-    align_rank_corr                         example
-    as_tibble.multisitedgp_data             example
-    bhattacharyya_coef                      example
-    canonical_hash                          example
-    compute_I                               example
-    compute_kappa                           example
-    compute_shrinkage                       example
-    default_thresholds                      example
-    design_grid                             example
-    feasibility_index                       example
-    gen_effects                             example
-    gen_effects_ald                         example
-    gen_effects_dpm                         example
-    gen_effects_gaussian                    example
-    gen_effects_mixture                     example
-    gen_effects_pmslab                      example
-    gen_effects_skewn                       example
-    gen_effects_studentt                    example
-    gen_effects_user                        example
-    gen_observations                        example
-    gen_se_direct                           example
-    gen_site_sizes                          example
-    heterogeneity_ratio                     example
-    informativeness                         example
-    is_multisitedgp_data                    example
-    is_multisitedgp_design                  example
-    ks_distance                             example
-    mean_shrinkage                          example
-    multisitedgp_design                     example
-    plots                                   example
-    presets                                 example
-    print.multisitedgp_data                 example
-    provenance_string                       example
-    realized_rank_corr                      example
-    realized_rank_corr_marginal             example
-    scenario_audit                          example
-    sim_meta                                example
-    sim_multisite                           example
-    summary.multisitedgp_data               example
-    update_multisitedgp_design              example
-    validate_multisitedgp_design            example
-*** copying figures
-** building package indices
-** installing vignettes
-** testing if installed package can be loaded
-* DONE (multisiteDGP)
-Running specific tests for package ‘multisiteDGP’
-  Running ‘testthat.R’
+multisiteDGP v0.2.0 업그레이드 — 커버리지 베이스라인
+Step 1.5, 2026-08-14 | MULTISITEDGP_RUN_SLOW/PROPERTY = true
+============================================================== 
+
+전체 커버리지: 90.89%
+
+=== 파일별 (낮은 순) ===
+                            file   pct hit   n
+            R/layer2-engine-a2.R  84.8  95 112
+              R/scenario_audit.R  88.1 111 126
+       R/layer1-effects-common.R  89.4  76  85
+   R/class-multisitedgp_design.R  90.8 138 152
+       R/utils-reproducibility.R  91.0 122 134
+            R/diagnostics-core.R  91.6 241 263
+                       R/plots.R  93.0 107 115
+          R/layer1-gen_effects.R  93.1  27  29
+        R/layer2-gen_se_direct.R  93.3  70  75
+    R/layer3-dependence-custom.R  93.5  29  31
+      R/layer3-align_rank_corr.R  94.5  69  73
+          R/layer2-diagnostics.R  95.0  95 100
+   R/layer1-gen_effects_pmslab.R  95.0  38  40
+     R/layer1-gen_effects_user.R  95.0  38  40
+      R/layer1-gen_effects_ald.R  95.2  20  21
+    R/layer3-align_copula_corr.R  95.3  41  43
+     R/class-multisitedgp_data.R  95.5 150 157
+    R/layer1-gen_effects_skewn.R  95.5  21  22
+                 R/design_grid.R  95.7  45  47
+       R/wrapper-sim_multisite.R  96.3  78  81
+            R/wrapper-sim_meta.R  96.9  62  64
+     R/layer4-gen_observations.R  97.5  39  40
+  R/layer1-gen_effects_mixture.R  98.0  48  49
+        R/00-errors-validation.R 100.0  82  82
+   R/layer3-dependence-helpers.R 100.0  57  57
+       R/layer2-gen_site_sizes.R 100.0  56  56
+    R/layer3-align_hybrid_corr.R 100.0  50  50
+                    R/adapters.R 100.0  43  43
+                     R/presets.R 100.0  22  22
+            R/layer2-engine-a1.R 100.0  13  13
+      R/layer1-gen_effects_dpm.R 100.0  12  12
+ R/layer1-gen_effects_studentt.R 100.0  11  11
+ R/layer1-gen_effects_gaussian.R 100.0  10  10
+                   R/utils-rng.R 100.0   7   7
+
+=== 90% 미만 파일 ===
+                      file  pct hit   n
+      R/layer2-engine-a2.R 84.8  95 112
+        R/scenario_audit.R 88.1 111 126
+ R/layer1-effects-common.R 89.4  76  85
+
+=== 미커버 라인 수 상위 10 파일 ===
+                          file miss  pct
+          R/diagnostics-core.R   22 91.6
+          R/layer2-engine-a2.R   17 84.8
+            R/scenario_audit.R   15 88.1
+ R/class-multisitedgp_design.R   14 90.8
+     R/utils-reproducibility.R   12 91.0
+     R/layer1-effects-common.R    9 89.4
+                     R/plots.R    8 93.0
+   R/class-multisitedgp_data.R    7 95.5
+      R/layer2-gen_se_direct.R    5 93.3
+        R/layer2-diagnostics.R    5 95.0
+
+완료: 2026-08-14 10:15:25 
