@@ -1,8 +1,12 @@
 name: pkgdown-deploy
 
+# Deliberately not on push. During the v0.2.0 upgrade `main` carries working
+# state whose user-facing documentation is still mid-correction — DESCRIPTION
+# still advertises eight distribution shapes when seven work, and the version
+# still reads 0.1.1 — so republishing the public site on every merge would ship
+# a half-corrected reference. Phase 11 publishes the release and the site
+# together; until then use workflow_dispatch for a deliberate rebuild.
 on:
-  push:
-    branches: [main, master]
   release:
     types: [published]
   workflow_dispatch:
