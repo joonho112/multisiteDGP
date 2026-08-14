@@ -86,7 +86,9 @@ appendix.
 ## 3. Install and load
 
 ```{r install, eval = FALSE}
-# install.packages("remotes")
+# install.packages("remotes")  # nolint: commented_code_linter.
+#   Intentional: the reader may not have remotes yet, and this is the
+#   line they uncomment.
 remotes::install_github("joonho112/multisiteDGP")
 ```
 

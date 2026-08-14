@@ -5,7 +5,7 @@
 #
 # 실측 결과 게이트를 전부 켜는 비용은 +94.6 초(18.1 s -> 112.7 s)뿐이었다.
 # 따라서 v0.2.0 은 표본 크기나 격자를 줄이지 않고 게이트를 제거했다.
-# 근거: log/log-version-up-2026-08-14/decisions/D3-test-gate-policy.md
+# 근거는 decisions 폴더의 D3 테스트 게이트 정책 문서에 있다.
 #
 # 남은 게이트는 둘뿐이다.
 #   - skip_if_not_installed()          soft dependency guard (testthat 기본 제공)

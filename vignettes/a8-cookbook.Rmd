@@ -339,8 +339,8 @@ ggplot(mf_r54, aes(yi, sei)) +
   geom_point(alpha = 0.6, size = 2) +
   scale_y_reverse() +
   geom_vline(xintercept = 0, linetype = 2, colour = "grey50") +
-  labs(x = expression(y[i]~"(estimate)"),
-       y = expression(s*e[i]~"(reverse axis)")) +
+  labs(x = expression(y[i] ~ "(estimate)"),
+       y = expression(s * e[i] ~ "(reverse axis)")) +
   theme_minimal(base_size = 11)
 ```
 
@@ -402,7 +402,7 @@ ggplot(dat_r55, aes(z_j)) +
   geom_density(fill = "grey70", colour = "grey20", alpha = 0.6) +
   geom_rug(alpha = 0.4) +
   geom_vline(xintercept = 0, linetype = 2, colour = "grey50") +
-  labs(x = expression(z[j]~"(standardized site effect)"),
+  labs(x = expression(z[j] ~ "(standardized site effect)"),
        y = "density") +
   theme_minimal(base_size = 11)
 ```
@@ -493,7 +493,7 @@ ggplot(dat_r56, aes(rank(z_j), se_j)) +
   geom_point(alpha = 0.7, size = 2) +
   geom_smooth(method = "loess", se = FALSE, formula = y ~ x,
               colour = "grey30", linewidth = 0.5) +
-  labs(x = expression(rank(z[j])), y = expression(s*e[j])) +
+  labs(x = expression(rank(z[j])), y = expression(s * e[j])) +
   theme_minimal(base_size = 11)
 ```
 
@@ -585,9 +585,9 @@ Run it:
 ```{r r58-run}
 hashes_r58 <- vapply(
   seq_len(3),
-  function(i) canonical_hash(
-    sim_multisite(preset_education_modest(), seed = 12345L)
-  ),
+  function(i) {
+    canonical_hash(sim_multisite(preset_education_modest(), seed = 12345L))
+  },
   character(1)
 )
 dat_r58 <- sim_multisite(preset_education_modest(), seed = 12345L)
@@ -624,9 +624,9 @@ hash_sweep_r58 <- data.frame(
   seed = 12345L + 0:5,
   hash = vapply(
     12345L + 0:5,
-    function(s) canonical_hash(
-      sim_multisite(preset_education_modest(), seed = s)
-    ),
+    function(s) {
+      canonical_hash(sim_multisite(preset_education_modest(), seed = s))
+    },
     character(1)
   )
 )
@@ -687,9 +687,9 @@ checks_r59 <- data.frame(
   ),
   feasibility = vapply(
     12345L + 0:2,
-    function(s) feasibility_index(
-      sim_multisite(design_r59, seed = s), warn = FALSE
-    ),
+    function(s) {
+      feasibility_index(sim_multisite(design_r59, seed = s), warn = FALSE)
+    },
     numeric(1)
   )
 )

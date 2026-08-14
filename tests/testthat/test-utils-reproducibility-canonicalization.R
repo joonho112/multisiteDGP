@@ -28,8 +28,10 @@ test_that("functions are excluded by identity, not by body", {
 })
 
 test_that("environments are excluded the same way", {
-  e1 <- new.env(); assign("x", 1, envir = e1)
-  e2 <- new.env(); assign("x", 2, envir = e2)
+  e1 <- new.env()
+  assign("x", 1, envir = e1)
+  e2 <- new.env()
+  assign("x", 2, envir = e2)
 
   expect_identical(canon(e1, path = "env"), canon(e2, path = "env"))
   expect_identical(canon(e1, path = "env")$kind, "environment_excluded")

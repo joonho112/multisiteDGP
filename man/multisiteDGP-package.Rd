@@ -76,7 +76,8 @@ reproducibility helpers (\code{\link{canonical_hash}},
 \item \href{../articles/a1-getting-started.html}{A1 \enc{·}{.} Getting started}
 \item \href{../articles/a2-choosing-a-preset.html}{A2 \enc{·}{.} Choosing a preset}
 \item \href{../articles/a3-diagnostics-in-practice.html}{A3 \enc{·}{.} Diagnostics in practice}
-\item \href{../articles/a4-covariates-precision-dependence.html}{A4 \enc{·}{.} Covariates and precision dependence}
+\item \href{../articles/a4-covariates-precision-dependence.html}{A4
+\enc{·}{.} Covariates and precision dependence}
 \item \href{../articles/a5-calibrating-real-data.html}{A5 \enc{·}{.} Calibrating to real data}
 \item \href{../articles/a6-case-study-multisite.html}{A6 \enc{·}{.} Case study \enc{—}{--} multisite trial}
 \item \href{../articles/a7-case-study-meta-analysis.html}{A7 \enc{·}{.} Case study \enc{—}{--} meta-analysis}
@@ -85,10 +86,14 @@ reproducibility helpers (\code{\link{canonical_hash}},
 }
 \item{Methodological Track}{
 \itemize{
-\item \href{../articles/m1-statistical-dgp.html}{M1 \enc{·}{.} The two-stage DGP \enc{—}{--} formal specification}
-\item \href{../articles/m2-g-distribution-catalog.html}{M2 \enc{·}{.} G-distribution catalog and standardization}
-\item \href{../articles/m3-margin-se-models.html}{M3 \enc{·}{.} Margin and SE models \enc{—}{--} site-size and direct-precision paths}
-\item \href{../articles/m4-precision-dependence-theory.html}{M4 \enc{·}{.} Precision dependence \enc{—}{--} three injection methods}
+\item \href{../articles/m1-statistical-dgp.html}{M1 \enc{·}{.} The
+two-stage DGP \enc{—}{--} formal specification}
+\item \href{../articles/m2-g-distribution-catalog.html}{M2 \enc{·}{.}
+G-distribution catalog and standardization}
+\item \href{../articles/m3-margin-se-models.html}{M3 \enc{·}{.} Margin
+and SE models \enc{—}{--} site-size and direct-precision paths}
+\item \href{../articles/m4-precision-dependence-theory.html}{M4
+\enc{·}{.} Precision dependence \enc{—}{--} three injection methods}
 \item \href{../articles/m5-custom-g-distributions.html}{M5 \enc{·}{.} Custom G distributions}
 \item \href{../articles/m6-adapters-downstream.html}{M6 \enc{·}{.} Adapters and downstream packages}
 \item \href{../articles/m7-reproducibility-provenance.html}{M7 \enc{·}{.} Reproducibility and provenance}
@@ -102,13 +107,33 @@ reproducibility helpers (\code{\link{canonical_hash}},
 
 \describe{
 \item{Front doors}{\code{\link{sim_multisite}}, \code{\link{sim_meta}}, \code{\link{design_grid}}.}
-\item{Design and data objects}{\code{\link{multisitedgp_design}} constructor with \code{\link{validate_multisitedgp_design}}, \code{\link{update_multisitedgp_design}}, \code{\link{is_multisitedgp_design}}, \code{\link{is_multisitedgp_data}}, and \code{\link{as_tibble.multisitedgp_data}}.}
-\item{Effect distributions (Layer 1)}{\code{\link{gen_effects}} dispatcher and the eight shape-specific generators \code{\link{gen_effects_gaussian}}, \code{\link{gen_effects_studentt}}, \code{\link{gen_effects_skewn}}, \code{\link{gen_effects_ald}}, \code{\link{gen_effects_mixture}}, \code{\link{gen_effects_pmslab}}, \code{\link{gen_effects_user}}, \code{\link{gen_effects_dpm}}.}
-\item{Margin / SE models (Layer 2)}{\code{\link{gen_site_sizes}} for the site-size margin; \code{\link{gen_se_direct}} for the direct standard-error margin.}
-\item{Precision dependence (Layer 3)}{\code{\link{align_rank_corr}}, \code{\link{align_copula_corr}}, \code{\link{align_hybrid_corr}}.}
+\item{Design and data objects}{
+\code{\link{multisitedgp_design}} constructor with \code{\link{validate_multisitedgp_design}},
+\code{\link{update_multisitedgp_design}}, \code{\link{is_multisitedgp_design}},
+\code{\link{is_multisitedgp_data}}, and \code{\link{as_tibble.multisitedgp_data}}.}
+\item{Effect distributions (Layer 1)}{
+\code{\link{gen_effects}} dispatcher and the eight shape-specific generators
+\code{\link{gen_effects_gaussian}}, \code{\link{gen_effects_studentt}}, \code{\link{gen_effects_skewn}},
+\code{\link{gen_effects_ald}}, \code{\link{gen_effects_mixture}}, \code{\link{gen_effects_pmslab}},
+\code{\link{gen_effects_user}}, \code{\link{gen_effects_dpm}}.}
+\item{Margin / SE models (Layer 2)}{
+\code{\link{gen_site_sizes}} for the site-size margin; \code{\link{gen_se_direct}} for the direct
+standard-error margin.}
+\item{Precision dependence (Layer 3)}{
+\code{\link{align_rank_corr}}, \code{\link{align_copula_corr}}, \code{\link{align_hybrid_corr}}.}
 \item{Observation draws (Layer 4)}{\code{\link{gen_observations}}.}
-\item{Diagnostics}{Group A precision and feasibility scalars (\code{\link{compute_kappa}}, \code{\link{compute_I}}, \code{\link{informativeness}}, \code{\link{compute_shrinkage}}, \code{\link{mean_shrinkage}}, \code{\link{feasibility_index}}, \code{\link{default_thresholds}}, \code{\link{heterogeneity_ratio}}); Group B realized dependence (\code{\link{realized_rank_corr}}, \code{\link{realized_rank_corr_marginal}}); Group C distributional fidelity (\code{\link{bhattacharyya_coef}}, \code{\link{ks_distance}}); top-of-funnel scenario sweep (\code{\link{scenario_audit}}).}
-\item{Presets}{\code{\link{preset_education_small}}, \code{\link{preset_education_modest}}, \code{\link{preset_education_substantial}}, \code{\link{preset_jebs_paper}}, \code{\link{preset_jebs_strict}}, \code{\link{preset_meta_modest}}, \code{\link{preset_small_area_estimation}}, \code{\link{preset_twin_towers}}, \code{\link{preset_walters_2024}}.}
+\item{Diagnostics}{
+Group A precision and feasibility scalars (\code{\link{compute_kappa}}, \code{\link{compute_I}},
+\code{\link{informativeness}}, \code{\link{compute_shrinkage}}, \code{\link{mean_shrinkage}},
+\code{\link{feasibility_index}}, \code{\link{default_thresholds}}, \code{\link{heterogeneity_ratio}}); Group B
+realized dependence (\code{\link{realized_rank_corr}}, \code{\link{realized_rank_corr_marginal}}); Group C
+distributional fidelity (\code{\link{bhattacharyya_coef}}, \code{\link{ks_distance}}); top-of-funnel scenario
+sweep (\code{\link{scenario_audit}}).}
+\item{Presets}{
+\code{\link{preset_education_small}}, \code{\link{preset_education_modest}},
+\code{\link{preset_education_substantial}}, \code{\link{preset_jebs_paper}}, \code{\link{preset_jebs_strict}},
+\code{\link{preset_meta_modest}}, \code{\link{preset_small_area_estimation}},
+\code{\link{preset_twin_towers}}, \code{\link{preset_walters_2024}}.}
 \item{Output adapters}{\code{\link{as_metafor}}, \code{\link{as_baggr}}, \code{\link{as_multisitepower}}.}
 \item{Visualization}{\code{\link{plot_effects}}, \code{\link{plot_funnel}}, \code{\link{plot_dependence}}.}
 \item{Reproducibility}{\code{\link{canonical_hash}}, \code{\link{provenance_string}}.}

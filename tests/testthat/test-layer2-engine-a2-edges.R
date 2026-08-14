@@ -4,8 +4,8 @@
 # 미커버 라인이 전부 fail-fast 분기와 수치 경계여서, 실패해야 할 때 실패하는지가
 # 검증되지 않은 상태였다. 결함 원장 D-012 · D-015.
 #
-# 실현 불가능 영역의 좌표는 Phase 2 Step 2.6 이 48셀 격자로 실측했다:
-# log/log-version-up-2026-08-14/evidence/phase02/solver-feasible-region.csv
+# 실현 불가능 영역의 좌표는 Phase 2 Step 2.6 이 48 셀 격자로 실측했으며
+# 결과는 evidence 폴더의 phase02 solver-feasible-region 표에 있다.
 
 # ── 인자 검증 분기 ────────────────────────────────────────────────────
 
@@ -18,14 +18,14 @@ test_that("engine_trunc_gamma_moment rejects a negative cv", {
 
 test_that("solve_trunc_gamma requires n_bar to exceed n_min", {
   expect_error(solve_trunc_gamma(n_bar = 5, cv = 0.4, n_min = 5L),
-              class = "multisitedgp_arg_error")
+               class = "multisitedgp_arg_error")
   expect_error(solve_trunc_gamma(n_bar = 100, cv = 0.4, n_min = 0L),
-              class = "multisitedgp_arg_error")
+               class = "multisitedgp_arg_error")
 })
 
 test_that("solve_trunc_gamma rejects a negative cv", {
   expect_error(solve_trunc_gamma(n_bar = 100, cv = -0.1, n_min = 5L),
-              class = "multisitedgp_arg_error")
+               class = "multisitedgp_arg_error")
 })
 
 test_that("solve_trunc_gamma rejects a non-positive tol", {
@@ -120,9 +120,9 @@ test_that("trunc_gamma_moments rejects a non-positive n_min", {
 
 test_that("trunc_gamma_moments rejects non-positive shape or rate", {
   expect_error(trunc_gamma_moments(alpha = 0, beta = 0.02, n_min = 5L),
-              class = "multisitedgp_arg_error")
+               class = "multisitedgp_arg_error")
   expect_error(trunc_gamma_moments(alpha = 2, beta = -1, n_min = 5L),
-              class = "multisitedgp_arg_error")
+               class = "multisitedgp_arg_error")
 })
 
 test_that("rtrunc_gamma rejects a non-positive n_min", {
@@ -194,9 +194,9 @@ test_that(".fit_trunc_gamma_start reports a failed fit instead of propagating", 
 
 test_that(".validate_positive_scalar_number rejects zero and negatives", {
   expect_error(.validate_positive_scalar_number(0, "alpha"),
-              class = "multisitedgp_arg_error")
+               class = "multisitedgp_arg_error")
   expect_error(.validate_positive_scalar_number(-1, "alpha"),
-              class = "multisitedgp_arg_error")
+               class = "multisitedgp_arg_error")
   expect_identical(.validate_positive_scalar_number(2.5, "alpha"), 2.5)
 })
 

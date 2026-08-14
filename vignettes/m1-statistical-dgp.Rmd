@@ -193,7 +193,7 @@ ggplot(df_stage1, aes(y = rank)) +
   geom_vline(xintercept = 0, linetype = "dashed", colour = "grey50") +
   scale_y_continuous(breaks = NULL) +
   labs(
-    x        = expression(tau[j]~"  /  "~hat(tau)[j]),
+    x        = expression(tau[j] ~ "  /  " ~ hat(tau)[j]),
     y        = "Sites (sorted by tau_j)",
     title    = "Stage 1 — sampling envelope around latent effect",
     subtitle = "Open = tau_j (latent) · Filled = tau_j_hat (observed) · Bar = +/- 1.96 * se_j"
@@ -463,7 +463,9 @@ dat_marg <- sim_multisite(design_marg, seed = 2L)
 sd_tau    <- round(sd(dat_marg$tau_j), 4)
 gm_se2    <- round(exp(mean(log(dat_marg$se2_j))), 4)
 range_se2 <- range(dat_marg$se2_j)
-sd_tau; gm_se2; range_se2
+sd_tau
+gm_se2
+range_se2
 ```
 
 ```{r stage2-plot, fig.height = 5.6, fig.cap = "Stage 2 default joint p(tau_j, se_j squared) at J = 200. Top: marginal density of latent effects, centered near 0 with SD near sigma_tau = 0.25 (T2). Right: marginal density of sampling variances, right-skewed because n_j is right-skewed and se squared = kappa over n_j (T3). Center: scatter of realized (tau_j, se squared) pairs is roughly cloud-shaped, with no visible tilt — independence at the sample level, consistent with T7.", fig.alt = "Composite figure with three panels: a top density of tau_j, a right-side density of se squared, and a central scatter of (tau_j, se_j squared) pairs."}
@@ -476,8 +478,8 @@ p_center <- ggplot(df_marg, aes(x = tau_j, y = se2_j)) +
   geom_point(alpha = 0.45, size = 1.6, colour = "#1B4965") +
   geom_vline(xintercept = 0, linetype = "dashed", colour = "grey50") +
   labs(
-    x = expression(tau[j]~"  (latent effect)"),
-    y = expression(widehat(se)[j]^{2}~"  (sampling variance)")
+    x = expression(tau[j] ~ "  (latent effect)"),
+    y = expression(widehat(se)[j]^2 ~ "  (sampling variance)")
   ) +
   theme_minimal(base_size = 11) +
   theme(panel.grid.minor = element_blank())

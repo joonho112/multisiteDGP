@@ -736,7 +736,7 @@ plot_density_qq <- function(z, shape_label, theta_label) {
     geom_abline(slope = 1, intercept = 0, colour = "grey40") +
     labs(
       x = "Gaussian theoretical quantile",
-      y = expression(z[j]~"  sample quantile"),
+      y = expression(z[j] ~ "  sample quantile"),
       title = "QQ vs Gaussian"
     ) +
     theme_minimal(base_size = 11) +
@@ -809,7 +809,7 @@ ggplot(df_overlay, aes(x = z, colour = shape)) +
   geom_density(linewidth = 0.6, alpha = 0.8) +
   geom_vline(xintercept = 0, linetype = "dashed", colour = "grey50") +
   labs(
-    x        = expression(z[j]~"  (standardized residual)"),
+    x        = expression(z[j] ~ "  (standardized residual)"),
     y        = "density",
     title    = "Catalog overlay — seven standardized G shapes at J = 200",
     subtitle = "All shapes are unit-variance by construction; tail and skew differences are the only design lever.",

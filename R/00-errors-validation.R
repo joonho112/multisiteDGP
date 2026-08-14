@@ -95,7 +95,7 @@
 
 # Optional packages that are not on CRAN. `install.packages()` cannot reach
 # these, so the guard has to name the actual source instead.
-.OFF_CRAN_SOURCES <- c(
+.off_cran_sources <- c(
   multisitepower = "remotes::install_github(\"jche/multisitepower\")"
 )
 
@@ -103,8 +103,8 @@
   if (!.require_namespace(package)) {
     # `[[` on a named character vector throws for an absent name, so look the
     # key up first rather than relying on a NULL return.
-    off_cran <- if (package %in% names(.OFF_CRAN_SOURCES)) {
-      .OFF_CRAN_SOURCES[[package]]
+    off_cran <- if (package %in% names(.off_cran_sources)) {
+      .off_cran_sources[[package]]
     } else {
       NULL
     }

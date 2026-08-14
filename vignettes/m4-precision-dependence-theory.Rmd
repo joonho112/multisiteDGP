@@ -471,8 +471,8 @@ ggplot(subset(scatter_df, method == "rank"),
               color = "darkblue", linewidth = 0.7) +
   labs(
     title = "Rank-permutation method (rank_corr = 0.40)",
-    x = expression(z[j]~"(standardized residual effect)"),
-    y = expression(widehat(se)[j]^2~"(sampling variance)")
+    x = expression(z[j] ~ "(standardized residual effect)"),
+    y = expression(widehat(se)[j]^2 ~ "(sampling variance)")
   ) +
   theme_minimal(base_size = 11)
 ```
@@ -485,8 +485,8 @@ ggplot(subset(scatter_df, method == "copula"),
               color = "darkred", linewidth = 0.7) +
   labs(
     title = "Gaussian-copula method (pearson_corr = 0.40)",
-    x = expression(z[j]~"(standardized residual effect)"),
-    y = expression(widehat(se)[j]^2~"(sampling variance)")
+    x = expression(z[j] ~ "(standardized residual effect)"),
+    y = expression(widehat(se)[j]^2 ~ "(sampling variance)")
   ) +
   theme_minimal(base_size = 11)
 ```
@@ -499,8 +499,8 @@ ggplot(subset(scatter_df, method == "hybrid"),
               color = "darkgreen", linewidth = 0.7) +
   labs(
     title = "Hybrid method (rank_corr = 0.40)",
-    x = expression(z[j]~"(standardized residual effect)"),
-    y = expression(widehat(se)[j]^2~"(sampling variance)")
+    x = expression(z[j] ~ "(standardized residual effect)"),
+    y = expression(widehat(se)[j]^2 ~ "(sampling variance)")
   ) +
   theme_minimal(base_size = 11)
 ```

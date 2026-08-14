@@ -107,9 +107,8 @@ alongside the residual `z_j` and the marginal $\tau_j$.
 
 ```{r covariate-sim}
 dat <- sim_multisite(design)
-head(tibble::as_tibble(dat)[,
-  c("site_index", "x_site", "z_j", "tau_j", "tau_j_hat", "se2_j")
-], 6)
+cov_cols <- c("site_index", "x_site", "z_j", "tau_j", "tau_j_hat", "se2_j")
+head(tibble::as_tibble(dat)[, cov_cols], 6)
 ```
 
 `tau_j` carries the covariate component plus residual variation;
