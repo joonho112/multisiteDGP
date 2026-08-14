@@ -1,0 +1,51 @@
+미커버 라인 총: 127 
+
+=== 파일별 미커버 ===
+
+          R/diagnostics-core.R             R/scenario_audit.R 
+                            22                             15 
+ R/class-multisitedgp_design.R      R/utils-reproducibility.R 
+                            14                             12 
+     R/layer1-effects-common.R                      R/plots.R 
+                             9                              8 
+   R/class-multisitedgp_data.R         R/layer2-diagnostics.R 
+                             7                              5 
+          R/layer2-engine-a2.R       R/layer2-gen_se_direct.R 
+                             5                              5 
+    R/layer3-align_rank_corr.R      R/wrapper-sim_multisite.R 
+                             4                              3 
+               R/design_grid.R  R/layer1-gen_effects_pmslab.R 
+                             2                              2 
+   R/layer1-gen_effects_user.R         R/layer1-gen_effects.R 
+                             2                              2 
+  R/layer3-align_copula_corr.R   R/layer3-dependence-custom.R 
+                             2                              2 
+          R/wrapper-sim_meta.R     R/layer1-gen_effects_ald.R 
+                             2                              1 
+R/layer1-gen_effects_mixture.R   R/layer1-gen_effects_skewn.R 
+                             1                              1 
+   R/layer4-gen_observations.R 
+                             1 
+
+──── R/utils-reproducibility.R — 미커버 12 라인 ────
+   202 | list(
+   282 | return(list(
+   297 | x <- as.list(x)
+   310 | child <- as.character(idx)
+   317 | return(list(
+   327 | unname(x)
+   408 | version
+   414 | return(typeof(x))
+   429 | return("<root>")
+   436 | .abort_arg(
+   447 | .abort_arg(
+   473 | .custom_hook_names(design)
+
+──── R/class-multisitedgp_data.R — 미커버 7 라인 ────
+   309 | return(c(lines, "#   Diagnostics unavailable for this object."))
+   391 | return(sprintf("%s: unavailable", label))
+   403 | return(sprintf(
+   422 | return("Feasibility: unavailable")
+   447 | return(tab[0, , drop = FALSE])
+   455 | return(sprintf("%s: unavailable", label))
+   488 | return(NULL)

@@ -1,6 +1,6 @@
 ---
 title: "Phase 5 — 테스트 스위트 재구축 (부분 완료)"
-subtitle: "게이트 29건 제거로 skip 30 → 1, 커버리지 90.89% → 92.22% · 3개 Step 잔여"
+subtitle: "게이트 29건 제거로 skip 30 → 1, 커버리지 90.89% → 92.78% · Step 5.3·5.6 잔여"
 author: "Claude Opus 5"
 date: "2026-08-14"
 format:
@@ -17,10 +17,10 @@ execute:
 ---
 
 ::: {.callout-important title="부분 완료 — PI 확인 필요"}
-Phase 5 는 **6 Step 중 3 개를 완료**하고 멈췄다. 두 가지 이유다.
+Phase 5 는 **6 Step 중 4 개를 완료**하고 멈췄다.
 
 1. **Step 5.3 (snapshot 안정화)은 Phase 4 에 종속**되어 있고 Phase 4 는 D-019(Linux 부재)로 막혀 있다
-2. 자율 실행 구간이 끝나가 나머지 2 Step 을 온전히 수행할 시간이 부족했다
+2. **Step 5.6 (회귀 테스트 + 확장 스위트 재정의)은 부분 완료** — 게이트 정리와 플레이키 검증은 마쳤으나, 원장 각 행에 대응하는 회귀 테스트와 확장 스위트 재정의가 남았다
 
 또한 이 Phase 는 **D3 의 권고안을 잠정 적용**해 실행했다. PI 승인 전이므로, D3 가 기각되면 커밋 하나를 되돌리면 된다 (`git revert`).
 :::
@@ -33,7 +33,7 @@ Phase 5 는 **6 Step 중 3 개를 완료**하고 멈췄다. 두 가지 이유다
 
 부수적으로 두 가지를 발견했다. **`hedgehog` 는 선언만 되고 아무 테스트도 쓰지 않는 유령 의존성**이었다 (Ch.1 U-3 확정 해소). 그리고 engine A2 의 커버리지 작업 중 **조건수 경고의 임계값이 실제 실패 경계와 어긋난다**는 새 결함을 찾았다 (D-022).
 
-커버리지는 **90.89% → 92.22%**, `layer2-engine-a2.R` 은 **84.8% → 95.5%** 로 올랐다.
+커버리지는 **90.89% → 92.78%** 로 올랐다. `layer2-engine-a2.R` 은 **84.8% → 95.5%**, `utils-reproducibility.R` 은 **91.0% → 95.5%** 다.
 
 ## Step 실행 기록
 
@@ -47,8 +47,8 @@ D3 권고에 따라 계획서의 8 Step 이 6 Step 으로 재구성됐다.
 | 5.2 | property 테스트 정리 | **done** | `hedgehog` 가 미사용임을 확인하고 제거 |
 | 5.3 | snapshot 테스트 안정화 | **blocked** | Phase 4 Step 4.5 종속 → D-019 |
 | 5.4 | 커버리지 보강 ① | **done** | engine A2 오류 분기 |
-| 5.5 | 커버리지 보강 ② | **미착수** | |
-| 5.6 | 회귀 테스트 + 게이트 최종 정리 | **부분** | 게이트 정리는 완료, 회귀 테스트는 미착수 |
+| 5.5 | 커버리지 보강 ② | **done** | 해시 정규화 계층 |
+| 5.6 | 회귀 테스트 + 게이트 최종 정리 | **부분** | 게이트 정리·플레이키 검증 완료. 회귀 테스트와 확장 스위트 재정의 미착수 |
 
 ## 산출물
 
@@ -60,7 +60,8 @@ D3 권고에 따라 계획서의 8 Step 이 6 Step 으로 재구성됐다.
 | `tests/testthat/test-T{10,11,13,14,15,16,17,1b,4,9}-*.R` | `skip_if_not_slow()` 호출 제거 (11 건) |
 | `tests/testthat/test-gen-effects-{gaussian-studentt,mixture,pmslab-user-dpm,skewn-ald}.R` | 동일 (6 건) |
 | `tests/testthat/test-property-core-invariants.R` | `skip_if_not_property()` 호출 제거 (12 건) |
-| **`tests/testthat/test-layer2-engine-a2-edges.R`** | **신규** — 23 test_that, 56 assertion |
+| **`tests/testthat/test-layer2-engine-a2-edges.R`** | **신규** — engine A2 오류 분기·수치 경계 |
+| **`tests/testthat/test-utils-reproducibility-canonicalization.R`** | **신규** — 해시 정규화 계층 18 test_that |
 | `DESCRIPTION` | `hedgehog` 를 Suggests 에서 제거 |
 | `log/.../defect-ledger.csv` | D-021 · D-022 추가 (20 → 22 행) |
 
@@ -71,7 +72,9 @@ D3 권고에 따라 계획서의 8 Step 이 6 Step 으로 재구성됐다.
 | `evidence/phase05/test-after-gate-removal.txt` | Step 5.1 직후 스위트 실행 |
 | `evidence/phase05/test-final.txt` | Phase 5 종료 시점 스위트 실행 |
 | `evidence/phase05/uncovered-lines.csv` / `.txt` | 미커버 139 라인 전수 + 파일별 |
-| `evidence/phase05/coverage-after.txt` | 커버리지 재측정 |
+| `evidence/phase05/coverage-after.txt` / `coverage-final.txt` | 커버리지 재측정 |
+| `evidence/phase05/test-final-run{1,2}.txt` | 플레이키 검증 (2 회 연속) |
+| `evidence/phase05/uncovered-lines-2.csv` / `.txt` | Step 5.5 대상 선정 |
 
 ## 근거와 실행 결과
 
@@ -148,8 +151,44 @@ Phase 1 이 `layer2-engine-a2.R` 을 최저 커버리지(84.8%, 미커버 17 줄
 
 | | 전 | 후 |
 |---|--:|--:|
-| 전체 | 90.89 % | **92.22 %** |
+| 전체 | 90.89 % | 92.22 % |
 | `R/layer2-engine-a2.R` | 84.8 % (미커버 17) | **95.5 %** (미커버 5) |
+
+### Step 5.5 — 커버리지 보강 ②: 해시 정규화 계층
+
+`utils-reproducibility.R` 의 미커버 12 줄이 전부 `.canonicalize_for_hash()` 의 정규화 분기였다. **Phase 4 가 재현성 계약을 재설계하면서 신뢰해야 할 바로 그 코드**이므로, 재설계 전에 현재 동작을 고정하는 것이 순서상 옳다.
+
+`test-utils-reproducibility-canonicalization.R` 을 신설했다 (18 test_that).
+
+| 영역 | 검증 내용 |
+|---|---|
+| 제외 분기 | 함수는 **본문이 달라도 같은 표현으로 정규화**된다 — 콜백 본문이 해시에 들어가지 않음을 확인. 환경도 동일 |
+| 문자열 분기 | 수식(`~ x1 + x2`)과 언어 객체(`quote(a + b)`)가 deparse 텍스트로 |
+| 컨테이너 분기 | named list 는 **정렬**되어 원소 순서가 해시를 바꾸지 못한다. unnamed list 는 위치로, pairlist 는 list 로, data.frame 은 열 정렬 |
+| atomic 분기 | 이름과 속성이 제거된다. **그리고 double 은 반올림되지 않는다** — 2 ULP 섭동으로 정규화 표현이 달라짐을 고정 |
+| payload 조립 | data.frame / design / 일반 객체 세 분기 |
+| 진단 allowlist | 허용 목록 밖·비유한·벡터값이 전부 제외됨 |
+| 공개 인자 검증 | `columns_to_include` 미지 열 거부, 열 순서 무관성, `algo` 타입 검증 |
+
+**"double 은 반올림되지 않는다" 테스트가 특히 중요하다.** 이것이 cross-platform 해시가 깨지는 직접 원인(D-002)이며, Phase 4 가 D1 에 따라 이 동작을 바꾸면 함께 갱신해야 한다는 사실을 테스트 주석에 남겼다.
+
+**커버리지 변화:**
+
+| | 전 | 후 |
+|---|--:|--:|
+| 전체 | 92.22 % | **92.78 %** |
+| `R/utils-reproducibility.R` | 91.0 % (미커버 12) | **95.5 %** (미커버 6) |
+
+### 플레이키 검증 (Step 5.6 부분)
+
+전체 스위트를 2 회 연속 실행했다.
+
+| 회차 | 시간 | skip | 실패 |
+|---|--:|--:|--:|
+| 1 | 106.0 s | 1 | 0 |
+| 2 | 105.7 s | 1 | 0 |
+
+skip 목록이 `diff` 로 동일했다 — **플레이키 테스트 없음.**
 
 ### 새 결함 D-022 — 조건수 경고 임계값이 실패 경계와 어긋난다
 
@@ -214,10 +253,8 @@ D-003 을 `fixed` 로 표시하되 **T1a 1 건이 남아 있다.** 성공 기준
 | 항목 | 상태 | 어디로 |
 |---|---|---|
 | Step 5.3 snapshot 안정화 | **blocked** | Phase 4 (D-019 해소 후) |
-| Step 5.5 커버리지 보강 ② | 미착수 | Phase 5 재개 시 |
 | Step 5.6 회귀 테스트 | 부분 | Phase 5 재개 시 |
-| 남은 미커버 라인 | 139 → 약 127 | `diagnostics-core.R` 22 · `scenario_audit.R` 15 · `class-multisitedgp_design.R` 14 · `utils-reproducibility.R` 12 가 상위 |
-| 플레이키 검증 (2 회 연속 실행) | 미수행 | Phase 5 재개 시 |
+| 남은 미커버 라인 | 139 → 약 118 | `diagnostics-core.R` 22 · `scenario_audit.R` 15 · `class-multisitedgp_design.R` 14 가 상위 |
 | 확장 스위트 재정의 | 미수행 | Phase 5 재개 시 → Phase 6 이 소비 |
 
 **확장 스위트 재정의가 특히 중요하다.** 게이트가 사라져 `extended-tests` workflow 가 기본 스위트와 같은 것을 돌리게 됐다. Phase 6 이 이 workflow 를 손보기 전에 존재 이유를 다시 정해야 한다.
@@ -231,13 +268,13 @@ D-003 을 `fixed` 로 표시하되 **T1a 1 건이 남아 있다.** 성공 기준
 | 1 | 기본 skip ≤ 3, 각각 사유 문서화 | **충족** — skip 1 (T1a), 사유는 재현성 정책 |
 | 2 | T13–T17, T1b, T4, T9, T10, T11, P01–P12 가 기본 스위트에서 실행 | **충족** |
 | 3 | 축소한 테스트가 mutation 검사 통과 | **해당 없음** — 축소하지 않음 |
-| 4 | 커버리지가 베이스라인 이상 | **충족** — 90.89 % → 92.22 % |
-| 5 | P0/P1 각 행에 회귀 테스트 | **미충족** — Step 5.6 미착수 |
-| 6 | 기본 스위트가 시간 예산 안 | **충족** — 110.7 s / 180 s |
-| 7 | 2 회 연속 실행 결과 동일 | **미확인** |
+| 4 | 커버리지가 베이스라인 이상 | **충족** — 90.89 % → **92.78 %** |
+| 5 | P0/P1 각 행에 회귀 테스트 | **미충족** — Step 5.6 미완 |
+| 6 | 기본 스위트가 시간 예산 안 | **충족** — 106.0 s / 180 s |
+| 7 | 2 회 연속 실행 결과 동일 | **충족** — 플레이키 없음 |
 | 8 | `helper-skip-policy.R` 에 미사용 helper 없음 | **충족** |
 
-**판정: Phase 5 미완료.** 조건 5 · 7 이 남았고 Step 5.3 은 Phase 4 에 막혀 있다.
+**판정: Phase 5 미완료.** 조건 5 가 남았고 Step 5.3 은 Phase 4 에 막혀 있다. 8 개 조건 중 7 개 충족.
 
 Phase 6(CI)은 Phase 4 · 5 · 7 이 **모두** 끝나야 시작할 수 있으므로, 현재로서는 Phase 6 진입이 두 겹으로 막혀 있다 (Phase 4 는 D-019, Phase 5 는 잔여 Step).
 
@@ -246,9 +283,9 @@ Phase 6(CI)은 Phase 4 · 5 · 7 이 **모두** 끝나야 시작할 수 있으�
 | 항목 | 값 |
 |---|---|
 | 완료 Phase | 1 · 2 · 3 |
-| 부분 완료 | **5 (3/6 Step)** |
+| 부분 완료 | **5 (4/6 Step)** |
 | 막힌 Phase | 4 (D-019), 6 (4·5·7 종속) |
-| 커밋 | 10 건, 전부 로컬 |
+| 커밋 | 11 건, 전부 로컬 |
 | 브랜치 | `upgrade/phase-05-test-suite` |
 | 로그 | `002` ~ `005` (qmd + html) |
 | 결함 원장 | 22 행 — P0 9(2 해소) · P1 6 · P2 7 |

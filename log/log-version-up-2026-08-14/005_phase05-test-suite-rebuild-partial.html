@@ -2221,7 +2221,9 @@ vertical-align: -.125em;
   <li><a href="#step-5.1-게이트-제거" id="toc-step-5.1-게이트-제거" class="nav-link" data-scroll-target="#step-5.1-게이트-제거"><span class="header-section-number">4.1</span> Step 5.1 — 게이트 제거</a></li>
   <li><a href="#step-5.2-property-테스트와-hedgehog" id="toc-step-5.2-property-테스트와-hedgehog" class="nav-link" data-scroll-target="#step-5.2-property-테스트와-hedgehog"><span class="header-section-number">4.2</span> Step 5.2 — property 테스트와 <code>hedgehog</code></a></li>
   <li><a href="#step-5.4-커버리지-보강-①-engine-a2" id="toc-step-5.4-커버리지-보강-①-engine-a2" class="nav-link" data-scroll-target="#step-5.4-커버리지-보강-①-engine-a2"><span class="header-section-number">4.3</span> Step 5.4 — 커버리지 보강 ①: engine A2</a></li>
-  <li><a href="#새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다" id="toc-새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다" class="nav-link" data-scroll-target="#새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다"><span class="header-section-number">4.4</span> 새 결함 D-022 — 조건수 경고 임계값이 실패 경계와 어긋난다</a></li>
+  <li><a href="#step-5.5-커버리지-보강-②-해시-정규화-계층" id="toc-step-5.5-커버리지-보강-②-해시-정규화-계층" class="nav-link" data-scroll-target="#step-5.5-커버리지-보강-②-해시-정규화-계층"><span class="header-section-number">4.4</span> Step 5.5 — 커버리지 보강 ②: 해시 정규화 계층</a></li>
+  <li><a href="#플레이키-검증-step-5.6-부분" id="toc-플레이키-검증-step-5.6-부분" class="nav-link" data-scroll-target="#플레이키-검증-step-5.6-부분"><span class="header-section-number">4.5</span> 플레이키 검증 (Step 5.6 부분)</a></li>
+  <li><a href="#새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다" id="toc-새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다" class="nav-link" data-scroll-target="#새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다"><span class="header-section-number">4.6</span> 새 결함 D-022 — 조건수 경고 임계값이 실패 경계와 어긋난다</a></li>
   </ul></li>
   <li><a href="#결정-사항" id="toc-결정-사항" class="nav-link" data-scroll-target="#결정-사항"><span class="header-section-number">5</span> 결정 사항</a></li>
   <li><a href="#원장-변경" id="toc-원장-변경" class="nav-link" data-scroll-target="#원장-변경"><span class="header-section-number">6</span> 원장 변경</a></li>
@@ -2236,7 +2238,7 @@ vertical-align: -.125em;
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Phase 5 — 테스트 스위트 재구축 (부분 완료)</h1>
-<p class="subtitle lead">게이트 29건 제거로 skip 30 → 1, 커버리지 90.89% → 92.22% · 3개 Step 잔여</p>
+<p class="subtitle lead">게이트 29건 제거로 skip 30 → 1, 커버리지 90.89% → 92.78% · Step 5.3·5.6 잔여</p>
 </div>
 
 
@@ -2275,10 +2277,10 @@ vertical-align: -.125em;
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Phase 5 는 <strong>6 Step 중 3 개를 완료</strong>하고 멈췄다. 두 가지 이유다.</p>
+<p>Phase 5 는 <strong>6 Step 중 4 개를 완료</strong>하고 멈췄다.</p>
 <ol type="1">
 <li><strong>Step 5.3 (snapshot 안정화)은 Phase 4 에 종속</strong>되어 있고 Phase 4 는 D-019(Linux 부재)로 막혀 있다</li>
-<li>자율 실행 구간이 끝나가 나머지 2 Step 을 온전히 수행할 시간이 부족했다</li>
+<li><strong>Step 5.6 (회귀 테스트 + 확장 스위트 재정의)은 부분 완료</strong> — 게이트 정리와 플레이키 검증은 마쳤으나, 원장 각 행에 대응하는 회귀 테스트와 확장 스위트 재정의가 남았다</li>
 </ol>
 <p>또한 이 Phase 는 <strong>D3 의 권고안을 잠정 적용</strong>해 실행했다. PI 승인 전이므로, D3 가 기각되면 커밋 하나를 되돌리면 된다 (<code>git revert</code>).</p>
 </div>
@@ -2288,7 +2290,7 @@ vertical-align: -.125em;
 <p>테스트 게이트 29 건을 축소 없이 전부 제거해 기본 <code>devtools::test()</code> 의 skip 을 <strong>30 → 1</strong> 로 줄였다. 남은 1 건은 T1a 이며 D1 결정에 종속된다 — D1 이 O2 또는 O4 로 확정되면 <strong>skip 0</strong> 이 된다.</p>
 <p>성공 기준 <strong>G3(skip ≤ 3)이 충족</strong>됐고, 스위트 실행 시간은 110.7 초로 예산 3 분 안에 들어온다.</p>
 <p>부수적으로 두 가지를 발견했다. <strong><code>hedgehog</code> 는 선언만 되고 아무 테스트도 쓰지 않는 유령 의존성</strong>이었다 (Ch.1 U-3 확정 해소). 그리고 engine A2 의 커버리지 작업 중 <strong>조건수 경고의 임계값이 실제 실패 경계와 어긋난다</strong>는 새 결함을 찾았다 (D-022).</p>
-<p>커버리지는 <strong>90.89% → 92.22%</strong>, <code>layer2-engine-a2.R</code> 은 <strong>84.8% → 95.5%</strong> 로 올랐다.</p>
+<p>커버리지는 <strong>90.89% → 92.78%</strong> 로 올랐다. <code>layer2-engine-a2.R</code> 은 <strong>84.8% → 95.5%</strong>, <code>utils-reproducibility.R</code> 은 <strong>91.0% → 95.5%</strong> 다.</p>
 </section>
 <section id="step-실행-기록" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="step-실행-기록"><span class="header-section-number">2</span> Step 실행 기록</h2>
@@ -2348,14 +2350,14 @@ vertical-align: -.125em;
 <tr class="odd">
 <td>5.5</td>
 <td>커버리지 보강 ②</td>
-<td><strong>미착수</strong></td>
-<td></td>
+<td><strong>done</strong></td>
+<td>해시 정규화 계층</td>
 </tr>
 <tr class="even">
 <td>5.6</td>
 <td>회귀 테스트 + 게이트 최종 정리</td>
 <td><strong>부분</strong></td>
-<td>게이트 정리는 완료, 회귀 테스트는 미착수</td>
+<td>게이트 정리·플레이키 검증 완료. 회귀 테스트와 확장 스위트 재정의 미착수</td>
 </tr>
 </tbody>
 </table>
@@ -2394,13 +2396,17 @@ vertical-align: -.125em;
 </tr>
 <tr class="odd">
 <td><strong><code>tests/testthat/test-layer2-engine-a2-edges.R</code></strong></td>
-<td><strong>신규</strong> — 23 test_that, 56 assertion</td>
+<td><strong>신규</strong> — engine A2 오류 분기·수치 경계</td>
 </tr>
 <tr class="even">
+<td><strong><code>tests/testthat/test-utils-reproducibility-canonicalization.R</code></strong></td>
+<td><strong>신규</strong> — 해시 정규화 계층 18 test_that</td>
+</tr>
+<tr class="odd">
 <td><code>DESCRIPTION</code></td>
 <td><code>hedgehog</code> 를 Suggests 에서 제거</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>log/.../defect-ledger.csv</code></td>
 <td>D-021 · D-022 추가 (20 → 22 행)</td>
 </tr>
@@ -2434,8 +2440,16 @@ vertical-align: -.125em;
 <td>미커버 139 라인 전수 + 파일별</td>
 </tr>
 <tr class="even">
-<td><code>evidence/phase05/coverage-after.txt</code></td>
+<td><code>evidence/phase05/coverage-after.txt</code> / <code>coverage-final.txt</code></td>
 <td>커버리지 재측정</td>
+</tr>
+<tr class="odd">
+<td><code>evidence/phase05/test-final-run{1,2}.txt</code></td>
+<td>플레이키 검증 (2 회 연속)</td>
+</tr>
+<tr class="even">
+<td><code>evidence/phase05/uncovered-lines-2.csv</code> / <code>.txt</code></td>
+<td>Step 5.5 대상 선정</td>
 </tr>
 </tbody>
 </table>
@@ -2598,7 +2612,7 @@ vertical-align: -.125em;
 <tr class="odd">
 <td>전체</td>
 <td style="text-align: right;">90.89 %</td>
-<td style="text-align: right;"><strong>92.22 %</strong></td>
+<td style="text-align: right;">92.22 %</td>
 </tr>
 <tr class="even">
 <td><code>R/layer2-engine-a2.R</code></td>
@@ -2608,8 +2622,112 @@ vertical-align: -.125em;
 </tbody>
 </table>
 </section>
-<section id="새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다" class="level3" data-number="4.4">
-<h3 data-number="4.4" class="anchored" data-anchor-id="새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다"><span class="header-section-number">4.4</span> 새 결함 D-022 — 조건수 경고 임계값이 실패 경계와 어긋난다</h3>
+<section id="step-5.5-커버리지-보강-②-해시-정규화-계층" class="level3" data-number="4.4">
+<h3 data-number="4.4" class="anchored" data-anchor-id="step-5.5-커버리지-보강-②-해시-정규화-계층"><span class="header-section-number">4.4</span> Step 5.5 — 커버리지 보강 ②: 해시 정규화 계층</h3>
+<p><code>utils-reproducibility.R</code> 의 미커버 12 줄이 전부 <code>.canonicalize_for_hash()</code> 의 정규화 분기였다. <strong>Phase 4 가 재현성 계약을 재설계하면서 신뢰해야 할 바로 그 코드</strong>이므로, 재설계 전에 현재 동작을 고정하는 것이 순서상 옳다.</p>
+<p><code>test-utils-reproducibility-canonicalization.R</code> 을 신설했다 (18 test_that).</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>영역</th>
+<th>검증 내용</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>제외 분기</td>
+<td>함수는 <strong>본문이 달라도 같은 표현으로 정규화</strong>된다 — 콜백 본문이 해시에 들어가지 않음을 확인. 환경도 동일</td>
+</tr>
+<tr class="even">
+<td>문자열 분기</td>
+<td>수식(<code>~ x1 + x2</code>)과 언어 객체(<code>quote(a + b)</code>)가 deparse 텍스트로</td>
+</tr>
+<tr class="odd">
+<td>컨테이너 분기</td>
+<td>named list 는 <strong>정렬</strong>되어 원소 순서가 해시를 바꾸지 못한다. unnamed list 는 위치로, pairlist 는 list 로, data.frame 은 열 정렬</td>
+</tr>
+<tr class="even">
+<td>atomic 분기</td>
+<td>이름과 속성이 제거된다. <strong>그리고 double 은 반올림되지 않는다</strong> — 2 ULP 섭동으로 정규화 표현이 달라짐을 고정</td>
+</tr>
+<tr class="odd">
+<td>payload 조립</td>
+<td>data.frame / design / 일반 객체 세 분기</td>
+</tr>
+<tr class="even">
+<td>진단 allowlist</td>
+<td>허용 목록 밖·비유한·벡터값이 전부 제외됨</td>
+</tr>
+<tr class="odd">
+<td>공개 인자 검증</td>
+<td><code>columns_to_include</code> 미지 열 거부, 열 순서 무관성, <code>algo</code> 타입 검증</td>
+</tr>
+</tbody>
+</table>
+<p><strong>“double 은 반올림되지 않는다” 테스트가 특히 중요하다.</strong> 이것이 cross-platform 해시가 깨지는 직접 원인(D-002)이며, Phase 4 가 D1 에 따라 이 동작을 바꾸면 함께 갱신해야 한다는 사실을 테스트 주석에 남겼다.</p>
+<p><strong>커버리지 변화:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: right;">전</th>
+<th style="text-align: right;">후</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>전체</td>
+<td style="text-align: right;">92.22 %</td>
+<td style="text-align: right;"><strong>92.78 %</strong></td>
+</tr>
+<tr class="even">
+<td><code>R/utils-reproducibility.R</code></td>
+<td style="text-align: right;">91.0 % (미커버 12)</td>
+<td style="text-align: right;"><strong>95.5 %</strong> (미커버 6)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="플레이키-검증-step-5.6-부분" class="level3" data-number="4.5">
+<h3 data-number="4.5" class="anchored" data-anchor-id="플레이키-검증-step-5.6-부분"><span class="header-section-number">4.5</span> 플레이키 검증 (Step 5.6 부분)</h3>
+<p>전체 스위트를 2 회 연속 실행했다.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>회차</th>
+<th style="text-align: right;">시간</th>
+<th style="text-align: right;">skip</th>
+<th style="text-align: right;">실패</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td style="text-align: right;">106.0 s</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td style="text-align: right;">105.7 s</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>skip 목록이 <code>diff</code> 로 동일했다 — <strong>플레이키 테스트 없음.</strong></p>
+</section>
+<section id="새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다" class="level3" data-number="4.6">
+<h3 data-number="4.6" class="anchored" data-anchor-id="새-결함-d-022-조건수-경고-임계값이-실패-경계와-어긋난다"><span class="header-section-number">4.6</span> 새 결함 D-022 — 조건수 경고 임계값이 실패 경계와 어긋난다</h3>
 <p>engine A2 의 조건수 경고를 테스트하다 발견했다.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>.warn_trunc_gamma_conditioning <span class="ot">&lt;-</span> <span class="cf">function</span>(n_bar, cv, n_min) {</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (cv <span class="sc">&lt;</span> <span class="fl">1e-3</span>) {</span>
@@ -2749,24 +2867,14 @@ Note
 <td>Phase 4 (D-019 해소 후)</td>
 </tr>
 <tr class="even">
-<td>Step 5.5 커버리지 보강 ②</td>
-<td>미착수</td>
-<td>Phase 5 재개 시</td>
-</tr>
-<tr class="odd">
 <td>Step 5.6 회귀 테스트</td>
 <td>부분</td>
 <td>Phase 5 재개 시</td>
 </tr>
-<tr class="even">
-<td>남은 미커버 라인</td>
-<td>139 → 약 127</td>
-<td><code>diagnostics-core.R</code> 22 · <code>scenario_audit.R</code> 15 · <code>class-multisitedgp_design.R</code> 14 · <code>utils-reproducibility.R</code> 12 가 상위</td>
-</tr>
 <tr class="odd">
-<td>플레이키 검증 (2 회 연속 실행)</td>
-<td>미수행</td>
-<td>Phase 5 재개 시</td>
+<td>남은 미커버 라인</td>
+<td>139 → 약 118</td>
+<td><code>diagnostics-core.R</code> 22 · <code>scenario_audit.R</code> 15 · <code>class-multisitedgp_design.R</code> 14 가 상위</td>
 </tr>
 <tr class="even">
 <td>확장 스위트 재정의</td>
@@ -2812,22 +2920,22 @@ Note
 <tr class="even">
 <td>4</td>
 <td>커버리지가 베이스라인 이상</td>
-<td><strong>충족</strong> — 90.89 % → 92.22 %</td>
+<td><strong>충족</strong> — 90.89 % → <strong>92.78 %</strong></td>
 </tr>
 <tr class="odd">
 <td>5</td>
 <td>P0/P1 각 행에 회귀 테스트</td>
-<td><strong>미충족</strong> — Step 5.6 미착수</td>
+<td><strong>미충족</strong> — Step 5.6 미완</td>
 </tr>
 <tr class="even">
 <td>6</td>
 <td>기본 스위트가 시간 예산 안</td>
-<td><strong>충족</strong> — 110.7 s / 180 s</td>
+<td><strong>충족</strong> — 106.0 s / 180 s</td>
 </tr>
 <tr class="odd">
 <td>7</td>
 <td>2 회 연속 실행 결과 동일</td>
-<td><strong>미확인</strong></td>
+<td><strong>충족</strong> — 플레이키 없음</td>
 </tr>
 <tr class="even">
 <td>8</td>
@@ -2836,7 +2944,7 @@ Note
 </tr>
 </tbody>
 </table>
-<p><strong>판정: Phase 5 미완료.</strong> 조건 5 · 7 이 남았고 Step 5.3 은 Phase 4 에 막혀 있다.</p>
+<p><strong>판정: Phase 5 미완료.</strong> 조건 5 가 남았고 Step 5.3 은 Phase 4 에 막혀 있다. 8 개 조건 중 7 개 충족.</p>
 <p>Phase 6(CI)은 Phase 4 · 5 · 7 이 <strong>모두</strong> 끝나야 시작할 수 있으므로, 현재로서는 Phase 6 진입이 두 겹으로 막혀 있다 (Phase 4 는 D-019, Phase 5 는 잔여 Step).</p>
 </section>
 <section id="자율-실행-구간-종료-시점의-상태" class="level2" data-number="9">
@@ -2859,7 +2967,7 @@ Note
 </tr>
 <tr class="even">
 <td>부분 완료</td>
-<td><strong>5 (3/6 Step)</strong></td>
+<td><strong>5 (4/6 Step)</strong></td>
 </tr>
 <tr class="odd">
 <td>막힌 Phase</td>
@@ -2867,7 +2975,7 @@ Note
 </tr>
 <tr class="even">
 <td>커밋</td>
-<td>10 건, 전부 로컬</td>
+<td>11 건, 전부 로컬</td>
 </tr>
 <tr class="odd">
 <td>브랜치</td>
