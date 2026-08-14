@@ -1,0 +1,117 @@
+test-coverage	Check exported-function coverage	﻿2026-08-14T16:26:19.5781005Z ##[group]Run pkgload::load_all(".", quiet = TRUE)
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5781231Z [36;1mpkgload::load_all(".", quiet = TRUE)[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5781399Z [36;1mns <- asNamespace("multisiteDGP")[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5781566Z [36;1mexported <- getNamespaceExports(ns)[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5781735Z [36;1minternal <- setdiff(ls(ns), exported)[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5782015Z [36;1minternal <- internal[vapply(internal, function(name) is.function(get(name, envir = ns)), logical(1))][0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5782290Z [36;1minternal_regex <- paste0([0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5782425Z [36;1m  "^",[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5782560Z [36;1m  gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", internal),[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5782722Z [36;1m  "$"[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5782831Z [36;1m)[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5782929Z [36;1m[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5783042Z [36;1mcov <- covr::package_coverage([0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5783193Z [36;1m  type = "tests",[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5783322Z [36;1m  quiet = FALSE,[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5783474Z [36;1m  clean = FALSE,[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5783672Z [36;1m  install_path = file.path(Sys.getenv("RUNNER_TEMP"), "multisiteDGP-cov"),[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5783908Z [36;1m  function_exclusions = internal_regex[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5784058Z [36;1m)[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5784157Z [36;1m[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5784296Z [36;1mline_cov <- covr::percent_coverage(cov, by = "line")[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5784551Z [36;1mwriteLines(sprintf("Exported-function line coverage: %.2f%%", line_cov))[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5784773Z [36;1mif (line_cov < 90) {[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5784964Z [36;1m  stop(sprintf("Coverage %.2f%% < 90%% target", line_cov), call. = FALSE)[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5785168Z [36;1m}[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5785271Z [36;1m[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5785412Z [36;1mcovr::to_cobertura(cov, filename = "cobertura.xml")[0m
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5790169Z shell: /usr/local/bin/Rscript {0}
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5790306Z env:
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5790415Z   _R_CHECK_FORCE_SUGGESTS_: false
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5790551Z   NOT_CRAN: true
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5790655Z   TZ: UTC
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5790762Z   MULTISITEDGP_RUN_SLOW: false
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5790902Z   MULTISITEDGP_RUN_PROPERTY: false
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5791051Z   MULTISITEDGP_RUN_VALIDATION: false
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5791264Z   MULTISITEDGP_REPRODUCIBILITY_POLICY: linux-strict-hash-cross-os-demoted
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5791504Z   MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN: false
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5791662Z   CODECOV_TOKEN: 
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5791791Z   R_LIBS_USER: /home/runner/work/_temp/Library
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5791950Z   _R_CHECK_SYSTEM_CLOCK_: FALSE
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5792145Z   RSPM: https://packagemanager.posit.co/cran/__linux__/noble/latest
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5792438Z   RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/noble/latest
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5792689Z   R_LIB_FOR_PAK: /opt/R/4.6.1/lib/R/site-library
+test-coverage	Check exported-function coverage	2026-08-14T16:26:19.5792846Z ##[endgroup]
+test-coverage	Check exported-function coverage	2026-08-14T16:26:20.5626830Z * installing *source* package ‘multisiteDGP’ ...
+test-coverage	Check exported-function coverage	2026-08-14T16:26:20.5627520Z ** this is package ‘multisiteDGP’ version ‘0.1.1’
+test-coverage	Check exported-function coverage	2026-08-14T16:26:20.5629782Z ** using non-staged installation
+test-coverage	Check exported-function coverage	2026-08-14T16:26:20.5756979Z ** R
+test-coverage	Check exported-function coverage	2026-08-14T16:26:20.5936488Z ** inst
+test-coverage	Check exported-function coverage	2026-08-14T16:26:20.5949428Z ** tests
+test-coverage	Check exported-function coverage	2026-08-14T16:26:20.5984105Z ** byte-compile and prepare package for lazy loading
+test-coverage	Check exported-function coverage	2026-08-14T16:26:21.9917788Z ** help
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.1618602Z *** installing help indices
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.2445917Z   converting help for package ‘multisiteDGP’
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3145605Z     adapters                                example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3156166Z     align_copula_corr                       example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3166185Z     align_hybrid_corr                       example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3176169Z     align_rank_corr                         example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3183181Z     as_tibble.multisitedgp_data             example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3191781Z     bhattacharyya_coef                      example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3200817Z     canonical_hash                          example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3209173Z     compute_I                               example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3218285Z     compute_kappa                           example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3228151Z     compute_shrinkage                       example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3236896Z     default_thresholds                      example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3246414Z     design_grid                             example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3256642Z     feasibility_index                       example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3267895Z     gen_effects                             example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3277336Z     gen_effects_ald                         example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3286123Z     gen_effects_dpm                         example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3296108Z     gen_effects_gaussian                    example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3306680Z     gen_effects_mixture                     example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3317166Z     gen_effects_pmslab                      example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3328000Z     gen_effects_skewn                       example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3338119Z     gen_effects_studentt                    example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3349960Z     gen_effects_user                        example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3371486Z     gen_observations                        example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3382942Z     gen_se_direct                           example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3394917Z     gen_site_sizes                          example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3404633Z     heterogeneity_ratio                     example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3415841Z     informativeness                         example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3423840Z     is_multisitedgp_data                    example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3434141Z     is_multisitedgp_design                  example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3444281Z     ks_distance                             example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3456055Z     mean_shrinkage                          example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3472065Z     multisitedgp_design                     example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3482519Z     plots                                   example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3496174Z     presets                                 example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3503999Z     print.multisitedgp_data                 example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3513782Z     provenance_string                       example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3523624Z     realized_rank_corr                      example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3533380Z     realized_rank_corr_marginal             example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3545023Z     scenario_audit                          example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3558668Z     sim_meta                                example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3571567Z     sim_multisite                           example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3579760Z     summary.multisitedgp_data               example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3590895Z     update_multisitedgp_design              example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3601069Z     validate_multisitedgp_design            example
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3603654Z *** copying figures
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.3606857Z ** building package indices
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.5399650Z ** installing vignettes
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.5426158Z ** testing if installed package can be loaded
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.8053762Z * DONE (multisiteDGP)
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.8196141Z Running specific tests for package ‘multisiteDGP’
+test-coverage	Check exported-function coverage	2026-08-14T16:26:22.8196546Z   Running ‘testthat.R’
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3095863Z ##[error]Error: running the tests in ‘testthat.R’ failed
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3103686Z ##[error]Error: Failure in `/home/runner/work/_temp/multisiteDGP-cov/multisiteDGP/multisiteDGP-tests/testthat.Rout.fail`
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3104539Z t.
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3104790Z * Copy 'tests/testthat/_snaps' to local package.
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3105521Z * Run `testthat::snapshot_accept()` to accept all changes.
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3106037Z * Run `testthat::snapshot_review()` to review all changes.
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3106366Z [ FAIL 15 | WARN 0 | SKIP 36 | PASS 4314 ]
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3106771Z Error:
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3106963Z ! Test failures.
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3107149Z Execution halted
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3107345Z Execution halted
+test-coverage	Check exported-function coverage	2026-08-14T16:29:55.3145595Z ##[error]Process completed with exit code 1.
