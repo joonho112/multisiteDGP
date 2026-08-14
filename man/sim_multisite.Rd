@@ -123,7 +123,7 @@ the \code{\link{presets}} family for defensible starting designs;
 four layers exposed individually;
 the \href{../articles/a1-getting-started.html}{Getting started} vignette.
 
-Other family-wrappers: 
-\code{\link{sim_meta}()}
+Other family-wrappers:
+\code{\link[=sim_meta]{sim_meta()}}
 }
 \concept{family-wrappers}

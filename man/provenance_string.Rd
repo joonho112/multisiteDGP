@@ -48,7 +48,7 @@ in multisite trials. \emph{Journal of Educational and Behavioral Statistics},
 the \href{../articles/m7-reproducibility-provenance.html}{M7
 Reproducibility and provenance} vignette.
 
-Other family-reproducibility: 
-\code{\link{canonical_hash}()}
+Other family-reproducibility:
+\code{\link[=canonical_hash]{canonical_hash()}}
 }
 \concept{family-reproducibility}

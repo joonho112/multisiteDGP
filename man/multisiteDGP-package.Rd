@@ -192,5 +192,10 @@ Useful links:
 \author{
 \strong{Maintainer}: JoonHo Lee \email{jlee296@ua.edu} (\href{https://orcid.org/0009-0006-4019-8703}{ORCID})
 
+Authors:
+\itemize{
+  \item JoonHo Lee \email{jlee296@ua.edu} (\href{https://orcid.org/0009-0006-4019-8703}{ORCID})
+}
+
 }
 \keyword{internal}

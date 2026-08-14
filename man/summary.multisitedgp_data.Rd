@@ -39,14 +39,14 @@ header; \code{\link{compute_I}}, \code{\link{realized_rank_corr}},
 \code{\link{bhattacharyya_coef}}, \code{\link{ks_distance}} for
 the underlying scalar diagnostics.
 
-Other family-design: 
-\code{\link{as_tibble.multisitedgp_data}()},
-\code{\link{design_grid}()},
-\code{\link{is_multisitedgp_data}()},
-\code{\link{is_multisitedgp_design}()},
-\code{\link{multisitedgp_design}()},
-\code{\link{print.multisitedgp_data}()},
-\code{\link{update_multisitedgp_design}()},
-\code{\link{validate_multisitedgp_design}()}
+Other family-design:
+\code{\link[=as_tibble.multisitedgp_data]{as_tibble.multisitedgp_data()}},
+\code{\link[=design_grid]{design_grid()}},
+\code{\link[=is_multisitedgp_data]{is_multisitedgp_data()}},
+\code{\link[=is_multisitedgp_design]{is_multisitedgp_design()}},
+\code{\link[=multisitedgp_design]{multisitedgp_design()}},
+\code{\link[=print.multisitedgp_data]{print.multisitedgp_data()}},
+\code{\link[=update_multisitedgp_design]{update_multisitedgp_design()}},
+\code{\link[=validate_multisitedgp_design]{validate_multisitedgp_design()}}
 }
 \concept{family-design}

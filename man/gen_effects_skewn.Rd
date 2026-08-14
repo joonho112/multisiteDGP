@@ -99,14 +99,14 @@ exponential tails;
 the \href{../articles/m2-g-distribution-catalog.html}{M2 G-distribution
 catalog} vignette.
 
-Other family-effects: 
-\code{\link{gen_effects}()},
-\code{\link{gen_effects_ald}()},
-\code{\link{gen_effects_dpm}()},
-\code{\link{gen_effects_gaussian}()},
-\code{\link{gen_effects_mixture}()},
-\code{\link{gen_effects_pmslab}()},
-\code{\link{gen_effects_studentt}()},
-\code{\link{gen_effects_user}()}
+Other family-effects:
+\code{\link[=gen_effects]{gen_effects()}},
+\code{\link[=gen_effects_ald]{gen_effects_ald()}},
+\code{\link[=gen_effects_dpm]{gen_effects_dpm()}},
+\code{\link[=gen_effects_gaussian]{gen_effects_gaussian()}},
+\code{\link[=gen_effects_mixture]{gen_effects_mixture()}},
+\code{\link[=gen_effects_pmslab]{gen_effects_pmslab()}},
+\code{\link[=gen_effects_studentt]{gen_effects_studentt()}},
+\code{\link[=gen_effects_user]{gen_effects_user()}}
 }
 \concept{family-effects}

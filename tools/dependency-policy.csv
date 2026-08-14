@@ -16,7 +16,7 @@ Suggests,LaplacesDemon,,asymmetric Laplace effect generation,soft dependency wit
 Suggests,copula,,optional copula examples and user hooks,soft dependency with guard
 Suggests,metafor,,metafor adapter,soft dependency with hard reject
 Suggests,baggr,,baggr adapter,soft dependency with hard reject
-Suggests,multisitepower,,multisitepower adapter,soft dependency with hard reject via shared adapter policy; no dedicated E-ID in v1
+not-declared,multisitepower,,multisitepower adapter,off-CRAN (github.com/jche/multisitepower); deliberately NOT in Suggests since v0.2.0 because an unresolvable Suggests entry breaks pak on macOS/Windows (D-025); runtime guard names the install command
 Suggests,deconvolveR,,Twin Towers preset,soft dependency with hard reject
 Suggests,furrr,,parallel design-grid examples,soft dependency for examples
 Suggests,yaml,,cookbook manifest examples,docs-only soft dependency
