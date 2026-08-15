@@ -201,7 +201,12 @@
   matched <- match(beta_names, column_names_normalized)
   out[matched] <- as.numeric(beta)
 
-  non_intercept <- column_names_normalized != "(intercept)"
+  # .normalize_beta_names() emits "(Intercept)". Comparing against a lowercase
+  # literal here never matched, so the intercept column was always counted as a
+  # missing *non-intercept* coefficient and a named `beta` that omitted the
+  # intercept was refused — contradicting the unnamed path, which defaults it to
+  # zero, and the fix line, which says to pass the non-intercept ones. D-035.
+  non_intercept <- column_names_normalized != "(Intercept)"
   missing_non_intercept <- non_intercept & !(seq_along(column_names) %in% matched)
   if (any(missing_non_intercept)) {
     .abort_arg(
