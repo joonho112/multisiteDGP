@@ -307,7 +307,7 @@ summary <- rbind(summary, data.frame(
   GM_se2_mean_rel_error = NA_real_,
   GM_se2_mean_pass = NA,
   acceptance_pass = NA,
-  acceptance_note = "DPM is explicit v1 skip evidence.",
+  acceptance_note = "DPM is an explicit skip: it is a reserved true_dist value, not a generated shape.",
   stringsAsFactors = FALSE
 ))
 summary_path <- validation_write_csv(summary, summary_path)

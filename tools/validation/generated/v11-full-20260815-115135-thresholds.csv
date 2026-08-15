@@ -1,0 +1,6 @@
+"run_id","experiment_id","threshold","value","role","acceptance_role"
+"v11-full-20260815-115135","V11","mean_shrinkage_min",0.3,"scenario_audit_public_quality_gate","reported_not_tuned_for_v11_pass_rate"
+"v11-full-20260815-115135","V11","feasibility_min",5,"scenario_audit_public_quality_gate","reported_not_tuned_for_v11_pass_rate"
+"v11-full-20260815-115135","V11","R_max",30,"scenario_audit_public_quality_gate","reported_not_tuned_for_v11_pass_rate"
+"v11-full-20260815-115135","V11","bhattacharyya_min",0.85,"scenario_audit_public_quality_gate","reported_not_tuned_for_v11_pass_rate"
+"v11-full-20260815-115135","V11","ks_max",0.1,"scenario_audit_public_quality_gate","reported_not_tuned_for_v11_pass_rate"

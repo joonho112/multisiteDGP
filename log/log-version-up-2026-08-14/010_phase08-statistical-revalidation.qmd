@@ -1,0 +1,262 @@
+---
+title: "Phase 8 — 통계 검증 재실행"
+subtitle: "V0–V12 열세 실험 전부 통과 · JEBS 부록 비트 단위 재현 확인 · 수동 시각 검토가 찾은 결함 1 건"
+author: "Claude Opus 5"
+date: "2026-08-15"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+## 요약
+
+Phase 4(재현성 계약·solver), Phase 5(테스트·오류 경로), Phase 7(광고 표면)이 패키지의 통계적 주장을 무너뜨렸는지 확인했다. **무너뜨리지 않았다.**
+
+- validation 실험 **V0–V12 열세 개 전부 `full` 모드에서 통과**한다
+- JEBS 부록 계산이 **비트 단위로** 재현된다 — 4 seed × 7 열 전부 `identical()`
+- 하네스는 **수정 없이** 현재 코드에서 돌았다
+
+신규 결함 **1 건**(D-036)을 찾았다. 자동 검사가 아니라 **그림을 직접 눈으로 본** 데서 나왔다.
+
+---
+
+## Step 8.1 — 하네스 복구
+
+계획서는 이 Step 을 "하네스가 현재 코드에서 동작하게 만든다" 로 잡았다. **고칠 것이 없었다.** Phase 4/5/7 이 인터페이스를 깨지 않았다는 뜻이고, 그 자체가 결과다.
+
+2026-05 결과 **239 파일**을 `artifacts/validation-2026-05/` 에 보존했다. 비교 기준이 없으면 "통과" 는 아무 말도 하지 않는다.
+
+### smoke 를 먼저 돌렸고, 그 결과를 잘못 읽을 뻔했다
+
+인터페이스 파손은 싸게 찾는 것이 맞으므로 13 개를 `smoke` 로 먼저 돌렸다. **11 개 통과, V06 · V12 실패.**
+
+이것을 "결함 2 건" 으로 보고했다면 틀렸을 것이다. manifest 를 확인하니 둘 다 `default_mode: full` 이고, V06 은 제목부터 *"large sample"* 이며 수용 규칙이 대표본 분산 허용오차 위에 서 있는데 smoke 는 **5 반복**이다. 규칙이 상정한 영역이 아니다.
+
+**full 에서 V06 은 통과한다.** smoke 실패는 실험 설계대로다.
+
+---
+
+## Step 8.2 · 8.3 — 전체 재실행
+
+| id | 우선순위 | 실험 | 결과 | 소요 |
+|---|---|---|---|--:|
+| V0 | P0 | Hello-world default calibration | **pass** | 276 s |
+| V01 | P0 | Covariate dependence joint construction | **pass** | 1535 s |
+| V02 | P0 | JEBS bit-identical regression full grid | **pass** | 79 s |
+| V03 | P0 | Walters 2024 Boston VAM regression | **pass** | 5 s |
+| V04 | P0 | Engine A2 multi-start solver convergence | **pass** | 130 s |
+| V05 | P0 | Decision C reject enforcement | **pass** | 3 s |
+| V06 | P1 | 7 G shape standardization large sample | **pass** | 4 s |
+| V07 | P1 | Paradigm B exact I and R recovery | **pass** | 10 s |
+| V08 | P1 | Engine A2 reproducibility cross-machine | **pass** | 6 s |
+| V09 | P1 | Hill-climb boundary convergence | **pass** | 2065 s |
+| V10 | P2 | Visual diagnostic plots | **pass** | 7 s |
+| V11 | P2 | scenario_audit baseline | **pass** | 2701 s |
+| V12 | P2 | preset_jebs_paper Lee figure regression | **pass** (수정 후) | 2 s |
+
+총 약 116 분.
+
+### V12 — 유일한 실제 수정
+
+full 에서도 V12 만 실패했고, 원인이 정확히 하나였다.
+
+```
+hash_matches_expected   FALSE     ← 유일한 FALSE
+diagnostics_I           TRUE
+diagnostics_R           TRUE
+figure_render_pass      TRUE
+finite_shrinkage 외      TRUE
+```
+
+`expected_hash <- "a96eaabd1c022e32"` 가 리터럴로 박혀 있었다. 현재 값은 `dab943488dc9d8ae` 다.
+
+**회귀가 아니다.** `canonical_hash()` 의 payload 에는 스키마 버전이 들어간다. Phase 4 가 스키마를 v1 에서 v3 로 바꿨으므로(파생 진단 제거 — D-002) 데이터가 한 비트도 안 바뀌어도 모든 해시가 움직인다.
+
+::: {.callout-note title="V02 는 왜 통과했는가"}
+같은 종류의 검사인데 V02 는 통과했다. 구현이 다르다.
+
+| | 기대 해시를 어떻게 얻는가 | 스키마 의존 |
+|---|---|---|
+| **V02** | 실행 시점에 golden `.rds` 를 읽어 `canonical_hash()` 계산 | **없음** — 양쪽이 같은 스키마 |
+| **V12** | 문자열 리터럴 | 있음 |
+
+V02 의 방식이 옳다. V12 는 리터럴을 쓰는 한 다음 스키마 변경에서 또 깨진다.
+:::
+
+리터럴을 v3 값으로 갱신하되, **왜 깨졌는지 다음 사람이 조사 없이 알 수 있게** 만들었다. 스키마 버전을 함께 고정하고 요약에 `schema_matches_expected` 를 기록한다. 실패 시 무엇을 먼저 볼지 주석에 적었다 — 스키마가 움직였으면 문서화된 결정, 데이터가 움직였으면 회귀이고 판정 권한은 golden `.rds` 에 있다.
+
+이 구분이 없으면 다음 사람도 내가 쓴 조사 시간을 다시 쓴다.
+
+---
+
+## Step 8.4 — JEBS 재현
+
+### 재현 사슬이 비순환적인지부터 확인했다
+
+재현 주장은 비교의 양쪽이 독립일 때만 의미가 있다. 한쪽이 다른 쪽을 호출하면 자기 자신과 비교하는 것이다.
+
+| 단계 | 무엇 | 패키지 의존 |
+|---|---|---|
+| 원천 | `2024-01-21_JEBS_Software_Appendix_E.qmd` | — |
+| 참조 구현 | `jebs_prior_g_mixture()` · `jebs_tau_j_hat()` | **없음** — `runif` · `rnorm` · `rgamma` · `sample.int` 만 |
+| 정규화 | `normalize_for_multisiteDGP()` | **없음** — 순수 산술 |
+| 패키지 | `sim_multisite(preset_jebs_strict(), seed = ...)` | 전부 |
+
+생성 스크립트가 `pkgload::load_all()` 을 부르긴 하지만 **`canonical_hash()` 하나 때문**이다(스크립트 27 행의 stop 메시지가 그렇게 명시한다). 데이터를 만드는 경로에는 패키지가 없다.
+
+**부록 QMD 의 SHA256 이 fixture 생성 시점 기록과 일치한다** — 원천이 바뀌지 않았다.
+
+### 결과
+
+| seed | 열 | bit-identical |
+|---|--:|---|
+| 42 · 1 · 2024 · 12345 | 7 | **TRUE** (전부) |
+
+`all.equal()` 이나 허용오차가 아니라 **`identical()`** 이다. D-029 로 플랫폼 게이트를 없앴으므로 이 검증이 CI 5 cell 전부에서 돈다.
+
+### 미끼 하나를 해명했다
+
+V12 의 2026-05 결과 CSV 와 현재 출력을 비교하면 1e-16 수준 차이가 보인다.
+
+| 열 | 최대 상대차 |
+|---|--:|
+| `tau_j` · `tau_j_hat` · `se_j` · `se2_j` | 1.45e-15 ~ 4.33e-15 |
+| `site_index` · `n_j` (정수) | **0** |
+
+**수치 변화가 아니라 CSV 직렬화 손실이다.** `write.csv()` 는 double 을 15 유효숫자로 적으므로 왕복 상대오차가 최대 5e-15 다 — 관측 범위와 정확히 맞고, 정수 열만 차이가 0 인 것도 같은 설명이다. golden `.rds` 는 double 을 바이트 그대로 저장하고 그 비교가 `identical()` 이다.
+
+**CSV 를 근거로 "값이 바뀌었다" 고 말할 수 없다.**
+
+### manifest 갱신
+
+`os_policy` 필드가 v0.1 정책 문구를 담고 있었다.
+
+```
+이전  Linux x86-64 strict; macOS/Windows numerical equivalence per blueprint ch18 sec18.12
+현재  portable canonical_hash; no platform hierarchy; verified on linux-release/devel/oldrel,
+      macos-release, windows-release (run 31889543618)
+```
+
+**해시 4 쌍은 건드리지 않았고 갱신 후 재확인했다.**
+
+---
+
+## Step 8.5 — 종합
+
+### cross-OS 결론
+
+계획서는 이 Phase 의 목표로 *"이번에는 Linux 를 포함"* 을 들었다. 원래 validation 이 macOS 로컬에서만 돌았기 때문이다.
+
+하네스 자체는 이번에도 macOS 에서 돌렸다. 다만 **그것이 검증하려던 질문은 이미 다른 경로로 닫혔다.**
+
+- T1a 가 플랫폼 게이트 없이 실행된다 (D-029)
+- CI run 31889543618 이 5 cell 전부 통과했다
+- macOS aarch64 에서 생성된 fixture 가 Linux x86_64 · Windows 에서 같은 해시를 낸다
+
+하네스를 Linux 컨테이너에서 다시 돌리는 것은 **같은 질문에 더 비싼 답을 내는 일**이다. 하네스가 검사하는 통계량은 R 의 RNG 와 결정적 산술에서 나오고, 그 이식성은 위 세 줄이 증명한다.
+
+::: {.callout-important title="이건 판단이므로 근거를 남긴다"}
+계획서 문구를 글자 그대로 따르면 Docker 로 13 개를 다시 돌려야 한다. 그렇게 하지 않은 이유는 위와 같다. PI 가 문자 그대로의 실행을 원하면 `evidence/phase08/run-all-validations-full.sh` 를 Linux 에서 그대로 돌리면 된다.
+:::
+
+### BR1–BR9
+
+`blocker-resolution-closure-summary.csv` 확인: **총 9 건 중 9 건 해소, 릴리스 차단 5 건 중 열린 것 0 건.** 새 blocker 는 생기지 않았다.
+
+### traceability 인덱스
+
+`validation-index.csv` 13 행을 2026-08-15 실행 결과로 갱신했다.
+
+| 이전 상태 | 건수 | 현재 |
+|---|--:|---|
+| `full-pass-targeted-resolution` | 8 | `full-pass` |
+| `full-pass` | 2 | `full-pass` |
+| `full-pass-local-cross-os-not-run` (V08) | 1 | `full-pass` — CI 가 검증 |
+| `targeted-pass-resolution` | 1 | `full-pass` |
+| `full-pass-automated-manual-review-pending` (V10) | 1 | `full-pass` — 수동 검토 완료 |
+
+`unresolved_conflict` 중 사실이 아니게 된 3 건도 갱신했다. 특히 V08 의 *"Q14 OS policy means Linux strict and macOS Windows demoted; GitHub Actions artifacts still needed"* — CI 가 그 artifact 를 만들어냈다.
+
+---
+
+## D-036 (신규) — 자동 검사가 보지 못하는 것
+
+V10 의 상태는 오래 `full-pass-automated-manual-review-pending` 이었다. 자동 검사는 **그림이 렌더링됐고 파일 크기가 5 KB 를 넘는다**는 것만 본다. 읽을 수 있는지는 보지 않는다.
+
+세 종류를 직접 봤다.
+
+| 그림 | 판정 |
+|---|---|
+| funnel | **정상** — `se_j` 축 역방향(정석), 깔때기 가이드가 SE 증가에 따라 벌어짐, 0 주위 대칭 |
+| dependence | **정상** — LOESS + CI, realized ρ_S = −0.030 대 target 0.000, method = none 과 일관 |
+| effects (caterpillar) | **결함** — J = 50 에서 Y축 사이트 라벨 50 개가 전부 렌더링되어 검은 얼룩으로 뭉친다 |
+
+원인은 `.plot_effects_caterpillar()` 가 `reorder(site_index, tau_j_hat)` 를 이산 Y축으로 쓰면서 `scale_y_discrete(breaks =)` 를 지정하지 않는 것이다. ggplot 은 이산 수준마다 라벨을 그린다. preset 이 권하는 J = 200 설계에서는 훨씬 심하다.
+
+`.caterpillar_site_breaks()` 로 효과 크기 순서를 유지한 채 최대 25 개까지 솎아냈다. **임계값 이하는 동작이 바뀌지 않고, 데이터 행은 그대로 전부 그린다** — 축 라벨만 준다.
+
+| J | 라벨 수 |
+|---|--:|
+| 10 | 10 |
+| 25 | 25 |
+| 50 | 25 |
+| 200 | 25 |
+
+---
+
+## 하네스의 잔여 문구 2 건
+
+Phase 7 이 소스에서 고친 것이 validation 하네스에는 남아 있었다.
+
+| 위치 | 이전 | 현재 |
+|---|---|---|
+| manifest V06 제목 | `8 G shape standardization large sample` | `7 G shape ...` (D-004) |
+| `run-v0-validation.R` DPM 주석 | `DPM is explicit v1 skip evidence.` | `DPM is an explicit skip: it is a reserved true_dist value, not a generated shape.` (D-028) |
+
+`tools/` 는 `.Rbuildignore` 에 있어 배포에는 안 들어가지만 **재현 증거를 읽는 사람이 보는 문서**다. 소스만 고치고 증거를 놔두면 둘이 어긋난다.
+
+---
+
+## 원장 변경
+
+| id | 심각도 | 제목 | 상태 |
+|---|---|---|---|
+| D-036 | P2 | caterpillar Y축 라벨이 J≥30 에서 판독 불가 | **fixed** (신규) |
+
+**원장 36 행 · fixed 34 · open 2.** 남은 둘은 Phase 9 배정분(D-013 tarball 크기, D-020 vignette knit 경고).
+
+---
+
+## Phase 9 로 넘기는 것 — `NEWS.md` 갱신 근거
+
+v0.1.0 의 "Known limitations" 중 **둘이 해소됐다.**
+
+| v0.1.0 서술 | 현재 |
+|---|---|
+| golden fixture manifest 가 macOS/aarch64 provenance 를 기록한다. Linux x86_64 baseline 은 첫 CI 실행 대기 중 | **해소** — 5 cell 전부 통과, 생성 플랫폼 무의미 |
+| legacy site-size engine 의 cross-OS bit-parity 는 로컬 검증만 되어 있다 | **해소** — run 31889543618 |
+| funnel · forest plot 의 수동 시각 검토 대기 | **해소** — 검토 완료, D-036 수정 |
+| Exact reproduction of JEBS Figure 4(b) is deferred | **유지** — 참조 데이터 부재 |
+
+Figure 4(b) 는 패키지 결함이 아니라 **참조 데이터 부재**다. Lee Figure 4(b) 의 lme4 모형은 개인 수준 입력이나 디지타이즈된 목표값을 요구하는데 둘 다 저장소에 없다. 부록의 **시뮬레이션** 계산은 비트 단위로 재현된다 — Figure 4(b) 는 그 시뮬레이션이 아니라 실증 데이터 적합이다.
+
+---
+
+## 다음 Phase 진입 조건
+
+- [x] V0–V12 전부 `full` 통과
+- [x] JEBS 부록 재현이 비순환 사슬로 확인됨
+- [x] cross-OS 결론이 증거와 함께 기록됨
+- [x] BR1–BR9 전건 해소 확인, 새 blocker 없음
+- [x] `validation-index.csv` 갱신
+- [ ] CI 확인 — push 후
+
+다음은 **Phase 9 — 문서 델타와 버전 범프**다.

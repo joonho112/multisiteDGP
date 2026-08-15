@@ -1,0 +1,13 @@
+v01   status: pass   rc=0  1535s
+v02   status: pass   rc=0  79s
+v03   status: pass   rc=0  5s
+v04   status: pass   rc=0  130s
+v05   status: pass   rc=0  3s
+v06   status: pass   rc=0  4s
+v07   status: pass   rc=0  10s
+v08   status: pass   rc=0  6s
+v09   status: pass   rc=0  2065s
+v10   status: pass   rc=0  7s
+v11   status: pass   rc=0  2701s
+v12   status: fail   rc=0  2s
+DONE
