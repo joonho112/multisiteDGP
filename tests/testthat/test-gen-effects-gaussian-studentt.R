@@ -101,6 +101,22 @@ test_that("Student-t generator validates nu and warns for non-finite kurtosis", 
   expect_s3_class(out, "tbl_df")
 })
 
+test_that("the kurtosis warning boundary is nu <= 4, not nu < 4", {
+  # Excess kurtosis of a t is 6 / (nu - 4), which diverges *at* nu = 4 as well
+  # as below it. v0.1.x guarded on `nu < 4` and told the user to "use nu >= 4",
+  # recommending the one value still inside the non-finite range (D-011).
+  expect_warning(
+    gen_effects_studentt(J = 10L, nu = 4),
+    "non-finite kurtosis"
+  )
+  expect_silent(gen_effects_studentt(J = 10L, nu = 4.5))
+
+  # The fix line must not send the user back into the warned range.
+  w <- tryCatch(gen_effects_studentt(J = 10L, nu = 4), warning = function(w) w)
+  expect_match(conditionMessage(w), "nu > 4", fixed = TRUE)
+  expect_no_match(conditionMessage(w), "nu >= 4", fixed = TRUE)
+})
+
 test_that("Gaussian and Student-t large-sample z_j moments match standardization contract", {
 
   gaussian <- withr::with_seed(104L, gen_effects_gaussian(J = 100000L))

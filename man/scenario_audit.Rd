@@ -29,7 +29,9 @@ with the caller's active future plan. Default \code{FALSE}.}
 \value{
 A tibble with one row per design-grid cell, columns include
 the cell's design parameters plus aggregated diagnostics and
-pass/fail flags.
+pass/fail flags. \code{target_source} reports whether the Group C
+distributional gates ran (\code{"auto"}) or were skipped for want of a
+reference distribution (\code{"not_available"}).
 }
 \description{
 Run \code{M} simulation replicates of each row of a \code{\link{design_grid}}
@@ -59,6 +61,29 @@ For a worked example see the
 \href{../articles/a6-case-study-multisite.html}{Case study — multisite
 trial} vignette.
 }
+\section{Group C coverage}{
+
+The Group C gates (\code{bhattacharyya}, \code{ks}) compare the realized
+standardized residuals against a reference quantile function for the
+declared shape. Only \code{Gaussian} and \code{StudentT} have one, so a design
+declaring \code{SkewN}, \code{ALD}, \code{Mixture} or \code{PointMassSlab} is audited on
+Groups A, B and D and reports \code{target_source = "not_available"}, with
+\code{med_bhattacharyya}, \code{q05_bhattacharyya}, \code{med_ks} and \code{q95_ks} all
+\code{NA}. The Group C gates are skipped rather than failed: an unmeasured
+diagnostic is not a violated one.
+
+\strong{This makes \code{pass} narrower than it looks.} \code{pass = TRUE} means every
+gate that could run did run and passed — not that every gate ran. When
+sweeping a grid that mixes shapes, read \code{target_source} alongside
+\code{pass}, or the cells that skipped a whole diagnostic group will look
+like the cells that cleared it.
+
+A manual Group C check is still available for any shape: draw a
+reference sample from the declared distribution and pass it as the
+second argument to \code{\link{bhattacharyya_coef}} or
+\code{\link{ks_distance}}.
+}
+
 \examples{
 # Fast pre-check on a small grid.
 grid <- design_grid(J = 10L, sigma_tau = c(0.10, 0.20), seed_root = 1L)

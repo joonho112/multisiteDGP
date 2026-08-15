@@ -622,9 +622,10 @@ preset catalog.
   signature" recipe, which adds a back-calculation step from the
   observed published record to $(I, R)$ targets.
 - [A2 · Choosing a preset](a2-choosing-a-preset.html) — the full
-  catalog of nine presets; `preset_meta_modest()` is the
-  direct-precision preset; the eight others are site-size-driven
-  presets calibrated to specific empirical heritages.
+  catalog of nine presets; `preset_meta_modest()` and
+  `preset_small_area_estimation()` are the two direct-precision
+  presets; the seven others are site-size-driven presets calibrated
+  to specific empirical heritages.
 - [A3 · Diagnostics in practice](a3-diagnostics-in-practice.html)
   — the four-question rubric the §2 and §4 summary prints read off;
   pairs naturally with this vignette when the reader wants to dig

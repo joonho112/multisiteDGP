@@ -5,7 +5,7 @@
 #'
 #' @description
 #' `gen_effects()` is the Layer 1 entry point of the multisiteDGP pipeline —
-#' it draws standardized site effects \eqn{z_j} from one of eight built-in
+#' it draws standardized site effects \eqn{z_j} from one of seven
 #' \eqn{G} distributions (or a user callback) and returns a forward-compatible
 #' tibble that Layers 2 through 4 can consume. Most users invoke it indirectly
 #' through \code{\link{sim_multisite}} or \code{\link{sim_meta}}; call it
@@ -15,7 +15,8 @@
 #' `g_fn` overrides the catalog when `true_dist = "User"`.
 #'
 #' @details
-#' The eight built-in \eqn{G} distributions are:
+#' The accepted `true_dist` values are the seven generated shapes plus the
+#' reserved `"DPM"` slot:
 #' \describe{
 #'   \item{`"Gaussian"` (\code{\link{gen_effects_gaussian}})}{Standard normal — the canonical baseline. No `theta_G` keys.}
 #'   \item{`"StudentT"` (\code{\link{gen_effects_studentt}})}{Standardized Student-\eqn{t} with degrees of freedom `theta_G$nu` (numeric, > 2). Heavier tails than Gaussian.}
@@ -36,7 +37,7 @@
 #' testing a `g_fn` callback's output before plugging it into the full
 #' simulation.
 #'
-#' \strong{Unit-variance convention.} All eight shapes share a unit-variance
+#' \strong{Unit-variance convention.} All seven shapes share a unit-variance
 #' standardization: the package draws \eqn{z_j} with \eqn{E[z_j] = 0} and
 #' \eqn{\mathrm{Var}(z_j) = 1}, then rescales to
 #' \eqn{\tau_j = \tau + X_j\boldsymbol{\beta} + \sigma_\tau\,z_j}. This makes
@@ -81,7 +82,7 @@
 #'   The unit-variance convention requires `variance = 1`; other shapes
 #'   ignore it.
 #' @param theta_G Named list of shape-specific parameters. Keys vary by
-#'   `true_dist`; see the eight-shape catalog above.
+#'   `true_dist`; see the seven-shape catalog above.
 #' @param formula One-sided formula for site-level covariates (e.g.,
 #'   `~ x1 + x2`), or `NULL`.
 #' @param beta Numeric coefficient vector matching the columns of the model
@@ -97,8 +98,6 @@
 #' @param audit_g Logical. When `g_returns = "standardized"`, validate that
 #'   the callback draws meet the unit-moment contract. Default `TRUE`. Has
 #'   no effect under `g_returns = "raw"`.
-#' @param upstream Reserved for future layer composition. Leave `NULL` (the
-#'   default); passing a non-`NULL` value aborts.
 #'
 #' @return A tibble with one row per site:
 #' \describe{
@@ -106,7 +105,7 @@
 #'   \item{`z_j`}{Standardized residual effect — mean 0, variance 1 by construction.}
 #'   \item{`tau_j`}{Response-scale latent effect, \eqn{\tau + X_j\boldsymbol{\beta} + \sigma_\tau\,z_j}.}
 #'   \item{`<covariate columns>`}{Pass-through from `data` if `formula` was non-`NULL`.}
-#'   \item{`latent_component`}{Character; for `true_dist = "Mixture"`, names which mixture component each row was drawn from. Absent for the other seven shapes.}
+#'   \item{`latent_component`}{Character; for `true_dist = "Mixture"`, names which mixture component each row was drawn from. Absent for the other six shapes.}
 #' }
 #' The tibble carries no S3 class beyond `tbl_df` — Layer 2 functions add
 #' the package's classes on top.
@@ -168,8 +167,7 @@ gen_effects <- function(
   data = NULL,
   g_fn = NULL,
   g_returns = c("standardized", "raw"),
-  audit_g = TRUE,
-  upstream = NULL
+  audit_g = TRUE
 ) {
   true_dist_missing <- missing(true_dist)
   if (!is.null(g_fn) && true_dist_missing) {
@@ -185,14 +183,6 @@ gen_effects <- function(
   theta_G <- .validate_theta_g_container(theta_G)
   g_fn <- .validate_function_or_null(g_fn, "g_fn")
   .validate_g_fn_true_dist(g_fn, true_dist)
-
-  if (!is.null(upstream)) {
-    .abort_arg(
-      "`upstream` is reserved and is not implemented yet.",
-      "Layer 1 starts the multisiteDGP pipeline in v1.",
-      "Remove `upstream` for current Layer 1 generators."
-    )
-  }
 
   switch(true_dist,
     Gaussian = gen_effects_gaussian(

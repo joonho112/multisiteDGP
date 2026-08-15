@@ -219,7 +219,7 @@ test_that("Layer 1 dispatcher preserves DPM bridge forwarding", {
 
 test_that("Layer 1 dispatcher enforces dispatcher-specific validation", {
   expect_multisitedgp_error(
-    gen_effects(J = 10L, upstream = tibble::tibble(x = 1)),
+    gen_effects(J = 10L, audit_g = "yes"),
     "multisitedgp_arg_error"
   )
   expect_multisitedgp_error(

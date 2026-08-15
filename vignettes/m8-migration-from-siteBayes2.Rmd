@@ -82,7 +82,7 @@ target name in the right column appears in NAMESPACE; verify with
 | siteBayes2                     | multisiteDGP                                                                               | Notes                                                                                |
 |--------------------------------|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
 | `sim_multisite_data()`         | [`sim_multisite()`](../reference/sim_multisite.html)                                       | Front door; refactored into the four-layer pipeline                                  |
-| `gen_priorG()`                 | [`gen_effects()`](../reference/gen_effects.html)                                           | Layer 1; selects from eight built-in $G$ shapes                                      |
+| `gen_priorG()`                 | [`gen_effects()`](../reference/gen_effects.html)                                           | Layer 1; selects from seven $G$ shapes                                              |
 | `gen_priorG2()`                | [`gen_effects()`](../reference/gen_effects.html) with `formula`, `beta`, `data`            | Same function; covariate-aware path is an argument set, not a separate function       |
 | `sim_sitesize_withinvar()`     | [`gen_site_sizes()`](../reference/gen_site_sizes.html)                                     | Layer 2; engine choice replaces the implicit JEBS algorithm                          |
 | `sim_observed_effects()`       | [`align_rank_corr()`](../reference/align_rank_corr.html) + [`gen_observations()`](../reference/gen_observations.html) | Layer 3 (dependence) and Layer 4 (observation) are now explicit       |
@@ -226,7 +226,7 @@ informativeness(custom_dat)
 The full custom-$G$ contract — including the `g_returns = "raw"`
 escape hatch — is in
 [M5: Custom G distributions](m5-custom-g-distributions.html). The
-eight built-in shapes are catalogued in
+seven shapes are catalogued in
 [M2: G-distribution catalog](m2-g-distribution-catalog.html), which
 includes the `gen_priorG` rename map under each shape.
 
@@ -412,7 +412,7 @@ For an end-to-end migrated workflow:
 
 - [A1: Getting started](a1-getting-started.html) — the basic four-step
   pipeline, the same pipeline a migrated script ends up running.
-- [A2: Choosing a preset](a2-choosing-a-preset.html) — the eight
+- [A2: Choosing a preset](a2-choosing-a-preset.html) — the nine
   presets cover the JEBS replication, two meta-analytic profiles, and
   small-area estimation; most migrated scripts can replace a flat
   argument list with a preset call.
@@ -420,7 +420,7 @@ For an end-to-end migrated workflow:
 For the methodological mapping behind the renames:
 
 - [M2: G-distribution catalog](m2-g-distribution-catalog.html) — the
-  eight built-in $G$ shapes and the `gen_priorG` → `gen_effects`
+  seven $G$ shapes and the `gen_priorG` → `gen_effects`
   parameter map per shape.
 - [M3: Margin and SE models](m3-margin-se-models.html) — the
   site-size-driven and direct-precision paths,

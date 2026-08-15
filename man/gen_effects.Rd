@@ -18,8 +18,7 @@ gen_effects(
   data = NULL,
   g_fn = NULL,
   g_returns = c("standardized", "raw"),
-  audit_g = TRUE,
-  upstream = NULL
+  audit_g = TRUE
 )
 }
 \arguments{
@@ -40,7 +39,7 @@ The unit-variance convention requires \code{variance = 1}; other shapes
 ignore it.}
 
 \item{theta_G}{Named list of shape-specific parameters. Keys vary by
-\code{true_dist}; see the eight-shape catalog above.}
+\code{true_dist}; see the seven-shape catalog above.}
 
 \item{formula}{One-sided formula for site-level covariates (e.g.,
 \code{~ x1 + x2}), or \code{NULL}.}
@@ -62,9 +61,6 @@ effects and the package does not rescale.}
 \item{audit_g}{Logical. When \code{g_returns = "standardized"}, validate that
 the callback draws meet the unit-moment contract. Default \code{TRUE}. Has
 no effect under \code{g_returns = "raw"}.}
-
-\item{upstream}{Reserved for future layer composition. Leave \code{NULL} (the
-default); passing a non-\code{NULL} value aborts.}
 }
 \value{
 A tibble with one row per site:
@@ -73,14 +69,14 @@ A tibble with one row per site:
 \item{\code{z_j}}{Standardized residual effect — mean 0, variance 1 by construction.}
 \item{\code{tau_j}}{Response-scale latent effect, \eqn{\tau + X_j\boldsymbol{\beta} + \sigma_\tau\,z_j}.}
 \item{\verb{<covariate columns>}}{Pass-through from \code{data} if \code{formula} was non-\code{NULL}.}
-\item{\code{latent_component}}{Character; for \code{true_dist = "Mixture"}, names which mixture component each row was drawn from. Absent for the other seven shapes.}
+\item{\code{latent_component}}{Character; for \code{true_dist = "Mixture"}, names which mixture component each row was drawn from. Absent for the other six shapes.}
 }
 The tibble carries no S3 class beyond \code{tbl_df} — Layer 2 functions add
 the package's classes on top.
 }
 \description{
 \code{gen_effects()} is the Layer 1 entry point of the multisiteDGP pipeline —
-it draws standardized site effects \eqn{z_j} from one of eight built-in
+it draws standardized site effects \eqn{z_j} from one of seven
 \eqn{G} distributions (or a user callback) and returns a forward-compatible
 tibble that Layers 2 through 4 can consume. Most users invoke it indirectly
 through \code{\link{sim_multisite}} or \code{\link{sim_meta}}; call it
@@ -90,7 +86,8 @@ shape-specific parameters travel through \code{theta_G}, and a user callback
 \code{g_fn} overrides the catalog when \code{true_dist = "User"}.
 }
 \details{
-The eight built-in \eqn{G} distributions are:
+The accepted \code{true_dist} values are the seven generated shapes plus the
+reserved \code{"DPM"} slot:
 \describe{
 \item{\code{"Gaussian"} (\code{\link{gen_effects_gaussian}})}{Standard normal — the canonical baseline. No \code{theta_G} keys.}
 \item{\code{"StudentT"} (\code{\link{gen_effects_studentt}})}{Standardized Student-\eqn{t} with degrees of freedom \code{theta_G$nu} (numeric, > 2). Heavier tails than Gaussian.}
@@ -111,7 +108,7 @@ suspected downstream diagnostic by verifying Layer 1 in isolation; and
 testing a \code{g_fn} callback's output before plugging it into the full
 simulation.
 
-\strong{Unit-variance convention.} All eight shapes share a unit-variance
+\strong{Unit-variance convention.} All seven shapes share a unit-variance
 standardization: the package draws \eqn{z_j} with \eqn{E[z_j] = 0} and
 \eqn{\mathrm{Var}(z_j) = 1}, then rescales to
 \eqn{\tau_j = \tau + X_j\boldsymbol{\beta} + \sigma_\tau\,z_j}. This makes

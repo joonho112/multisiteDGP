@@ -562,7 +562,7 @@ shape against a Gaussian reference; downstream estimators that
 assume Gaussian effects systematically under-estimate the
 high-implementation tail. See
 [M2 · G-distribution catalog](m2-g-distribution-catalog.html) for
-the full eight-shape inventory.
+the full seven-shape inventory.
 
 ## 7. Where to next
 

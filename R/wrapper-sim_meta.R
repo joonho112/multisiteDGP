@@ -23,7 +23,7 @@
 #' @details
 #' The simulation runs four generative layers in order:
 #' \describe{
-#'   \item{\strong{Layer 1 — latent effects} (\code{\link{gen_effects}})}{Draws standardized site effects \eqn{z_j} from one of eight built-in \eqn{G} distributions and rescales to \eqn{\tau_j = \tau + \sigma_\tau\,z_j}.}
+#'   \item{\strong{Layer 1 — latent effects} (\code{\link{gen_effects}})}{Draws standardized site effects \eqn{z_j} from one of seven \eqn{G} distributions and rescales to \eqn{\tau_j = \tau + \sigma_\tau\,z_j}.}
 #'   \item{\strong{Layer 2 — direct precision margin} (\code{\link{gen_se_direct}})}{Builds the per-site sampling variance \eqn{\widehat{se}_j^2} as a deterministic grid that exactly hits the user-specified \eqn{(I, R)} targets. The site-size column \eqn{n_j} is `NA_integer_` because no site-size margin is involved.}
 #'   \item{\strong{Layer 3 — precision dependence} (\code{\link{align_rank_corr}}, \code{\link{align_copula_corr}}, \code{\link{align_hybrid_corr}})}{Optionally aligns \eqn{\widehat{se}_j^2} against \eqn{\tau_j} to a target Spearman correlation, preserving both marginals exactly.}
 #'   \item{\strong{Layer 4 — observation draws} (\code{\link{gen_observations}})}{Draws \eqn{\widehat{\tau}_j \sim \mathcal{N}(\tau_j,\, \widehat{se}_j^2)}.}

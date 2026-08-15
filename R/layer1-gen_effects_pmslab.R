@@ -54,7 +54,7 @@
 #'
 #' @family family-effects
 #' @seealso
-#'   \code{\link{gen_effects}} for the dispatcher and the full eight-shape
+#'   \code{\link{gen_effects}} for the dispatcher and the full seven-shape
 #'   catalog;
 #'   \code{\link{gen_effects_mixture}} for a related two-component mixture
 #'   shape (without a point mass);

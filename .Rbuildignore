@@ -3,6 +3,7 @@
 ^.*\.Rproj$
 ^\.github$
 ^\.lintr$
+^\.lintr\.md$
 ^\.pre-commit-config\.yaml$
 ^\.quarto$
 ^_book$
@@ -27,6 +28,7 @@
 ^multisiteDGP_.*\.tar\.gz$
 ^multisiteDGP\.Rcheck$
 ^CONTRIBUTING\.md$
+^README\.Rmd$
 ^README\.html$
 ^index\.md$
 ^pkgdown$

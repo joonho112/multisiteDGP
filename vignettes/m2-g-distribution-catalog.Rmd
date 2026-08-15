@@ -7,10 +7,10 @@ abstract: >
   shape of latent-effect distribution `multisiteDGP` is putting under
   the simulation, and exactly how that shape is rescaled before it
   reaches the rest of the pipeline. This vignette is organized one
-  section per shape: each of the eight built-in `G` distributions gets
+  section per shape: each of the seven `G` distributions gets
   its own parameterization, density, unit-variance derivation,
   generator function, and decision rule for when to use it. You leave
-  with eight density-and-QQ panels, a sanity table of realized
+  with seven density-and-QQ panels, a sanity table of realized
   `var(z_j)` at `J = 200`, and a decision rubric for picking among
   Student-t, skew-normal, and the asymmetric Laplace.
 output:
@@ -94,9 +94,10 @@ $\sigma_\tau$, so empirical-Bayes shrinkage diagnostics
 
 ## 2. The catalog at a glance
 
-The eight shapes the package supports, with their `theta_G` fields
-and their canonical use cases. The order matches the rest of the
-vignette; the exported Layer-1 generator name is given in code font.
+The seven shapes the package generates, with their `theta_G` fields
+and their canonical use cases, followed by the reserved `DPM` slot.
+The order matches the rest of the vignette; the exported Layer-1
+generator name is given in code font.
 
 | Shape | `true_dist` | `theta_G` fields | Layer-1 generator | Reach for it when |
 |-------|---------|-------------------------------------------|------------------------------------------|-------------------------------------------------------------|
@@ -106,7 +107,7 @@ vignette; the exported Layer-1 generator name is given in code font.
 | ALD | `"ALD"` | `rho` (in (0, 1)) | [`gen_effects_ald()`](../reference/gen_effects_ald.html) | Skewness with sharper peaks; quantile interpretation. |
 | Mixture | `"Mixture"` | `delta`, `eps`, `ups` | [`gen_effects_mixture()`](../reference/gen_effects_mixture.html) | Bimodality, contamination, latent classes of sites. |
 | Point-mass-plus-slab | `"PointMassSlab"` | `pi0`, plus slab params | [`gen_effects_pmslab()`](../reference/gen_effects_pmslab.html) | A fraction of sites are exactly null (sparse effects). |
-| User | `"User"` | (whatever your callback consumes) | [`gen_effects_user()`](../reference/gen_effects_user.html) | None of the seven match — bring your own generator. |
+| User | `"User"` | (whatever your callback consumes) | [`gen_effects_user()`](../reference/gen_effects_user.html) | None of the first six match — bring your own generator. |
 | DPM | `"DPM"` | (deferred) | [`gen_effects_dpm()`](../reference/gen_effects_dpm.html) | Use the `User` bridge — built-in DPM sampling is deferred. |
 
 The first six are the closed-catalog choices. `User` is the escape
@@ -122,10 +123,11 @@ actionable error (see Section 3.8).
 
 ## 3. Per-shape sections
 
-Each of the eight subsections below follows the same template:
-parameterization, formal density, unit-variance derivation, the
-exported Layer-1 generator, when to reach for the shape, and a
-density / QQ-against-Gaussian panel. A reader can jump straight to
+Sections 3.1 through 3.7 — one per generated shape — each follow the
+same template: parameterization, formal density, unit-variance
+derivation, the exported Layer-1 generator, when to reach for the
+shape, and a density / QQ-against-Gaussian panel. Section 3.8
+documents the reserved `DPM` slot, which has none of these. A reader can jump straight to
 the shape they need without reading the others — this is the
 "organize-by-shape" view; the cross-shape audit lives at Section 4.
 
@@ -195,8 +197,15 @@ implies $\mathrm{Var}(z_j) = (\nu - 2)/\nu \cdot \nu/(\nu - 2) = 1$
 exactly.
 
 **Identifiability.** Hard refuse $\nu \le 2$ (variance non-finite);
-soft warn at $\nu < 4$ (kurtosis non-finite, sample-variance
-estimates unstable on small $J$).
+soft warn at $\nu \le 4$ (kurtosis non-finite). The rescaling is exact
+in expectation at every admissible $\nu$, so the warning is not about
+bias in $\mathrm{Var}(z_j)$ — it is about the spread of the realized
+variance in a single run. That spread is right-skewed at small $\nu$,
+so a typical run lands *below* 1: over 400 replicates at $J = 200$ the
+median realized `var(z_j)` is 0.68 at $\nu = 2.5$, 0.84 at $\nu = 3$,
+0.95 at $\nu = 4$, and 0.99 from $\nu = 5$ up. Requesting
+`sigma_tau = 1` at $\nu = 2.5$ therefore realizes a between-site SD of
+about 0.82 in a typical run.
 
 **Generator.**
 [`gen_effects_studentt()`](../reference/gen_effects_studentt.html) —
@@ -690,19 +699,29 @@ Cross-references for downstream interpretation:
 
 ### Known limitation — `scenario_audit()` Group C resolver
 
-The Group C reference resolver inside
-[`scenario_audit()`](../reference/scenario_audit.html) currently
-supports automatic Gaussian and Student-$t$ targets only. Designs
-declaring a SkewN, ALD, Mixture, or PointMassSlab latent fall back
-to `target_source = "not_available"` for the Group C row of the
-audit (the row prints in the diagnostic block but the audit pipeline
-does not gate on it). The Group A, B, and D rows of the audit
-operate normally for every shape. Manual Group C checks are still
-available — call
+The Group C gates compare realized residuals against a reference
+quantile function for the declared shape, and only Gaussian and
+Student-$t$ have one. A design declaring SkewN, ALD, Mixture, or
+PointMassSlab is audited on Groups A, B, and D; its row reports
+`target_source = "not_available"` and its four Group C columns
+(`med_bhattacharyya`, `q05_bhattacharyya`, `med_ks`, `q95_ks`) are
+`NA`. The Group C gates are skipped rather than failed — an
+unmeasured diagnostic is not a violated one.
+
+Read `target_source` alongside `pass` when sweeping a grid that mixes
+shapes. `pass = TRUE` means every gate that *could* run passed, not
+that every gate ran, so a skipped Group C otherwise looks identical to
+a cleared one.
+
+Manual Group C checks are available for any shape — call
 [`bhattacharyya_coef()`](../reference/bhattacharyya_coef.html) or
 [`ks_distance()`](../reference/ks_distance.html) with an explicit
-target sample drawn from the declared shape. Resolver extension to
-the remaining catalog shapes is on the v0.2.0 roadmap.
+target sample drawn from the declared shape.
+
+In v0.1.x this was worse than a missing gate: `scenario_audit()`
+called the Group C diagnostics unconditionally, so auditing any of
+those four shapes aborted the entire run. Four of the seven catalog
+shapes could not be audited at all.
 
 ## 6. Plots — density and QQ panels per shape
 

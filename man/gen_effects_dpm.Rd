@@ -96,7 +96,7 @@ in multisite trials. \emph{Journal of Educational and Behavioral Statistics},
 \seealso{
 \code{\link{gen_effects_user}} for the underlying user-callback
 pathway that the bridge routes through;
-\code{\link{gen_effects}} for the dispatcher and the full eight-shape
+\code{\link{gen_effects}} for the dispatcher and the full seven-shape
 catalog;
 the \href{../articles/m5-custom-g-distributions.html}{M5 Custom G
 distributions} vignette.

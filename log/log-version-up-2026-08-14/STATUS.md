@@ -1,24 +1,21 @@
 # 돌아오셨을 때 먼저 읽을 것
 
-**2026-08-14 자율 실행 구간 종료 시점 상태입니다.**
+**2026-08-15 · Phase 7 종료 시점 상태입니다.**
 
 ---
 
-## 1. 결정 5 건 — 2026-08-14 전부 승인됨
+## 1. 한눈에
 
-기록: [`decisions/001-pi-decisions-gate-B.md`](decisions/001-pi-decisions-gate-B.md). **게이트 G-B 통과.**
-
-| # | 결정 | 채택안 |
-|---|---|---|
-| D5 | Linux 검증 수단 | **원격 push 승인** → 실행 완료, CI 가동 중 |
-| D1 | 재현성 계약 | Step 4.1 에서 O4 조사 → 실패 시 O2 |
-| D2 | 광고-구현 갭 | IES 자료 언급 없음 → **7 로 축소** |
-| D3 | 테스트 게이트 | 승인 + Phase 5 잔여 Step 진행 |
-| D4 | 버전·범위 | `0.2.0`, 원장 전건 포함 |
-
-::: 중요
-**push 후 첫 Linux CI 가 D1 의 전제를 흔들었습니다.** 아래 §3-④ 를 보십시오 — O4 만으로는 닫히지 않을 가능성이 큽니다.
-:::
+| | |
+|---|---|
+| **완료 Phase** | 1 · 2 · 3 · 4 · 5 · 6 · 7 |
+| **남은 Phase** | 8(통계 재검증) · 9(문서·버전) · 10(외부 검토) · 11(릴리스) |
+| **결함 원장** | 31 행 · **fixed 29** · open 2 (둘 다 Phase 9 배정) |
+| **테스트** | 4561 통과 · 0 실패 · **0 skip** |
+| **lint** | 0 위반 |
+| **`R CMD check --as-cran`** | **0 error · 0 warning · 0 note** |
+| **CI** | `main` 6/6 green · **Phase 7 브랜치 4/4 green** (5 cell 전부 포함) |
+| **PI 조치 대기** | `main` branch protection 1 건 (아래 §5) |
 
 ---
 
@@ -26,119 +23,120 @@
 
 | Phase | 상태 | 로그 |
 |---|---|---|
-| 1 작업 기반 복구 | **완료** | [`002_phase01-foundation-recovery.html`](002_phase01-foundation-recovery.html) |
-| 2 결함 인벤토리 감사 | **완료** | [`003_phase02-defect-audit.html`](003_phase02-defect-audit.html) |
-| 3 v0.2.0 범위 결정 | **완료 — 게이트 G-B 대기** | [`004_phase03-scope-decisions.html`](004_phase03-scope-decisions.html) |
-| 4 재현성 계약 + solver 견고화 | **Step 4.1a·4.1b 완료** (4.7 정책문서 잔여) | [`006_phase04-solver-hardening-partial.html`](006_phase04-solver-hardening-partial.html) |
-| 5 테스트 스위트 | **부분 (4/6 Step)** | [`005_phase05-test-suite-rebuild-partial.html`](005_phase05-test-suite-rebuild-partial.html) |
-| 6–11 | 미착수 | — |
+| 1 작업 기반 복구 | 완료 | [`002`](002_phase01-foundation-recovery.html) |
+| 2 결함 인벤토리 감사 | 완료 | [`003`](003_phase02-defect-audit.html) |
+| 3 v0.2.0 범위 결정 | 완료 | [`004`](004_phase03-scope-decisions.html) |
+| 4 재현성 계약 + solver | 완료 | [`006`](006_phase04-solver-hardening-partial.html) |
+| 5 테스트 스위트 | 부분 (Step 5.6 잔여) | [`005`](005_phase05-test-suite-rebuild-partial.html) |
+| 6 CI 복구 | 완료 (branch protection 대기) | [`007`](007_phase06-ci-restoration.html) |
+| **7 기능 결함 수정** | **완료** | [**`008`**](008_phase07-defect-remediation.html) |
+| 8–11 | 미착수 | — |
 
 ---
 
-## 3. 가장 중요한 세 가지 발견
-
-### ① 우려했던 "3 개월 격차" 는 격차가 아니었습니다
-
-원격 추적 파일 235 개 중 **226 개가 바이트 동일**하고, 로컬에서 원격으로 가야 할 변경은 **하나도 없었습니다.** 다른 9 개는 전부 원격이 최신이었고, 그중 `CONTRIBUTING.md`·`NEWS.md`·`references.bib` 는 공개 릴리스 때 내부 경로를 지운 **정제본이 로컬로 돌아오지 않은 것**이었습니다. 모르고 편집하셨다면 정제가 되돌려질 뻔했습니다.
-
-### ② red CI 4 개가 근본 원인 2 개로 환원됩니다
-
-- **RC-1** — macOS 에서 생성된 golden fixture·snapshot 이 체크인되어 있는데, 이를 검증하는 테스트 5 개 파일이 **게이트 없이** 모든 플랫폼에서 실행됩니다. `extended-tests`·`R-CMD-check`·`test-coverage` 를 설명합니다
-- **RC-2** — `lint` 는 위반 1 건도 허용하지 않는데, **`.lintr` 이 원격에 추적되지 않아** CI 가 기본 규칙으로 돌았습니다. 위반이 65 가 아니라 **440** 이었습니다 (Phase 1 에서 `.lintr` 추적으로 이미 65 로 낮췄습니다)
-
-### ④ [2026-08-14 CI] solver 실현 가능 경계가 **플랫폼 의존**입니다 — D1 재검토 필요
-
-push 직후 첫 Linux CI 가 Phase 5 에서 추가한 테스트로 이것을 잡았습니다.
-
-| `solve_trunc_gamma(n_bar=100, cv=0.005, n_min=5)` | macOS | Linux |
-|---|--:|--:|
-| 최대 스케일 잔차 | 7.44e-07 | **1.908e-06** |
-| tolerance | 1e-06 | 1e-06 |
-| 판정 | 통과 | **abort** |
-
-잔차가 **2.56 배** 차이납니다. 최하위 비트 드리프트가 아니라 **두 플랫폼이 실질적으로 다른 점에 수렴**하며, PASS/FAIL 판정이 뒤집힙니다. **같은 설계가 macOS 에서 성공하고 Linux 에서 abort 합니다** — 해시 불일치보다 심각합니다.
-
-**D1 에 대한 함의.** O4(출력 양자화)는 두 플랫폼이 같은 점에 도달하고 마지막 비트만 다르다고 가정합니다. `cv = 0.4` 같은 조건수 좋은 영역에서는 성립하지만, 경계 근처(`cv` 작음 → `alpha` 약 40000)에서는 성립하지 않습니다. **다른 점에 수렴하므로 양자화로는 화해시킬 수 없습니다.** solver 견고화(시작점 개선 · tolerance 재설계 · 재매개화)가 별도로 필요합니다. 원장 D-024 (P0).
-
-### ③ 재현성 계약은 버그가 아니라 **달성 불가능한 계약**이었습니다
-
-기본 engine A2 가 `nleqslv` 를 `ftol = 1e-12` 로 돌립니다. 5 개 시작점이 **모두 수렴 조건을 만족하면서 서로 약 5,000 ULP 떨어진 점**에 안착합니다. 반면 해시는 double 을 반올림하지 않아 **1 ULP** 에도 뒤집힙니다.
-
-**계약이 요구하는 정밀도가 계산이 제공하는 정밀도보다 3~4 자릿수 엄격합니다.** 어느 플랫폼에서 재생성해도 다른 플랫폼에서는 반드시 깨집니다. 그래서 D1 에서 O1(Linux 재생성)을 **기각 권고**했습니다 — 문제를 macOS 로 옮길 뿐입니다.
-
----
-
-## 4. 눈에 보이는 개선
+## 3. 지금까지 무엇이 바뀌었나
 
 | 지표 | 시작 | 지금 |
 |---|--:|--:|
-| git 관리 | 없음 | 695 파일 추적, 커밋 12 건 |
-| 기본 테스트 skip | **30** | **1** |
-| 기본 테스트 실패 | 0 | 0 |
-| 기본 테스트 시간 | 18.1 s | 106.0 s (예산 180 s) |
-| 커버리지 | 90.89 % | **92.78 %** |
-| `layer2-engine-a2.R` | 84.8 % | **95.5 %** |
-| `utils-reproducibility.R` | 91.0 % | **95.5 %** |
-| 작업 디렉터리 | 462 MB | 417 MB |
-| 결함 원장 | 없음 | **27 행**, **13 건 해소** (P0 8 · P1 5) |
-
-`R CMD check --as-cran` (vignette 포함)은 시작 시점부터 **0 error / 0 warning / 1 note** 였습니다. NOTE 는 `README.Rmd` 가 최상위에 있다는 것뿐입니다.
+| git 관리 | 없음 | 추적 중, 커밋 40+ |
+| green workflow | **0 / 6** | **6 / 6** |
+| lint 위반 (CI 조건) | 440 | **0** |
+| 기본 테스트 skip | **30** | **0** |
+| 기본 테스트 실패 (Linux) | 15 | **0** |
+| `R CMD check` NOTE | 1 | **0** |
+| 커버리지 | 90.89 % | 92.75 % |
+| 결함 원장 | 없음 | **31 행 · 29 해소** |
 
 ---
 
-## 5. 안전 상태
+## 4. 가장 중요한 세 가지
+
+### ① CI 3 개월 red 는 결함 **네 개가 겹친 것**이었다
+
+하나의 버그가 여러 곳에 나타난 것이 아니다. `.lintr` 미추적 · `multisitepower` 가 어디서도 해결 불가 · 재현성 계약이 달성 불가능 · `covr` 의 `xml2` 누락 — **넷이 서로 독립**이라 하나를 고쳐도 나머지가 red 였다. 자세한 것은 [Phase 6 로그](007_phase06-ci-restoration.html).
+
+### ② 재현성 계약은 이제 실제로 이식 가능하다
+
+해시 스키마 v3 가 파생 진단(`cor()`/`sd()` 로 계산되어 플랫폼마다 누적 순서가 다른 값)을 payload 에서 제거했다. 그 결과 **macOS ARM 에서 Linux 생성 fixture 와 해시가 일치**한다 — 네 seed 전부.
+
+그래서 Phase 7 에서 **T1a 의 Linux 전용 skip 을 제거**했다. 정책 문서가 "플랫폼 위계 없음" 을 선언하는데 테스트는 5 칸 중 1 칸에서만 검사하고 있었다. 스위트의 마지막 skip 이 사라졌다.
+
+::: 확인됨
+**세 플랫폼 전부 통과했습니다** (run 31889543618 — Windows · macOS · Linux release/devel/oldrel). Linux 에서 생성된 golden fixture 에 대해 macOS 와 Windows 가 같은 `canonical_hash()` 를 냅니다. 재현성 계약은 이제 선언이 아니라 **검증된 사실**입니다.
+:::
+
+### ③ `scenario_audit()` 이 7 종 중 4 종에서 쓸 수 없었다
+
+계획서 Step 7.5 의 완료 조건("문서와 동작이 일치") 을 **검증하다** 발견했다. m2 vignette 은 SkewN·ALD·Mixture·PointMassSlab 에서 Group C 만 `not_available` 로 폴백한다고 서술했는데, 실제로는 **감사 전체가 abort** 했고 문서가 말한 `target_source` 열은 존재조차 하지 않았다. 원장 D-031 (P1), Phase 7 에서 수정 + 회귀 테스트 42 건.
+
+문서만 읽고 넘어갔다면 놓쳤을 결함이다.
+
+---
+
+## 5. PI 조치가 필요한 것 — 1 건
+
+### `main` branch protection 설정
+
+요청 문서: [`decisions/002-branch-protection-request.md`](decisions/002-branch-protection-request.md)
+
+**왜 중요한가.** workflow 를 green 으로 만드는 것만으로는 3 개월 red 가 재발합니다. red 인 CI 가 병합을 막지 않으면 실패에 비용이 없고, 비용 없는 신호는 결국 무시됩니다. Phase 6 의 진짜 목표 — "red 가 방치되지 않는 구조" — 의 마지막 조각입니다.
+
+저장소 설정 변경은 관리자 권한이라 제가 수행하지 않았습니다. 필수 체크 목록까지 문서에 적어 두었습니다.
+
+---
+
+## 6. 판단이 갈릴 수 있는 지점 — 1 건
+
+**`scenario_audit()` 에서 Group C 를 측정할 수 없는 셀의 `status`.**
+
+현재는 `PASS` 로 두고 `target_source = "not_available"` 열로 구별합니다. 진단군 하나를 통째로 건너뛴 셀이 그것을 통과한 셀과 같은 `status` 를 갖습니다.
+
+- **`PASS` 유지 (현재)** — 해당 4 종을 의도적으로 쓰는 사용자에게 영구 WARN 은 "WARN 은 무시해도 된다" 를 학습시킵니다. 대신 roxygen 과 m2 에 "`pass` 와 `target_source` 를 함께 읽으라" 를 명시했습니다
+- **`WARN` 으로 승격** — 감사가 불완전했다는 사실이 `status` 하나로 드러납니다. `.summarize_scenario_metrics()` 의 `group_c` 분기에 warn 사유 한 줄을 추가하면 됩니다
+
+뒤집기를 원하시면 말씀해 주십시오.
+
+---
+
+## 7. 다음에 할 일
+
+| 순서 | 내용 |
+|---|---|
+| 1 | **Phase 7 병합 여부 결정** (PI) — 브랜치 CI 는 전부 green |
+| 2 | Phase 5 Step 5.6·5.7 — 커버리지 공백 보강 (하위: `layer1-effects-common.R` 79.7 % · `scenario_audit.R` 83.1 % · `layer2-diagnostics.R` 85.9 %) |
+| 3 | Phase 8 — 통계적 재검증 |
+| 4 | Phase 9 — 문서 델타, `0.2.0` 버전 범프, `NEWS.md` breaking change 절 (`upstream` 제거 · `target_source` 열 추가), D-013 · D-020 |
+| 5 | Phase 10 외부 검토 → Phase 11 릴리스 |
+
+---
+
+## 8. 안전 상태
 
 | 항목 | 상태 |
 |---|---|
-| **원격 push** | **2026-08-14 승인 후 실행** — 브랜치 3 개 + 태그 push 완료 |
-| **외부 저장소 생성** | 하지 않았습니다 — 아카이브는 로컬 git repo 로만 |
-| 패키지 코드(`R/`) 변경 | **0 줄** |
-| `DESCRIPTION` 변경 | 1 줄 (`hedgehog` 제거) |
+| 원격 push | 승인됨(D5). `main` 은 9d39131 |
+| `pkgdown` 공개 사이트 | **릴리스 전용** — 병합으로 갱신되지 않습니다 |
 | 되돌리기 | `git checkout pre-upgrade-baseline` 으로 전체 원복 |
-
-디스크 사고 위험은 push 로 해소되었습니다. `main` 은 아직 건드리지 않았습니다 — Phase 종료 시 병합합니다.
-
----
-
-## 6. Linux CI 가 확정한 것 (2026-08-14)
-
-Phase 2 가 Linux 부재로 `partial` 로 남겼던 항목이 전부 해소되었습니다.
-
-| workflow | 결과 | 실패 지점 | 원인 |
-|---|---|---|---|
-| `lint` | failure | Lint package | **위반 65 건** (`.lintr` 은 정상 적용됨 — 440 이 아님). D-006 확정 |
-| `extended-tests` | failure | 테스트 | 해시 불일치 + **D-024** |
-| `test-coverage` | failure | covr 실행 | **테스트 실패 전파** — `[FAIL 15 SKIP 36 PASS 4314]`. Codecov 토큰 무관. **D-009 확정 (후보 B-1)** |
-| `R-CMD-check` linux-release · linux-oldrel | failure | `check-r-package` | 테스트 실패 |
-| `R-CMD-check` macos-release · windows-release | failure | **`setup-r-dependencies`** | 의존성 설치 실패 — 코드에 닿기 전. **D-025 신규 (P0)** |
-
-실제 테스트 실패는 **15 건**입니다 (extended-tests 는 10 건에서 잘렸습니다 — D-017 확정).
-
-`extended-tests` 는 GitHub 이 **자동 비활성화**해 두었습니다 — 무활동 60 일. 2026-07-13 이후 실패가 멈춘 것은 고쳐져서가 아니라 신호가 죽었기 때문입니다 (D-023, 재활성화 완료).
+| 수치 출력 | golden fixture 열 값 **바이트 동일** — 시뮬레이션 결과는 바뀌지 않았습니다 |
 
 ---
 
-## 7. 파일 지도
+## 9. 파일 지도
 
 ```
 log-version-up-2026-08-14/
 ├─ STATUS.md                          ← 이 문서
 ├─ 001_plan-master-version-upgrade/   계획서 (Quarto Book)
-├─ 002_phase01-*.qmd/html             Phase 1 로그
-├─ 003_phase02-*.qmd/html             Phase 2 로그 (가장 내용이 많습니다)
-├─ 004_phase03-*.qmd/html             Phase 3 로그
-├─ 005_phase05-*.qmd/html             Phase 5 로그 (부분)
-├─ defect-ledger.csv                  결함 원장 22 행
+├─ 002_phase01-*  003_phase02-*  004_phase03-*
+├─ 005_phase05-*  006_phase04-*
+├─ 007_phase06-ci-restoration.*       CI 복구
+├─ 008_phase07-defect-remediation.*   기능 결함 수정 (최신)
+├─ defect-ledger.csv                  31 행
 ├─ decisions/
-│  ├─ 000-PI-approval-packet.html     ★ 먼저 읽으실 것
-│  ├─ D1-reproducibility-contract.md
-│  ├─ D2-advertised-surface.md
-│  ├─ D3-test-gate-policy.md
-│  ├─ D4-release-scope.md
-│  ├─ 000-pi-approval-record.md       2026-08-14 승인 기록
-│  └─ branch-strategy.md
-├─ evidence/phase01/                  베이스라인 측정 + 재실행 스크립트
-├─ evidence/phase02/                  감사 증거 14 파일 + 스크립트 7
-├─ evidence/phase05/                  게이트 제거 전후
-└─ artifacts/                         되돌리기용 보존
+│  ├─ 000-PI-approval-packet.html
+│  ├─ 000-pi-approval-record.md       D1-D5 승인
+│  ├─ 001-pi-decisions-gate-B.md      D6-D9
+│  ├─ 002-branch-protection-request.md  ★ PI 조치 대기
+│  └─ D1-D4-*.md  branch-strategy.md
+└─ evidence/phase01 … phase07/
 ```

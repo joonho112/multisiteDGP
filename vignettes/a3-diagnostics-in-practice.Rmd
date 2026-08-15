@@ -314,7 +314,7 @@ mimicked. Revisit the latent G choice and recalibrate against a
 real-data target through the workflow in
 [A5 · Calibrating to real data](a5-calibrating-real-data.html). The
 [G-distribution catalog](m2-g-distribution-catalog.html) lists the
-eight built-in shapes. At small $J$ a Group C FAIL is more often a
+seven shapes. At small $J$ a Group C FAIL is more often a
 power problem than a calibration problem; the quick check is to
 repeat the diagnostic at a synthetically larger $J$ and see whether
 the FAIL persists.
@@ -513,8 +513,9 @@ audit[, c("cell_id", "J", "sigma_tau", "M",
           "status", "pass", "n_violations")]
 ```
 
-`scenario_audit()` returns a tibble with 25 columns. The eight you
-reach for first:
+`scenario_audit()` returns a wide tibble — 26 columns for this grid;
+the manifest block widens with whatever `design_grid()` varies. The nine
+you reach for first:
 
 - **`cell_id`** — integer 1, 2, ...; matches the `design_grid()`
   printout.
@@ -522,7 +523,15 @@ reach for first:
   audit is self-documenting.
 - **`status`** — one-word verdict per cell: `PASS` / `WARN` / `FAIL`.
 - **`pass`** — logical companion; `TRUE` only if no gate fired. Use
-  it to filter the audit tibble.
+  it to filter the audit tibble, but read it together with
+  `target_source` — see below.
+- **`target_source`** — `"auto"` when the Group C distributional gates
+  ran, `"not_available"` when the declared shape has no reference
+  distribution (everything but `Gaussian` and `StudentT`). Group C is
+  then skipped rather than failed, so `pass = TRUE` means every gate
+  that *could* run passed, not that every gate ran. On a grid that
+  mixes shapes, a cell that skipped a whole diagnostic group otherwise
+  looks identical to one that cleared it.
 - **`n_violations`** — count of distinct gates that fired. Three
   simultaneous gates point at where to look; one often resolves with
   a single override.

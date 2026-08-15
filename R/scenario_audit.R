@@ -43,7 +43,30 @@
 #'
 #' @return A tibble with one row per design-grid cell, columns include
 #'   the cell's design parameters plus aggregated diagnostics and
-#'   pass/fail flags.
+#'   pass/fail flags. `target_source` reports whether the Group C
+#'   distributional gates ran (`"auto"`) or were skipped for want of a
+#'   reference distribution (`"not_available"`).
+#'
+#' @section Group C coverage:
+#' The Group C gates (`bhattacharyya`, `ks`) compare the realized
+#' standardized residuals against a reference quantile function for the
+#' declared shape. Only `Gaussian` and `StudentT` have one, so a design
+#' declaring `SkewN`, `ALD`, `Mixture` or `PointMassSlab` is audited on
+#' Groups A, B and D and reports `target_source = "not_available"`, with
+#' `med_bhattacharyya`, `q05_bhattacharyya`, `med_ks` and `q95_ks` all
+#' `NA`. The Group C gates are skipped rather than failed: an unmeasured
+#' diagnostic is not a violated one.
+#'
+#' **This makes `pass` narrower than it looks.** `pass = TRUE` means every
+#' gate that could run did run and passed — not that every gate ran. When
+#' sweeping a grid that mixes shapes, read `target_source` alongside
+#' `pass`, or the cells that skipped a whole diagnostic group will look
+#' like the cells that cleared it.
+#'
+#' A manual Group C check is still available for any shape: draw a
+#' reference sample from the declared distribution and pass it as the
+#' second argument to \code{\link{bhattacharyya_coef}} or
+#' \code{\link{ks_distance}}.
 #'
 #' @family family-diagnostics
 #' @seealso
@@ -224,7 +247,11 @@ scenario_audit <- function(
     )
   })
   rep_metrics <- dplyr::bind_rows(reps)
-  summary <- .summarize_scenario_metrics(rep_metrics, thresholds = thresholds)
+  summary <- .summarize_scenario_metrics(
+    rep_metrics,
+    thresholds = thresholds,
+    group_c = .has_auto_reference(design)
+  )
   manifest <- .scenario_cell_manifest(grid, cell_id, design, M, seed_root)
   dplyr::bind_cols(manifest, summary)
 }
@@ -253,6 +280,13 @@ scenario_audit <- function(
 .audit_scenario_replicate <- function(design, cell_id, rep_id, seed) {
   dat <- .simulate_scenario_replicate(design, seed)
   diag <- attr(dat, "diagnostics", exact = TRUE)
+  # Group C needs a reference quantile function for the declared shape, and only
+  # Gaussian and StudentT have one. v0.1.x called the diagnostics unconditionally,
+  # so auditing a SkewN / ALD / Mixture / PointMassSlab design aborted the whole
+  # run — four of the seven shapes could not be audited at all (D-031). Report
+  # the metric as unmeasured instead; .scenario_fail_reasons() is told not to
+  # gate on it.
+  group_c <- .has_auto_reference(design)
   tibble::tibble(
     cell_id = cell_id,
     rep = rep_id,
@@ -262,8 +296,8 @@ scenario_audit <- function(
     mean_shrinkage = mean_shrinkage(dat),
     feasibility_efron = feasibility_index(dat, kind = "efron", warn = FALSE),
     feasibility_morris = feasibility_index(dat, kind = "morris", warn = FALSE),
-    bhattacharyya = bhattacharyya_coef(dat),
-    ks = ks_distance(dat)
+    bhattacharyya = if (group_c) bhattacharyya_coef(dat) else NA_real_,
+    ks = if (group_c) ks_distance(dat) else NA_real_
   )
 }
 
@@ -289,7 +323,7 @@ scenario_audit <- function(
   cells[c("cell_id", setdiff(names(cells), "cell_id"))]
 }
 
-.summarize_scenario_metrics <- function(rep_metrics, thresholds) {
+.summarize_scenario_metrics <- function(rep_metrics, thresholds, group_c = TRUE) {
   q <- function(x, prob) unname(stats::quantile(x, prob, names = FALSE, type = 7, na.rm = TRUE))
   med <- function(x) stats::median(x, na.rm = TRUE)
 
@@ -301,9 +335,9 @@ scenario_audit <- function(
     ks = list(med = med(rep_metrics$ks), q95 = q(rep_metrics$ks, 0.95))
   )
 
-  fail_reasons <- .scenario_fail_reasons(values, thresholds)
+  fail_reasons <- .scenario_fail_reasons(values, thresholds, group_c = group_c)
   warn_reasons <- if (length(fail_reasons) == 0L) {
-    .scenario_warn_reasons(values, thresholds)
+    .scenario_warn_reasons(values, thresholds, group_c = group_c)
   } else {
     character()
   }
@@ -318,6 +352,7 @@ scenario_audit <- function(
   tibble::tibble(
     status = status,
     pass = !identical(status, "FAIL"),
+    target_source = if (group_c) "auto" else "not_available",
     n_violations = length(fail_reasons),
     fail_reasons = paste(fail_reasons, collapse = "; "),
     warn_reasons = paste(warn_reasons, collapse = "; "),
@@ -338,7 +373,7 @@ scenario_audit <- function(
   )
 }
 
-.scenario_fail_reasons <- function(values, thresholds) {
+.scenario_fail_reasons <- function(values, thresholds, group_c = TRUE) {
   reasons <- character()
   if (.gate_low_fail(values$mean_shrinkage$med, thresholds$mean_shrinkage_min)) {
     reasons <- c(reasons, sprintf("mean_shrinkage:median<%.3f", thresholds$mean_shrinkage_min))
@@ -349,16 +384,21 @@ scenario_audit <- function(
   if (.gate_high_fail(values$R$med, thresholds$R_max)) {
     reasons <- c(reasons, sprintf("R:median>%.3f", thresholds$R_max))
   }
-  if (.gate_low_fail(values$bhattacharyya$med, thresholds$bhattacharyya_min)) {
-    reasons <- c(reasons, sprintf("bhattacharyya:median<%.3f", thresholds$bhattacharyya_min))
-  }
-  if (.gate_high_fail(values$ks$med, thresholds$ks_max)) {
-    reasons <- c(reasons, sprintf("ks:median>%.3f", thresholds$ks_max))
+  # The fail gates treat a non-finite value as a failure, which is right for a
+  # metric that was measured and came back NaN. An unmeasurable Group C is not
+  # that: skip it rather than convert "no reference distribution" into FAIL.
+  if (group_c) {
+    if (.gate_low_fail(values$bhattacharyya$med, thresholds$bhattacharyya_min)) {
+      reasons <- c(reasons, sprintf("bhattacharyya:median<%.3f", thresholds$bhattacharyya_min))
+    }
+    if (.gate_high_fail(values$ks$med, thresholds$ks_max)) {
+      reasons <- c(reasons, sprintf("ks:median>%.3f", thresholds$ks_max))
+    }
   }
   reasons
 }
 
-.scenario_warn_reasons <- function(values, thresholds) {
+.scenario_warn_reasons <- function(values, thresholds, group_c = TRUE) {
   reasons <- character()
   if (.gate_low_warn(values$mean_shrinkage$q05, thresholds$mean_shrinkage_min)) {
     reasons <- c(reasons, sprintf("mean_shrinkage:q05<%.3f", thresholds$mean_shrinkage_min))
@@ -369,11 +409,13 @@ scenario_audit <- function(
   if (.gate_high_warn(values$R$q95, thresholds$R_max)) {
     reasons <- c(reasons, sprintf("R:q95>%.3f", thresholds$R_max))
   }
-  if (.gate_low_warn(values$bhattacharyya$q05, thresholds$bhattacharyya_min)) {
-    reasons <- c(reasons, sprintf("bhattacharyya:q05<%.3f", thresholds$bhattacharyya_min))
-  }
-  if (.gate_high_warn(values$ks$q95, thresholds$ks_max)) {
-    reasons <- c(reasons, sprintf("ks:q95>%.3f", thresholds$ks_max))
+  if (group_c) {
+    if (.gate_low_warn(values$bhattacharyya$q05, thresholds$bhattacharyya_min)) {
+      reasons <- c(reasons, sprintf("bhattacharyya:q05<%.3f", thresholds$bhattacharyya_min))
+    }
+    if (.gate_high_warn(values$ks$q95, thresholds$ks_max)) {
+      reasons <- c(reasons, sprintf("ks:q95>%.3f", thresholds$ks_max))
+    }
   }
   reasons
 }

@@ -73,8 +73,9 @@
 #'   polishing controls. See \code{\link{align_hybrid_corr}}.
 #' @param max_iter,tol Iteration budget and convergence tolerance for
 #'   the rank / hybrid hill-climb. Defaults `20000L` and `0.02`.
-#' @param target_marginal_rho Reserved for future marginal-correlation
-#'   target; not implemented in the current release.
+#' @param target_marginal_rho Reserved for a future marginal-correlation
+#'   target. Leave `NULL` (the default); a non-`NULL` value aborts. Effects
+#'   under a covariate are interpreted on the residual scale in this release.
 #' @param obs_fn Optional Layer 4 observation callback. See
 #'   \code{\link{gen_observations}}.
 #' @param framing Character. Sampling-frame interpretation —
@@ -339,7 +340,7 @@ is_multisitedgp_design <- function(x) {
 #' @details
 #' Validation enforces every constraint the constructor enforces — for
 #' example, the Decision-C contract (engine A1 with non-trivial
-#' precision dependence is rejected), the eight-shape `true_dist`
+#' precision dependence is rejected), the seven-shape `true_dist`
 #' allowlist, the `theta_G` per-shape required keys, and the unit-
 #' variance convention. Errors are emitted with full
 #' message + info + fix hints from the typed-error catalog (see
@@ -769,9 +770,9 @@ format.multisitedgp_design <- function(x, ...) {
 ) {
   if (!is.null(target_marginal_rho)) {
     .abort_arg(
-      "`target_marginal_rho` is not supported in v1.0.",
-      "multisiteDGP v1 uses residual interpretation for covariate-dependent effects.",
-      "Remove `target_marginal_rho`; the marginal API is deferred to v2."
+      "`target_marginal_rho` is not implemented in this release.",
+      "Covariate-dependent effects are interpreted on the residual scale, so a marginal correlation target has no effect.",
+      "Remove `target_marginal_rho`; the marginal API is deferred to a future release."
     )
   }
   if (identical(paradigm, "site_size")) {

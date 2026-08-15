@@ -12,7 +12,7 @@ sampling variances, optional precision dependence between effects and
 precisions, and observed site estimates — in one call. Use this when you
 are designing a multisite-trial power analysis, choosing between
 meta-analytic estimators, or sweeping a scenario grid before committing
-to a long simulation run. The eight built-in effect distributions and the
+to a long simulation run. The seven effect distributions and the
 literature-calibrated presets let you anchor a simulation to the
 applied evidence base, and bundled diagnostics, plots, and adapters
 carry the result through to downstream analysis.
@@ -22,10 +22,10 @@ The generative model is a transparent four-layer pipeline. Each layer
 has a single responsibility and forwards a documented schema downstream:
 \describe{
 \item{Layer 1 — latent effects (\code{\link{gen_effects}})}{Draws
-standardized site effects \eqn{z_j} from one of eight built-in
+standardized site effects \eqn{z_j} from one of seven
 \eqn{G} distributions — Gaussian, Student-t, skew-normal,
-asymmetric Laplace, two-component mixture, point-mass slab, a user
-callback, and a Dirichlet-process-mixture bridge — and rescales to
+asymmetric Laplace, two-component mixture, point-mass slab, and a
+user callback — and rescales to
 the response-scale latent effect
 \eqn{\tau_j = \tau + \sigma_\tau\,z_j}.}
 \item{Layer 2 — site-level precision
@@ -112,10 +112,11 @@ and SE models \enc{—}{--} site-size and direct-precision paths}
 \code{\link{update_multisitedgp_design}}, \code{\link{is_multisitedgp_design}},
 \code{\link{is_multisitedgp_data}}, and \code{\link{as_tibble.multisitedgp_data}}.}
 \item{Effect distributions (Layer 1)}{
-\code{\link{gen_effects}} dispatcher and the eight shape-specific generators
+\code{\link{gen_effects}} dispatcher and the seven shape generators
 \code{\link{gen_effects_gaussian}}, \code{\link{gen_effects_studentt}}, \code{\link{gen_effects_skewn}},
 \code{\link{gen_effects_ald}}, \code{\link{gen_effects_mixture}}, \code{\link{gen_effects_pmslab}},
-\code{\link{gen_effects_user}}, \code{\link{gen_effects_dpm}}.}
+\code{\link{gen_effects_user}}, plus the reserved
+\code{\link{gen_effects_dpm}} stub.}
 \item{Margin / SE models (Layer 2)}{
 \code{\link{gen_site_sizes}} for the site-size margin; \code{\link{gen_se_direct}} for the direct
 standard-error margin.}
