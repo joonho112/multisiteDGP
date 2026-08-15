@@ -1,0 +1,2 @@
+"run_id","experiment_id","mode","local_os","fixtures","reruns","rows","completed","failed","local_hash_identical_rate","rng_preserved_rate","provenance_hash_match_rate","required_local_hash_rate","cross_os_matrix_status","acceptance_pass","acceptance_note"
+"v08-smoke-20260815-104155","V08","smoke","Darwin",10,3,30,30,0,1,1,1,0.95,"not_run_in_local_phase9_job",TRUE,"V08 records local canonical_hash rerun evidence only; Linux/Windows/macOS cross-machine matrix remains external to this local job."

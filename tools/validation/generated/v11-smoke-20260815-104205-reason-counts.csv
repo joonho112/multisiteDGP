@@ -1,0 +1,7 @@
+"run_id","experiment_id","reason_type","reason","n"
+"v11-smoke-20260815-104205","V11","fail","bhattacharyya:median<0.850",72
+"v11-smoke-20260815-104205","V11","fail","feasibility:median<5.000",37
+"v11-smoke-20260815-104205","V11","fail","ks:median>0.100",63
+"v11-smoke-20260815-104205","V11","fail","mean_shrinkage:median<0.300",50
+"v11-smoke-20260815-104205","V11","fail","R:median>30.000",1
+"v11-smoke-20260815-104205","V11","warn","ks:q95>0.100",5
