@@ -1,6 +1,6 @@
 # 돌아오셨을 때 먼저 읽을 것
 
-**2026-08-15 · Phase 9 완료 시점 상태입니다.**
+**2026-08-15 · Phase 10 Step 10.1 완료 시점 상태입니다.**
 
 ---
 
@@ -8,16 +8,16 @@
 
 | | |
 |---|---|
-| **완료 Phase** | 1 · 2 · 3 · 4 · 5 · 6 · 7 · 8 · 9 |
-| **남은 Phase** | 10(외부 검토) · 11(릴리스) |
+| **완료 Phase** | 1 · 2 · 3 · 4 · 5 · 6 · 7 · 8 · 9 · 10 부분 |
+| **남은 Phase** | 10 나머지(리뷰 수행) · 11(릴리스) |
 | **결함 원장** | 37 행 · **fixed 36** · 문서화된 한계 1 · **open 0** |
 | **테스트** | **4882 통과** · 0 실패 · **0 skip** · 커버리지 **96.42 %** |
 | **lint** | 0 위반 |
 | **`R CMD check --as-cran`** | **0 error · 0 warning · 0 note** |
 | **버전** | **0.2.0** (0.1.1 에서 범프) |
-| **CI** | `main` 6/6 green (Phase 5·7·8 병합 완료) · Phase 9 브랜치 push 대기 |
+| **CI** | `main` 6/6 green (Phase 5·7·8·9 병합 완료) · Phase 10 브랜치 push 대기 |
 | **Validation** | **V0–V12 열세 실험 전부 `full` 통과** (2026-08-15) |
-| **PI 조치 대기** | `main` branch protection 1 건 (아래 §5) |
+| **PI 조치 대기** | `main` branch protection · **외부 리뷰 수행** (아래 §5) |
 
 ---
 
@@ -33,8 +33,9 @@
 | 6 CI 복구 | 완료 (branch protection 대기) | [`007`](007_phase06-ci-restoration.html) |
 | 7 기능 결함 수정 | 완료 | [`008`](008_phase07-defect-remediation.html) |
 | 8 통계 검증 재실행 | 완료 | [`010`](010_phase08-statistical-revalidation.html) |
-| **9 문서 델타 동기화** | **완료** | [**`011`**](011_phase09-documentation-sync.html) |
-| 10–11 | 미착수 | — |
+| 9 문서 델타 동기화 | 완료 | [`011`](011_phase09-documentation-sync.html) |
+| **10 외부 리뷰 게이트** | **Step 10.1 완료** (10.2–10.5 리뷰 대기) | [**`012`**](012_phase10-external-review.html) |
+| 11 릴리스 | 미착수 | — |
 
 ---
 
@@ -91,9 +92,17 @@ Phase 4·5·7 이 재현성 계약·solver·오류 경로·광고 표면을 바�
 
 ---
 
-## 5. PI 조치가 필요한 것 — 1 건
+## 5. PI 조치가 필요한 것 — 2 건
 
-### `main` branch protection 설정
+### ① 외부 리뷰 수행
+
+패킷: [`review-packet/README.html`](review-packet/README.html)
+
+리뷰어에게는 **패킷과 package 만** 주십시오. 계획서·Phase 로그·결함 원장은 주지 않습니다 — 계획의 프레이밍이 리뷰를 오염시키면 "우리가 이미 아는 것" 만 확인받게 됩니다. 패킷은 그 전제로 자기 완결적으로 썼습니다(Phase/Step 번호 0 건, 결함 ID 0 건).
+
+Phase 10 은 **게이트**입니다. 패킷을 만든 것만으로 통과가 아니고, 리뷰를 생략하기로 하시면 그것은 게이트 면제이지 통과가 아니므로 기록에 그렇게 남기는 편이 정확합니다.
+
+### ② `main` branch protection 설정
 
 요청 문서: [`decisions/002-branch-protection-request.md`](decisions/002-branch-protection-request.md)
 
@@ -120,8 +129,8 @@ Phase 4·5·7 이 재현성 계약·solver·오류 경로·광고 표면을 바�
 
 | 순서 | 내용 |
 |---|---|
-| 1 | **Phase 9 브랜치 병합 여부 결정** (PI) |
-| 2 | Phase 10 — 외부 검토 |
+| 1 | **외부 리뷰 수행** (PI) — 패킷은 [`review-packet/`](review-packet/README.html) 에 준비되어 있습니다 |
+| 2 | 리뷰 발견 트리아지 → Critical 리메디에이션 (Step 10.2–10.5) |
 | 3 | Phase 11 — 릴리스 (`v0.2.0` 태그 + GitHub Release, **외부 공개 행위이므로 PI 확인 필요**) |
 
 ---
