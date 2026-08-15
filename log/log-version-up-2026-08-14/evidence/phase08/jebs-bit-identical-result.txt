@@ -1,0 +1,4 @@
+  seed=42     열 7개 | bit-identical: TRUE 
+  seed=1      열 7개 | bit-identical: TRUE 
+  seed=2024   열 7개 | bit-identical: TRUE 
+  seed=12345  열 7개 | bit-identical: TRUE 

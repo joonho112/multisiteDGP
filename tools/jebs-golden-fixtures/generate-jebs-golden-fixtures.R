@@ -204,7 +204,7 @@ for (idx in seq_along(seeds)) {
     generated_R_version = R.version.string,
     generated_platform = R.version$platform,
     package_versions = package_versions,
-    os_policy = "Linux x86-64 strict; macOS/Windows numerical equivalence per blueprint ch18 sec18.12",
+    os_policy = "portable canonical_hash; no platform hierarchy; verified on linux-release/devel/oldrel, macos-release, windows-release (run 31889543618)",
     stringsAsFactors = FALSE
   )
 }

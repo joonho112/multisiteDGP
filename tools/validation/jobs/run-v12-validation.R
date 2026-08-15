@@ -37,7 +37,19 @@ if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(res
   quit(status = 0)
 }
 
-expected_hash <- "a96eaabd1c022e32"
+# Pinned against hash schema v3. canonical_hash() carries the schema version in
+# its payload, so a schema change moves this value even when the data is
+# untouched — which is exactly what v1 -> v3 did (Phase 4, defect D-002). The
+# previous pin, a96eaabd1c022e32, was a v1 value.
+#
+# If this check fails, read schema_matches_expected first. Schema moved is a
+# documented decision; data moved is a regression, and the authority on that is
+# the golden .rds set in tests/testthat/_snaps/golden, which compares exactly
+# and does not depend on the schema. V02 sidesteps this entirely by hashing
+# those fixtures at run time instead of pinning a literal.
+expected_hash <- "dab943488dc9d8ae"
+expected_hash_schema <- "multisiteDGP-canonical-hash-v3"
+actual_hash_schema <- multisiteDGP:::.hash_schema_version()
 design <- multisiteDGP::preset_jebs_paper()
 dat <- multisiteDGP::sim_multisite(design, seed = lee_seed)
 provenance <- attr(dat, "provenance", exact = TRUE)
@@ -177,6 +189,9 @@ summary <- data.frame(
   canonical_hash = provenance$canonical_hash,
   expected_hash = expected_hash,
   hash_matches_expected = identical(provenance$canonical_hash, expected_hash),
+  hash_schema = actual_hash_schema,
+  expected_hash_schema = expected_hash_schema,
+  schema_matches_expected = identical(actual_hash_schema, expected_hash_schema),
   diagnostics_I = diagnostics$I_hat,
   diagnostics_R = diagnostics$R_hat,
   diagnostics_rho_S = diagnostics$rho_S_residual,

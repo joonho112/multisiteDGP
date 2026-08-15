@@ -271,7 +271,8 @@ plot_dependence.multisitedgp_data <- function(
       y = "Site",
       caption = .plot_caption(x, caption)
     ) +
-    .theme_multisitedgp()
+    .theme_multisitedgp() +
+    ggplot2::scale_y_discrete(breaks = .caterpillar_site_breaks(plot_data))
 
   if (isTRUE(truth)) {
     p <- p + ggplot2::geom_point(
@@ -283,6 +284,23 @@ plot_dependence.multisitedgp_data <- function(
     )
   }
   p
+}
+
+# The y axis is one discrete level per site, so every site label renders and at
+# J = 50 they collide into an unreadable smear — worse at the J = 200 designs the
+# presets encourage (D-036). Thin them to at most .CATERPILLAR_MAX_LABELS, keeping
+# every k-th site in effect order so the axis still locates a site approximately.
+# Below the threshold nothing changes.
+.CATERPILLAR_MAX_LABELS <- 25L
+
+.caterpillar_site_breaks <- function(plot_data) {
+  ordered_sites <- plot_data$site_index[order(plot_data$tau_j_hat)]
+  n <- length(ordered_sites)
+  if (n <= .CATERPILLAR_MAX_LABELS) {
+    return(as.character(ordered_sites))
+  }
+  keep <- seq(1L, n, by = ceiling(n / .CATERPILLAR_MAX_LABELS))
+  as.character(ordered_sites[keep])
 }
 
 .plot_effects_density <- function(x, truth, monochrome, caption) {

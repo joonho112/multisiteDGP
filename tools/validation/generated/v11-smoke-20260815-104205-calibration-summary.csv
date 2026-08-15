@@ -1,0 +1,6 @@
+"run_id","experiment_id","region","cells","pass_cells","warn_cells","fail_cells","public_pass_rate","strict_pass_rate","reporting_role"
+"v11-smoke-20260815-104205","V11","full_broad_stress_grid",108,12,5,91,0.157407407407407,0.111111111111111,"post_hoc_calibration_evidence_not_release_gate"
+"v11-smoke-20260815-104205","V11","J_eq_100",36,12,5,19,0.472222222222222,0.333333333333333,"post_hoc_calibration_evidence_not_release_gate"
+"v11-smoke-20260815-104205","V11","J_eq_100_sigma_ge_0_15",24,12,5,7,0.708333333333333,0.5,"post_hoc_calibration_evidence_not_release_gate"
+"v11-smoke-20260815-104205","V11","high_information_region",32,10,4,18,0.4375,0.3125,"post_hoc_calibration_evidence_not_release_gate"
+"v11-smoke-20260815-104205","V11","very_high_information_region",16,4,3,9,0.4375,0.25,"post_hoc_calibration_evidence_not_release_gate"
