@@ -480,7 +480,7 @@ mean_shrinkage.default <- function(x = NULL, ..., nj_mean, sigma_tau, varY = 1, 
     .abort_arg(
       "Closed-form `mean_shrinkage()` requires `nj_mean` and `sigma_tau`.",
       "The closed-form path approximates `se2 = kappa / nj_mean`.",
-      "Call `mean_shrinkage(nj_mean = 50, sigma_tau = 0.20)`."
+      "Use `mean_shrinkage(nj_mean = 50, sigma_tau = 0.20)`."
     )
   }
 

@@ -173,7 +173,7 @@ gen_effects_user <- function(
       .abort_arg(
         sprintf("`%s` failed while generating user-supplied effects.", context),
         conditionMessage(e),
-        "Check that the callback accepts `J` and all names supplied in `g_args` or `theta_G`."
+        "Use a callback that accepts `J` and every name supplied in `g_args` or `theta_G`."
       )
     }
   )

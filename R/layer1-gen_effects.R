@@ -282,7 +282,7 @@ gen_effects <- function(
   .abort_arg(
     sprintf("`true_dist = \"%s\"` is not implemented.", true_dist),
     "Step 3.6 routes all catalog Layer 1 shapes.",
-    "Check `true_dist` spelling and use one of the documented catalog shapes."
+    "Use one of the documented catalog shapes; check the `true_dist` spelling."
   )
 }
 

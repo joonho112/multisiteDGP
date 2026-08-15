@@ -1,0 +1,225 @@
+---
+title: "Phase 5 완료 — Step 5.6·5.7 커버리지 공백 보강"
+subtitle: "미실행 오류 분기가 숨기고 있던 결함 4 건 · 커버리지 90.89 % → 96.42 % · skip 0"
+author: "Claude Opus 5"
+date: "2026-08-15"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+## 요약
+
+Phase 5 의 남은 두 Step 을 실행해 Phase 를 닫았다. 계획서가 정한 우선순위 —
+"사용자가 직접 호출하는 exported 함수의 미검증 경로 → 오류 처리 경로 → 통계적으로 중요한 내부 함수 → 순수 유틸리티" — 를 따랐고, 실제로 공백의 거의 전부가 **두 번째 범주**였다.
+
+**신규 결함 4 건**(D-032 · D-033 · D-034 · D-035, P1 2 건)을 찾아 전부 닫았다. 넷 다 "한 번도 실행된 적 없는 오류 분기" 에 있었다.
+
+::: {.callout-important title="이 Phase 의 논지"}
+커버리지 숫자를 올리는 것이 목적이 아니었다. 계획서는 명시적으로 **"각 테스트는 행 커버리지가 아니라 동작을 검증한다 — 커버리지 숫자를 올리기 위한 테스트는 쓰지 않는다"** 고 못박았다.
+
+논지는 이것이다. **실행된 적 없는 오류 메시지는 아무도 확인한 적 없는 오류 메시지다.** Phase 7 이 찾은 가장 나쁜 결함 두 건(`.OFF_CRAN_SOURCES` 조회 실패, fix-line 규약 위반)이 전부 그런 분기에 있었다. 같은 자리를 체계적으로 뒤지면 더 나올 것이라 예상했고, 4 건이 나왔다.
+:::
+
+---
+
+## 공백의 구조
+
+Step 2.2 가 지목한 하위 파일들의 미커버 행을 **내용별로** 분류하니 패턴이 하나였다.
+
+| 파일 | 미커버 | 그중 `.abort_*()` 분기 |
+|---|--:|--:|
+| `layer1-effects-common.R` | 37 | 35 |
+| `class-multisitedgp_design.R` | 50 | 40 |
+| `scenario_audit.R` | 39 | 30 |
+| `layer2-diagnostics.R` | 25 | 25 |
+| `layer2-gen_se_direct.R` | 21 | 20 |
+| `layer1-gen_effects_user.R` | 13 | 5 |
+| `layer3-dependence-custom.R` | 10 | 10 |
+
+오류 분기가 아닌 나머지는 포맷 헬퍼(`.format_design_scalar()` 의 formula·vector·function 분기), `update_multisitedgp_design()` 의 무-갱신 경로, 그리고 **도달 불가 코드**(D-034)였다.
+
+---
+
+## Step 5.6 — 상위 절반
+
+### `scenario_audit()` 의 WARN 게이트는 한 번도 발화한 적이 없었다
+
+게이트는 각각 **중앙값에서 FAIL, 꼬리 분위수에서 WARN** 으로 두 번 판정한다. 스위트 전체가 FAIL 쪽만 검증하고 있었으므로, "중앙값은 통과하지만 꼬리가 걸린다" 는 경로 다섯 개가 통째로 미검증이었다.
+
+임계값을 하드코딩하면 RNG 스트림이 움직일 때 깨지므로, **셀 자신의 실측 분위수에서 유도**했다:
+
+```r
+mid <- function(med, tail) (med + tail) / 2
+thresholds <- list(
+  mean_shrinkage_min = mid(baseline$med_mean_shrinkage, baseline$q05_mean_shrinkage),
+  ...
+)
+```
+
+중앙값과 꼬리 사이에 임계값을 놓으면 FAIL 은 비고 WARN 만 다섯 개가 뜬다. 그 상태가 실제로 `status == "WARN"`, `fail_reasons == ""` 인지 확인했다.
+
+### D-032 (P1) — 32 비트를 넘는 정수가 조용히 NA 가 된다
+
+`scenario_audit()` 의 seed 경로를 조사하다 발견했다.
+
+```r
+multisitedgp_design(J = 10L, sigma_tau = 0.2, nj_mean = 100, seed = 2^40)
+#> Error: missing value where TRUE/FALSE needed
+```
+
+`simpleError` 다. 다른 모든 잘못된 인자가 내는 `multisitedgp_arg_error` 가 아니고, **무엇이 잘못됐는지도 말해 주지 않는다.**
+
+원인은 `.validate_scalar_integer()` 다. 유한·정수값 여부만 보고 통과시킨 뒤 `as.integer(x)` 를 반환하는데, `2^31` 을 넘으면 `as.integer()` 가 경고와 함께 `NA` 를 돌려준다. 그 `NA` 가 한참 뒤 `if()` 조건에서 터진다.
+
+`J` · `seed` · `max_iter` · `n_min` · `M` 다섯 인자에서 재현했다. 사용처 18 곳이 전부 개수·반복수라 32 비트 범위 제한이 안전함을 확인하고 검사를 추가했다.
+
+### D-033 (P2) — 규약 위반 6 건이 검사를 통과하고 있었다
+
+`expect_multisitedgp_error()` 는 fix 라인이 `Try|Use|Pass|Remove` 로 시작하는지 검사한다. 그런데 **그 분기가 실행될 때만** 검사한다. 실제로 어긴 메시지가 6 건 있었다:
+
+| 파일 | fix 라인 시작 |
+|---|---|
+| `layer2-gen_se_direct.R` × 3 | `Return` |
+| `layer2-diagnostics.R` | `Call` |
+| `layer1-gen_effects.R` · `gen_effects_user.R` | `Check` |
+
+규약을 넓힐지 메시지를 고칠지 판단하려면 세어야 했다. **준수 223 곳 대 위반 6 곳** — 이탈한 쪽이 메시지다. 6 건을 `Use`/`Pass` 로 재작성했다.
+
+그리고 같은 일이 다시 일어나지 않도록 **AST 정적 검사**를 넣었다. R 소스를 파싱해 `.abort_*()` 호출의 세 번째 인자를 직접 보므로, **분기가 실행되지 않아도 잡힌다.** 223 개 fix 라인 전부를 검사한다 — 런타임 커버리지로는 닿을 수 없는 범위이고, 모든 오류 분기에 테스트를 붙이는 것보다 훨씬 싸다.
+
+::: {.callout-note title="구현에서 걸린 것"}
+R 의 AST 를 순회할 때 **기본값 없는 형식인자는 빈 심볼**이다. 이것을 루프 변수에 묶거나 인자로 넘기는 순간 `argument "el" is missing` 이 난다. `[[` 도 `for` 도 원소를 강제하므로 안 된다. `[` 는 강제하지 않으므로 한 원소짜리 슬라이스를 `list(quote(expr = ))` 와 비교해 건너뛴다.
+:::
+
+### D-034 (P2) — 도달 불가 분기가 실행되면 계약을 위반한다
+
+`.scenario_replicate_seeds()` 와 `.simulate_scenario_replicate()` 에 `is.na(seed)` 분기가 있고, 그 분기는 `sim_multisite(design)` 을 **seed 없이** 호출한다. 그러면 caller 의 global RNG 를 소비한다 — 30 줄 위 abort 메시지가 "감사는 절대 그러지 않는다" 고 선언한 바로 그 동작이다.
+
+`.scenario_cell_seed_root()` 는 정수를 반환하거나 abort 하므로 공개 API 로는 도달할 수 없다. 다만 그 함수가 `as.integer()` 를 직접 부르므로 구멍이 완전히 닫혀 있지도 않았다(D-032 와 같은 뿌리). **조용히 계약을 어기느니 거부하는 편이 낫다** — `.checked_cell_seed()` 로 `NA` 를 명시적으로 거부하고 죽은 분기를 제거했다. direct 패러다임의 `sim_meta()` 경로가 덤으로 커버됐다.
+
+---
+
+## Step 5.7 — 나머지 절반
+
+### D-035 (P1) — 이름 붙인 `beta` 가 절편 생략을 거부한다
+
+공변량 경로는 커버리지 **79.7 %** 로 패키지 최하위였다. 사용자가 `formula` · `beta` · `data` 셋을 서로 맞춰 넘겨야 하므로 어긋날 방법이 많고, 그만큼 오류 메시지가 실제로 읽히는 자리다.
+
+```r
+gen_effects(J = 20L, sigma_tau = 0.2, formula = ~ prior,
+            beta = c(prior = 0.3), data = d)
+#> Error: `beta` is missing non-intercept coefficients.
+#>        Missing coefficients: (Intercept).
+```
+
+**절편을 "비-절편 계수" 라고 부르는 자기모순 메시지다.**
+
+원인:
+
+```r
+.normalize_beta_names <- function(x) {
+  normalized[tolower(normalized) == "intercept"] <- "(Intercept)"   # 대문자 I
+  ...
+}
+
+.resolve_named_beta <- function(beta, column_names) {
+  non_intercept <- column_names_normalized != "(intercept)"          # 소문자 i
+```
+
+`"(Intercept)" != "(intercept)"` 는 항상 참이므로 **절편 열이 언제나 비-절편 계수로 분류**된다. 이름 붙인 `beta` 는 절편을 명시하지 않으면 반드시 거부된다.
+
+이것이 결함인 근거는 세 가지다.
+
+1. 같은 파일의 `.resolve_unnamed_beta()` 는 `"(Intercept)"` 를 **올바르게** 쓴다
+2. 그 함수의 fix 라인이 *"omit the intercept coefficient to default it to zero"* 라고 명시한다 — unnamed 경로는 절편 생략을 허용한다
+3. 오류 메시지 자신이 앞뒤가 맞지 않는다
+
+비교 문자열을 `"(Intercept)"` 로 고쳤다. 수정 후 같은 seed 에서 named 절편 생략과 unnamed 절편 생략이 **동일한 `tau_j`** 를 내고, 실제 비-절편 계수 누락은 여전히 검출된다.
+
+### 설계 클래스와 콜백 계약
+
+나머지는 `theta_G` · `se_args` · `g_args` 의 타입 검증, direct 패러다임의 `I`/`R`/`tol` 범위, 패러다임 교차 인자 거부, print 메서드의 formula·vector·callback 렌더링, `dependence_fn` 훅 계약을 덮었다.
+
+---
+
+## 내가 틀린 것들
+
+이 Phase 에서 **테스트 쪽 가정이 여러 번 틀렸다.** 기록해 둔다 — 어느 쪽이 틀렸는지 재보지 않고 코드를 고쳤다면 맞는 코드를 망가뜨렸을 것이다.
+
+| 내 가정 | 실제 |
+|---|---|
+| `shuffle = TRUE` 가 site-size 에서 거부된다 | `shuffle` 기본값이 `TRUE` 라 **기본값에서 벗어날 때** 발화한다. `R`(기본 1) 과 같은 규칙 — **결함 아님** |
+| `dependence_fn` 이 `upstream` 프레임을 받는다 | `z_j` · `se2_j` · `target` 으로 호출된다 |
+| `dependence_fn` 이 `perm` 만 돌려줘도 된다 | `se2_j` 와 `perm` 을 **둘 다** 요구한다 |
+| `J = 1` 로 단일 사이트 분해 분기를 칠 수 있다 | `J >= 10` 이 강제된다 — 그 분기는 공개 API 로 도달 불가 |
+| `multisitedgp_design` 에 `g_args`·`obs_args` 가 있다 | `se_args` 만 있다 |
+| 같은 인자로 두 번 호출하면 같은 결과 | seed 를 안 주면 global RNG 를 쓰므로 다르다. `withr::with_seed()` 필요 |
+
+특히 첫 줄은 위험했다. `!identical(shuffle, TRUE)` 는 언뜻 뒤집힌 조건처럼 읽히지만, 기본값이 `TRUE` 라는 것을 확인하니 옳았다.
+
+---
+
+## 검증 결과
+
+| 게이트 | Step 5.6 전 | Step 5.6 후 | Step 5.7 후 |
+|---|--:|--:|--:|
+| 커버리지 | 92.75 % | 94.44 % | **96.42 %** |
+| 테스트 통과 | 4561 | 4745 | **4873** |
+| 테스트 파일 | 453 | 481 | **502** |
+| skip | 0 | 0 | **0** |
+| lint | 0 | 0 | **0** |
+
+Phase 5 시작 시점(커버리지 90.89 %, skip 30) 대비 **커버리지 +5.53 %p, skip 30 → 0** 이다.
+
+### 하위 파일의 이동
+
+| 파일 | 5.6 전 | 5.7 후 |
+|---|--:|--:|
+| `layer1-effects-common.R` | 79.67 % | 하위 15 이탈 |
+| `class-multisitedgp_design.R` | 87.41 % | 하위 15 이탈 |
+| `scenario_audit.R` | 83.12 % | 하위 15 이탈 |
+| `layer2-diagnostics.R` | 85.88 % | 하위 15 이탈 |
+| `layer2-gen_se_direct.R` | 85.91 % | 하위 15 이탈 |
+
+### 신규 테스트 파일
+
+| 파일 | assertion | 대상 |
+|---|--:|---|
+| `test-scenario-audit-validation.R` | 94 | grid·thresholds 검증, WARN 게이트 5 개, furrr 병렬 경로, D-032 |
+| `test-diagnostics-se-error-paths.R` | 87 | S3 dispatch default 분기, `se_fn` 콜백 계약 |
+| `test-error-message-conformance.R` | 3 | fix 라인 223 개 AST 정적 검사 (D-033) |
+| `test-covariate-and-design-error-paths.R` | 128 | 공변량 삼자 정합성, `beta` 이름 해석(D-035), 설계 클래스, `dependence_fn` 계약 |
+
+---
+
+## 원장 변경
+
+| id | 심각도 | 제목 | 상태 |
+|---|---|---|---|
+| D-032 | P1 | 32 비트 초과 정수가 조용히 NA 가 되어 typed error 를 벗어난다 | **fixed** |
+| D-033 | P2 | 규약 위반 메시지 6 건이 미실행이라 통과했다 | **fixed** |
+| D-034 | P2 | 도달 불가 분기가 실행되면 RNG 불변식을 위반한다 | **fixed** |
+| D-035 | P1 | 이름 붙인 `beta` 가 절편 생략을 거부한다 | **fixed** |
+
+**원장 35 행 · fixed 33 · open 2.** 남은 둘은 Phase 9 배정분(D-013 tarball 크기, D-020 vignette knit 경고)이다.
+
+---
+
+## 다음 Phase 진입 조건
+
+- [x] Step 2.2 가 지목한 커버리지 공백을 우선순위 상·하위 모두 처리
+- [x] 추가한 테스트가 전부 통과
+- [x] 커버리지 변화 측정 완료 (90.89 % → 96.42 %)
+- [x] skip 0 · lint 0 · `R CMD check --as-cran` 0/0/0
+- [x] CI 전부 green — `R-CMD-check` 5 cell (`linux-release` · `linux-devel` · `linux-oldrel` · `macos-release` · `windows-release`), `lint`, `test-coverage`, `extended-tests`
+
+Phase 5 는 이로써 6 개 Step 전부 완료다. 다음은 **Phase 8 — 통계적 재검증**이다.

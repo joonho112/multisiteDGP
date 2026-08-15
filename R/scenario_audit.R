@@ -258,10 +258,10 @@ scenario_audit <- function(
 
 .scenario_cell_seed_root <- function(grid, cell_id, design) {
   if ("seed" %in% names(grid) && !is.na(grid$seed[[cell_id]])) {
-    return(as.integer(grid$seed[[cell_id]]))
+    return(.checked_cell_seed(as.integer(grid$seed[[cell_id]])))
   }
   if (!is.null(design$seed)) {
-    return(as.integer(design$seed))
+    return(.checked_cell_seed(as.integer(design$seed)))
   }
   .abort_arg(
     "`scenario_audit()` requires deterministic cell seeds.",
@@ -270,10 +270,23 @@ scenario_audit <- function(
   )
 }
 
-.scenario_replicate_seeds <- function(M, seed_root) {
-  if (is.na(seed_root)) {
-    return(rep(NA_integer_, M))
+# The two call sites above go through as.integer(), which yields NA past the
+# 32-bit range. A seed that reached the audit as NA used to fall through to
+# sim_multisite(design) with no seed — consuming the caller's global RNG, the
+# exact thing the abort above says the audit must never do. Refuse instead
+# (D-034).
+.checked_cell_seed <- function(seed) {
+  if (is.na(seed)) {
+    .abort_arg(
+      "`scenario_audit()` could not resolve a usable cell seed.",
+      "The seed is present but does not survive conversion to a 32-bit integer.",
+      "Use a seed at most 2147483647."
+    )
   }
+  seed
+}
+
+.scenario_replicate_seeds <- function(M, seed_root) {
   .local_seed_stream(M, seed_root)
 }
 
@@ -302,14 +315,10 @@ scenario_audit <- function(
 }
 
 .simulate_scenario_replicate <- function(design, seed) {
+  # seed is always a usable integer here — .checked_cell_seed() guarantees it —
+  # so neither branch may fall back to an unseeded call.
   if (identical(design$paradigm, "direct")) {
-    if (is.na(seed)) {
-      return(sim_meta(design))
-    }
     return(sim_meta(design, seed = seed))
-  }
-  if (is.na(seed)) {
-    return(sim_multisite(design))
   }
   sim_multisite(design, seed = seed)
 }

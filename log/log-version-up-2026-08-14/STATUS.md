@@ -1,6 +1,6 @@
 # 돌아오셨을 때 먼저 읽을 것
 
-**2026-08-15 · Phase 7 종료 시점 상태입니다.**
+**2026-08-15 · Phase 5 완료 시점 상태입니다.**
 
 ---
 
@@ -10,11 +10,11 @@
 |---|---|
 | **완료 Phase** | 1 · 2 · 3 · 4 · 5 · 6 · 7 |
 | **남은 Phase** | 8(통계 재검증) · 9(문서·버전) · 10(외부 검토) · 11(릴리스) |
-| **결함 원장** | 31 행 · **fixed 29** · open 2 (둘 다 Phase 9 배정) |
-| **테스트** | 4561 통과 · 0 실패 · **0 skip** |
+| **결함 원장** | 35 행 · **fixed 33** · open 2 (둘 다 Phase 9 배정) |
+| **테스트** | **4873 통과** · 0 실패 · **0 skip** · 커버리지 **96.42 %** |
 | **lint** | 0 위반 |
 | **`R CMD check --as-cran`** | **0 error · 0 warning · 0 note** |
-| **CI** | `main` 6/6 green · **Phase 7 브랜치 4/4 green** (5 cell 전부 포함) |
+| **CI** | `main` 6/6 green (Phase 7 병합 완료) · **Phase 5 브랜치 4/4 green** (5 cell 전부 포함) |
 | **PI 조치 대기** | `main` branch protection 1 건 (아래 §5) |
 
 ---
@@ -27,7 +27,7 @@
 | 2 결함 인벤토리 감사 | 완료 | [`003`](003_phase02-defect-audit.html) |
 | 3 v0.2.0 범위 결정 | 완료 | [`004`](004_phase03-scope-decisions.html) |
 | 4 재현성 계약 + solver | 완료 | [`006`](006_phase04-solver-hardening-partial.html) |
-| 5 테스트 스위트 | 부분 (Step 5.6 잔여) | [`005`](005_phase05-test-suite-rebuild-partial.html) |
+| 5 테스트 스위트 | **완료** (6/6 Step) | [`005`](005_phase05-test-suite-rebuild-partial.html) · [**`009`**](009_phase05-coverage-completion.html) |
 | 6 CI 복구 | 완료 (branch protection 대기) | [`007`](007_phase06-ci-restoration.html) |
 | **7 기능 결함 수정** | **완료** | [**`008`**](008_phase07-defect-remediation.html) |
 | 8–11 | 미착수 | — |
@@ -44,8 +44,8 @@
 | 기본 테스트 skip | **30** | **0** |
 | 기본 테스트 실패 (Linux) | 15 | **0** |
 | `R CMD check` NOTE | 1 | **0** |
-| 커버리지 | 90.89 % | 92.75 % |
-| 결함 원장 | 없음 | **31 행 · 29 해소** |
+| 커버리지 | 90.89 % | **96.42 %** |
+| 결함 원장 | 없음 | **35 행 · 33 해소** |
 
 ---
 
@@ -65,7 +65,15 @@
 **세 플랫폼 전부 통과했습니다** (run 31889543618 — Windows · macOS · Linux release/devel/oldrel). Linux 에서 생성된 golden fixture 에 대해 macOS 와 Windows 가 같은 `canonical_hash()` 를 냅니다. 재현성 계약은 이제 선언이 아니라 **검증된 사실**입니다.
 :::
 
-### ③ `scenario_audit()` 이 7 종 중 4 종에서 쓸 수 없었다
+### ③ 실행된 적 없는 오류 분기가 결함 6 건을 숨기고 있었다
+
+Phase 7 이 찾은 가장 나쁜 두 건이 전부 "테스트가 한 번도 도달하지 않은 `.abort_*()` 분기" 에 있었다. Phase 5 Step 5.6·5.7 이 같은 자리를 체계적으로 뒤지자 **4 건이 더** 나왔다 — 그중 P1 이 둘이다.
+
+가장 뚜렷한 것: 이름 붙인 `beta` 로 공변량 설계를 하면 절편을 명시하지 않는 한 항상 거부되고, 메시지는 절편을 *"비-절편 계수 누락"* 이라고 부른다(D-035). 대소문자 하나 차이였다. 공변량 경로는 커버리지 79.7 % 로 패키지 최하위였다.
+
+같은 일이 재발하지 않도록 **AST 정적 검사**를 넣었다 — 오류 메시지 223 개의 fix 라인을 소스에서 직접 읽으므로, 분기가 실행되지 않아도 규약 위반이 잡힌다.
+
+### ④ `scenario_audit()` 이 7 종 중 4 종에서 쓸 수 없었다
 
 계획서 Step 7.5 의 완료 조건("문서와 동작이 일치") 을 **검증하다** 발견했다. m2 vignette 은 SkewN·ALD·Mixture·PointMassSlab 에서 Group C 만 `not_available` 로 폴백한다고 서술했는데, 실제로는 **감사 전체가 abort** 했고 문서가 말한 `target_source` 열은 존재조차 하지 않았다. 원장 D-031 (P1), Phase 7 에서 수정 + 회귀 테스트 42 건.
 
@@ -102,9 +110,8 @@
 
 | 순서 | 내용 |
 |---|---|
-| 1 | **Phase 7 병합 여부 결정** (PI) — 브랜치 CI 는 전부 green |
-| 2 | Phase 5 Step 5.6·5.7 — 커버리지 공백 보강 (하위: `layer1-effects-common.R` 79.7 % · `scenario_audit.R` 83.1 % · `layer2-diagnostics.R` 85.9 %) |
-| 3 | Phase 8 — 통계적 재검증 |
+| 1 | **Phase 5 브랜치 병합 여부 결정** (PI) |
+| 2 | Phase 8 — 통계적 재검증 |
 | 4 | Phase 9 — 문서 델타, `0.2.0` 버전 범프, `NEWS.md` breaking change 절 (`upstream` 제거 · `target_source` 열 추가), D-013 · D-020 |
 | 5 | Phase 10 외부 검토 → Phase 11 릴리스 |
 
