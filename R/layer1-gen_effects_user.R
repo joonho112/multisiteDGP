@@ -14,7 +14,7 @@
 #' provenance.
 #'
 #' @details
-#' Use the user callback when none of the seven built-in shapes
+#' Use the user callback when none of the six built-in shapes
 #' (Gaussian, Student-t, skew-normal, ALD, mixture, point-mass slab, DPM)
 #' captures the effect distribution you need. Typical use cases: a DPM
 #' draw fitted offline, a custom skew-mixture, a deconvolution-derived
@@ -71,10 +71,10 @@
 #'
 #' @family family-effects
 #' @seealso
-#'   \code{\link{gen_effects}} for the dispatcher and the full eight-shape
+#'   \code{\link{gen_effects}} for the dispatcher and the full seven-shape
 #'   catalog;
 #'   \code{\link{gen_effects_dpm}} for the bridged DPM route;
-#'   \code{\link{gen_effects_gaussian}} and the seven built-in shapes;
+#'   \code{\link{gen_effects_gaussian}} and the six built-in shapes;
 #'   the \href{../articles/m5-custom-g-distributions.html}{M5 Custom G
 #'   distributions} vignette.
 #'

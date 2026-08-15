@@ -211,25 +211,25 @@
       i Both endpoints are refused: `pi0 = 0` is all slab; `pi0 = 1` is degenerate.
       > Use `pi0 = 0.20`, `pi0 = 0.50`, or another interior value.
 
-# E22 snapshot records DPM v1 stub abort
+# E22 snapshot records the DPM stub abort
 
     Code
       gen_effects_dpm(J = 10L)
     Condition
       Error in `.abort_multisitedgp()`:
-      x `true_dist = "DPM"` is not implemented in multisiteDGP v1.
-      i Built-in Dirichlet Process Mixture sampling is deferred to v2 or a sibling package.
+      x `true_dist = "DPM"` is not implemented in this release.
+      i Built-in Dirichlet Process Mixture sampling is deferred to a future release or a sibling package.
       > Use `true_dist = "User"` with a custom `g_fn`, or pass `g_fn` as an explicit DPM bridge.
 
-# E23 snapshot records target_marginal_rho v1 abort
+# E23 snapshot records the target_marginal_rho abort
 
     Code
       multisitedgp_design(target_marginal_rho = 0.3)
     Condition
       Error in `.abort_multisitedgp()`:
-      x `target_marginal_rho` is not supported in v1.0.
-      i multisiteDGP v1 uses residual interpretation for covariate-dependent effects.
-      > Remove `target_marginal_rho`; the marginal API is deferred to v2.
+      x `target_marginal_rho` is not implemented in this release.
+      i Covariate-dependent effects are interpreted on the residual scale, so a marginal correlation target has no effect.
+      > Remove `target_marginal_rho`; the marginal API is deferred to a future release.
 
 # E24 snapshot records deferred PSD placeholder
 

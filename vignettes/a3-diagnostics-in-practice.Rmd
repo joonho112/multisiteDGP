@@ -314,7 +314,7 @@ mimicked. Revisit the latent G choice and recalibrate against a
 real-data target through the workflow in
 [A5 · Calibrating to real data](a5-calibrating-real-data.html). The
 [G-distribution catalog](m2-g-distribution-catalog.html) lists the
-eight built-in shapes. At small $J$ a Group C FAIL is more often a
+seven shapes. At small $J$ a Group C FAIL is more often a
 power problem than a calibration problem; the quick check is to
 repeat the diagnostic at a synthetically larger $J$ and see whether
 the FAIL persists.

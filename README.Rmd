@@ -19,6 +19,9 @@ set.seed(1L)
 # multisiteDGP <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/joonho112/multisiteDGP/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/joonho112/multisiteDGP/actions/workflows/R-CMD-check.yaml)
+[![lint](https://github.com/joonho112/multisiteDGP/actions/workflows/lint.yaml/badge.svg)](https://github.com/joonho112/multisiteDGP/actions/workflows/lint.yaml)
+[![test-coverage](https://github.com/joonho112/multisiteDGP/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/joonho112/multisiteDGP/actions/workflows/test-coverage.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
@@ -45,7 +48,7 @@ specification through intuitive quantities:
 
 These applied questions are translated into a four-layer simulation
 pipeline — latent effects, site-size margins, precision dependence,
-observed estimates — backed by a catalog of eight distribution shapes
+observed estimates — backed by a catalog of seven distribution shapes
 for the latent site-effect distribution. Every default has a citation;
 every layer has a contract; every diagnostic answers a verification
 question.
@@ -126,7 +129,7 @@ dat <- sim_multisite(
 )
 ```
 
-### 2. Catalog of eight distribution shapes
+### 2. Catalog of seven distribution shapes
 
 Move beyond Gaussian site effects to study estimator behavior under
 realistic departures from normality:
@@ -139,11 +142,13 @@ dat_skew <- sim_multisite(
 )
 ```
 
-The eight shapes — Gaussian, Student-t, skew-normal, asymmetric
-Laplace, two-component mixture, point-mass slab, user callback, and a
-Dirichlet-process-mixture bridge — share a standardized-residual
+The seven shapes — Gaussian, Student-t, skew-normal, asymmetric
+Laplace, two-component mixture, point-mass slab, and a user callback —
+share a standardized-residual
 convention so `sigma_tau` (between-site heterogeneity) means the same
-thing across scenarios.
+thing across scenarios. A `"DPM"` slot is reserved: `true_dist`
+accepts the string, but built-in Dirichlet-process sampling is
+deferred, so reach it through a `g_fn` bridge.
 
 ### 3. Sampling-error margins and dependence structure
 
@@ -227,7 +232,7 @@ deploys.)
 | Vignette | Description |
 |----------|-------------|
 | [M1 · The two-stage DGP](https://joonho112.github.io/multisiteDGP/articles/m1-statistical-dgp.html) | Mathematical framing of the four layers |
-| [M2 · G-distribution catalog](https://joonho112.github.io/multisiteDGP/articles/m2-g-distribution-catalog.html) | The eight built-in shapes, side by side |
+| [M2 · G-distribution catalog](https://joonho112.github.io/multisiteDGP/articles/m2-g-distribution-catalog.html) | The seven shapes, side by side |
 | [M3 · Margin and SE models](https://joonho112.github.io/multisiteDGP/articles/m3-margin-se-models.html) | Site-size-driven and direct-precision paths |
 | [M4 · Precision dependence theory](https://joonho112.github.io/multisiteDGP/articles/m4-precision-dependence-theory.html) | Rank, copula, and hybrid methods compared |
 | [M5 · Custom G distributions](https://joonho112.github.io/multisiteDGP/articles/m5-custom-g-distributions.html) | Bring your own latent distribution |

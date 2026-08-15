@@ -79,7 +79,7 @@ Use the table below when scanning for a pattern you can copy.
 | R5.2 | Custom calibration with `sigma_tau` and `R2` | Preset override of two anchor knobs | Pinning a substantive heterogeneity target with a covariate proxy |
 | R5.3 | Compare two presets side by side | `preset_education_small()` vs `preset_education_substantial()` | Bracketing an evidence claim across the field's regime |
 | R5.4 | Bridge to downstream adapters | `as_metafor()` and `as_baggr()` with namespace guards | Handing simulated data to an external estimator |
-| R5.5 | User `g_fn` callback | A custom Layer 1 G-distribution callback | A site-effect distribution that none of the eight built-ins covers |
+| R5.5 | User `g_fn` callback | A custom Layer 1 G-distribution callback | A site-effect distribution that none of the seven shapes covers |
 | R5.6 | Custom `dependence_fn` | A custom Layer 3 alignment callback | Replacing the built-in copula/rank/hybrid alignment |
 | R5.7 | Design grid and scenario audit | `design_grid()` + `scenario_audit()` for a small factorial | Pre-registration; defending a chosen cell |
 | R5.8 | Canonical hash reproducibility | Hash determinism across reruns and column orderings | Provenance; cache invalidation |
@@ -351,7 +351,7 @@ wires it into a `multisitedgp_design()` with `true_dist = "User"`,
 and verifies the realized standardized SD recovers $\sigma_\tau$.
 
 When to reach for it: a site-effect distribution that none of the
-eight built-in G distributions covers — a bimodal or lopsided shape
+seven built-in G distributions covers — a bimodal or lopsided shape
 the analyst wants to inject directly. The callback contract (input
 `J` plus `...`, return either the standardized $z$-vector or a list
 with `z`) is documented at

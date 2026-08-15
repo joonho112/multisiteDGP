@@ -89,7 +89,7 @@ in multisite trials. \emph{Journal of Educational and Behavioral Statistics},
 \bold{50}(5), 731--764. \doi{10.3102/10769986241254286}.
 }
 \seealso{
-\code{\link{gen_effects}} for the dispatcher and the full eight-shape
+\code{\link{gen_effects}} for the dispatcher and the full seven-shape
 catalog;
 \code{\link{gen_effects_gaussian}} for the symmetric baseline;
 \code{\link{gen_effects_studentt}} for symmetric heavy tails;

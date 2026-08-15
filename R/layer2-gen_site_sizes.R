@@ -33,6 +33,39 @@
 #' (`p = 0.5`, `R2 = 0`, `var_outcome = 1`) give \eqn{\kappa = 4}, the
 #' baseline used in the JEBS paper.
 #'
+#' @section Engine A2 feasible region:
+#' A2 fits a lower-truncated Gamma by moment matching, so not every
+#' `(n_bar, cv, n_min)` request is attainable: truncating at `n_min` removes
+#' the left tail that supplies the dispersion, and past some point no
+#' truncated Gamma has both the requested mean and the requested `cv`. The
+#' fit is then refused rather than silently approximated.
+#'
+#' What governs it is the ratio `n_min / nj_mean` alone — `nj_mean` itself
+#' drops out. Measured on the current solver, the largest attainable `cv`:
+#'
+#' \tabular{lr}{
+#'   \strong{`n_min / nj_mean`} \tab \strong{largest attainable `cv`} \cr
+#'   0.02 \tab 1.95 \cr
+#'   0.05 \tab 1.65 \cr
+#'   0.10 \tab 1.40 \cr
+#'   0.20 \tab 1.10 \cr
+#'   0.30 \tab 0.85 \cr
+#'   0.50 \tab 0.55 \cr
+#'   0.70 \tab 0.30 \cr
+#' }
+#'
+#' The row for 0.20 is 1.10 at every `nj_mean` from 10 to 500 — the boundary
+#' is scale invariant. The JEBS reference design (`nj_mean = 50`, `n_min = 5`,
+#' `cv = 0.5`) sits at ratio 0.10 against a ceiling of 1.40, well inside.
+#' Keeping `nj_mean >= 2 * n_min` and `cv <= 0.5` is interior everywhere.
+#'
+#' Two soft edges warn rather than refuse. Above `cv` about 1.5 the draw is
+#' heavy-tailed and the solve is delicate, so A2 says so and proceeds. Below
+#' `cv` about `1e-3` the moment evaluation cancels to more relative error than
+#' the fit tolerance, so the fit is accepted but A2 reports the precision to
+#' which the realized SD is actually checkable. Neither is an error; both are
+#' telling you the number you asked for is near a limit of the method.
+#'
 #' For the formal Paradigm A vs Paradigm B contrast and the engine
 #' derivation, see the
 #' \href{../articles/m3-margin-se-models.html}{Margin and SE models —

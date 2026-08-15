@@ -7,7 +7,7 @@
 #' Draw J standardized site effects from the standard normal distribution and
 #' apply the shared Layer 1 location-scale wrapper to produce response-scale
 #' effects \eqn{\tau_j = \tau + X_j\boldsymbol{\beta} + \sigma_\tau\,z_j}. The
-#' Gaussian shape is the canonical baseline of the eight-distribution catalog
+#' Gaussian shape is the canonical baseline of the seven-distribution catalog
 #' — pick it when you have no specific reason to prefer a heavier-tailed or
 #' asymmetric shape, or when matching the JEBS paper's reference design.
 #'
@@ -41,7 +41,7 @@
 #'
 #' @family family-effects
 #' @seealso
-#'   \code{\link{gen_effects}} for the dispatcher and the full eight-shape
+#'   \code{\link{gen_effects}} for the dispatcher and the full seven-shape
 #'   catalog;
 #'   \code{\link{gen_effects_studentt}} and \code{\link{gen_effects_skewn}}
 #'   for heavier-tailed and asymmetric variants;
@@ -103,7 +103,7 @@ gen_effects_gaussian <- function(
   }
   if (!identical(as.numeric(variance), 1)) {
     .abort_arg(
-      "`variance` must equal 1 in multisiteDGP v1.",
+      "`variance` must equal 1 in this release.",
       "Layer 1 generators must return standardized residuals with unit variance.",
       "Use `sigma_tau` to control between-site heterogeneity."
     )

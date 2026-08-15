@@ -11,7 +11,7 @@ You have a multisite trial to design, a meta-analysis to plan, or an estimator t
 <div class="card mb-4 h-100">
 <div class="card-body">
 <h5 class="card-title">Layered DGP</h5>
-<p class="card-text">Four generative layers — latent effects, site-size margins, precision dependence, observation draws — with eight built-in distribution shapes and a single-call front door.</p>
+<p class="card-text">Four generative layers — latent effects, site-size margins, precision dependence, observation draws — with seven distribution shapes and a single-call front door.</p>
 <a href="articles/a1-getting-started.html" class="btn btn-primary">Get started</a>
 </div>
 </div>
@@ -117,7 +117,7 @@ In a single call you have a citable scenario, a printed dataset, a realized-targ
 | Vignette | What you get |
 |----------|--------------|
 | [M1 · The two-stage DGP](articles/m1-statistical-dgp.html) | Mathematical framing of the four layers |
-| [M2 · G-distribution catalog](articles/m2-g-distribution-catalog.html) | The eight built-in shapes, side by side |
+| [M2 · G-distribution catalog](articles/m2-g-distribution-catalog.html) | The seven shapes, side by side |
 | [M3 · Margin and SE models](articles/m3-margin-se-models.html) | Site-size-driven and direct-precision paths |
 | [M4 · Precision dependence theory](articles/m4-precision-dependence-theory.html) | Rank, copula, and hybrid methods compared |
 | [M5 · Custom G distributions](articles/m5-custom-g-distributions.html) | Bring your own latent distribution |

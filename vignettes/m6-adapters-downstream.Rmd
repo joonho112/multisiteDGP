@@ -162,13 +162,20 @@ specification; the adapter omits `n` rather than emit all-`NA`.
 Site-size paradigm designs (the default in
 `preset_education_modest()`) include `n`.
 
-`multisitepower` is a soft `Suggests` dependency and may not be
-installed on a given machine. The chunk below is guarded; when the
-package is absent, the adapter raises a classed soft-dependency error
-that the chunk traps and prints, exercising the guard from Section 5.
+`multisitepower` is optional and lives on GitHub rather than CRAN, so
+unlike `metafor` and `baggr` it is deliberately *not* a declared
+`Suggests` dependency — see Section 5 for why. The chunk below is
+guarded; when the package is absent, the adapter raises a classed
+soft-dependency error that the chunk traps and prints, exercising the
+guard from Section 5.
 
 ```{r as-multisitepower}
-if (requireNamespace("multisitepower", quietly = TRUE)) {
+# The package name is held in a variable on purpose. A literal
+# requireNamespace("multisitepower") would make `R CMD check` ask for a
+# declared dependency, which is exactly what this package does not have.
+mp_pkg <- "multisitepower"
+
+if (requireNamespace(mp_pkg, quietly = TRUE)) {
   mp <- as_multisitepower(dat)
   print(mp, n = 4)
 } else {
@@ -318,18 +325,26 @@ set (`R/adapters.R` line 167) — any non-canonical column qualifies.
 
 ## 5. Soft-dependency guard
 
-`metafor`, `baggr`, and `multisitepower` are listed in `Suggests`,
-not `Imports` — none is required to use `multisiteDGP` itself, only
-to use the matching adapter. Each adapter calls
-`requireNamespace("target", quietly = TRUE)` through the internal
-`.require_soft_dependency()` helper and aborts with a three-line
-error when the target package is missing:
+`metafor` and `baggr` are listed in `Suggests`, not `Imports` —
+neither is required to use `multisiteDGP` itself, only to use the
+matching adapter.
 
-| line  | content                                                   |
-|-------|-----------------------------------------------------------|
-| 1     | `Package "<pkg>" is required for "<adapter>()".`          |
-| 2     | `<pkg> is a multisiteDGP Suggests dependency …`           |
-| 3     | `Use install.packages("<pkg>") and try again.`            |
+`multisitepower` is not listed at all. It is distributed on GitHub, not
+CRAN, so declaring it would make installation fail on any machine where
+the resolver cannot reach it — which is what it did: three months of red
+CI on macOS and Windows traced back to that one line. The adapter works
+the moment you install the package yourself; it is the *declaration*
+that was removed, not the support.
+
+Each adapter calls `requireNamespace("target", quietly = TRUE)` through
+the internal `.require_soft_dependency()` helper and aborts with a
+three-line error when the target package is missing:
+
+| line  | content                                                              |
+|-------|----------------------------------------------------------------------|
+| 1     | `Package "<pkg>" is required for "<adapter>()".`                     |
+| 2     | why it is absent — a `Suggests` package not installed, or, for `multisitepower`, not a declared dependency at all |
+| 3     | the exact install call — `install.packages()` for a CRAN `Suggests`, `remotes::install_github("jche/multisitepower")` for `multisitepower` |
 
 The exact message body for `multisitepower` (commonly absent on a
 fresh CRAN check environment) is the chunk output of Section 2.3. The

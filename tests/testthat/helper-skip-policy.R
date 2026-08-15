@@ -8,14 +8,12 @@
 # 근거는 decisions 폴더의 D3 테스트 게이트 정책 문서에 있다.
 #
 # 남은 게이트는 둘뿐이다.
-#   - skip_if_not_installed()          soft dependency guard (testthat 기본 제공)
-#   - skip_if_not_linux_strict_hash()  아래. 재현성 계약(D1)에 종속된다.
-
-skip_if_not_linux_strict_hash <- function() {
-  platform <- tolower(R.version$platform)
-  testthat::skip_if_not(
-    identical(tolower(Sys.info()[["sysname"]]), "linux") &&
-      grepl("x86_64|amd64", platform),
-    "Strict canonical_hash equality is Linux x86_64/amd64 baseline only."
-  )
-}
+# 남은 게이트는 하나뿐이다.
+#   - skip_if_not_installed()  soft dependency guard (testthat 기본 제공)
+#
+# v0.1.x 에는 skip_if_not_linux_strict_hash() 가 있었다. canonical_hash 동등성을
+# Linux x86_64 에서만 검사하고 나머지 플랫폼은 면제했다. 해시 스키마 v3 가
+# 파생 진단값을 payload 에서 빼면서 해시가 실제로 이식 가능해졌고,
+# tools/cross-os-reproducibility-policy.md 는 "플랫폼 위계 없음" 을 계약으로
+# 명시한다. 그 계약을 CI 5 칸 중 1 칸에서만 검사하는 gate 는 계약을 검증하지
+# 않는 것과 같으므로 제거했다. T1a 는 이제 모든 플랫폼에서 실행된다.

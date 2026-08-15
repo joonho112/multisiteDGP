@@ -1,0 +1,19 @@
+=== 중단(abort) 경계만: 비율별 최대 해결 가능 cv ===
+  n_min/n_bar=0.02  해결 가능 cv 상한 = 1.95
+  n_min/n_bar=0.05  해결 가능 cv 상한 = 1.65
+  n_min/n_bar=0.10  해결 가능 cv 상한 = 1.40
+  n_min/n_bar=0.20  해결 가능 cv 상한 = 1.10
+  n_min/n_bar=0.30  해결 가능 cv 상한 = 0.85
+  n_min/n_bar=0.40  해결 가능 cv 상한 = 0.70
+  n_min/n_bar=0.50  해결 가능 cv 상한 = 0.55
+  n_min/n_bar=0.60  해결 가능 cv 상한 = 0.40
+  n_min/n_bar=0.70  해결 가능 cv 상한 = 0.30
+  n_min/n_bar=0.80  해결 가능 cv 상한 = 0.20
+
+=== n_bar 자체의 영향 (비율 0.2 고정) ===
+  n_bar=10   n_min=2    상한 = 1.10
+  n_bar=25   n_min=5    상한 = 1.10
+  n_bar=50   n_min=10   상한 = 1.10
+  n_bar=100  n_min=20   상한 = 1.10
+  n_bar=250  n_min=50   상한 = 1.10
+  n_bar=500  n_min=100  상한 = 1.10

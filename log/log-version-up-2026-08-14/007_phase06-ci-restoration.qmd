@@ -1,0 +1,169 @@
+---
+title: "Phase 6 — CI 복구"
+subtitle: "3 개월 red 를 만든 네 겹의 독립 결함 · 6 개 workflow 전부 green · main 병합"
+author: "Claude Opus 5"
+date: "2026-08-14"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+## 요약
+
+CI 6 개 workflow 를 전부 green 으로 만들고 PR #1 을 `main` 에 병합했다. 성공 기준 **G2** 를 달성했다.
+
+이 Phase 의 핵심 발견은 **"CI 가 왜 실패하는가" 에 답이 하나가 아니었다는 것**이다. 3 개월간의 red 는 하나의 버그가 여러 곳에 나타난 것이 아니라, **서로 독립된 네 개의 결함이 겹쳐 있던 것**이었다. 각각을 고쳐도 다음 것이 드러나므로, 한 번에 하나씩 고치고 CI 를 기다리는 방식은 최악의 전략이었다 — 이 Phase 가 예상보다 오래 걸린 유일한 원인이며, 내가 통제할 수 있었던 부분이다.
+
+::: {.callout-important title="Phase 6 은 계획된 순서대로 실행되지 않았다"}
+계획서는 Phase 6 의 선행 조건을 "Phase 4, 5, 7 **전부** 완료" 로 못박았다. 근거는 타당했다 — 고치는 중인 코드에 workflow 를 맞추면 무엇이 환경 문제이고 무엇이 코드 문제인지 구별되지 않는다.
+
+실제로는 **Phase 4 와 6 이 뒤엉켜 진행됐다.** D5(원격 push 승인)로 Linux CI 가 가동되자, Phase 4 의 재현성 계약이 Linux 없이는 검증 불가능하다는 것이 드러났기 때문이다. 계획의 전제("코드는 이미 로컬에서 옳다")가 성립하지 않았다 — 로컬에서 옳은 것과 Linux 에서 옳은 것이 달랐고, 그 차이 자체가 Phase 4 의 대상이었다.
+
+결과적으로 계획의 우려는 현실이 되었다. 커밋 이력(`step4.1a` 와 `step6.3` 이 교차한다)이 그 증거다. 다만 순서를 지켰다면 Phase 4 를 끝낼 수 없었다.
+:::
+
+---
+
+## 근본 원인 — 네 겹
+
+Phase 2 는 Linux 부재로 원인을 `partial` 로 남겼다. Linux CI 가 가동되면서 전부 확정됐다.
+
+| # | 결함 | 무엇을 설명하는가 | 원장 |
+|---|---|---|---|
+| 1 | `.lintr` 이 원격에 미추적 | CI 가 **기본 규칙**으로 lint 를 돌렸다. 위반이 65 가 아니라 **440** | D-005 |
+| 2 | `multisitepower` 가 Suggests 에 있으나 어디서도 해결 불가 | macOS·Windows 가 **코드에 닿기 전에** `setup-r-dependencies` 에서 죽었다 | D-025 |
+| 3 | 재현성 계약이 달성 불가능 | `canonical_hash()` 가 raw IEEE-754 를 해싱하는데 payload 에 `cor()`/`sd()` 파생 진단이 들어 있었다 | D-002 · D-007 |
+| 4 | `covr::to_cobertura()` 가 `xml2` 를 요구 | `test-coverage` 가 리포트 작성 단계에서 죽었다 | D-027 |
+
+**네 개가 서로 독립이다.** ①은 lint 만, ②는 macOS·Windows 만, ③은 해시 테스트만, ④는 커버리지만 설명한다. 어느 하나를 고쳐도 나머지 셋은 그대로 red 다.
+
+### 원인 ③ 이 가장 깊었다
+
+`canonical_hash()` 는 double 을 반올림하지 않고 해싱했다. **1 ULP 차이에도 해시가 뒤집힌다.** 그런데 해시 payload 에는 `cor()`·`sd()`·`mean()` 으로 계산한 파생 진단(`I_hat`, `R_hat`, `rho_S_*`, `rho_P_*`, `sigma_tau_*`)이 들어 있었다. 이 함수들의 부동소수점 누적 순서는 플랫폼마다 다르다.
+
+드리프트는 **한 대의 기계 안에서도** 보인다. 공변량 없는 설계에서 `rho_P_marginal` 과 `rho_P_residual` 은 수학적으로 동일한 양인데:
+
+```
+rho_P_marginal  -0.18428017280171624
+rho_P_residual  -0.1842801728017163
+```
+
+계약이 요구하는 정밀도가 계산이 제공하는 정밀도보다 3~4 자릿수 엄격했다. 해결은 Phase 4 의 해시 스키마 v3 — **파생 진단을 payload 에서 뺀다.** 그것들은 해싱된 데이터와 해싱된 설계의 함수이므로 provenance 를 추가하지 않는다. 잡음만 추가한다.
+
+---
+
+## Step 실행 기록
+
+| Step | 상태 | 실제 수행 |
+|---|---|---|
+| 6.1 workflow 감사 | 완료 | 6 개 workflow 전수 점검. 네 겹의 원인 확정 |
+| 6.2 `R-CMD-check` 복구 | 완료 | D-025(의존성) + D-002(해시) 해소로 5 cell 전부 green |
+| 6.3 `lint` 복구 | 완료 | 위반 65 → **0**. `.lintr` 확장 + `.lintr.md` 작성 |
+| 6.4 `test-coverage` 복구 | 완료 | `any::xml2` 추가 (D-027) |
+| 6.5 `extended-tests` 복구 | 완료 | 재활성화(D-023) + 실패 시 Issue 자동 생성 |
+| 6.6 매트릭스 확인·유지 장치 | **부분** | green 확인·정책 문자열 통일 완료. 배지·branch protection 은 아래 참조 |
+
+### Step 6.3 — lint 위반 65 건
+
+위반을 지우는 방법은 두 가지다. 코드를 규칙에 맞추거나, 규칙을 코드에 맞추거나. 대부분은 전자로 처리했지만 **일부는 후자가 옳았다.**
+
+`J`, `I`, `R`, `GM`, `theta_G` 같은 이름은 통계 표기이지 나쁜 작명이 아니다. `R = 9.83` 은 이 패키지에서 이질성 비율이고, 이것을 `heterogeneity_ratio` 로 바꾸면 JEBS 논문과의 대응이 끊어진다. 그래서 `.lintr` 에 **정당화된 정규식**을 넣었다:
+
+```
+object_name_linter = object_name_linter(
+  styles = c("snake_case", "dotted.case"),
+  regexes = c("^[JIR]$", "_[AB]$", "^group[A-D]_", "(^|_)(I|R|GM)(_|$)", "_M[1-8]$")
+)
+```
+
+규칙을 느슨하게 하는 것은 위반을 숨기는 것과 구별되지 않으므로, **`.lintr.md` 에 각 비기본 설정의 근거를 적었다.** 유일한 `nolint` 도 왜 필요한지 기록했다. 근거 없이 느슨해진 규칙은 다음 사람에게 "여기는 안 봐도 된다" 는 신호가 된다.
+
+### Step 6.5 — red 가 다시 방치되지 않게 하기
+
+Phase 의 진짜 목표는 green 을 한 번 만드는 것이 아니었다. `extended-tests` 는 스케줄 실행인데, **GitHub 이 60 일 무활동 후 자동 비활성화**한다. 2026-07-13 이후 실패가 멈춘 것은 고쳐져서가 아니라 신호가 죽었기 때문이다.
+
+두 가지를 넣었다.
+
+1. `actions/github-script@v7` 로 **스케줄 실패 시 `ci-failure` 라벨 Issue 를 열고, 성공하면 닫는다.** red 가 알림을 만들지 않으면 red 는 존재하지 않는 것과 같다
+2. 같은 job 이 **실행됐다는 사실 자체를 보고**한다. 조용한 정지도 눈에 보인다
+
+### `pkgdown-deploy` 를 릴리스 전용으로
+
+`main` 병합 시 공개 사이트가 갱신되면, 작업 중인 상태가 공개된다. PI 결정에 따라 `push` 트리거를 제거하고 **릴리스 시에만** 배포하도록 바꿨다. 병합 후 실제로 트리거되지 않은 것을 확인했다.
+
+---
+
+## 결과
+
+### CI 최종 상태 — `main` (9d39131)
+
+| workflow | 결과 | 소요 | run ID |
+|---|---|--:|---|
+| `R-CMD-check` (5 cell) | **success** | 34m47s | 31845191849 |
+| `lint` | **success** | 2m40s | 31845191702 |
+| `test-coverage` | **success** | 8m40s | 31845191697 |
+| `extended-tests` | **success** | — | 수동 실행 |
+| `pkgdown-deploy` | 트리거 안 됨 (의도대로) | — | — |
+
+5 cell 은 `linux-release`, `linux-devel`, `linux-oldrel`, `macos-release`, `windows-release` 전부 green 이다.
+
+### 지표 변화
+
+| 지표 | Phase 6 시작 | 종료 |
+|---|--:|--:|
+| green workflow | 0 / 6 | **6 / 6** |
+| lint 위반 (CI 조건) | 440 | **0** |
+| 실패 테스트 (Linux) | 15 | **0** |
+| 정책 문자열 선언 workflow | 0 | **6** |
+
+---
+
+## 미해결 및 이월
+
+### Step 6.6 의 미완 항목 — 이 Phase 에서 정직하게 남긴 것
+
+계획서의 종료 조건 중 셋이 아직 닫히지 않았다.
+
+| 조건 | 상태 | 조치 |
+|---|---|---|
+| 연속 3 회 green 이 run ID 로 증명 | **부분** — PR 1 회 + main 1 회 | Phase 7 CI 로 3 회째 충족 예정 |
+| CI 배지가 README 에 있다 | **완료** (Phase 7 작업 중 추가) | `R-CMD-check`·`lint`·`test-coverage` 배지 |
+| branch protection | **PI 요청 문서 작성** | [`decisions/002-branch-protection-request.md`](decisions/002-branch-protection-request.md) |
+
+**branch protection 은 내 권한이 아니다.** 저장소 설정 변경은 관리자 권한이 필요하고 수행하지 않았다. 요청 문서에 필수 체크 목록까지 적어 두었으므로 PI 가 설정하면 닫힌다.
+
+이것을 강조하는 이유가 있다. **workflow 를 green 으로 만드는 것만으로는 3 개월 red 가 재발한다.** red 인 CI 가 병합을 막지 않으면 실패에 비용이 없고, 비용 없는 신호는 무시된다. branch protection 은 이 Phase 의 진짜 목표 — "red 가 방치되지 않는 구조" — 의 마지막 조각이다.
+
+### 원장 변경
+
+| id | 제목 | 상태 |
+|---|---|---|
+| D-005 | `.lintr` 미추적으로 CI 가 기본 규칙 실행 | fixed |
+| D-006 | lint 위반 65 건 | fixed |
+| D-009 | `multisitepower` 가 어디서도 해결되지 않는다 | fixed |
+| D-010 | `multisitepower` 설치 경로 미문서화 | fixed |
+| D-023 | `extended-tests` 자동 비활성화 | fixed |
+| D-025 | macOS·Windows 가 의존성 설치에서 실패 | fixed |
+| D-026 | print 예제가 버전 문자열을 마스킹하지 않는다 | fixed |
+| D-027 | `test-coverage` 에 `xml2` 누락 | fixed |
+| D-014 · D-017 | Phase 7 에서 처리 | → phase07 |
+
+---
+
+## 다음 Phase 진입 조건
+
+- [x] 6 개 workflow 전부 green
+- [x] 실패 테스트 0
+- [x] 재현성 정책 문서가 실제 계약과 일치 (Phase 4 Step 4.7)
+- [x] `main` 병합 완료 (PR #1 → 9d39131)
+- [ ] branch protection — **PI 조치 대기**
+
+Phase 7 은 `main` 에서 분기한 `upgrade/phase-07-surface` 에서 진행한다.

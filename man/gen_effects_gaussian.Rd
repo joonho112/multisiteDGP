@@ -44,7 +44,7 @@ effect), plus any covariate columns from \code{data}.
 Draw J standardized site effects from the standard normal distribution and
 apply the shared Layer 1 location-scale wrapper to produce response-scale
 effects \eqn{\tau_j = \tau + X_j\boldsymbol{\beta} + \sigma_\tau\,z_j}. The
-Gaussian shape is the canonical baseline of the eight-distribution catalog
+Gaussian shape is the canonical baseline of the seven-distribution catalog
 — pick it when you have no specific reason to prefer a heavier-tailed or
 asymmetric shape, or when matching the JEBS paper's reference design.
 }
@@ -73,7 +73,7 @@ in multisite trials. \emph{Journal of Educational and Behavioral Statistics},
 \bold{50}(5), 731--764. \doi{10.3102/10769986241254286}.
 }
 \seealso{
-\code{\link{gen_effects}} for the dispatcher and the full eight-shape
+\code{\link{gen_effects}} for the dispatcher and the full seven-shape
 catalog;
 \code{\link{gen_effects_studentt}} and \code{\link{gen_effects_skewn}}
 for heavier-tailed and asymmetric variants;

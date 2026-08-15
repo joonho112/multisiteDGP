@@ -4,7 +4,7 @@ author: "JoonHo Lee"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 abstract: >
   For methodologists who need a latent site-effect distribution
-  outside the eight-shape catalog — a horseshoe residual, a
+  outside the seven-shape catalog — a horseshoe residual, a
   deconvolution draw from a sister study, an externally fitted
   Dirichlet process mixture. The user-callback path threads a custom
   shape through `multisiteDGP` under one of two conventions: A returns
@@ -49,7 +49,7 @@ library(ggplot2)
 
 ## 1. The problem — when the catalog runs out
 
-The eight built-in $G$ distributions documented in
+The seven $G$ distributions documented in
 [M2: G-distribution catalog and standardization](m2-g-distribution-catalog.html)
 cover most applied shapes: Gaussian, Student-$t$, skew-normal,
 asymmetric Laplace, two-component mixture, point-mass-plus-slab, the
@@ -455,7 +455,7 @@ and the marginal is owned by the callback.
 ## 7. Where to next
 
 If, while writing your callback, the shape starts looking like a
-catalog entry, prefer the catalog. The eight built-in shapes have
+catalog entry, prefer the catalog. The seven catalog shapes have
 closed-form unit-variance derivations (where possible) and are
 exercised at $J = 10^6$ in the test suite — realized variance lands
 within $10^{-3}$ of 1. A custom callback only matches that guarantee
@@ -491,7 +491,7 @@ from Section 5. Sibling vignettes for deeper context:
 specification of the four generative layers — the callback operates
 inside Layer 1),
 [M2: G-distribution catalog and standardization](m2-g-distribution-catalog.html)
-(the eight built-in shapes and the unit-variance discipline the
+(the seven catalog shapes and the unit-variance discipline the
 callback inherits),
 [A8: Cookbook](a8-cookbook.html) (short walkthroughs that mix custom
 callbacks with the rest of the design surface), and

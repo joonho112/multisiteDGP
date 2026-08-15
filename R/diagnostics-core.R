@@ -736,6 +736,17 @@ ks_distance <- function(x, y = NULL) {
   )
 }
 
+.auto_reference_shapes <- function() {
+  c("Gaussian", "StudentT")
+}
+
+# scenario_audit() 가 Group C 를 측정할 수 있는지 미리 묻기 위한 술어.
+# .reference_z_quantiles() 의 switch 와 같은 목록을 보므로 둘이 어긋날 수 없다.
+.has_auto_reference <- function(design) {
+  !is.null(design) && !is.null(design$true_dist) &&
+    design$true_dist %in% .auto_reference_shapes()
+}
+
 .reference_z_quantiles <- function(x) {
   design <- attr(x, "design", exact = TRUE)
   if (is.null(design) || is.null(design$true_dist)) {

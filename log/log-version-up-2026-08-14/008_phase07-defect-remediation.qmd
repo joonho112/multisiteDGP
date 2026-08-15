@@ -1,0 +1,364 @@
+---
+title: "Phase 7 — 기능 결함 수정 (광고 표면 == 구현 표면)"
+subtitle: "shape 개수 8 → 7 · 예약 인자 제거 · StudentT 경고 정정 · A2 가용 영역 문서화 · scenario_audit 이 7 종 중 4 종에서 abort 하던 문제"
+author: "Claude Opus 5"
+date: "2026-08-15"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+## 요약
+
+성공 기준 **G5 — 광고 표면 == 구현 표면** 을 목표로, 패키지가 *말하는 것* 과 *하는 것* 의 차이를 전수 조사해 메웠다. 원장의 배정분(D-004 · D-011 · D-012 · D-018) 과 Phase 6 이월분(D-014 · D-017) 을 처리했고, 그 과정에서 **신규 결함 4 건**(D-028 · D-029 · D-030 · D-031)을 발견해 함께 닫았다.
+
+PI 결정에 따라 **전부 로컬에서 만들고 검증한 뒤 CI 를 마지막에 한 번만** 태우는 방식으로 실행했다. Phase 6 이 "한 번에 하나 고치고 CI 대기" 로 시간을 잃은 것에 대한 직접적 교정이다.
+
+::: {.callout-important title="가장 중요한 발견"}
+계획서 Step 7.5 의 완료 조건은 "SkewN 설계에서 `scenario_audit()` 을 호출했을 때의 동작이 문서와 일치한다" 였다. 문서는 우아한 폴백을 서술하고 있었다. **실제로는 감사 전체가 abort 했다** — 7 종 중 4 종에서 `scenario_audit()` 을 아예 쓸 수 없었고, 문서가 약속한 `target_source` 열은 존재조차 하지 않았다.
+
+완료 조건을 *검증하지 않고* 문서만 읽었다면 놓쳤을 결함이다. 원장 D-031 (P1).
+:::
+
+---
+
+## D-004 — shape 개수 8 → 7
+
+### Phase 2 가 센 18 곳보다 많았다
+
+Phase 2 는 "eight shapes" 주장을 18 곳으로 집계했다. 전수 조사 결과 **더 있었다** — 첫 grep 패턴이 `eight (distribution|shape|...)` 이라 하이픈 형태(`eight-shape catalog`)와 R roxygen 의 `@seealso` 를 놓쳤기 때문이다.
+
+최종 수정 범위:
+
+| 위치 | 건수 |
+|---|--:|
+| `R/` roxygen (`gen_effects*`, `wrapper-*`, `multisitedgp-package.R`, `class-multisitedgp_design.R`) | 17 |
+| `DESCRIPTION` · `README.Rmd` · `index.md` · `_pkgdown.yml` | 11 |
+| vignette 7 편 (`a3` · `a6` · `a8` · `m1` · `m2` · `m5` · `m8`) | 14 |
+
+### 7 이 맞다는 것을 패키지 자신이 증명하고 있었다
+
+m2 vignette 은 이미 **7 개만 그리고 있었다.** 플롯 청크는 `plot-gaussian` 부터 `plot-user` 까지 7 개이고, overlay 캡션은 `"Density overlay of seven shapes"` 이며, §6 도입부는 `"One plot per shape (seven total — the DPM stub has no density panel)"` 이다. 표에는 DPM 행이 `(deferred)` 로 있고 §4 는 DPM 을 `NA_real_` 로 처리한다.
+
+**그림과 표는 처음부터 정직했다. 산문만 여덟이라고 말하고 있었다.** 이것이 카탈로그를 7 로 확정한 근거다.
+
+### 확정한 어휘
+
+- **카탈로그 7 종**: Gaussian · StudentT · SkewN · ALD · Mixture · PointMassSlab · User
+- **DPM**: `true_dist` 가 문자열은 받지만 abort 하는 **예약 슬롯**. `g_fn` 브리지로만 도달
+
+파생 개수도 함께 내렸다. `gen_effects.R` 의 `"Absent for the other seven shapes"` 는 8 기준의 상대 개수였으므로 **six** 로, `gen_effects_user.R` 의 `"none of the seven built-in shapes"` 는 User 를 제외한 개수이므로 **six** 로 바꿨다.
+
+### 오탐 3 건은 건드리지 않았다
+
+- `a3:516` — `scenario_audit()` 25 열 중 여덟 개
+- `a6:164` — 출력 tibble 의 여덟 열 (**실측으로 8 열 확인**)
+- `m8:9,72` — 마이그레이션 패턴 MV1–MV8
+
+세 번째는 실제로 `sim_multisite()` 를 돌려 `ncol(dat) == 8` 을 확인했다. 개수 주장은 세어 보기 전에는 고칠 수도 남길 수도 없다.
+
+---
+
+## D-018 — 예약 인자
+
+### `upstream` 은 Layer 1 에서만 제거했다
+
+`upstream` 은 이 패키지에 **두 가지 뜻**으로 존재한다.
+
+| 위치 | 의미 | 조치 |
+|---|---|---|
+| `align_copula_corr()` · `gen_observations()` · `gen_site_sizes()` · `gen_se_direct()` | **첫 위치 인자** — 이전 layer 의 데이터 프레임. 실제 데이터 흐름 | **손대지 않음** |
+| `gen_effects(..., upstream = NULL)` | 예약 자리. 비-`NULL` 이면 abort | **제거** |
+
+Layer 1 은 파이프라인의 **시작**이므로 upstream 이 없다. 있을 수 없는 것을 인자로 노출하고 있었다. Layer 2/3/4 의 동명 인자는 정상 동작하는 API 이므로 구별이 필요했다.
+
+### `target_marginal_rho` 는 유지하되 메시지를 정정
+
+PI 결정대로 인자는 남기고 문구만 고쳤다. roxygen 에 "비-`NULL` 이면 abort" 와 "이 릴리스에서 공변량 하의 효과는 잔차 척도로 해석된다" 를 명시했다.
+
+---
+
+## D-028 (신규) — 오류 메시지가 존재하지 않는 버전을 말한다
+
+`target_marginal_rho` 를 손보다 발견했다. 메시지 5 곳이 **`v1` · `v2` · `v1.0`** 을 말하고 있었다:
+
+```
+`target_marginal_rho` is not supported in v1.0.
+multisiteDGP v1 uses residual interpretation for covariate-dependent effects.
+Remove `target_marginal_rho`; the marginal API is deferred to v2.
+```
+
+패키지 버전은 `0.1.1` → `0.2.0` 이다. **`0.2.0` 사용자는 "v1.0 에서 지원 안 됨" 이 자기에게 해당하는 말인지 알 수 없다.** blueprint 의 v1/v2 로드맵 어휘가 사용자 대면 메시지로 새어 나온 것이다.
+
+`this release` / `a future release` 로 바꿨다 — 버전 번호에 묶이지 않으므로 다음 릴리스에서 다시 틀리지 않는다. E22·E23 스냅샷 2 건이 의도대로 갱신됐다.
+
+---
+
+## D-011 — StudentT 경고
+
+### 수정 안내가 여전히 경고 대상인 값을 권하고 있었다
+
+t 분포의 초과첨도는 $6/(\nu - 4)$ 로, $\nu \le 4$ 에서 발산한다. 그런데 코드는:
+
+```r
+if (nu < 4) {                                  # nu = 4 는 경고하지 않는다
+  ">" = "Use `nu >= 4` for more stable ..."     # 첨도가 여전히 무한대인 값을 권한다
+}
+```
+
+경계를 `nu <= 4` 로, 안내를 `nu > 4` 로 고쳤다. `nu = 4` 를 쓰는 곳이 코드·테스트·vignette 어디에도 없음을 확인한 뒤 바꿨으므로 기존 동작에 영향이 없다.
+
+### 첨도 표기가 초과/전체를 섞고 있었다
+
+roxygen 이 `"nu = 5 gives kurtosis 6"`(초과첨도) 과 `"nu = 10 gives kurtosis ≈ 3.75"` 를 나란히 적고 있었다. 전체첨도는 $3(\nu-2)/(\nu-4)$ 이므로 $\nu=10$ 에서 **4.0** 이고, 3.75 는 $\nu=12$ 의 값이다. **어느 규약으로 읽어도 틀린 수**였다. 초과첨도로 통일했다: $\nu=5 \to 6$, $\nu=10 \to 1$, $\nu=30 \to 0.23$.
+
+### 실측 — 경고가 말하던 것보다 중요한 사실
+
+기존 경고는 `"Monte Carlo moment checks may be noisy"` 라고 했다. 400 회 반복, $J = 200$, `sigma_tau = 1` 에서 실측한 결과:
+
+| `nu` | median `var(z_j)` | IQR | max |
+|---|--:|---|--:|
+| 2.5 | **0.68** | 0.56–0.90 | 10.4 |
+| 3 | 0.84 | 0.71–1.03 | 8.0 |
+| 4 | 0.95 | 0.84–1.09 | 3.2 |
+| 5 | 0.99 | 0.88–1.10 | 3.0 |
+| 10 | 0.98 | 0.90–1.07 | 1.5 |
+| 30 | 0.99 | 0.91–1.07 | 1.4 |
+
+`nu = 2.5` 에서 **중앙값이 0.68** 이다. "noisy" 가 아니라 **전형적 실행이 1 보다 아래로 치우친다.** 표준화 자체는 기댓값에서 정확하다 — 치우침은 무거운 꼬리의 표본분산이 우편향이라 평균은 1 이지만 중앙값이 작기 때문이다(최댓값 10.4 가 그 대가).
+
+실무적 함의: `sigma_tau = 1` 을 요청하면 `nu = 2.5` 에서 전형적 실행의 사이트 간 SD 는 약 $\sqrt{0.68} \approx 0.82$ 다. roxygen 과 m2 §3.2 에 표와 함께 적었다. **수치 동작은 바꾸지 않았다** — PI 결정대로 문구와 문서만 고쳤다.
+
+---
+
+## D-012 — Engine A2 가용 영역
+
+### Phase 2 격자는 적응형 허용오차 **이전** 측정이라 다시 쟀다
+
+Phase 4 가 post-solve tolerance 를 잔차 평가 정밀도에서 유도하도록 바꿨으므로 경계가 이동했다. 120 칸 격자 재측정 결과 **117 칸 ok** 이고, Phase 2 에서 경계였던 `cv = 0.005` 는 이제 전부 통과한다.
+
+### 가용 영역은 `n_min / n_bar` 비율에만 의존한다
+
+| `n_min / nj_mean` | 해결 가능한 최대 `cv` |
+|---|--:|
+| 0.02 | 1.95 |
+| 0.05 | 1.65 |
+| 0.10 | 1.40 |
+| 0.20 | 1.10 |
+| 0.30 | 0.85 |
+| 0.50 | 0.55 |
+| 0.70 | 0.30 |
+
+비율 0.20 에서 `nj_mean` 을 10 부터 500 까지 바꿔도 상한이 **전부 1.10** 이다 — **척도 불변**이다. `nj_mean` 자체는 경계에 들어오지 않는다.
+
+JEBS 기준 설계(`nj_mean = 50`, `n_min = 5`, `cv = 0.5`)는 비율 0.10, 상한 1.40 이므로 충분히 내부다. `nj_mean >= 2 * n_min` 이고 `cv <= 0.5` 면 어디서나 내부다.
+
+### 중단과 경고를 구별해서 적었다
+
+처음 측정에서 "최대 ok cv = 1.50" 을 얻었는데, 이는 **경고를 ok 에서 뺀 값**이었다. 실제로 `cv > 1.5` 는 중단이 아니라 "large cv" 경고 후 정상 해를 낸다. 중단만 분리해 다시 재서 위 표를 만들었다. 두 soft edge(상단 `cv ≈ 1.5` 경고, 하단 `cv ≈ 1e-3` 검증 정밀도 경고)는 별도로 서술했다.
+
+---
+
+## D-030 (신규) — preset 개수·패러다임 모순
+
+vignette 두 편이 서로 다른 말을 하고 있었다.
+
+- `a2`: "nine presets — 일곱은 site-size, 둘은 direct-precision"
+- `a7`: "nine presets 중 `preset_meta_modest()` 가 direct-precision, **나머지 여덟**이 site-size"
+- `m8`: "**the eight presets**"
+
+9 개 preset 을 전부 호출해 `$paradigm` 을 확인했다: **site_size 7, direct 2** (`preset_meta_modest`, `preset_small_area_estimation`). `a2` 가 맞고 `a7`(direct 를 단수로 셈) 과 `m8`(총수를 8 로 셈) 이 틀렸다.
+
+::: {.callout-note title="이 조사에서 내가 먼저 틀렸다"}
+처음에 `grep -oE "^export\(preset_[a-z_]+\)"` 로 세어 **8 개**라고 판단하고 "`a7` 이 nine 이라 하는데 8 개다" 라고 적었다. 정규식이 소문자만 허용해 `preset_walters_2024` 를 빼먹은 것이다. 실제로는 9 개이고, `a7` 의 총수는 맞았으며 틀린 것은 패러다임 배분이었다.
+
+세어서 확인하지 않았다면 맞는 문장을 틀리게 고칠 뻔했다.
+:::
+
+---
+
+## D-031 (신규, P1) — `scenario_audit()` 이 7 종 중 4 종에서 감사 전체를 중단한다
+
+### 문서와 코드가 둘 다 틀렸고, 방향이 달랐다
+
+m2 vignette 의 "Known limitation" 절은 이렇게 서술하고 있었다:
+
+> SkewN, ALD, Mixture, PointMassSlab 설계는 Group C 행에 대해 `target_source = "not_available"` 로 폴백한다 (행은 출력되지만 감사 파이프라인이 그것으로 게이트하지 않는다). Group A·B·D 행은 모든 shape 에서 정상 동작한다.
+
+실측 결과:
+
+| `true_dist` | 문서가 말하는 것 | 실제 |
+|---|---|---|
+| Gaussian · StudentT | 정상 | 정상 |
+| SkewN · ALD · Mixture · PointMassSlab | Group C 만 `not_available` | **감사 전체 abort** |
+
+게다가 **`target_source` 열은 출력에 존재하지 않았다.** 문서가 서술한 폴백은 구현된 적이 없다.
+
+### 원인은 두 겹이다
+
+1. `.audit_scenario_replicate()` 가 `bhattacharyya_coef()`·`ks_distance()` 를 **무조건** 호출한다. 둘 다 `.reference_z_quantiles()` 로 참조분포를 해결하는데, 그 `switch` 는 Gaussian·StudentT 만 처리하고 나머지는 abort 한다
+2. 단순히 NA 를 흘리면 **더 나쁘다.** `.gate_low_fail()` 은 `!is.finite(value)` 를 실패로 판정하므로 "측정 없음" 이 "FAIL" 로 둔갑한다
+
+### 수정
+
+```r
+.auto_reference_shapes <- function() c("Gaussian", "StudentT")
+
+.has_auto_reference <- function(design) {
+  !is.null(design) && !is.null(design$true_dist) &&
+    design$true_dist %in% .auto_reference_shapes()
+}
+```
+
+술어를 `.reference_z_quantiles()` 바로 위에 두어 **둘이 어긋날 수 없게** 했다(회귀 테스트가 이 일치를 검사한다). replicate 단계에서 `NA_real_` 을 반환하고, `group_c` 플래그를 `.scenario_fail_reasons()`·`.scenario_warn_reasons()` 까지 전달해 Group C 게이트를 **실패시키지 않고 건너뛴다.** 출력에는 문서가 이미 약속했던 이름 그대로 `target_source` 열을 추가했다.
+
+수정 후 실측:
+
+| shape | `target_source` | status | `med_bhattacharyya` |
+|---|---|---|---|
+| Gaussian | auto | (게이트 적용) | 0.805 |
+| StudentT | auto | (게이트 적용) | 0.848 |
+| SkewN · ALD · Mixture · PointMassSlab | **not_available** | PASS | NA |
+
+### `pass = TRUE` 가 좁아진다는 것을 명시했다
+
+`not_available` 셀이 `PASS` 로 나오면, 그리드를 쓸어 `pass == TRUE` 로 거르는 사용자가 **"Group C 까지 검증됨" 으로 오독**할 수 있다. 진단군 하나를 통째로 건너뛴 셀과 그것을 통과한 셀이 같아 보인다.
+
+`status` 를 WARN 으로 올릴지 고민했으나, 해당 4 종을 의도적으로 쓰는 사용자에게 영구 WARN 은 "WARN 은 무시해도 된다" 를 학습시킨다. 대신 `target_source` 열로 구별하고, roxygen 과 m2 에 **`pass` 와 `target_source` 를 함께 읽으라고** 명시했다:
+
+> `pass = TRUE` means every gate that *could* run did run and passed — not that every gate ran.
+
+이 선택은 PI 가 뒤집을 수 있다. 뒤집는다면 `.summarize_scenario_metrics()` 의 `group_c` 분기에 warn 사유를 추가하면 된다.
+
+---
+
+## D-014 · D-017 — Phase 6 이월분
+
+| id | 조치 |
+|---|---|
+| D-014 | `^README\.Rmd$` 를 `.Rbuildignore` 에 추가 |
+| D-017 | `tests/testthat.R` 에 `options(testthat.progress.max_fails = 200L)` |
+
+D-017 은 기본값 10 이 **광범위한 회귀를 좁은 회귀처럼 보고**하는 문제다. 로그가 "10 failures" 라고 하면 10 개가 깨졌는지 200 개가 깨졌는지 알 수 없다. 무한대가 아니라 200 으로 둔 것은 전면 붕괴 시 로그가 묻히지 않게 하기 위해서다.
+
+---
+
+## D-029 (신규, P1) — T1a 의 Linux 전용 skip 이 재현성 정책과 정면 모순
+
+### 정책 문서와 테스트가 서로 다른 말을 하고 있었다
+
+Phase 4 가 쓴 `tools/cross-os-reproducibility-policy.md` 는 이렇게 선언한다:
+
+> 플랫폼 위계도, 권위 있는 운영체제도, OS 별 면제도 없다.
+
+그런데 `test-T1a-jebs-bit-identical.R` 은 `skip_if_not_linux_strict_hash()` 로 **Linux x86_64 외 전부 건너뛰고** 있었다. 계약이 CI 5 칸 중 **1 칸에서만** 검증된다. 해시 스키마 v1 시절의 gate 가 v3 전환 후에도 남은 것이다.
+
+### 재서 확인했다
+
+macOS **aarch64**-apple-darwin23 — x86_64 도 아닌 ARM — 에서 skip 없이 실행:
+
+| seed | 결과 |
+|---|---|
+| 42 | `c8092eeb1f9e3e2b` **일치** |
+| 1 | `4729d3f2b3201843` **일치** |
+| 2024 | `b54b8b6cc205c06b` **일치** |
+| 12345 | `b4bf41b1c5e278bd` **일치** |
+
+skip 과 헬퍼 함수를 제거했다. **스위트의 마지막 skip 이 사라져 skip 이 0 이 되었다.**
+
+::: {.callout-warning title="이 변경은 CI 에서 처음 검증된다"}
+Windows 결과는 아직 모른다. 깨진다면 **정책 문서가 과장한 것**이므로 릴리스 전에 알아야 한다. 계약을 선언해 놓고 검사하지 않는 것보다, 검사해서 틀렸음을 아는 편이 낫다.
+:::
+
+---
+
+## `R CMD check` NOTE 2 건 — 이번 업그레이드가 만든 것
+
+첫 실행에서 NOTE 2 건이 나왔고, **둘 다 이 업그레이드의 부작용**이었다.
+
+| NOTE | 원인 | 조치 |
+|---|---|---|
+| `.lintr.md` 가 숨김 파일로 배포된다 | Phase 6 이 만든 문서가 `.Rbuildignore` 에 없었다 (`^\.lintr$` 는 `$` 때문에 매치 안 됨) | `^\.lintr\.md$` 추가 |
+| vignette 의 `multisitepower` 미선언 | Phase 6 이 Suggests 에서 제거했는데 m6 에 리터럴 `requireNamespace("multisitepower")` 가 남아 있었다 | 패키지 이름을 변수로 옮김 |
+
+두 번째를 고치면서 m6 의 서술도 정정했다. `"metafor, baggr, and multisitepower are listed in Suggests"` 는 이제 거짓이다. `multisitepower` 가 왜 빠졌는지(CRAN 이 아니라 GitHub 배포, 선언하면 해결 못 하는 환경에서 설치 실패) 와 **그것이 3 개월 red CI 의 원인 중 하나였다는 것**을 적었다.
+
+---
+
+## 검증 결과
+
+| 게이트 | 결과 |
+|---|---|
+| 테스트 스위트 | **4561 통과 · 0 실패 · 0 오류 · 0 skip** (453 파일) |
+| lint | **0 위반** |
+| `R CMD check --as-cran` | **0 error · 0 warning · 0 note** |
+
+::: {.callout-note title="skip 0 이 이 Phase 의 부수적 성과다"}
+Phase 5 시작 시점 skip 은 **30** 이었다(게이트 뒤에 숨은 통계 불변량). Phase 5 가 29 를 걷어내 1 로 줄였고, Phase 7 의 D-029 가 마지막 1 을 없앴다. **기본 `devtools::test()` 가 이제 아무것도 건너뛰지 않는다.**
+:::
+
+### 신규 회귀 테스트
+
+| 파일 | 대상 |
+|---|---|
+| `test-scenario-audit-group-c.R` (신규, 42 assertion) | D-031 — 7 종 전부 감사 가능, `target_source` 값, NA 열, 게이트 건너뜀, 술어-resolver 일치 |
+| `test-gen-effects-gaussian-studentt.R` (추가) | D-011 — `nu = 4` 경고 발생, `nu = 4.5` 무경고, 안내 문구가 `nu >= 4` 를 말하지 않음 |
+| `test-gen-effects.R` (수정) | D-018 — `upstream` 제거에 따라 dispatcher 검증을 `audit_g` 로 교체 |
+| `test-T1a-jebs-bit-identical.R` (수정) | D-029 — 전 플랫폼 실행 |
+
+---
+
+## 원장 변경
+
+| id | 심각도 | 제목 | 상태 |
+|---|---|---|---|
+| D-004 | P0 | DESCRIPTION 이 미구현 DPM 을 8 번째 shape 로 광고 | **fixed** |
+| D-011 | P1 | StudentT 경고 문구가 오도 | **fixed** |
+| D-012 | P2 | A2 가용 영역 미문서화 | **fixed** |
+| D-014 | P2 | `README.Rmd` NOTE | **fixed** |
+| D-017 | P2 | testthat 10 건 절단 | **fixed** |
+| D-018 | P1 | 예약 인자와 문서 불일치 | **fixed** |
+| D-028 | P2 | 메시지가 존재하지 않는 버전을 말함 | **fixed** (신규) |
+| D-029 | P1 | T1a skip 이 정책과 모순 | **fixed** (신규) |
+| D-030 | P2 | preset 개수·패러다임 모순 | **fixed** (신규) |
+| D-031 | P1 | `scenario_audit()` 이 4 종에서 abort | **fixed** (신규) |
+
+**원장 31 행 · fixed 29 · open 2.** 남은 둘은 전부 Phase 9 배정분이다.
+
+| id | 제목 | 배정 |
+|---|---|---|
+| D-013 | tarball 9.2MB 중 `inst/doc` 이 압축 전 13.7MB | phase09 |
+| D-020 | vignette knit 중 경고 16 건 | phase09 |
+
+---
+
+## 미해결 및 이월
+
+### Phase 9 로 넘기는 것
+
+- **`NEWS.md` v0.2.0 항목** — shape 개수 정정을 릴리스 노트에 기록해야 한다. v0.1.0 히스토리 섹션(`- **Eight latent-effect distributions**`)은 PI 결정대로 **보존**했다. 히스토리는 당시의 주장을 기록하는 것이고, 정정은 v0.2.0 항목에서 하는 것이 맞다
+- **버전 범프** `0.1.1` → `0.2.0` 과 breaking change 절 (`upstream` 인자 제거, `scenario_audit()` 출력에 `target_source` 열 추가)
+
+### 판단이 갈릴 수 있는 지점
+
+`not_available` 셀의 `status` 를 `PASS` 로 둔 것(D-031 절 참조). 진단군 하나를 건너뛴 셀이 통과한 셀과 같은 status 를 갖는다. 열로는 구별되고 문서에 명시했으나, PI 가 WARN 을 선호한다면 한 줄로 바꿀 수 있다.
+
+---
+
+## 다음 Phase 진입 조건
+
+- [x] 원장의 P0 전건 소진
+- [x] v0.2.0 범위의 P1 전건 처리
+- [x] 로컬 3 게이트 통과 (테스트 · lint · `R CMD check`)
+- [ ] CI 5 cell green — **이번 push 로 검증**
+- [ ] Windows 에서 T1a 통과 — **D-029 의 미검증 부분**
+
+Phase 8(통계적 재검증)은 CI 결과 확인 후 진입한다.

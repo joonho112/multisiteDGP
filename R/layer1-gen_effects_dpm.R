@@ -57,7 +57,7 @@
 #' @seealso
 #'   \code{\link{gen_effects_user}} for the underlying user-callback
 #'   pathway that the bridge routes through;
-#'   \code{\link{gen_effects}} for the dispatcher and the full eight-shape
+#'   \code{\link{gen_effects}} for the dispatcher and the full seven-shape
 #'   catalog;
 #'   the \href{../articles/m5-custom-g-distributions.html}{M5 Custom G
 #'   distributions} vignette.
@@ -124,8 +124,8 @@ gen_effects_dpm <- function(
 
 .abort_dpm_stub <- function() {
   .abort_arg(
-    "`true_dist = \"DPM\"` is not implemented in multisiteDGP v1.",
-    "Built-in Dirichlet Process Mixture sampling is deferred to v2 or a sibling package.",
+    "`true_dist = \"DPM\"` is not implemented in this release.",
+    "Built-in Dirichlet Process Mixture sampling is deferred to a future release or a sibling package.",
     "Use `true_dist = \"User\"` with a custom `g_fn`, or pass `g_fn` as an explicit DPM bridge."
   )
 }

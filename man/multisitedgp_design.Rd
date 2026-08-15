@@ -109,8 +109,9 @@ polishing controls. See \code{\link{align_hybrid_corr}}.}
 \item{max_iter, tol}{Iteration budget and convergence tolerance for
 the rank / hybrid hill-climb. Defaults \code{20000L} and \code{0.02}.}
 
-\item{target_marginal_rho}{Reserved for future marginal-correlation
-target; not implemented in the current release.}
+\item{target_marginal_rho}{Reserved for a future marginal-correlation
+target. Leave \code{NULL} (the default); a non-\code{NULL} value aborts. Effects
+under a covariate are interpreted on the residual scale in this release.}
 
 \item{obs_fn}{Optional Layer 4 observation callback. See
 \code{\link{gen_observations}}.}

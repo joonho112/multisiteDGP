@@ -210,12 +210,12 @@ test_that("E21 snapshot records PointMassSlab pi0 boundary abort", {
   expect_snapshot(gen_effects_pmslab(J = 10L, pi0 = 0), error = TRUE)
 })
 
-test_that("E22 snapshot records DPM v1 stub abort", {
+test_that("E22 snapshot records the DPM stub abort", {
   local_error_snapshot_output()
   expect_snapshot(gen_effects_dpm(J = 10L), error = TRUE)
 })
 
-test_that("E23 snapshot records target_marginal_rho v1 abort", {
+test_that("E23 snapshot records the target_marginal_rho abort", {
   local_error_snapshot_output()
   expect_snapshot(multisitedgp_design(target_marginal_rho = 0.3), error = TRUE)
 })
