@@ -2354,7 +2354,7 @@ window.Quarto = {
   <li><a href="#phase-2-가-센-18-곳보다-많았다" id="toc-phase-2-가-센-18-곳보다-많았다" class="nav-link" data-scroll-target="#phase-2-가-센-18-곳보다-많았다"><span class="header-section-number">2.1</span> Phase 2 가 센 18 곳보다 많았다</a></li>
   <li><a href="#이-맞다는-것을-패키지-자신이-증명하고-있었다" id="toc-이-맞다는-것을-패키지-자신이-증명하고-있었다" class="nav-link" data-scroll-target="#이-맞다는-것을-패키지-자신이-증명하고-있었다"><span class="header-section-number">2.2</span> 7 이 맞다는 것을 패키지 자신이 증명하고 있었다</a></li>
   <li><a href="#확정한-어휘" id="toc-확정한-어휘" class="nav-link" data-scroll-target="#확정한-어휘"><span class="header-section-number">2.3</span> 확정한 어휘</a></li>
-  <li><a href="#오탐-3-건은-건드리지-않았다" id="toc-오탐-3-건은-건드리지-않았다" class="nav-link" data-scroll-target="#오탐-3-건은-건드리지-않았다"><span class="header-section-number">2.4</span> 오탐 3 건은 건드리지 않았다</a></li>
+  <li><a href="#shape-개수가-아닌-eight-는-세어-보고-판정했다" id="toc-shape-개수가-아닌-eight-는-세어-보고-판정했다" class="nav-link" data-scroll-target="#shape-개수가-아닌-eight-는-세어-보고-판정했다"><span class="header-section-number">2.4</span> shape 개수가 아닌 “eight” 는 세어 보고 판정했다</a></li>
   </ul></li>
   <li><a href="#d-018-예약-인자" id="toc-d-018-예약-인자" class="nav-link" data-scroll-target="#d-018-예약-인자"><span class="header-section-number">3</span> D-018 — 예약 인자</a>
   <ul class="collapse">
@@ -2391,7 +2391,9 @@ window.Quarto = {
   <li><a href="#r-cmd-check-note-2-건-이번-업그레이드가-만든-것" id="toc-r-cmd-check-note-2-건-이번-업그레이드가-만든-것" class="nav-link" data-scroll-target="#r-cmd-check-note-2-건-이번-업그레이드가-만든-것"><span class="header-section-number">11</span> <code>R CMD check</code> NOTE 2 건 — 이번 업그레이드가 만든 것</a></li>
   <li><a href="#검증-결과" id="toc-검증-결과" class="nav-link" data-scroll-target="#검증-결과"><span class="header-section-number">12</span> 검증 결과</a>
   <ul class="collapse">
-  <li><a href="#신규-회귀-테스트" id="toc-신규-회귀-테스트" class="nav-link" data-scroll-target="#신규-회귀-테스트"><span class="header-section-number">12.1</span> 신규 회귀 테스트</a></li>
+  <li><a href="#로컬" id="toc-로컬" class="nav-link" data-scroll-target="#로컬"><span class="header-section-number">12.1</span> 로컬</a></li>
+  <li><a href="#ci-upgradephase-07-surface-88d4d2e" id="toc-ci-upgradephase-07-surface-88d4d2e" class="nav-link" data-scroll-target="#ci-upgradephase-07-surface-88d4d2e"><span class="header-section-number">12.2</span> CI — <code>upgrade/phase-07-surface</code> (88d4d2e)</a></li>
+  <li><a href="#신규-회귀-테스트" id="toc-신규-회귀-테스트" class="nav-link" data-scroll-target="#신규-회귀-테스트"><span class="header-section-number">12.3</span> 신규 회귀 테스트</a></li>
   </ul></li>
   <li><a href="#원장-변경" id="toc-원장-변경" class="nav-link" data-scroll-target="#원장-변경"><span class="header-section-number">13</span> 원장 변경</a></li>
   <li><a href="#미해결-및-이월" id="toc-미해결-및-이월" class="nav-link" data-scroll-target="#미해결-및-이월"><span class="header-section-number">14</span> 미해결 및 이월</a>
@@ -2503,14 +2505,16 @@ window.Quarto = {
 </ul>
 <p>파생 개수도 함께 내렸다. <code>gen_effects.R</code> 의 <code>&quot;Absent for the other seven shapes&quot;</code> 는 8 기준의 상대 개수였으므로 <strong>six</strong> 로, <code>gen_effects_user.R</code> 의 <code>&quot;none of the seven built-in shapes&quot;</code> 는 User 를 제외한 개수이므로 <strong>six</strong> 로 바꿨다.</p>
 </section>
-<section id="오탐-3-건은-건드리지-않았다" class="level3" data-number="2.4">
-<h3 data-number="2.4" class="anchored" data-anchor-id="오탐-3-건은-건드리지-않았다"><span class="header-section-number">2.4</span> 오탐 3 건은 건드리지 않았다</h3>
+<section id="shape-개수가-아닌-eight-는-세어-보고-판정했다" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="shape-개수가-아닌-eight-는-세어-보고-판정했다"><span class="header-section-number">2.4</span> shape 개수가 아닌 “eight” 는 세어 보고 판정했다</h3>
 <ul>
-<li><code>a3:516</code> — <code>scenario_audit()</code> 25 열 중 여덟 개</li>
-<li><code>a6:164</code> — 출력 tibble 의 여덟 열 (<strong>실측으로 8 열 확인</strong>)</li>
-<li><code>m8:9,72</code> — 마이그레이션 패턴 MV1–MV8</li>
+<li><code>a6:164</code> — 출력 tibble 의 여덟 열. <code>sim_multisite()</code> 를 돌려 <code>ncol(dat) == 8</code> <strong>확인, 유지</strong></li>
+<li><code>m8:9,72</code> — 마이그레이션 패턴 MV1–MV8. <strong>유지</strong></li>
+<li><code>a5:337,358</code> — 격자 여덟 칸. <strong>유지</strong></li>
+<li><code>a3:516</code> — <code>scenario_audit()</code> 열 중 여덟 개. <strong>여기는 별건이 나왔다</strong> (아래)</li>
 </ul>
-<p>세 번째는 실제로 <code>sim_multisite()</code> 를 돌려 <code>ncol(dat) == 8</code> 을 확인했다. 개수 주장은 세어 보기 전에는 고칠 수도 남길 수도 없다.</p>
+<p><code>a3</code> 는 <code>&quot;returns a tibble with 25 columns&quot;</code> 라고 적고 있었는데 실제로는 <strong>26 열</strong>이었다. 이 업그레이드 이전부터 틀린 값이다. 게다가 열 수는 <code>design_grid()</code> 가 무엇을 변화시키느냐에 따라 넓어지므로 <strong>애초에 고정 숫자로 적을 것이 아니었다.</strong> 해당 격자에서 26 이라고 적고 왜 움직이는지를 함께 적었다. D-031 이 추가한 <code>target_source</code> 도 이 목록에 넣었다.</p>
+<p>개수 주장은 세어 보기 전에는 고칠 수도 남길 수도 없다.</p>
 <hr>
 </section>
 </section>
@@ -2882,17 +2886,18 @@ Remove `target_marginal_rho`; the marginal API is deferred to v2.</code></pre>
 </tbody>
 </table>
 <p>skip 과 헬퍼 함수를 제거했다. <strong>스위트의 마지막 skip 이 사라져 skip 이 0 이 되었다.</strong></p>
-<div class="callout callout-style-default callout-warning callout-titled" title="이 변경은 CI 에서 처음 검증된다">
+<div class="callout callout-style-default callout-tip callout-titled" title="CI 가 확인했다 — 계약이 성립한다">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>이 변경은 CI 에서 처음 검증된다
+<span class="screen-reader-only">Tip</span>CI 가 확인했다 — 계약이 성립한다
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Windows 결과는 아직 모른다. 깨진다면 <strong>정책 문서가 과장한 것</strong>이므로 릴리스 전에 알아야 한다. 계약을 선언해 놓고 검사하지 않는 것보다, 검사해서 틀렸음을 아는 편이 낫다.</p>
+<p>push 전 시점에서 Windows 결과는 미지수였다. 깨진다면 정책 문서가 과장한 것이므로 릴리스 전에 알아야 했다.</p>
+<p><strong>세 플랫폼 전부 통과했다</strong> (run 31889543618): <code>windows-release</code>, <code>macos-release</code>, <code>linux-release</code>, <code>linux-oldrel</code>, <code>linux-devel</code>. Linux 에서 생성된 golden fixture 에 대해 macOS 와 Windows 가 같은 <code>canonical_hash()</code> 를 낸다. v0.2.0 재현성 계약은 이제 <strong>선언이 아니라 검증된 사실</strong>이다.</p>
 </div>
 </div>
 <hr>
@@ -2932,6 +2937,8 @@ Remove `target_marginal_rho`; the marginal API is deferred to v2.</code></pre>
 </section>
 <section id="검증-결과" class="level2" data-number="12">
 <h2 data-number="12" class="anchored" data-anchor-id="검증-결과"><span class="header-section-number">12</span> 검증 결과</h2>
+<section id="로컬" class="level3" data-number="12.1">
+<h3 data-number="12.1" class="anchored" data-anchor-id="로컬"><span class="header-section-number">12.1</span> 로컬</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -2952,8 +2959,48 @@ Remove `target_marginal_rho`; the marginal API is deferred to v2.</code></pre>
 <td><code>R CMD check --as-cran</code></td>
 <td><strong>0 error · 0 warning · 0 note</strong></td>
 </tr>
+<tr class="even">
+<td>커버리지</td>
+<td>92.75 %</td>
+</tr>
 </tbody>
 </table>
+</section>
+<section id="ci-upgradephase-07-surface-88d4d2e" class="level3" data-number="12.2">
+<h3 data-number="12.2" class="anchored" data-anchor-id="ci-upgradephase-07-surface-88d4d2e"><span class="header-section-number">12.2</span> CI — <code>upgrade/phase-07-surface</code> (88d4d2e)</h3>
+<p>PI 결정대로 <strong>로컬에서 전부 만들고 검증한 뒤 CI 를 한 번만</strong> 태웠다. Phase 6 이 “하나 고치고 CI 대기” 로 시간을 잃은 것에 대한 교정이며, 4 회 왕복이 1 회로 줄었다.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>workflow</th>
+<th>결과</th>
+<th>run</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>R-CMD-check</code> (5 cell 전부)</td>
+<td><strong>success</strong></td>
+<td>31889543618</td>
+</tr>
+<tr class="even">
+<td><code>lint</code></td>
+<td><strong>success</strong></td>
+<td>31889544341</td>
+</tr>
+<tr class="odd">
+<td><code>test-coverage</code></td>
+<td><strong>success</strong></td>
+<td>31889545026</td>
+</tr>
+<tr class="even">
+<td><code>extended-tests</code></td>
+<td><strong>success</strong></td>
+<td>31889545652</td>
+</tr>
+</tbody>
+</table>
+<p>5 cell: <code>linux-release</code> · <code>linux-devel</code> · <code>linux-oldrel</code> · <code>macos-release</code> · <code>windows-release</code>.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="skip 0 이 이 Phase 의 부수적 성과다">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -2967,8 +3014,9 @@ Remove `target_marginal_rho`; the marginal API is deferred to v2.</code></pre>
 <p>Phase 5 시작 시점 skip 은 <strong>30</strong> 이었다(게이트 뒤에 숨은 통계 불변량). Phase 5 가 29 를 걷어내 1 로 줄였고, Phase 7 의 D-029 가 마지막 1 을 없앴다. <strong>기본 <code>devtools::test()</code> 가 이제 아무것도 건너뛰지 않는다.</strong></p>
 </div>
 </div>
-<section id="신규-회귀-테스트" class="level3" data-number="12.1">
-<h3 data-number="12.1" class="anchored" data-anchor-id="신규-회귀-테스트"><span class="header-section-number">12.1</span> 신규 회귀 테스트</h3>
+</section>
+<section id="신규-회귀-테스트" class="level3" data-number="12.3">
+<h3 data-number="12.3" class="anchored" data-anchor-id="신규-회귀-테스트"><span class="header-section-number">12.3</span> 신규 회귀 테스트</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -3127,10 +3175,11 @@ Remove `target_marginal_rho`; the marginal API is deferred to v2.</code></pre>
 <li><label><input type="checkbox" checked>원장의 P0 전건 소진</label></li>
 <li><label><input type="checkbox" checked>v0.2.0 범위의 P1 전건 처리</label></li>
 <li><label><input type="checkbox" checked>로컬 3 게이트 통과 (테스트 · lint · <code>R CMD check</code>)</label></li>
-<li><label><input type="checkbox">CI 5 cell green — <strong>이번 push 로 검증</strong></label></li>
-<li><label><input type="checkbox">Windows 에서 T1a 통과 — <strong>D-029 의 미검증 부분</strong></label></li>
+<li><label><input type="checkbox" checked>CI 5 cell green (run 31889543618)</label></li>
+<li><label><input type="checkbox" checked>Windows 에서 T1a 통과 — <strong>D-029 검증 완료</strong></label></li>
+<li><label><input type="checkbox" checked><code>lint</code> · <code>test-coverage</code> · <code>extended-tests</code> green</label></li>
 </ul>
-<p>Phase 8(통계적 재검증)은 CI 결과 확인 후 진입한다.</p>
+<p>Phase 8(통계적 재검증) 진입 가능. 다만 <code>main</code> 병합은 PI 승인 사항이므로 브랜치에 둔다.</p>
 </section>
 
 </main>

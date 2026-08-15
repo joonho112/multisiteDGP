@@ -57,13 +57,16 @@ m2 vignette 은 이미 **7 개만 그리고 있었다.** 플롯 청크는 `plot-
 
 파생 개수도 함께 내렸다. `gen_effects.R` 의 `"Absent for the other seven shapes"` 는 8 기준의 상대 개수였으므로 **six** 로, `gen_effects_user.R` 의 `"none of the seven built-in shapes"` 는 User 를 제외한 개수이므로 **six** 로 바꿨다.
 
-### 오탐 3 건은 건드리지 않았다
+### shape 개수가 아닌 "eight" 는 세어 보고 판정했다
 
-- `a3:516` — `scenario_audit()` 25 열 중 여덟 개
-- `a6:164` — 출력 tibble 의 여덟 열 (**실측으로 8 열 확인**)
-- `m8:9,72` — 마이그레이션 패턴 MV1–MV8
+- `a6:164` — 출력 tibble 의 여덟 열. `sim_multisite()` 를 돌려 `ncol(dat) == 8` **확인, 유지**
+- `m8:9,72` — 마이그레이션 패턴 MV1–MV8. **유지**
+- `a5:337,358` — 격자 여덟 칸. **유지**
+- `a3:516` — `scenario_audit()` 열 중 여덟 개. **여기는 별건이 나왔다** (아래)
 
-세 번째는 실제로 `sim_multisite()` 를 돌려 `ncol(dat) == 8` 을 확인했다. 개수 주장은 세어 보기 전에는 고칠 수도 남길 수도 없다.
+`a3` 는 `"returns a tibble with 25 columns"` 라고 적고 있었는데 실제로는 **26 열**이었다. 이 업그레이드 이전부터 틀린 값이다. 게다가 열 수는 `design_grid()` 가 무엇을 변화시키느냐에 따라 넓어지므로 **애초에 고정 숫자로 적을 것이 아니었다.** 해당 격자에서 26 이라고 적고 왜 움직이는지를 함께 적었다. D-031 이 추가한 `target_source` 도 이 목록에 넣었다.
+
+개수 주장은 세어 보기 전에는 고칠 수도 남길 수도 없다.
 
 ---
 
@@ -274,8 +277,10 @@ macOS **aarch64**-apple-darwin23 — x86_64 도 아닌 ARM — 에서 skip 없�
 
 skip 과 헬퍼 함수를 제거했다. **스위트의 마지막 skip 이 사라져 skip 이 0 이 되었다.**
 
-::: {.callout-warning title="이 변경은 CI 에서 처음 검증된다"}
-Windows 결과는 아직 모른다. 깨진다면 **정책 문서가 과장한 것**이므로 릴리스 전에 알아야 한다. 계약을 선언해 놓고 검사하지 않는 것보다, 검사해서 틀렸음을 아는 편이 낫다.
+::: {.callout-tip title="CI 가 확인했다 — 계약이 성립한다"}
+push 전 시점에서 Windows 결과는 미지수였다. 깨진다면 정책 문서가 과장한 것이므로 릴리스 전에 알아야 했다.
+
+**세 플랫폼 전부 통과했다** (run 31889543618): `windows-release`, `macos-release`, `linux-release`, `linux-oldrel`, `linux-devel`. Linux 에서 생성된 golden fixture 에 대해 macOS 와 Windows 가 같은 `canonical_hash()` 를 낸다. v0.2.0 재현성 계약은 이제 **선언이 아니라 검증된 사실**이다.
 :::
 
 ---
@@ -295,11 +300,27 @@ Windows 결과는 아직 모른다. 깨진다면 **정책 문서가 과장한 �
 
 ## 검증 결과
 
+### 로컬
+
 | 게이트 | 결과 |
 |---|---|
 | 테스트 스위트 | **4561 통과 · 0 실패 · 0 오류 · 0 skip** (453 파일) |
 | lint | **0 위반** |
 | `R CMD check --as-cran` | **0 error · 0 warning · 0 note** |
+| 커버리지 | 92.75 % |
+
+### CI — `upgrade/phase-07-surface` (88d4d2e)
+
+PI 결정대로 **로컬에서 전부 만들고 검증한 뒤 CI 를 한 번만** 태웠다. Phase 6 이 "하나 고치고 CI 대기" 로 시간을 잃은 것에 대한 교정이며, 4 회 왕복이 1 회로 줄었다.
+
+| workflow | 결과 | run |
+|---|---|---|
+| `R-CMD-check` (5 cell 전부) | **success** | 31889543618 |
+| `lint` | **success** | 31889544341 |
+| `test-coverage` | **success** | 31889545026 |
+| `extended-tests` | **success** | 31889545652 |
+
+5 cell: `linux-release` · `linux-devel` · `linux-oldrel` · `macos-release` · `windows-release`.
 
 ::: {.callout-note title="skip 0 이 이 Phase 의 부수적 성과다"}
 Phase 5 시작 시점 skip 은 **30** 이었다(게이트 뒤에 숨은 통계 불변량). Phase 5 가 29 를 걷어내 1 로 줄였고, Phase 7 의 D-029 가 마지막 1 을 없앴다. **기본 `devtools::test()` 가 이제 아무것도 건너뛰지 않는다.**
@@ -358,7 +379,8 @@ Phase 5 시작 시점 skip 은 **30** 이었다(게이트 뒤에 숨은 통계 �
 - [x] 원장의 P0 전건 소진
 - [x] v0.2.0 범위의 P1 전건 처리
 - [x] 로컬 3 게이트 통과 (테스트 · lint · `R CMD check`)
-- [ ] CI 5 cell green — **이번 push 로 검증**
-- [ ] Windows 에서 T1a 통과 — **D-029 의 미검증 부분**
+- [x] CI 5 cell green (run 31889543618)
+- [x] Windows 에서 T1a 통과 — **D-029 검증 완료**
+- [x] `lint` · `test-coverage` · `extended-tests` green
 
-Phase 8(통계적 재검증)은 CI 결과 확인 후 진입한다.
+Phase 8(통계적 재검증) 진입 가능. 다만 `main` 병합은 PI 승인 사항이므로 브랜치에 둔다.

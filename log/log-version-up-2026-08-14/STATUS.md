@@ -14,7 +14,7 @@
 | **테스트** | 4561 통과 · 0 실패 · **0 skip** |
 | **lint** | 0 위반 |
 | **`R CMD check --as-cran`** | **0 error · 0 warning · 0 note** |
-| **CI** | `main` (9d39131) 6/6 green. Phase 7 브랜치는 push 대기 |
+| **CI** | `main` 6/6 green · **Phase 7 브랜치 4/4 green** (5 cell 전부 포함) |
 | **PI 조치 대기** | `main` branch protection 1 건 (아래 §5) |
 
 ---
@@ -44,7 +44,7 @@
 | 기본 테스트 skip | **30** | **0** |
 | 기본 테스트 실패 (Linux) | 15 | **0** |
 | `R CMD check` NOTE | 1 | **0** |
-| 커버리지 | 90.89 % | 92.78 % |
+| 커버리지 | 90.89 % | 92.75 % |
 | 결함 원장 | 없음 | **31 행 · 29 해소** |
 
 ---
@@ -61,8 +61,8 @@
 
 그래서 Phase 7 에서 **T1a 의 Linux 전용 skip 을 제거**했다. 정책 문서가 "플랫폼 위계 없음" 을 선언하는데 테스트는 5 칸 중 1 칸에서만 검사하고 있었다. 스위트의 마지막 skip 이 사라졌다.
 
-::: 확인 필요
-**Windows 결과는 이번 CI 에서 처음 검증됩니다.** 깨진다면 정책 문서가 과장한 것이므로 릴리스 전에 알아야 합니다.
+::: 확인됨
+**세 플랫폼 전부 통과했습니다** (run 31889543618 — Windows · macOS · Linux release/devel/oldrel). Linux 에서 생성된 golden fixture 에 대해 macOS 와 Windows 가 같은 `canonical_hash()` 를 냅니다. 재현성 계약은 이제 선언이 아니라 **검증된 사실**입니다.
 :::
 
 ### ③ `scenario_audit()` 이 7 종 중 4 종에서 쓸 수 없었다
@@ -102,8 +102,8 @@
 
 | 순서 | 내용 |
 |---|---|
-| 1 | **Phase 7 CI 확인** — 5 cell green, 특히 Windows 의 T1a |
-| 2 | Phase 5 Step 5.6 — 원장별 회귀 테스트 정리, extended-suite 재정의 |
+| 1 | **Phase 7 병합 여부 결정** (PI) — 브랜치 CI 는 전부 green |
+| 2 | Phase 5 Step 5.6·5.7 — 커버리지 공백 보강 (하위: `layer1-effects-common.R` 79.7 % · `scenario_audit.R` 83.1 % · `layer2-diagnostics.R` 85.9 %) |
 | 3 | Phase 8 — 통계적 재검증 |
 | 4 | Phase 9 — 문서 델타, `0.2.0` 버전 범프, `NEWS.md` breaking change 절 (`upstream` 제거 · `target_source` 열 추가), D-013 · D-020 |
 | 5 | Phase 10 외부 검토 → Phase 11 릴리스 |
