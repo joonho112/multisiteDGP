@@ -1,6 +1,6 @@
 # 돌아오셨을 때 먼저 읽을 것
 
-**2026-08-15 · Phase 5 완료 시점 상태입니다.**
+**2026-08-15 · Phase 8 완료 시점 상태입니다.**
 
 ---
 
@@ -8,13 +8,14 @@
 
 | | |
 |---|---|
-| **완료 Phase** | 1 · 2 · 3 · 4 · 5 · 6 · 7 |
-| **남은 Phase** | 8(통계 재검증) · 9(문서·버전) · 10(외부 검토) · 11(릴리스) |
-| **결함 원장** | 35 행 · **fixed 33** · open 2 (둘 다 Phase 9 배정) |
-| **테스트** | **4873 통과** · 0 실패 · **0 skip** · 커버리지 **96.42 %** |
+| **완료 Phase** | 1 · 2 · 3 · 4 · 5 · 6 · 7 · 8 |
+| **남은 Phase** | 9(문서·버전) · 10(외부 검토) · 11(릴리스) |
+| **결함 원장** | 36 행 · **fixed 34** · open 2 (둘 다 Phase 9 배정) |
+| **테스트** | **4882 통과** · 0 실패 · **0 skip** · 커버리지 **96.42 %** |
 | **lint** | 0 위반 |
 | **`R CMD check --as-cran`** | **0 error · 0 warning · 0 note** |
-| **CI** | `main` 6/6 green (Phase 7 병합 완료) · **Phase 5 브랜치 4/4 green** (5 cell 전부 포함) |
+| **CI** | `main` 6/6 green (Phase 5·7 병합 완료) · Phase 8 브랜치 실행 중 |
+| **Validation** | **V0–V12 열세 실험 전부 `full` 통과** (2026-08-15) |
 | **PI 조치 대기** | `main` branch protection 1 건 (아래 §5) |
 
 ---
@@ -29,8 +30,9 @@
 | 4 재현성 계약 + solver | 완료 | [`006`](006_phase04-solver-hardening-partial.html) |
 | 5 테스트 스위트 | **완료** (6/6 Step) | [`005`](005_phase05-test-suite-rebuild-partial.html) · [**`009`**](009_phase05-coverage-completion.html) |
 | 6 CI 복구 | 완료 (branch protection 대기) | [`007`](007_phase06-ci-restoration.html) |
-| **7 기능 결함 수정** | **완료** | [**`008`**](008_phase07-defect-remediation.html) |
-| 8–11 | 미착수 | — |
+| 7 기능 결함 수정 | 완료 | [`008`](008_phase07-defect-remediation.html) |
+| **8 통계 검증 재실행** | **완료** | [**`010`**](010_phase08-statistical-revalidation.html) |
+| 9–11 | 미착수 | — |
 
 ---
 
@@ -73,7 +75,13 @@ Phase 7 이 찾은 가장 나쁜 두 건이 전부 "테스트가 한 번도 도�
 
 같은 일이 재발하지 않도록 **AST 정적 검사**를 넣었다 — 오류 메시지 223 개의 fix 라인을 소스에서 직접 읽으므로, 분기가 실행되지 않아도 규약 위반이 잡힌다.
 
-### ④ `scenario_audit()` 이 7 종 중 4 종에서 쓸 수 없었다
+### ④ 통계적 주장은 그대로다 — 그리고 자동 검사가 못 보는 것이 있었다
+
+Phase 4·5·7 이 재현성 계약·solver·오류 경로·광고 표면을 바꿨지만 **V0–V12 열세 실험이 전부 통과**하고, JEBS 부록 계산이 **비트 단위로** 재현된다(4 seed × 7 열 `identical()`). 하네스는 수정 없이 돌았다.
+
+다만 V10 의 자동 검사는 *"그림이 렌더링됐고 5 KB 를 넘는다"* 만 본다. 직접 눈으로 보니 caterpillar 의 Y축 사이트 라벨이 J = 50 에서 겹쳐 판독 불가였다(D-036). funnel 과 dependence 는 정상이었다.
+
+### ⑤ `scenario_audit()` 이 7 종 중 4 종에서 쓸 수 없었다
 
 계획서 Step 7.5 의 완료 조건("문서와 동작이 일치") 을 **검증하다** 발견했다. m2 vignette 은 SkewN·ALD·Mixture·PointMassSlab 에서 Group C 만 `not_available` 로 폴백한다고 서술했는데, 실제로는 **감사 전체가 abort** 했고 문서가 말한 `target_source` 열은 존재조차 하지 않았다. 원장 D-031 (P1), Phase 7 에서 수정 + 회귀 테스트 42 건.
 
@@ -110,10 +118,9 @@ Phase 7 이 찾은 가장 나쁜 두 건이 전부 "테스트가 한 번도 도�
 
 | 순서 | 내용 |
 |---|---|
-| 1 | **Phase 5 브랜치 병합 여부 결정** (PI) |
-| 2 | Phase 8 — 통계적 재검증 |
-| 4 | Phase 9 — 문서 델타, `0.2.0` 버전 범프, `NEWS.md` breaking change 절 (`upstream` 제거 · `target_source` 열 추가), D-013 · D-020 |
-| 5 | Phase 10 외부 검토 → Phase 11 릴리스 |
+| 1 | **Phase 8 브랜치 병합 여부 결정** (PI) |
+| 2 | Phase 9 — 문서 델타, `0.2.0` 버전 범프, `NEWS.md` breaking change 절 (`upstream` 제거 · `target_source` 열 추가), 해소된 Known limitations 3 건 갱신, D-013 · D-020 |
+| 3 | Phase 10 외부 검토 → Phase 11 릴리스 |
 
 ---
 
