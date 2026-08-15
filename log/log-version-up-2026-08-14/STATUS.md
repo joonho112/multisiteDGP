@@ -14,7 +14,7 @@
 | **테스트** | **4873 통과** · 0 실패 · **0 skip** · 커버리지 **96.42 %** |
 | **lint** | 0 위반 |
 | **`R CMD check --as-cran`** | **0 error · 0 warning · 0 note** |
-| **CI** | `main` 6/6 green (Phase 7 병합 완료) · Phase 5 브랜치 push 대기 |
+| **CI** | `main` 6/6 green (Phase 7 병합 완료) · **Phase 5 브랜치 4/4 green** (5 cell 전부 포함) |
 | **PI 조치 대기** | `main` branch protection 1 건 (아래 §5) |
 
 ---

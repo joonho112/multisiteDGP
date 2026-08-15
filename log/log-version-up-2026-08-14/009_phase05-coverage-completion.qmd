@@ -220,6 +220,6 @@ Phase 5 시작 시점(커버리지 90.89 %, skip 30) 대비 **커버리지 +5.53
 - [x] 추가한 테스트가 전부 통과
 - [x] 커버리지 변화 측정 완료 (90.89 % → 96.42 %)
 - [x] skip 0 · lint 0 · `R CMD check --as-cran` 0/0/0
-- [ ] CI 확인 — push 후
+- [x] CI 전부 green — `R-CMD-check` 5 cell (`linux-release` · `linux-devel` · `linux-oldrel` · `macos-release` · `windows-release`), `lint`, `test-coverage`, `extended-tests`
 
 Phase 5 는 이로써 6 개 Step 전부 완료다. 다음은 **Phase 8 — 통계적 재검증**이다.
