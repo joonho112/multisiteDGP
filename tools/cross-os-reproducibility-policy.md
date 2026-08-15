@@ -22,8 +22,18 @@ Two things follow from it.
 ## What is covered
 
 `canonical_hash()` covers the simulated data columns, the column names, and a
-manifest that carries the package version, the paradigm, `design_hash`, the
-schema version and the names of any user callbacks.
+manifest that carries the paradigm, `design_hash`, the schema version and the
+names of any user callbacks.
+
+**The package version is deliberately not hashed.** A hash gets quoted in a
+manuscript or an issue as an anchor for "this data, this design", and a version
+in the payload made every release invalidate every recorded hash even when
+nothing about the data moved. v0.1.x worked around that with a hardcoded lineage
+bucket collapsing `0.0.0.9000` and `0.1.*` into one string; it had no rule for
+`0.2` and the bump moved every hash. What moves the hash when the package
+changes what the hash *means* is `hash_schema_version`, and that is the thing
+worth pinning. The producing version is still recorded on the object's
+provenance attribute and printed.
 
 **Data columns are hashed exactly, with no rounding.** Each is platform stable
 for a specific reason:

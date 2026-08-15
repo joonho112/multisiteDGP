@@ -1,10 +1,10 @@
 #!/usr/bin/env Rscript
 # nolint start: object_name_linter, object_usage_linter
 
-# Authoritative regeneration is Linux x86-64 only; see
-# tools/cross-os-reproducibility-policy.md. The printed R version is normalized
-# to R=<R>, but canonical_hash and design_hash are intentionally preserved as
-# strict provenance fields.
+# Regenerate on any platform; see tools/cross-os-reproducibility-policy.md. The
+# printed R version and the package version are normalized to R=<R> and
+# <VERSION>, but canonical_hash and design_hash are preserved deliberately —
+# they are the provenance the examples exist to pin, and they are portable.
 is_linux_x86_64 <- function() {
   platform <- tolower(R.version$platform)
   identical(tolower(Sys.info()[["sysname"]]), "linux") &&
@@ -16,9 +16,11 @@ if (!is_linux_x86_64() &&
   stop(
     paste(
       "Generated print examples embed canonical_hash/design_hash values.",
-      "Regenerate on Linux x86-64, or set",
-      "MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN=true for exploratory local regeneration.",
-      "Do not commit non-Linux hash-only diffs."
+      "This gate is a speed bump against accidental regeneration, not a platform",
+      "requirement -- the hash is portable and these files are byte-identical",
+      "wherever they are built. Set",
+      "MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN=true when you mean to regenerate,",
+      "and say in the commit why the values should move."
     ),
     call. = FALSE
   )
@@ -27,8 +29,8 @@ if (!is_linux_x86_64() &&
 if (!is_linux_x86_64()) {
   warning(
     paste(
-      "Non-Linux print-example regeneration is exploratory only;",
-      "canonical_hash/design_hash diffs should not be committed."
+      "Regenerating print-examples moves canonical_hash/design_hash.",
+      "Commit the diff only if the values are meant to move."
     ),
     call. = FALSE
   )

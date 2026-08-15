@@ -47,7 +47,7 @@ if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(res
 # the golden .rds set in tests/testthat/_snaps/golden, which compares exactly
 # and does not depend on the schema. V02 sidesteps this entirely by hashing
 # those fixtures at run time instead of pinning a literal.
-expected_hash <- "dab943488dc9d8ae"
+expected_hash <- "df7a9af6d6f144c1"
 expected_hash_schema <- "multisiteDGP-canonical-hash-v3"
 actual_hash_schema <- multisiteDGP:::.hash_schema_version()
 design <- multisiteDGP::preset_jebs_paper()

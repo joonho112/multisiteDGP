@@ -1,0 +1,267 @@
+---
+title: "Phase 9 — 문서 델타 동기화"
+subtitle: "0.1.1 → 0.2.0 · 해시에서 버전 제거 · 배포되는 정책 문서가 폐기된 플랫폼 위계를 계속 주장하고 있었다"
+author: "Claude Opus 5"
+date: "2026-08-15"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+## 요약
+
+버전을 `0.2.0` 으로 올리고, v0.2.0 에서 **실제로 바뀐 것만** 문서에 반영했다. 원장 36 건 중 사용자 대면 **19 건**을 델타로 추렸고, 개발 인프라 13 건과 테스트 3 건은 `NEWS.md` 가 아니라 `CONTRIBUTING.md` 대상으로 분류했다.
+
+남아 있던 open 결함 2 건을 닫았고(D-013 문서화된 한계, D-020 해소), 신규 결함 **1 건**(D-037)을 찾았다.
+
+::: {.callout-important title="버전 범프가 드러낸 것"}
+`Version: 0.1.1 → 0.2.0` 한 줄이 테스트 **12 건**을 깨뜨렸다. 원인은 하나였다 — `.hash_manifest_version()` 에 `0.1.*` 을 한 버킷으로 묶는 **하드코딩된 계보 규칙**이 있었고 `0.2.x` 에 대한 규칙이 없었다. 버전이 해시 payload 에 들어 있었으므로 모든 해시가 이동했다.
+
+PI 결정: **manifest 에서 버전을 제거한다.** 해시는 원고·로그에 인용되는 앵커인데, payload 에 버전이 있으면 데이터가 그대로여도 릴리스마다 무효화된다.
+:::
+
+---
+
+## Step 9.1 — 델타 확정과 최상위 메타데이터
+
+### 무엇을 델타로 보았는가
+
+| 범주 | 원장 건수 | 사용자 대면 |
+|---|--:|--:|
+| 개발 인프라 · 테스트 | 16 | **0** |
+| 커널 · 표면 · 오류 · 진단 · 재현성 · Layer 1 · 그림 · 문서 · 의존성 | 20 | **19** |
+
+계획서가 경고한 실패 모드는 *"Phase 9 가 세 번째 문서 오버홀이 되는 것"* 이다. CI · lint · git · 워크플로는 패키지를 쓰는 사람에게 보이지 않으므로 `NEWS.md` 에 넣지 않았다. 전체 목록은 [`evidence/phase09/documentation-delta.md`](evidence/phase09/documentation-delta.md).
+
+### `NEWS.md` v0.2.0 항목
+
+사용자 목소리로 썼고 breaking change 를 맨 위에 놓았다. 내부 Phase/Step 번호는 쓰지 않았다.
+
+1. `canonical_hash()` 값이 전부 이동 — 스키마 v3
+2. `gen_effects()` 의 `upstream` 제거
+3. `scenario_audit()` 에 `target_source` 열 추가
+
+v0.1.0 의 "Known limitations" 섹션은 **그대로 두었다.** PI 결정대로, 히스토리는 당시의 주장을 기록하는 것이고 정정은 v0.2.0 항목에서 한다. 해소된 3 건은 v0.2.0 의 별도 절에서 근거와 함께 밝혔다.
+
+---
+
+## 해시에서 버전을 제거했다
+
+### 무엇이 있었는가
+
+```r
+.hash_manifest_version <- function(x) {
+  version <- .attr_as_character(x, "multisitedgp_version")
+  if (grepl("^(0\\.0\\.0\\.9000|0\\.1(\\.|$))", version)) {
+    return("0.0.0.9000")     # 개발 계보를 하나로 묶는다
+  }
+  version
+}
+```
+
+`0.1.*` 이 전부 `"0.0.0.9000"` 으로 정규화됐다. 그래서 *"해시는 `multisitedgp_version` 속성에 불변이다"* 를 주장하는 테스트가 0.1.1 에서는 통과했다 — 양쪽이 같은 버킷에 들어갔기 때문이다. `0.2.0` 에는 규칙이 없으니 그 통과가 깨졌다.
+
+### 왜 버킷이 있었는가, 그리고 왜 제거가 맞는가
+
+버킷은 **개발 중 버전 문자열이 흔들려도 해시가 유지되게** 하려는 것이었다. 그 동기는 타당하다. 다만 해결책이 하드코딩된 목록이라 릴리스마다 길어지고, 버킷 이름(`0.0.0.9000`)은 의미가 없다.
+
+세 안을 놓고 PI 가 **버전 제거**를 택했다.
+
+| 안 | 결과 |
+|---|---|
+| **manifest 에서 제거 (채택)** | 해시가 데이터+설계+스키마에만 의존. 원고에 적은 해시가 업그레이드를 견딘다 |
+| minor 시리즈로 기록 | 패치 릴리스는 보존, minor 릴리스는 이동 |
+| 버킷에 `0.2` 추가 | 현재 동작 보존. 목록이 계속 길어진다 |
+
+provenance 는 이미 `design_hash` 와 `hash_schema_version` 이 담는다. **패키지가 해시의 의미를 바꿀 때 움직이는 것은 스키마 버전이고, 그것이 고정할 가치가 있는 것이다.** 생산 버전은 객체의 provenance 속성에 그대로 남고 출력에도 찍힌다 — 해시되지 않을 뿐이다.
+
+### 파급 — 데이터가 아니라 기록만 이동했다
+
+manifest 필드를 뺐으므로 모든 해시가 다시 이동했다. 리터럴을 박아둔 모든 곳을 갱신했다.
+
+| 위치 | 건수 |
+|---|--:|
+| `inst/extdata/golden/golden-fixture-manifest.csv` (`canonical_hash` + `source_canonical_hash`) | 9 × 2 |
+| `tools/jebs-golden-fixtures/jebs-golden-fixture-manifest.csv` (4 개 해시 열) | 4 × 4 |
+| `tests/testthat/_snaps/snapshot-print.md` | 스냅샷 6 |
+| `tests/testthat/_snaps/print-examples/*.txt` | 5 |
+| `tools/validation/jobs/run-v12-validation.R` | 1 |
+| vignette `a6` · `a7` 산문 인용 | 4 |
+| `README.Rmd` | 1 |
+
+::: {.callout-warning title="갱신 전에 데이터 불변을 증명했다"}
+해시 리터럴을 갱신하는 것은 회귀를 덮는 가장 쉬운 방법이다. 그래서 매번 **golden `.rds` 를 먼저 확인했다** — 4 seed × 7 열 전부 `identical()`, 그리고 9 개 fixture 의 `rds_sha256` 이 전부 불변.
+
+`.rds` 는 double 을 바이트 그대로 저장하므로 해시 스키마와 무관하다. 그것이 "데이터가 움직였는가" 의 판정 권한이다.
+
+한 번 더 확인이 붙었다. JEBS 생성기를 dry-run 으로 돌려 **부록을 base R 로 처음부터 다시 계산**했더니, 배포된 `.rds` 를 해싱한 값과 같은 해시가 나왔다.
+:::
+
+---
+
+## D-037 (신규) — 정책을 바꾸고 도구를 놔두면 도구가 옛 정책을 집행한다
+
+버전 범프로 print-example 재생성이 필요해졌는데, 생성기가 이렇게 중단했다.
+
+```
+Error: Generated print examples embed canonical_hash/design_hash values.
+Regenerate on Linux x86-64, or set MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN=true
+for exploratory local regeneration. Do not commit non-Linux hash-only diffs.
+```
+
+Phase 4 가 정책 문서를 다시 썼고 D-029 가 T1a 의 게이트를 없앴지만, **그 정책을 참조하는 도구들은 v0.1 어휘를 그대로 들고 있었다.** 정책 문서는 이미 이렇게 적혀 있다:
+
+> Regenerating fixtures: **Any platform.** … no `ALLOW_NON_LINUX_*` gate on correctness. The environment variables remain as a speed bump against accidental regeneration, not as a platform claim.
+
+찾아 고친 곳:
+
+| 위치 | 무엇을 주장하고 있었나 |
+|---|---|
+| `tests/data-raw/generate_print_examples.R` | "Regenerate on Linux x86-64" (중단 메시지 + 파일 머리 주석) |
+| `tests/data-raw/generate_golden_fixtures.R` | 같은 중단 메시지, 경고 문구, 그리고 **생성되는 README 본문** |
+| `tests/testthat/_snaps/golden/README.md` | "Authoritative regeneration is Linux x86_64/amd64 only … until a GitHub Actions Linux artifact pass confirms equality" |
+| `inst/extdata/golden/README.md` | 같은 주장 |
+| manifest 2 종의 `os_policy` | "Linux x86-64 strict; macOS/Windows numerical equivalence" |
+| `tools/traceability/decision-index.csv` Q14 | `deferred-v1.x` |
+| `tools/traceability/conflict-checklist.csv` C05 | "Linux strict hash and macOS Windows distributional parity locked for v1" |
+
+**README 는 CI 가 만들어낸 바로 그 artifact 를 기다린다고 적고 있었다.** 환경변수는 유지했다(실수 방지용이고 테스트가 존재를 검사한다). 플랫폼 정확성 주장만 제거했다. 생성기와 그 출력 README 를 함께 고쳐 다음 재생성에서 되돌아가지 않게 했다.
+
+### 가장 중요한 것 — 배포되는 정책 문서
+
+`inst/REPRODUCIBILITY.md` 는 **사용자에게 설치되는** 문서이고, `canonical_hash()` 의 roxygen 과 vignette `m7` 이 읽으라고 지시하는 파일이다. Phase 4 는 `tools/` 쪽 개발자용 정책만 다시 썼고 이쪽은 손대지 않았다. 138 줄 전체가 v0.1 위계였다:
+
+> Linux strict hash means that Ubuntu Linux is the canonical strict baseline …
+> macOS and Windows are demoted from strict cross-OS hash equality.
+
+v0.2.0 계약으로 다시 썼다. 같은 이유로 `m7` §6.3 (*"Cross-platform hash equality is held to a weaker standard"*) 과 `canonical_hash()` 의 `@details` 도 고쳤다.
+
+---
+
+## Step 9.3 — vignette
+
+### D-020 해소 — 경고 16 건의 정체
+
+전체 재-knit 에서 16 편 각각 경고 1 건이 나왔고, 전부 같은 것이었다.
+
+```
+The vignette title specified in \VignetteIndexEntry{} is different from
+the title in the YAML metadata.
+```
+
+16 편 **전부** 불일치인데, 패턴이 일관된다 — 색인 항목은 `A1 Getting started` 같은 **ASCII 짧은 라벨**, YAML 제목은 `A1 · Getting started — your first multisite simulation` 같은 서술형이다.
+
+이것은 실수가 아니라 설계다. `\VignetteIndexEntry` 에 비-ASCII 를 넣지 않는 것은 좋은 관행이고, 억지로 맞추면 오히려 나빠진다. rmarkdown 이 *"의도적이라면 이렇게 선언하라"* 는 옵션을 제공하므로 그것을 썼다 — 각 setup 청크에 한 줄과 이유.
+
+**재-knit 후 경고 0 건.**
+
+### 재-knit 시간
+
+| 항목 | 값 |
+|---|--:|
+| 16 편 전체 | 약 50 초 |
+| 최장 (a6 · a8) | 5 초 |
+| 실패 | **0** |
+
+---
+
+## D-013 — 문서화된 한계로 남긴다
+
+| 측정 | 값 |
+|---|--:|
+| tarball | 8.29 MB (CRAN 권고 5 MB) |
+| 설치 크기 | 14.2 MB (그중 `doc` 13 MB) |
+| vignette HTML 중 임베드 그림 | **96 %** |
+
+`R CMD check` 는 이것을 **INFO** 로 분류한다(NOTE 아님). 제가 "0 NOTE" 라고만 보고했다면 CRAN 제출 시 NOTE 가 뜬다는 사실이 가려졌을 것이므로 여기 적어 둔다.
+
+지렛대는 하나다 — `fig.retina: 2 → 1`. m2 로 실측하니 **2.19 → 0.96 MB (2.3 배)** 이고, 전체 적용 시 tarball 이 약 4 MB 로 CRAN 권고 아래로 내려간다. 대가는 그림이 288 dpi 에서 144 dpi 로 내려가 HiDPI 화면에서 눈에 띄게 부드러워지는 것이다.
+
+**PI 결정: 문서화하고 유지.** D4 가 이미 *"v0.2.0 은 CRAN 제출 범위가 아니므로 릴리스를 막지 않는다"* 고 정했고, 진단 플롯이 교재의 핵심인 방법론 패키지에서 비-CRAN 릴리스를 위해 해상도를 낮추는 것은 손해다. 숫자와 지렛대를 원장에 적어 두었으므로 향후 CRAN 제출 시 그대로 쓰면 된다.
+
+---
+
+## Step 9.4 — README · CONTRIBUTING
+
+`CONTRIBUTING.md` 에 세 절을 새로 넣었다. 계획서가 *"이번 Phase 의 실질적 신규 내용"* 이라 부른 부분이다.
+
+- **Tests** — 환경 게이트가 없다는 것, 오류 메시지 3 단 구조와 그것을 소스 파싱으로 검사한다는 것, 그리고 *"실행된 적 없는 오류 분기는 아무도 확인한 적 없는 오류 메시지"* 라는 이번 릴리스의 교훈
+- **Fixtures and hashes** — 해시가 이식 가능하고 버전에 무관하다는 것, 재생성은 어느 플랫폼에서나 되지만 **의도가 있을 때만** 한다는 것, 판정 권한이 golden `.rds` 에 있다는 것
+- **Validation experiments** — `OVERWRITE=true` 가 선택이 아니라는 것(기본 `RESUME` 이 이전 결과를 재사용해 통과를 보고한다), `smoke` 실패를 어떻게 읽는지
+
+pre-merge 체크리스트에 skip 0 · lint 0 · 의도치 않은 fixture diff 없음을 추가했다.
+
+---
+
+## Step 9.5 — traceability 와 정합성 스캔
+
+`test-traceability.R` 통과(84 assertion). 갱신한 것:
+
+| ledger | 변경 |
+|---|---|
+| `decision-index.csv` | Q14 `deferred-v1.x` → 해소, 근거 기록 |
+| `conflict-checklist.csv` | C05(Q14 OS) · C02(실험 개수 13) 해소 |
+| `api-index.csv` | API015 `gen_effects_dpm` — "v1 stub" 어휘를 "예약 슬롯" 서술로 |
+| `validation-index.csv` · `validation-plan-manifest.csv` | Phase 8 에서 13 행 `full-pass` 로 |
+
+### 정합성 스캔
+
+| 스캔 | 결과 |
+|---|---|
+| 옛 버전 번호 `0.1.1` 잔여 | **0 건** |
+| `gen_effects(..., upstream = ...)` 잔여 | **0 건** |
+| "eight shapes" 잔여 | **0 건** (남은 "eight" 는 MV1–MV8 마이그레이션 패턴뿐) |
+
+::: {.callout-note title="테스트가 내 실수를 잡았다"}
+`validation-index.csv` 를 갱신하고 `validation-plan-manifest.csv` 는 놔뒀더니 `test-traceability.R` 이 둘의 불일치를 잡았다. 두 파일이 같은 것을 말해야 한다는 계약이 테스트로 박혀 있었다.
+
+같은 종류의 실수를 한 번 더 했다. golden fixture 해시를 재생성하면서 **`tools/` 의 4-fixture JEBS manifest 를 편집**했는데, 테스트가 읽는 것은 `inst/extdata` 의 9-fixture manifest 였다. `rds_sha256` 이 안 맞아서 스크립트가 멈췄고, 그때 "데이터가 바뀌었다" 고 결론 내릴 뻔했다. 실제로는 **다른 파일을 보고 있었다.**
+:::
+
+---
+
+## 검증 결과
+
+| 게이트 | 결과 |
+|---|---|
+| 테스트 스위트 | **4882 통과 · 0 실패 · 0 skip** (505 파일) |
+| lint | **0 위반** |
+| `R CMD check --as-cran` | **0 error · 0 warning · 0 note** (설치 크기 14.2 MB 는 INFO) |
+| vignette 16 편 재-knit | **0 실패 · 0 경고** |
+
+---
+
+## 원장 변경
+
+| id | 심각도 | 제목 | 상태 |
+|---|---|---|---|
+| D-013 | P2 | tarball 크기 | **documented-limitation** |
+| D-020 | P2 | vignette knit 경고 16 건 | **fixed** |
+| D-037 | P2 | 생성기·manifest 가 v0.1 플랫폼 위계를 계속 주장 | **fixed** (신규) |
+
+**원장 37 행 · fixed 36 · documented-limitation 1 · open 0.**
+
+::: {.callout-note title="집계를 맞추다 잡은 것"}
+로그를 쓰면서 원장을 세어 보니 `open` 이 1 이었다. D-020 을 고쳐 놓고 **상태를 갱신하지 않은** 것이었다. 세어 보지 않았으면 "open 0" 이라고 적었을 것이다.
+:::
+
+---
+
+## 다음 Phase 진입 조건
+
+- [x] 버전 `0.2.0`, `NEWS.md` v0.2.0 항목 (breaking change 맨 위)
+- [x] 해소된 Known limitations 3 건이 v0.2.0 항목에 근거와 함께 기록됨
+- [x] 배포되는 정책 문서(`inst/REPRODUCIBILITY.md`)가 실제 계약과 일치
+- [x] vignette 16 편 무경고 재-knit
+- [x] traceability 9 종 갱신, 정합성 스캔 0 건
+- [ ] CI 확인 — push 후
+
+다음은 **Phase 10 — 외부 검토**다.

@@ -90,7 +90,7 @@ plot_effects(dat)
 # Stamp the scenario for reproducibility — the hash is identical
 # every time you rerun the same call.
 canonical_hash(dat)
-#> [1] "c52e75f276d82836"
+#> [1] "04b356c64fab6bd7"
 ```
 
 In a single call you have a citable scenario, a printed dataset, a

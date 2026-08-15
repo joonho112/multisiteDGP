@@ -13,7 +13,7 @@ API011,gen_effects_ald,layer1,Phase 3,Step 3.3,ch10 sec10.4.2,implemented,soft d
 API012,gen_effects_mixture,layer1,Phase 3,Step 3.4,ch10 sec10.4.2,implemented,legacy ups SD-ratio matches ch05 and ch23; latent_component retained
 API013,gen_effects_pmslab,layer1,Phase 3,Step 3.5,ch10 sec10.4.2,implemented,pi0 naming locked by R2-F03b and R2-F16
 API014,gen_effects_user,layer1,Phase 3,Step 3.5,ch10 sec10.4.2,implemented,g_fn convention supports standardized and raw paths
-API015,gen_effects_dpm,layer1,Phase 3,Step 3.5,ch10 sec10.4.2,implemented,v1 stub hard-aborts unless g_fn bridge supplied
+API015,gen_effects_dpm,layer1,Phase 3,Step 3.5,ch10 sec10.4.2,implemented,reserved slot: gen_effects_dpm() aborts unless a g_fn bridge is supplied; DPM is not one of the seven generated shapes
 API016,gen_site_sizes,layer2,Phase 4,Step 4.5,ch10 sec10.5.1,implemented,A1 and A2 engine split is hard contract
 API017,gen_se_direct,layer2,Phase 4,Step 4.6,ch10 sec10.5.2,implemented,none
 API018,align_rank_corr,layer3,Phase 5,Step 5.2,ch10 sec10.6.1,implemented,residual z_j targeting required
