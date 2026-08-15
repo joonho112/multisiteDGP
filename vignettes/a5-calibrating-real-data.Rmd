@@ -29,6 +29,11 @@ csl: apa.csl
 ---
 
 ```{r setup, include = FALSE}
+# The VignetteIndexEntry is a short ASCII label for browseVignettes(); the YAML
+# title is the descriptive one. The mismatch is deliberate, so say so rather
+# than let every knit warn about it (defect D-020).
+options(rmarkdown.html_vignette.check_title = FALSE)
+
 knitr::opts_chunk$set(
   echo       = TRUE,
   results    = "markup",   # never "hide" for primary calls

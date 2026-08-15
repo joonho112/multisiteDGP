@@ -80,7 +80,7 @@ test_that("the hash is identical across the paradigms and engines", {
   expect_identical(canonical_hash(flat), canonical_hash(viad))
 })
 
-test_that("Step 10.7 golden fixture generator blocks non-Linux authoritative regeneration", {
+test_that("the golden fixture generator keeps its accidental-regeneration gate", {
   generator_file <- test_path("../../tests/data-raw/generate_golden_fixtures.R")
   skip_if_not(file.exists(generator_file), "Golden fixture generator is not shipped in the package tarball.")
 

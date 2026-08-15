@@ -29,6 +29,11 @@ csl: apa.csl
 ---
 
 ```{r setup, include = FALSE}
+# The VignetteIndexEntry is a short ASCII label for browseVignettes(); the YAML
+# title is the descriptive one. The mismatch is deliberate, so say so rather
+# than let every knit warn about it (defect D-020).
+options(rmarkdown.html_vignette.check_title = FALSE)
+
 knitr::opts_chunk$set(
   echo       = TRUE,
   results    = "markup",   # never "hide" for primary calls
@@ -256,7 +261,7 @@ canonical_hash(dat_dep)
 ```
 
 Two hashes are now in play. `fea865758616c492` is the anchor (no
-dependence); `862fe27147e750df` is the dependence-aware design.
+dependence); `89191ceaedd2bc29` is the dependence-aware design.
 Both go into the methods appendix because both are part of the pre-
 registered sensitivity story — the anchor establishes that the scale
 and shape diagnostics behave as expected at $\rho_S = 0$, and the
@@ -530,7 +535,7 @@ provenance_string(dat_dep)
 
 The string carries the package version, the paradigm
 (`paradigm=direct`), the seed (`seed=1`), the canonical hash for the
-simulation (`canonical_hash=862fe27147e750df`), the design hash, the
+simulation (`canonical_hash=89191ceaedd2bc29`), the design hash, the
 hash algorithm, the R version, and the hook configuration — every
 input that influenced the output. A reviewer who pastes the string
 into a methods footnote and re-runs the vignette at the same package
@@ -546,7 +551,7 @@ meta-analytic case study:
 > in the anchor design and a residual rank correlation
 > $\rho_S = 0.30$ in the dependence-aware design. The anchor's
 > canonical hash is `fea865758616c492`; the dependence-aware
-> design's canonical hash is `862fe27147e750df`. The full provenance
+> design's canonical hash is `89191ceaedd2bc29`. The full provenance
 > strings are reproduced verbatim in Supplementary Materials S1.
 >
 > **Estimator.** Pooled effects were estimated by random-effects

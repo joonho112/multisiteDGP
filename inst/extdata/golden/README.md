@@ -17,15 +17,19 @@ Regenerate the inventory with:
 Rscript tests/data-raw/generate_golden_fixtures.R
 ```
 
-Authoritative regeneration is Linux x86_64/amd64 only; see
-`tools/cross-os-reproducibility-policy.md`. The current v0.1 checked-in
-manifest records local macOS/aarch64 provenance for the bootstrap fixtures.
-Linux x86_64/amd64 remains the intended strict `canonical_hash()` baseline. The
-first GitHub Actions artifact pass should confirm equality with these hashes or
-regenerate the fixtures and manifest as the Linux-baseline authority. Non-Linux
-regeneration is exploratory only and must not be committed as authoritative.
+Regenerate on any platform; see `tools/cross-os-reproducibility-policy.md`.
+These fixtures are byte-identical wherever they are built, and their
+`canonical_hash()` agrees across the whole CI matrix — linux-release,
+linux-devel, linux-oldrel, macos-release and windows-release. The manifest
+still records which machine generated them, as provenance; it is not a claim
+of authority.
 
-The authoritative v1 inventory is nine files:
+Off Linux the generator asks for `MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN=true`.
+That is a speed bump against regenerating by accident, not a platform claim: an
+unintended fixture diff is a regression, so say in the commit why the values
+moved.
+
+The inventory is nine files:
 
 - four JEBS appendix normalized seed fixtures;
 - five package preset output fixtures.

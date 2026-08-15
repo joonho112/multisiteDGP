@@ -36,18 +36,23 @@ A single character hash string of length 16 (xxhash64) or 32
 Compute a stable content hash of a multisiteDGP simulation object —
 the hash that identifies whether two simulation runs produced
 bit-identical results. The hash is \emph{canonical}: it normalizes column
-order, drops row names, selects only the stable diagnostics, and
+order, drops row names, excludes the derived diagnostics, and
 replaces callback functions with presence sentinels (so the hash is
 invariant under callback identity but sensitive to callback presence).
 }
 \details{
-\strong{Cross-OS policy.} Linux x86_64 / amd64 is the strict hash
-baseline for golden fixtures used in the package's regression tests.
-macOS and Windows are held to same-machine reproducibility and
-distributional parity rather than Linux byte-identical hashes — minor
-floating-point divergences across platforms are expected and do not
-indicate a bug. See \code{system.file("REPRODUCIBILITY.md", package = "multisiteDGP")}
-for the full installed policy.
+\strong{The hash is portable.} The same design and the same seed give the
+same hash on any platform — checked on every release across Linux
+(release, devel, oldrel), macOS and Windows. There is no baseline
+operating system. A mismatch means the design, the seed, or the hash
+schema genuinely differs; it is never platform noise.
+
+\strong{The package version is not hashed.} Upgrading multisiteDGP does not
+invalidate a hash you already published. What moves the hash when the
+package changes what the hash \emph{means} is \code{hash_schema_version}, carried in
+the manifest. See
+\code{system.file("REPRODUCIBILITY.md", package = "multisiteDGP")} for the full
+installed policy.
 
 \strong{Use cases.} (1) Save the hash alongside a published
 simulation result so future readers can verify reproduction.

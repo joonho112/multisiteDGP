@@ -28,6 +28,11 @@ csl: apa.csl
 ---
 
 ```{r setup, include = FALSE}
+# The VignetteIndexEntry is a short ASCII label for browseVignettes(); the YAML
+# title is the descriptive one. The mismatch is deliberate, so say so rather
+# than let every knit warn about it (defect D-020).
+options(rmarkdown.html_vignette.check_title = FALSE)
+
 knitr::opts_chunk$set(
   echo       = TRUE,
   results    = "markup",   # never "hide" for primary calls
@@ -153,7 +158,7 @@ feasibility FAIL says the partial-pooling effective-sample-size
 metric is sitting below the public floor at this $(J, \sigma_\tau,
 \bar n_j)$ combination — exactly the question the scenario grid
 in §3 is designed to settle. The provenance line at the bottom of
-the print carries the canonical hash `c9bb1021b2d12725`; that hash
+the print carries the canonical hash `925992396b5c80f3`; that hash
 is what a reviewer runs `canonical_hash(dat)` against to confirm
 the simulation reproduces:
 
@@ -171,7 +176,7 @@ analyst's regression model will eventually consume.
 canonical_hash(dat)
 ```
 
-The hash `c9bb1021b2d12725` matches the trailing line of the
+The hash `925992396b5c80f3` matches the trailing line of the
 printed `summary()`. Re-running the chunk at this package version
 on a different machine reproduces it; that is the determinism
 contract.
@@ -454,7 +459,7 @@ provenance_string(dat)
 
 The string carries the package version, the paradigm, the seed
 (`11235`), the canonical hash for the simulation
-(`c9bb1021b2d12725`), the design hash, the hash algorithm, the R
+(`925992396b5c80f3`), the design hash, the hash algorithm, the R
 version, and the hook configuration — every input that influenced
 the output. A reviewer who pastes the string into a methods
 footnote and re-runs the vignette at the same package version

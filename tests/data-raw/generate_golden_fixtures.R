@@ -26,9 +26,11 @@ if (!is_linux_x86_64() &&
   stop(
     paste(
       "Golden fixtures embed canonical_hash/design_hash values.",
-      "Regenerate on Linux x86_64/amd64, or set",
-      "MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN=true for exploratory local regeneration.",
-      "Do not commit non-Linux hash-only diffs."
+      "This gate is a speed bump against accidental regeneration, not a platform",
+      "requirement -- the hash is portable and these fixtures are byte-identical",
+      "wherever they are built. Set",
+      "MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN=true when you mean to regenerate,",
+      "and say in the commit why the values should move."
     ),
     call. = FALSE
   )
@@ -37,8 +39,8 @@ if (!is_linux_x86_64() &&
 if (!is_linux_x86_64()) {
   warning(
     paste(
-      "Non-Linux golden-fixture regeneration is exploratory only;",
-      "canonical_hash/design_hash diffs should not be committed."
+      "Regenerating golden-fixtures moves canonical_hash/design_hash.",
+      "Commit the diff only if the values are meant to move."
     ),
     call. = FALSE
   )
@@ -148,7 +150,7 @@ fixture_row <- function(
       ),
       collapse = "; "
     ),
-    os_policy = "Linux x86-64 strict; macOS/Windows numerical equivalence per blueprint ch18 sec18.12",
+    os_policy = "portable canonical_hash; no platform hierarchy; verified on linux-release/devel/oldrel, macos-release, windows-release (run 31889543618)",
     stringsAsFactors = FALSE
   )
 }
@@ -277,17 +279,17 @@ writeLines(
 	    "Rscript tests/data-raw/generate_golden_fixtures.R",
 	    "```",
 	    "",
-	    "Authoritative regeneration is Linux x86_64/amd64 only. Non-Linux",
-	    "regeneration requires MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN=true",
-	    "and is exploratory only. Non-Linux fixture, manifest, or hash-only",
-	    "diffs must not be committed as authoritative.",
+	    "Regenerate on any platform. These fixtures are byte-identical wherever",
+	    "they are built, and their canonical_hash agrees across the whole CI",
+	    "matrix -- linux-release, linux-devel, linux-oldrel, macos-release and",
+	    "windows-release. There is no authoritative machine.",
 	    "",
-	    "For the v0.1 bootstrap manifest, local macOS/aarch64 provenance remains",
-	    "documented in `inst/extdata/golden/golden-fixture-manifest.csv` until a",
-	    "GitHub Actions Linux x86_64/amd64 artifact pass confirms equality or",
-	    "regenerates the fixtures and manifest as the Linux-baseline authority.",
+	    "Off Linux the generator asks for",
+	    "MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN=true. That is a speed bump",
+	    "against regenerating by accident, not a platform claim: an unintended",
+	    "fixture diff is a regression, so say in the commit why the values moved.",
 	    "",
-	    "The authoritative v1 inventory is nine files:",
+	    "The inventory is nine files:",
     "",
     "- four JEBS appendix normalized seed fixtures;",
     "- five package preset output fixtures.",

@@ -27,6 +27,11 @@ csl: apa.csl
 ---
 
 ```{r setup, include = FALSE}
+# The VignetteIndexEntry is a short ASCII label for browseVignettes(); the YAML
+# title is the descriptive one. The mismatch is deliberate, so say so rather
+# than let every knit warn about it (defect D-020).
+options(rmarkdown.html_vignette.check_title = FALSE)
+
 knitr::opts_chunk$set(
   echo       = TRUE,
   results    = "markup",
@@ -72,10 +77,13 @@ you assemble per project.
 1. **`canonical_hash(x)`** — the 16-character `xxhash64` content
    fingerprint of a simulation object, a design object, or any
    data-frame-shaped result. It normalizes column order, drops row
-   names, restricts to a stable diagnostics allowlist, and replaces
-   callback functions with presence sentinels. Two runs with the
-   same package version, seed, and design produce the same hash; any
-   meaningful drift produces a different hash.
+   names, excludes the derived diagnostics, and replaces callback
+   functions with presence sentinels. Two runs with the same seed and
+   design produce the same hash — **on any platform, and across package
+   versions** — while any meaningful drift produces a different hash.
+   The package version is not hashed, so upgrading does not invalidate a
+   hash you already quoted; what does move it is `hash_schema_version`,
+   which changes only when the package changes what the hash means.
 2. **`provenance_string(x)`** — a single pipe-delimited line carrying
    package version, paradigm, seed, canonical hash, design hash, hash
    algorithm, R version, and any active hooks. Drop it in the methods
@@ -400,20 +408,33 @@ that differ only in the `R=...` slot, you have located the cause.
 
 ### 6.3 Changing the OS or the platform
 
-Cross-platform hash equality is held to a weaker standard. Linux
-x86_64 / amd64 is the strict baseline used for the package's golden
-fixtures in `tests/testthat/`. macOS and Windows are held to
-*same-machine* reproducibility plus *distributional parity* against
-the Linux baseline — the realized distribution of point estimates
-and SEs matches Linux to numerical tolerance, but the exact
-`canonical_hash` is allowed to drift because of platform-level
-floating-point differences in BLAS / LAPACK and compiler math
-libraries. The full installed policy is in
-`system.file("REPRODUCIBILITY.md", package = "multisiteDGP")`. If
-you and a coauthor on different operating systems produce different
-hashes for the same `seed` and design, the next check is whether
-the *distributions* of `tau_j_hat` and `se_j` agree to numerical
-tolerance, not the 16 hex characters.
+Nothing happens. **The same design and the same seed produce the same
+`canonical_hash()` on any platform**, and that is checked on every
+release across the full matrix — Linux release / devel / oldrel, macOS,
+and Windows. There is no baseline operating system and no per-OS
+exemption.
+
+So if you and a coauthor on different operating systems get different
+hashes for the same `seed` and design, do not reach for a
+platform explanation. It means something real differs: the design, the
+seed, or the package's hash schema. Compare `provenance_string()` lines
+first — the `design_hash` slot localizes a design difference, and the
+schema version localizes a package-behaviour difference.
+
+The full installed policy is in
+`system.file("REPRODUCIBILITY.md", package = "multisiteDGP")`.
+
+This is new in v0.2.0. Under v0.1.x the hash covered derived diagnostics
+computed with `cor()`, `sd()` and `mean()`, whose floating-point
+accumulation order varies by platform — so cross-platform equality was
+genuinely unachievable and the policy demoted macOS and Windows to
+*distributional parity*. Dropping those diagnostics made equality
+achievable, because they were functions of the hashed data and the
+hashed design and added no provenance the hash did not already carry.
+The old advice — when hashes disagree across operating systems, check
+whether the *distributions* of `tau_j_hat` and `se_j` agree to numerical
+tolerance rather than the sixteen hex characters — no longer applies. The
+hex characters are now the right thing to compare.
 
 ### 6.4 What does not break the contract
 

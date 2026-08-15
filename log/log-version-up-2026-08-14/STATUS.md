@@ -1,6 +1,6 @@
 # 돌아오셨을 때 먼저 읽을 것
 
-**2026-08-15 · Phase 8 완료 시점 상태입니다.**
+**2026-08-15 · Phase 9 완료 시점 상태입니다.**
 
 ---
 
@@ -8,13 +8,14 @@
 
 | | |
 |---|---|
-| **완료 Phase** | 1 · 2 · 3 · 4 · 5 · 6 · 7 · 8 |
-| **남은 Phase** | 9(문서·버전) · 10(외부 검토) · 11(릴리스) |
-| **결함 원장** | 36 행 · **fixed 34** · open 2 (둘 다 Phase 9 배정) |
+| **완료 Phase** | 1 · 2 · 3 · 4 · 5 · 6 · 7 · 8 · 9 |
+| **남은 Phase** | 10(외부 검토) · 11(릴리스) |
+| **결함 원장** | 37 행 · **fixed 36** · 문서화된 한계 1 · **open 0** |
 | **테스트** | **4882 통과** · 0 실패 · **0 skip** · 커버리지 **96.42 %** |
 | **lint** | 0 위반 |
 | **`R CMD check --as-cran`** | **0 error · 0 warning · 0 note** |
-| **CI** | `main` 6/6 green (Phase 5·7 병합 완료) · Phase 8 브랜치 실행 중 |
+| **버전** | **0.2.0** (0.1.1 에서 범프) |
+| **CI** | `main` 6/6 green (Phase 5·7·8 병합 완료) · Phase 9 브랜치 push 대기 |
 | **Validation** | **V0–V12 열세 실험 전부 `full` 통과** (2026-08-15) |
 | **PI 조치 대기** | `main` branch protection 1 건 (아래 §5) |
 
@@ -31,8 +32,9 @@
 | 5 테스트 스위트 | **완료** (6/6 Step) | [`005`](005_phase05-test-suite-rebuild-partial.html) · [**`009`**](009_phase05-coverage-completion.html) |
 | 6 CI 복구 | 완료 (branch protection 대기) | [`007`](007_phase06-ci-restoration.html) |
 | 7 기능 결함 수정 | 완료 | [`008`](008_phase07-defect-remediation.html) |
-| **8 통계 검증 재실행** | **완료** | [**`010`**](010_phase08-statistical-revalidation.html) |
-| 9–11 | 미착수 | — |
+| 8 통계 검증 재실행 | 완료 | [`010`](010_phase08-statistical-revalidation.html) |
+| **9 문서 델타 동기화** | **완료** | [**`011`**](011_phase09-documentation-sync.html) |
+| 10–11 | 미착수 | — |
 
 ---
 
@@ -118,9 +120,9 @@ Phase 4·5·7 이 재현성 계약·solver·오류 경로·광고 표면을 바�
 
 | 순서 | 내용 |
 |---|---|
-| 1 | **Phase 8 브랜치 병합 여부 결정** (PI) |
-| 2 | Phase 9 — 문서 델타, `0.2.0` 버전 범프, `NEWS.md` breaking change 절 (`upstream` 제거 · `target_source` 열 추가), 해소된 Known limitations 3 건 갱신, D-013 · D-020 |
-| 3 | Phase 10 외부 검토 → Phase 11 릴리스 |
+| 1 | **Phase 9 브랜치 병합 여부 결정** (PI) |
+| 2 | Phase 10 — 외부 검토 |
+| 3 | Phase 11 — 릴리스 (`v0.2.0` 태그 + GitHub Release, **외부 공개 행위이므로 PI 확인 필요**) |
 
 ---
 
