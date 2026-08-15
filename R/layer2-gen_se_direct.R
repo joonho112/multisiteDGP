@@ -180,7 +180,7 @@ gen_se_direct <- function(
     .abort_arg(
       "`se_fn` must return a named list containing `se2_j`.",
       "`gen_se_direct()` uses `se2_j` to append direct sampling variances.",
-      "Return `list(se2_j = numeric(J), n_j = NULL)` or a data frame with `se2_j`."
+      "Pass an `se_fn` returning `list(se2_j = numeric(J), n_j = NULL)` or a data frame with `se2_j`."
     )
   }
 
@@ -189,7 +189,7 @@ gen_se_direct <- function(
     .abort_arg(
       "`se_fn()` returned the wrong number of `se2_j` values.",
       sprintf("Got length %s for J = %s.", length(se2_j), J),
-      "Return exactly one positive `se2_j` value per site."
+      "Use an `se_fn` returning exactly one positive `se2_j` value per site."
     )
   }
 
@@ -240,7 +240,7 @@ gen_se_direct <- function(
     .abort_arg(
       "`se_fn()` returned invalid `n_j` values.",
       "`n_j` must be integer-like with one value per site, or `NULL` for Paradigm B.",
-      "Return `n_j = NULL` or an integer vector of length J."
+      "Pass `n_j = NULL` or an integer vector of length J from `se_fn()`."
     )
   }
   as.integer(n_j)

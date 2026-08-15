@@ -1,8 +1,5 @@
 "file","pct"
 "R/layer1-effects-common.R",79.67
-"R/scenario_audit.R",83.12
-"R/layer2-diagnostics.R",85.88
-"R/layer2-gen_se_direct.R",85.91
 "R/layer1-gen_effects_user.R",87.38
 "R/class-multisitedgp_design.R",87.41
 "R/layer3-dependence-custom.R",88.1
@@ -21,13 +18,16 @@
 "R/wrapper-sim_multisite.R",95.91
 "R/utils-reproducibility.R",96.02
 "R/plots.R",96.55
+"R/scenario_audit.R",97.84
 "R/layer1-gen_effects_mixture.R",99.13
 "R/00-errors-validation.R",100
 "R/adapters.R",100
 "R/layer1-gen_effects_dpm.R",100
 "R/layer1-gen_effects_gaussian.R",100
 "R/layer1-gen_effects_studentt.R",100
+"R/layer2-diagnostics.R",100
 "R/layer2-engine-a1.R",100
+"R/layer2-gen_se_direct.R",100
 "R/layer2-gen_site_sizes.R",100
 "R/layer3-align_hybrid_corr.R",100
 "R/layer3-dependence-helpers.R",100

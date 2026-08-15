@@ -41,6 +41,17 @@
       sprintf("Pass `%s` as one integer-like value.", arg)
     )
   }
+  # Without this, as.integer() silently returns NA for anything past 2^31 and the
+  # NA surfaces later as a bare "missing value where TRUE/FALSE needed" — outside
+  # the typed error hierarchy the package guarantees. Defect ledger D-032.
+  if (abs(x) > .Machine$integer.max) {
+    .abort_arg(
+      sprintf("`%s` is outside the representable integer range.", arg),
+      sprintf("`%s` is stored as a 32-bit integer, so it must be at most %s.",
+              arg, format(.Machine$integer.max, scientific = FALSE)),
+      sprintf("Pass `%s` as an integer-like value within that range.", arg)
+    )
+  }
   invisible(as.integer(x))
 }
 
