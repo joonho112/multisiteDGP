@@ -112,9 +112,48 @@ scenario_audit <- function(
 
   if (isTRUE(parallel)) {
     .require_soft_dependency("furrr", "scenario_audit")
+    .warn_parallel_dev_package()
     return(furrr::future_map_dfr(cell_ids, audit_one))
   }
   dplyr::bind_rows(lapply(cell_ids, audit_one))
+}
+
+# A multisession worker starts a clean R session and resolves multisiteDGP from
+# the installed library. Under pkgload::load_all() that is a different package
+# from the one being developed -- on the machine where this was found, 0.1.1
+# with hash schema v1 against a 0.2.0/v4 source tree -- and the audit reports a
+# clean pass for code that never ran. The failure is silent, so say something.
+#
+# An installed package is unaffected: its workers load the same version the
+# caller has. This only bites development sessions (D-061).
+.warn_parallel_dev_package <- function() {
+  if (!isTRUE(.is_dev_load()) || !.future_plan_is_multiprocess()) {
+    return(invisible(FALSE))
+  }
+  cli::cli_warn(c(
+    "!" = "`parallel = TRUE` under a development load resolves the package separately in each worker.",
+    "i" = "Workers load the installed multisiteDGP, not the source tree you are developing, so the audit may describe a different version.",
+    ">" = "Use `parallel = FALSE`, or have each worker call `pkgload::load_all()` before the audit."
+  ))
+  invisible(TRUE)
+}
+
+.is_dev_load <- function() {
+  isTRUE(tryCatch(
+    requireNamespace("pkgload", quietly = TRUE) &&
+      pkgload::is_dev_package("multisiteDGP"),
+    error = function(e) FALSE
+  ))
+}
+
+.future_plan_is_multiprocess <- function() {
+  if (!requireNamespace("future", quietly = TRUE)) {
+    return(FALSE)
+  }
+  isTRUE(tryCatch(
+    !inherits(future::plan(), "sequential"),
+    error = function(e) FALSE
+  ))
 }
 
 .validate_scenario_grid <- function(grid) {

@@ -39,7 +39,7 @@ Two things to know before reading a failure:
   version in its payload, so a schema change moves that value even when the
   data is identical. The summary now records `schema_matches_expected` so the
   two cases are distinguishable. The authority on whether the data moved is the
-  golden `.rds` set in `tests/testthat/_snaps/golden`, which compares exactly
+  golden `.rds` set in `tests/testthat/fixtures/golden`, which compares exactly
   and does not depend on the schema — V02 hashes those at run time instead of
   pinning, which is why it survives schema changes.
 

@@ -288,12 +288,40 @@ if (nzchar(reuse_source_run_id)) {
   message("V11 reusing completed source results: ", source_result_path)
   audit$cell_id <- seq_len(nrow(audit))
 } else {
-  rows <- vector("list", nrow(grid))
-  for (cell_id in seq_len(nrow(grid))) {
-    if (cell_id %% 25L == 0L || cell_id == 1L || cell_id == nrow(grid)) {
-      message("V11 cell ", cell_id, " / ", nrow(grid))
+  cell_ids <- seq_len(nrow(grid))
+  if (isTRUE(parallel)) {
+    # Cells are independent: one_cell_grid() carries its own deterministic seed,
+    # so execution order cannot change any cell's result. Checked against the
+    # sequential path before this was enabled.
+    # multisession workers start clean and would resolve multisiteDGP from the
+    # installed library, not this source tree. Left alone they silently validate
+    # whatever version happens to be installed -- 0.1.1 with hash schema v1 on
+    # this machine. Each worker therefore loads the tree under test first.
+    worker_root <- paths$package_root
+    workers <- max(1L, parallel::detectCores() - 2L)
+    message("V11 running ", nrow(grid), " cells on ", workers, " workers")
+    oplan <- future::plan(future::multisession, workers = workers)
+    on.exit(future::plan(oplan), add = TRUE)
+    rows <- furrr::future_map(
+      cell_ids,
+      function(cell_id) {
+        suppressMessages(pkgload::load_all(worker_root, quiet = TRUE))
+        run_cell(cell_id)
+      },
+      .options = furrr::furrr_options(
+        seed = TRUE,
+        globals = c("worker_root", "run_cell", "grid", "one_cell_grid", "M",
+                    "error_cell_row")
+      )
+    )
+  } else {
+    rows <- vector("list", nrow(grid))
+    for (cell_id in cell_ids) {
+      if (cell_id %% 25L == 0L || cell_id == 1L || cell_id == nrow(grid)) {
+        message("V11 cell ", cell_id, " / ", nrow(grid))
+      }
+      rows[[cell_id]] <- run_cell(cell_id)
     }
-    rows[[cell_id]] <- run_cell(cell_id)
   }
   audit <- do.call(rbind, rows)
 }

@@ -15,7 +15,7 @@ generators in a package-normalized schema and writes:
   activates the lower bound stated in the paper and appendix.
 
 The matching checked-in authority files live in
-`tests/testthat/_snaps/golden/`; `tests/data-raw/generate_golden_fixtures.R`
+`tests/testthat/fixtures/golden/`; `tests/data-raw/generate_golden_fixtures.R`
 owns that final inventory and shipped manifest. This directory remains the
 independent appendix-code provenance source. By default the script records
 in-memory canonical hashes and temporary-RDS SHA-256 hashes without leaving

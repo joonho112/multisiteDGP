@@ -31,7 +31,7 @@ expected_golden_fixtures <- function() {
 test_that("Step 8.1 golden fixture inventory matches the shipped manifest", {
   manifest <- golden_manifest()
   expected <- expected_golden_fixtures()
-  golden_dir <- test_path("_snaps/golden")
+  golden_dir <- test_path("fixtures/golden")
   rds_files <- sort(list.files(golden_dir, pattern = "\\.rds$", full.names = FALSE))
   inst_golden_dir <- dirname(golden_extdata_path("golden-fixture-manifest.csv"))
   inst_rds_files <- list.files(inst_golden_dir, pattern = "\\.rds$", full.names = FALSE)
@@ -44,12 +44,12 @@ test_that("Step 8.1 golden fixture inventory matches the shipped manifest", {
   expect_identical(manifest$fixture_type, expected$fixture_type)
   expect_identical(sort(manifest$fixture_file), rds_files)
   expect_true(file.exists(golden_extdata_path("README.md")))
-  expect_true(file.exists(test_path("_snaps/golden/README.md")))
+  expect_true(file.exists(test_path("fixtures/golden/README.md")))
 })
 
 test_that("Step 8.1 golden RDS files match the manifest hashes", {
   manifest <- golden_manifest()
-  golden_dir <- test_path("_snaps/golden")
+  golden_dir <- test_path("fixtures/golden")
 
   for (idx in seq_len(nrow(manifest))) {
     row <- manifest[idx, ]
@@ -66,7 +66,7 @@ test_that("Step 8.1 golden RDS files match the manifest hashes", {
 
 test_that("Step 8.1 full-object fixtures carry current self-consistent provenance", {
   manifest <- golden_manifest()
-  golden_dir <- test_path("_snaps/golden")
+  golden_dir <- test_path("fixtures/golden")
   preset_rows <- manifest$fixture_id %in% sprintf("F%02d", 5:9)
 
   for (idx in which(preset_rows)) {
@@ -82,7 +82,7 @@ test_that("Step 8.1 full-object fixtures carry current self-consistent provenanc
 
 test_that("Step 8.1 preset fixtures are independent live regenerations", {
   manifest <- golden_manifest()
-  golden_dir <- test_path("_snaps/golden")
+  golden_dir <- test_path("fixtures/golden")
   live_objects <- golden_live_preset_specs()
   preset_rows <- manifest$fixture_id %in% sprintf("F%02d", 5:9)
 
@@ -150,7 +150,7 @@ test_that("Step 8.1 manifest is bound to the current fixture generator", {
 
 test_that("Step 8.1 golden fixtures preserve object classes and schema", {
   manifest <- golden_manifest()
-  golden_dir <- test_path("_snaps/golden")
+  golden_dir <- test_path("fixtures/golden")
   canonical_cols <- c("site_index", "z_j", "tau_j", "tau_j_hat", "se_j", "se2_j", "n_j")
 
   jebs_rows <- manifest$fixture_id %in% c(sprintf("F%02d", 1:4), "F10")

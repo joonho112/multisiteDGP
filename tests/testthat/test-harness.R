@@ -79,7 +79,7 @@ test_that("snapshot and golden policies track active Step 8.5 artifacts", {
   expect_identical(golden_fixture_policy$jebs_floor_active_files, 1L)
   expect_identical(golden_fixture_policy$preset_output_files, 5L)
   golden_files <- list.files(
-    test_path("_snaps/golden"),
+    test_path("fixtures/golden"),
     pattern = "[.]rds$",
     all.files = FALSE,
     recursive = FALSE

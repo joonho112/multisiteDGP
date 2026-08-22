@@ -158,7 +158,7 @@ validation_source_digest <- function(package_root) {
   roots <- c(
     file.path(package_root, "R"),
     file.path(package_root, "inst", "extdata"),
-    file.path(package_root, "tests", "testthat", "_snaps", "golden"),
+    file.path(package_root, "tests", "testthat", "fixtures", "golden"),
     file.path(package_root, "tools", "jebs-golden-fixtures"),
     file.path(package_root, "tools", "validation", "R")
   )

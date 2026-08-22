@@ -10,7 +10,7 @@ script_path <- if (length(file_arg) == 1L) {
 }
 
 package_root <- normalizePath(file.path(dirname(script_path), "..", ".."), mustWork = TRUE)
-golden_dir <- file.path(package_root, "tests", "testthat", "_snaps", "golden")
+golden_dir <- file.path(package_root, "tests", "testthat", "fixtures", "golden")
 manifest_dir <- file.path(package_root, "inst", "extdata", "golden")
 dir.create(golden_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(manifest_dir, recursive = TRUE, showWarnings = FALSE)
@@ -165,7 +165,7 @@ fixture_row <- function(
     source_call = source_call,
     source_policy = source_policy,
     generator = generator,
-    storage_path = file.path("tests", "testthat", "_snaps", "golden", fixture_file),
+    storage_path = file.path("tests", "testthat", "fixtures", "golden", fixture_file),
     object_class = paste(class(object), collapse = "/"),
     nrow = if (inherits(object, "data.frame")) nrow(object) else NA_integer_,
     ncol = if (inherits(object, "data.frame")) ncol(object) else NA_integer_,
@@ -368,6 +368,6 @@ writeLines(
   useBytes = TRUE
 )
 
-message("Wrote 10 golden RDS files to: tests/testthat/_snaps/golden")
+message("Wrote 10 golden RDS files to: tests/testthat/fixtures/golden")
 message("Wrote manifest to: inst/extdata/golden/golden-fixture-manifest.csv")
 # nolint end

@@ -53,7 +53,7 @@ if (identical(run_state$action, "reuse")) {
 #
 # If this check fails, read schema_matches_expected first. Schema moved is a
 # documented decision; data moved is a regression, and the authority on that is
-# the golden .rds set in tests/testthat/_snaps/golden, which compares exactly
+# the golden .rds set in tests/testthat/fixtures/golden, which compares exactly
 # and does not depend on the schema. V02 sidesteps this entirely by hashing
 # those fixtures at run time instead of pinning a literal.
 expected_hash <- "1cb59345862bc1f8"

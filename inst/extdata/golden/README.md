@@ -3,7 +3,7 @@
 This directory stores the shipped manifest for the Step 8.1 golden fixture
 inventory.
 
-The binary RDS fixtures live in `tests/testthat/_snaps/golden/` because they
+The binary RDS fixtures live in `tests/testthat/fixtures/golden/` because they
 are test references, not user-facing example data. This `inst/extdata/golden/`
 directory ships only lightweight provenance and policy metadata.
 

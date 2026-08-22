@@ -23,7 +23,7 @@ test_that("independent live regeneration matches the golden canonical payload", 
     )
   }
 
-  readme_source <- test_path("_snaps/golden/README.md")
+  readme_source <- test_path("fixtures/golden/README.md")
   readme_copy <- tempfile(pattern = "multisiteDGP-golden-readme-", fileext = ".md")
   writeLines(readLines(readme_source, warn = FALSE), readme_copy, useBytes = TRUE)
   expect_snapshot_file(readme_copy, name = "README.md")

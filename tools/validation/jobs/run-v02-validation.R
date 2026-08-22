@@ -78,7 +78,7 @@ plain_jebs_frame <- function(x) {
 }
 
 golden_hash <- function(seed) {
-  path <- file.path(paths$package_root, "tests", "testthat", "_snaps", "golden", sprintf("jebs_appendix_mixture_seed%d.rds", seed))
+  path <- file.path(paths$package_root, "tests", "testthat", "fixtures", "golden", sprintf("jebs_appendix_mixture_seed%d.rds", seed))
   multisiteDGP::canonical_hash(readRDS(path))
 }
 
