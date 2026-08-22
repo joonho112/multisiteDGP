@@ -1,0 +1,6 @@
+"run_id","experiment_id","region","cells","pass_cells","warn_cells","fail_cells","public_pass_rate","strict_pass_rate","reporting_role"
+"phase6-v11-full-20260816","V11","full_broad_stress_grid",1500,0,158,1342,0,0,"post_hoc_calibration_evidence_not_release_gate"
+"phase6-v11-full-20260816","V11","J_eq_100",300,0,158,142,0,0,"post_hoc_calibration_evidence_not_release_gate"
+"phase6-v11-full-20260816","V11","J_eq_100_sigma_ge_0_15",180,0,138,42,0,0,"post_hoc_calibration_evidence_not_release_gate"
+"phase6-v11-full-20260816","V11","high_information_region",216,0,107,109,0,0,"post_hoc_calibration_evidence_not_release_gate"
+"phase6-v11-full-20260816","V11","very_high_information_region",96,0,48,48,0,0,"post_hoc_calibration_evidence_not_release_gate"

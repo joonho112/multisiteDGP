@@ -17,15 +17,20 @@ experiment_id <- "V0"
 mode <- Sys.getenv("MULTISITEDGP_VALIDATION_MODE", unset = "smoke")
 reps <- validation_env_int("MULTISITEDGP_VALIDATION_REPS", 3L)
 seed_root <- validation_env_int("MULTISITEDGP_VALIDATION_SEED_ROOT", 910001L)
-resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = TRUE)
+resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = FALSE)
 overwrite <- validation_env_flag("MULTISITEDGP_VALIDATION_OVERWRITE", default = FALSE)
 run_id <- validation_run_id(experiment_id, mode)
 
 result_path <- file.path(paths$generated_dir, paste0(run_id, "-results.csv"))
 summary_path <- file.path(paths$generated_dir, paste0(run_id, "-summary.csv"))
 started_at <- Sys.time()
+parameters <- list(reps = reps, harness_scope = "plumbing-only")
+run_state <- validation_prepare_run(
+  paths, run_id, experiment_id, mode, seed_root, parameters, script_path,
+  result_path, summary_path, resume = resume, overwrite = overwrite
+)
 
-if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(result_path, summary_path)) {
+if (identical(run_state$action, "reuse")) {
   existing_summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
   resumed_status <- if (nrow(existing_summary) == 1L && isTRUE(existing_summary$smoke_pass[[1L]])) {
     "pass"
@@ -33,20 +38,9 @@ if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(res
     "fail"
   }
   ended_at <- Sys.time()
-  validation_record_manifest(
-    paths = paths,
-    run_id = run_id,
-    experiment_id = experiment_id,
-    mode = mode,
-    status = resumed_status,
-    started_at = started_at,
-    ended_at = ended_at,
-    seed_root = seed_root,
-    reps = reps,
-    script_path = script_path,
-    result_path = result_path,
-    summary_path = summary_path,
-    notes = "Existing result and summary files reused because resume=true and overwrite=false."
+  validation_record_reuse(
+    paths, run_state, started_at, ended_at,
+    "Compatible smoke result and summary reused after contract verification."
   )
   message("Resumed existing validation output: ", result_path)
   quit(status = 0)
@@ -173,7 +167,8 @@ validation_record_manifest(
   script_path = script_path,
   result_path = result_path,
   summary_path = summary_path,
-  notes = "Step 9.1 tiny harness smoke job. This checks plumbing only, not full V0 acceptance."
+  notes = "Step 9.1 tiny harness smoke job. This checks plumbing only, not full V0 acceptance.",
+  parameters = parameters
 )
 
 print(results)

@@ -9,9 +9,10 @@ mistakes while the package is still being assembled.
 
 ## Re-running after a code change
 
-The v0.2.0 reliability work re-ran all thirteen experiments on 2026-08-15 and
-all thirteen pass in `full` mode. See
-`log/log-version-up-2026-08-14/evidence/phase08/validation-summary-2026-08-15.md`.
+The 2026-08-15 full runs predate the final v0.2.0 source and contract schema.
+They remain historical artifacts but are not current release evidence. The
+traceability and plan manifests therefore mark V0--V12
+`pending-current-source` until the Phase 6 full rerun completes.
 
 ```sh
 export MULTISITEDGP_VALIDATION_MODE=full
@@ -22,9 +23,12 @@ for v in v0 v01 v02 v03 v04 v05 v06 v07 v08 v09 v10 v11 v12; do
 done
 ```
 
-**`OVERWRITE=true` is not optional after a code change.** `RESUME` defaults to
-true, so an existing complete run is reused and reported as a pass without the
-new code ever running.
+`RESUME` defaults to false. A new timestamped run ID normally needs neither
+resume nor overwrite. If an explicit run ID collides with existing files, the
+harness stops unless `OVERWRITE=true`. Explicit `RESUME=true` succeeds only
+when the result, summary, and `-contract.csv` sidecar all match the current
+source digest, package version, job SHA, parameter digest, seed/mode,
+schema/RNG policy, and artifact SHA values.
 
 Two things to know before reading a failure:
 
@@ -48,13 +52,14 @@ Core conventions:
 - generated outputs live under `tools/validation/generated`;
 - `validation-plan-manifest.csv` lists V0 plus V01-V12 and their planned
   evidence contract;
-- every run writes or replaces one run row in
-  `generated/validation-run-manifest.csv`;
+- a fresh run writes a `produced` event and a compatible reuse writes a
+  distinct `reuse` event in `generated/validation-run-manifest.csv`;
 - result files are keyed by `run_id`, `experiment_id`, and `mode`;
+- each result/summary pair has a `-contract.csv` producer sidecar;
 - seed streams are derived from `MULTISITEDGP_VALIDATION_SEED_ROOT` and restore
   the caller RNG state after allocation;
-- existing outputs are reused when `MULTISITEDGP_VALIDATION_RESUME=true` and
-  `MULTISITEDGP_VALIDATION_OVERWRITE=false`;
+- producer fields are retained on reuse; current runtime metadata is not
+  stamped onto an old artifact;
 - full release evidence should be summarized into
   `tools/validation/reports/validation-report-template.qmd`.
 
@@ -71,6 +76,10 @@ MULTISITEDGP_VALIDATION_MODE=smoke
 MULTISITEDGP_VALIDATION_REPS=3
 MULTISITEDGP_VALIDATION_SEED_ROOT=910001
 MULTISITEDGP_VALIDATION_RUN_ID=v0-smoke-manual
-MULTISITEDGP_VALIDATION_RESUME=true
+MULTISITEDGP_VALIDATION_RESUME=false
 MULTISITEDGP_VALIDATION_OVERWRITE=false
 ```
+
+To request reuse of that exact run ID, set `RESUME=true` without changing any
+other contract input. A missing legacy sidecar or any mismatch is refused; use
+a new run ID for a fresh run, or set `OVERWRITE=true` deliberately.

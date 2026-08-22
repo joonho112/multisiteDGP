@@ -1,0 +1,2 @@
+"run_id","experiment_id","mode","reps","completed","failed","all_finite_diagnostics","all_hashes_present","all_design_hashes_present","mean_I_hat","mean_R_hat","mean_sigma_tau_resid","mean_GM_se2","smoke_pass"
+"phase5-contract-smoke-20260816","V0","smoke",2,2,0,TRUE,TRUE,TRUE,0.302007362049878,8.20769230769231,0.188905601291049,0.0925417106182862,TRUE

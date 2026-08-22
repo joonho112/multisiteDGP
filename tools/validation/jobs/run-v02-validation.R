@@ -15,7 +15,7 @@ validation_load_package(paths$package_root)
 experiment_id <- "V02"
 mode <- Sys.getenv("MULTISITEDGP_VALIDATION_MODE", unset = "full")
 seed_root <- validation_env_int("MULTISITEDGP_VALIDATION_SEED_ROOT", 910201L)
-resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = TRUE)
+resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = FALSE)
 overwrite <- validation_env_flag("MULTISITEDGP_VALIDATION_OVERWRITE", default = FALSE)
 run_id <- validation_run_id(experiment_id, mode)
 
@@ -46,12 +46,20 @@ summary_path <- file.path(paths$generated_dir, paste0(run_id, "-summary.csv"))
 cell_stability_path <- file.path(paths$generated_dir, paste0(run_id, "-cell-stability.csv"))
 seed_summary_path <- file.path(paths$generated_dir, paste0(run_id, "-seed-summary.csv"))
 started_at <- Sys.time()
+parameters <- list(
+  J_grid = J_grid, nj_mean_grid = nj_mean_grid, cv_grid = cv_grid,
+  sigma_grid = sigma_grid, seed_grid = seed_grid, reps = reps
+)
+run_state <- validation_prepare_run(
+  paths, run_id, experiment_id, mode, seed_root, parameters, script_path,
+  result_path, summary_path, resume = resume, overwrite = overwrite
+)
 
-if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(result_path, summary_path)) {
+if (identical(run_state$action, "reuse")) {
   summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
   status <- if (nrow(summary) == 1L && isTRUE(summary$acceptance_pass[[1L]])) "pass" else "fail"
   ended_at <- Sys.time()
-  validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, reps, script_path, result_path, summary_path, "Existing V02 output reused.")
+  validation_record_reuse(paths, run_state, started_at, ended_at, "Compatible V02 output reused.")
   message("Resumed existing V02 output: ", result_path)
   validation_maybe_stop_for_blocker(status, "V02 validation failed in resumed output.")
   quit(status = 0)
@@ -225,7 +233,7 @@ summary_path <- validation_write_csv(summary, summary_path)
 
 status <- if (isTRUE(summary$acceptance_pass)) "pass" else "fail"
 ended_at <- Sys.time()
-validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, reps, script_path, result_path, summary_path, "V02 strict JEBS grid and T1a anchor evidence.")
+validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, reps, script_path, result_path, summary_path, "V02 strict JEBS grid and T1a anchor evidence.", parameters = parameters)
 print(summary)
 message("V02 status: ", status)
 validation_maybe_stop_for_blocker(status, "V02 validation failed acceptance criteria.")

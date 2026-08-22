@@ -16,7 +16,7 @@ experiment_id <- "V12"
 mode <- Sys.getenv("MULTISITEDGP_VALIDATION_MODE", unset = "full")
 seed_root <- validation_env_int("MULTISITEDGP_VALIDATION_SEED_ROOT", 911201L)
 lee_seed <- validation_env_int("MULTISITEDGP_VALIDATION_LEE_SEED", 4719L)
-resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = TRUE)
+resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = FALSE)
 overwrite <- validation_env_flag("MULTISITEDGP_VALIDATION_OVERWRITE", default = FALSE)
 attempt_site_lme4 <- validation_env_flag("MULTISITEDGP_VALIDATION_ATTEMPT_SITE_LME4", default = FALSE)
 run_id <- validation_run_id(experiment_id, mode)
@@ -26,29 +26,38 @@ summary_path <- file.path(paths$generated_dir, paste0(run_id, "-summary.csv"))
 figure_path <- file.path(paths$generated_dir, paste0(run_id, "-jebs-shrinkage.png"))
 started_at <- Sys.time()
 acceptance_rule_version <- "phase9-v12-pattern-evidence-v2"
+parameters <- list(
+  lee_seed = lee_seed,
+  attempt_site_lme4 = attempt_site_lme4,
+  acceptance_rule_version = acceptance_rule_version
+)
+run_state <- validation_prepare_run(
+  paths, run_id, experiment_id, mode, seed_root, parameters, script_path,
+  result_path, summary_path, resume = resume, overwrite = overwrite
+)
 
-if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(result_path, summary_path)) {
+if (identical(run_state$action, "reuse")) {
   summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
   status <- if (nrow(summary) == 1L && isTRUE(summary$acceptance_pass[[1L]])) "pass" else "fail"
   ended_at <- Sys.time()
-  validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, summary$n_sites[[1L]], script_path, result_path, summary_path, "Existing V12 output reused.")
+  validation_record_reuse(paths, run_state, started_at, ended_at, "Compatible V12 output reused.")
   message("Resumed existing V12 output: ", result_path)
   validation_maybe_stop_for_blocker(status, "V12 validation failed in resumed output.")
   quit(status = 0)
 }
 
-# Pinned against hash schema v3. canonical_hash() carries the schema version in
+# Pinned against hash schema v4. canonical_hash() carries the schema version in
 # its payload, so a schema change moves this value even when the data is
-# untouched — which is exactly what v1 -> v3 did (Phase 4, defect D-002). The
-# previous pin, a96eaabd1c022e32, was a v1 value.
+# untouched. Schema v4 also reflects the final JEBS paper preset and pinned RNG
+# contract used by this release.
 #
 # If this check fails, read schema_matches_expected first. Schema moved is a
 # documented decision; data moved is a regression, and the authority on that is
 # the golden .rds set in tests/testthat/_snaps/golden, which compares exactly
 # and does not depend on the schema. V02 sidesteps this entirely by hashing
 # those fixtures at run time instead of pinning a literal.
-expected_hash <- "df7a9af6d6f144c1"
-expected_hash_schema <- "multisiteDGP-canonical-hash-v3"
+expected_hash <- "1cb59345862bc1f8"
+expected_hash_schema <- "multisiteDGP-canonical-hash-v4"
 actual_hash_schema <- multisiteDGP:::.hash_schema_version()
 design <- multisiteDGP::preset_jebs_paper()
 dat <- multisiteDGP::sim_multisite(design, seed = lee_seed)
@@ -224,7 +233,7 @@ summary_path <- validation_write_csv(summary, summary_path)
 
 status <- if (isTRUE(summary$acceptance_pass)) "pass" else "fail"
 ended_at <- Sys.time()
-validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, nrow(dat), script_path, result_path, summary_path, "V12 JEBS qualitative pattern evidence; exact Lee lme4/Figure target deferred pending external reference.")
+validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, nrow(dat), script_path, result_path, summary_path, "V12 JEBS qualitative pattern evidence; exact Lee lme4/Figure target deferred pending external reference.", parameters = parameters)
 print(summary)
 message("V12 status: ", status)
 validation_maybe_stop_for_blocker(status, "V12 validation failed acceptance criteria.")

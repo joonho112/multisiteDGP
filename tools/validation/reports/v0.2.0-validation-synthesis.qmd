@@ -1,0 +1,122 @@
+---
+title: "Validation Synthesis — multisiteDGP v0.2.0"
+subtitle: "Codex reliability repair · current-source full evidence"
+date: "2026-08-16"
+lang: ko
+format:
+  html:
+    toc: true
+    embed-resources: true
+    theme: cosmo
+  gfm: default
+execute:
+  echo: false
+---
+
+## 결론
+
+**현재 v0.2.0 소스에 대해 V0–V12 열세 실험이 모두 `full` 모드에서 새로
+생성되어 PASS했다.** 이 판정은 파일 존재 여부가 아니라 package version,
+validation script SHA-256, 실행 parameter/seed, canonical hash schema, RNG
+policy, 소스 트리 digest, 결과·요약·sidecar SHA-256가 모두 일치하는
+`phase5-validation-contract-v1` 증거에 근거한다.
+
+검증 대상 소스 digest는
+`902b4add7f139e5eedf8d1e9a5307c0ead2a7dc951aee56c6aabb4a82ab95cb6`이다.
+모든 실행은 `multisiteDGP 0.2.0`, hash schema
+`multisiteDGP-canonical-hash-v4`, RNG
+`Mersenne-Twister/Inversion/Rejection`, `event = produced`로 기록됐다.
+
+## 실행 계약
+
+이번 증거는 다음 설정으로 생성했다.
+
+```sh
+export MULTISITEDGP_VALIDATION_MODE=full
+export MULTISITEDGP_VALIDATION_OVERWRITE=true
+export MULTISITEDGP_VALIDATION_RESUME=false
+```
+
+각 실험에는 `phase6b-<id>-full-20260816` 형식의 고유 run ID를 부여했다.
+소스 트리는 리뷰 수정 중이라 Git 관점에서는 dirty였지만, 검증 대상 파일
+집합 전체를 내용 기반 source digest로 묶었다. 경로 정렬은 locale에 영향을
+받지 않는 radix 순서로 고정해 일반 R 실행, testthat, CI에서 동일한 digest를
+계산한다.
+
+## 전체 결과
+
+| ID | Run ID | 핵심 범위 | 결과 | 소요 |
+|---|---|---|:---:|---:|
+| V0 | `phase6b-v0-full-20260816` | 7개 활성 shape × 1,000회, 기본 calibration | PASS | 206.7 s |
+| V01 | `phase6b-v01-full-20260816` | 7개 활성 shape × 1,000회, residual dependence | PASS | 1,371.7 s |
+| V02 | `phase6b-v02-full-20260816` | JEBS strict grid 2,000행, T1a anchor | PASS | 65.6 s |
+| V03 | `phase6b-v03-full-20260816` | Walters proxy 200회, oracle EB consistency | PASS | 3.6 s |
+| V04 | `phase6b-v04-full-20260816` | Engine A2 feasible fixture 100개 | PASS | 87.7 s |
+| V05 | `phase6b-v05-full-20260816` | 금지 조합 abort 200건 | PASS | 1.5 s |
+| V06 | `phase6b-v06-full-20260816` | 활성 shape 35행 × 1,000,000 draw | PASS | 2.3 s |
+| V07 | `phase6b-v07-full-20260816` | Paradigm B exact recovery 500행 | PASS | 7.9 s |
+| V08 | `phase6b-v08-full-20260816` | 로컬 재현성 50 fixture × 5회 | PASS | 4.2 s |
+| V09 | `phase6b-v09-full-20260816` | hill-climb 경계 grid 3,600행 | PASS | 1,793.5 s |
+| V10 | `phase6b-v10-full-20260816` | 8 preset × 3 plot = 24 산출물 | PASS | 6.1 s |
+| V11 | `phase6b-v11-full-20260816` | 1,500 cell × 100회 = 150,000회 | PASS | 2,287.3 s |
+| V12 | `phase6b-v12-full-20260816` | JEBS golden hash·shrinkage pattern | PASS | 1.5 s |
+
+총 wall-clock 합계는 5,839.6초, 약 97.3분이다.
+
+## 핵심 수치와 판정 해석
+
+- V0은 모든 활성 shape에서 완료 1,000, 실패 0이며, informativeness 분포와
+  shape-level 평균 calibration 게이트를 통과했다.
+- V01은 모든 활성 shape에서 residual 기록률·수렴률이 1.0이다. marginal
+  Spearman은 v1 residual-target 계약에서 파생 보고값이지 별도 목표가 아니다.
+- V02는 2,000개 JEBS grid 행을 완료했고 seed-grid 평균 안정성 및 T1a anchor
+  hash를 통과했다.
+- V04는 strict solver residual 통과율 1.0, 최대 잔차
+  `4.921332e-10`이다. ill-conditioned 입력은 완화된 평균 잔차로 승인되지 않는다.
+- V05는 잘못된 A1 legacy + dependence 조합 200건 모두 typed abort와 RNG 보존
+  계약을 통과했다.
+- V06은 35개 활성 대표본 행의 평균·분산 통과율이 모두 1.0이다. DPM 5행은
+  지원 shape가 아니라 예약된 v1 stub이므로 명시적으로 skip됐다.
+- V07의 최대 I 오차는 `1.11e-16`, 최대 R 오차는 `1.78e-15`이다.
+- V08의 로컬 hash 일치율, provenance hash 일치율, RNG 보존율은 모두 1.0이다.
+- V09의 3,600행에서 unexpected failure는 0이고, multiset 보존율은 1.0이다.
+- V10은 24개 plot 모두 build/render/axis/caption 게이트를 통과했다.
+- V11은 1,500개 cell과 150,000회 시뮬레이션에서 error cell 0,
+  finite-metric rate 1.0이다. broad stress grid의 public PASS 비율은 0,
+  WARN 158, FAIL 1,342였지만 운영 분포와 PRIMO subgrid가 사전등록되지 않았으므로
+  이 비율은 계획대로 calibration 보고값이며 release gate가 아니다.
+- V12는 canonical hash `1cb59345862bc1f8`, v4 schema, finite shrinkage,
+  `se2_j` 대비 retention 단조성, posterior contraction 패턴을 통과했다.
+
+## 증거 무결성
+
+`tests/testthat/test-traceability.R`은 `full-pass`로 표시된 각 실험에 대해 최신
+PASS 행을 고르고 다음을 모두 확인한다.
+
+1. 현재 package version, source digest, hash schema와 RNG policy가 일치한다.
+2. script, result, summary, contract sidecar 파일의 실제 SHA-256이 manifest와
+   일치한다.
+3. sidecar가 같은 source/parameter/artifact identity를 기록한다.
+4. 이전 source digest를 가진 행은 파일이 남아 있어도 현재 증거로 승격되지
+   않는다.
+
+최종 targeted 실행 결과는 `FAIL 0 | WARN 0 | SKIP 0 | PASS 168`이다.
+
+## 명시적 제한
+
+- V08은 이 로컬 실행에서 macOS 내 재실행 동일성만 확인했다. 정책은 raw R
+  object의 cross-platform bit identity를 약속하지 않으며, 다른 OS에서는 같은
+  v4 canonical numerical hash를 검증해야 한다.
+- V10의 자동 게이트는 렌더 성공과 의미 있는 축·subtitle·provenance caption을
+  확인한다. 시각적 미감에 대한 수동 평가는 수행하지 않았다.
+- V11의 broad stress grid는 운영 사용분포가 아니다. 향후 release-blocking
+  pass-rate interval을 두려면 PRIMO subgrid와 expected mix를 먼저 사전등록해야
+  한다.
+- V12는 저장소에 Lee 개인수준 자료 또는 digitized numeric target이 없으므로
+  Figure 4(b)의 exact `lme4` 수치 재현은 외부 참조가 확보될 때까지 deferred다.
+  현재 판정은 명시적으로 qualitative pattern evidence에 한정된다.
+
+## 최종 판정
+
+**V0–V12 current-source validation: PASS.** 이전 v0.1.1 및 이전 v0.2.0
+산출물은 역사적 기록일 뿐 이번 판정의 근거로 사용하지 않았다.

@@ -17,19 +17,24 @@ mode <- Sys.getenv("MULTISITEDGP_VALIDATION_MODE", unset = "full")
 fixtures <- validation_env_int("MULTISITEDGP_VALIDATION_REPS", if (identical(mode, "full")) 100L else 10L)
 seeds_per_fixture <- validation_env_int("MULTISITEDGP_VALIDATION_SEEDS_PER_FIXTURE", if (identical(mode, "full")) 5L else 2L)
 seed_root <- validation_env_int("MULTISITEDGP_VALIDATION_SEED_ROOT", 910701L)
-resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = TRUE)
+resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = FALSE)
 overwrite <- validation_env_flag("MULTISITEDGP_VALIDATION_OVERWRITE", default = FALSE)
 run_id <- validation_run_id(experiment_id, mode)
 
 result_path <- file.path(paths$generated_dir, paste0(run_id, "-results.csv"))
 summary_path <- file.path(paths$generated_dir, paste0(run_id, "-summary.csv"))
 started_at <- Sys.time()
+parameters <- list(fixtures = fixtures, seeds_per_fixture = seeds_per_fixture)
+run_state <- validation_prepare_run(
+  paths, run_id, experiment_id, mode, seed_root, parameters, script_path,
+  result_path, summary_path, resume = resume, overwrite = overwrite
+)
 
-if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(result_path, summary_path)) {
+if (identical(run_state$action, "reuse")) {
   summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
   status <- if (nrow(summary) == 1L && isTRUE(summary$acceptance_pass[[1L]])) "pass" else "fail"
   ended_at <- Sys.time()
-  validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, fixtures * seeds_per_fixture, script_path, result_path, summary_path, "Existing V07 output reused.")
+  validation_record_reuse(paths, run_state, started_at, ended_at, "Compatible V07 output reused.")
   message("Resumed existing V07 output: ", result_path)
   validation_maybe_stop_for_blocker(status, "V07 validation failed in resumed output.")
   quit(status = 0)
@@ -178,7 +183,7 @@ validation_write_csv(fixture_summary, file.path(paths$generated_dir, paste0(run_
 
 status <- if (isTRUE(summary$acceptance_pass)) "pass" else "fail"
 ended_at <- Sys.time()
-validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, nrow(results), script_path, result_path, summary_path, "V07 Paradigm B exact I/R recovery evidence.")
+validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, nrow(results), script_path, result_path, summary_path, "V07 Paradigm B exact I/R recovery evidence.", parameters = parameters)
 print(summary)
 message("V07 status: ", status)
 validation_maybe_stop_for_blocker(status, "V07 validation failed acceptance criteria.")

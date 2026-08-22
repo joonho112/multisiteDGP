@@ -16,7 +16,7 @@ experiment_id <- "V11"
 mode <- Sys.getenv("MULTISITEDGP_VALIDATION_MODE", unset = "full")
 M <- validation_env_int("MULTISITEDGP_VALIDATION_REPS", if (identical(mode, "full")) 100L else 3L)
 seed_root <- validation_env_int("MULTISITEDGP_VALIDATION_SEED_ROOT", 911101L)
-resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = TRUE)
+resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = FALSE)
 overwrite <- validation_env_flag("MULTISITEDGP_VALIDATION_OVERWRITE", default = FALSE)
 parallel <- validation_env_flag("MULTISITEDGP_VALIDATION_PARALLEL", default = FALSE)
 run_id <- validation_run_id(experiment_id, mode)
@@ -27,12 +27,44 @@ summary_path <- file.path(paths$generated_dir, paste0(run_id, "-summary.csv"))
 started_at <- Sys.time()
 acceptance_rule_version <- "phase9-v11-artifact-calibration-v2"
 source_result_path <- NA_character_
+parameters <- list(
+  M = M,
+  parallel = parallel,
+  reuse_source_run_id = reuse_source_run_id,
+  acceptance_rule_version = acceptance_rule_version
+)
 
-if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(result_path, summary_path)) {
+if (nzchar(reuse_source_run_id)) {
+  source_result_candidate <- file.path(paths$generated_dir, paste0(reuse_source_run_id, "-results.csv"))
+  source_summary_candidate <- file.path(paths$generated_dir, paste0(reuse_source_run_id, "-summary.csv"))
+  source_parameters <- list(
+    M = M,
+    parallel = parallel,
+    reuse_source_run_id = "",
+    acceptance_rule_version = acceptance_rule_version
+  )
+  source_state <- validation_prepare_run(
+    paths, reuse_source_run_id, experiment_id, mode, seed_root, source_parameters,
+    script_path, source_result_candidate, source_summary_candidate,
+    resume = TRUE, overwrite = FALSE
+  )
+  if (!identical(source_state$action, "reuse")) {
+    stop("Requested V11 source run did not resolve to compatible evidence.", call. = FALSE)
+  }
+  parameters$source_result_sha256 <- validation_file_hash(source_result_candidate)
+  parameters$source_contract_sha256 <- validation_file_hash(source_state$sidecar_path)
+}
+
+run_state <- validation_prepare_run(
+  paths, run_id, experiment_id, mode, seed_root, parameters, script_path,
+  result_path, summary_path, resume = resume, overwrite = overwrite
+)
+
+if (identical(run_state$action, "reuse")) {
   summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
   status <- if (nrow(summary) == 1L && isTRUE(summary$acceptance_pass[[1L]])) "pass" else "fail"
   ended_at <- Sys.time()
-  validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, summary$rows[[1L]], script_path, result_path, summary_path, "Existing V11 output reused.")
+  validation_record_reuse(paths, run_state, started_at, ended_at, "Compatible V11 output reused.")
   message("Resumed existing V11 output: ", result_path)
   validation_maybe_stop_for_blocker(status, "V11 validation failed in resumed output.")
   quit(status = 0)
@@ -402,7 +434,7 @@ manifest_note <- if (nzchar(reuse_source_run_id)) {
 } else {
   "V11 scenario_audit baseline calibration evidence."
 }
-validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, nrow(grid) * M, script_path, result_path, summary_path, manifest_note)
+validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, nrow(grid) * M, script_path, result_path, summary_path, manifest_note, parameters = parameters)
 print(summary)
 message("V11 status: ", status)
 validation_maybe_stop_for_blocker(status, "V11 validation failed acceptance criteria.")

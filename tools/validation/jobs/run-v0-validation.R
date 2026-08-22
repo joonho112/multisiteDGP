@@ -16,20 +16,25 @@ experiment_id <- "V0"
 mode <- Sys.getenv("MULTISITEDGP_VALIDATION_MODE", unset = "full")
 reps <- validation_env_int("MULTISITEDGP_VALIDATION_REPS", if (identical(mode, "full")) 1000L else 10L)
 seed_root <- validation_env_int("MULTISITEDGP_VALIDATION_SEED_ROOT", 910001L)
-resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = TRUE)
+resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = FALSE)
 overwrite <- validation_env_flag("MULTISITEDGP_VALIDATION_OVERWRITE", default = FALSE)
 run_id <- validation_run_id(experiment_id, mode)
 
 result_path <- file.path(paths$generated_dir, paste0(run_id, "-results.csv"))
 summary_path <- file.path(paths$generated_dir, paste0(run_id, "-summary.csv"))
 started_at <- Sys.time()
+parameters <- list(reps = reps)
+run_state <- validation_prepare_run(
+  paths, run_id, experiment_id, mode, seed_root, parameters, script_path,
+  result_path, summary_path, resume = resume, overwrite = overwrite
+)
 
-if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(result_path, summary_path)) {
+if (identical(run_state$action, "reuse")) {
   summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
   active_summary <- summary[summary$shape != "DPM", , drop = FALSE]
   status <- if (nrow(active_summary) > 0L && isTRUE(all(active_summary$acceptance_pass))) "pass" else "fail"
   ended_at <- Sys.time()
-  validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, reps, script_path, result_path, summary_path, "Existing V0 output reused.")
+  validation_record_reuse(paths, run_state, started_at, ended_at, "Compatible V0 output reused.")
   message("Resumed existing V0 output: ", result_path)
   validation_maybe_stop_for_blocker(status, "V0 validation failed in resumed output.")
   quit(status = 0)
@@ -314,7 +319,7 @@ summary_path <- validation_write_csv(summary, summary_path)
 
 status <- if (nrow(complete) == length(active_shapes) * reps && all(summary$acceptance_pass[summary$shape != "DPM"])) "pass" else "fail"
 ended_at <- Sys.time()
-validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, reps, script_path, result_path, summary_path, "Full V0 acceptance uses aggregate shape-level calibration, trimmed R, and reporting-only legacy per-rep gates.")
+validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, reps, script_path, result_path, summary_path, "Full V0 acceptance uses aggregate shape-level calibration, trimmed R, and reporting-only legacy per-rep gates.", parameters = parameters)
 print(summary)
 message("V0 status: ", status)
 validation_maybe_stop_for_blocker(status, "V0 validation failed acceptance criteria.")
