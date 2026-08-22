@@ -113,6 +113,8 @@ test_that("the tail gates fire on their own, without the median gates", {
   out <- suppressWarnings(scenario_audit(g, M = 30L, thresholds = thresholds))
 
   expect_identical(out$status, "WARN")
+  expect_false(out$pass)
+  expect_gt(out$n_warnings, 0L)
   expect_identical(out$fail_reasons, "")
   for (gate in c("mean_shrinkage", "feasibility", "R", "bhattacharyya", "ks")) {
     expect_match(out$warn_reasons, gate, fixed = TRUE)
@@ -128,6 +130,9 @@ test_that("a cell with no violations reports PASS and empty reason strings", {
 
   expect_identical(out$status, "PASS")
   expect_true(out$pass)
+  expect_true(out$audit_complete)
+  expect_identical(out$groups_evaluated, "A,B,C,D")
+  expect_identical(out$threshold_profile, "replicate-grid-audit-v1")
   expect_identical(out$n_violations, 0L)
   expect_identical(out$fail_reasons, "")
   expect_identical(out$warn_reasons, "")

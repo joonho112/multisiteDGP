@@ -43,25 +43,24 @@
 #'
 #' @return A tibble with one row per design-grid cell, columns include
 #'   the cell's design parameters plus aggregated diagnostics and
-#'   pass/fail flags. `target_source` reports whether the Group C
-#'   distributional gates ran (`"auto"`) or were skipped for want of a
-#'   reference distribution (`"not_available"`).
+#'   PASS/WARN/FAIL status and a literal logical `pass` (`TRUE` only for
+#'   `status == "PASS"`). `audit_complete` and `groups_evaluated` state
+#'   whether all four groups ran. `threshold_profile` identifies these as
+#'   replicate-grid gates, distinct from the single-run summary rubric.
 #'
 #' @section Group C coverage:
 #' The Group C gates (`bhattacharyya`, `ks`) compare the realized
-#' standardized residuals against a reference quantile function for the
-#' declared shape. Only `Gaussian` and `StudentT` have one, so a design
+#' standardized residuals against a package-defined reference distribution
+#' for the declared shape. Only `Gaussian` and `StudentT` have one, so a design
 #' declaring `SkewN`, `ALD`, `Mixture` or `PointMassSlab` is audited on
 #' Groups A, B and D and reports `target_source = "not_available"`, with
 #' `med_bhattacharyya`, `q05_bhattacharyya`, `med_ks` and `q95_ks` all
 #' `NA`. The Group C gates are skipped rather than failed: an unmeasured
 #' diagnostic is not a violated one.
 #'
-#' **This makes `pass` narrower than it looks.** `pass = TRUE` means every
-#' gate that could run did run and passed — not that every gate ran. When
-#' sweeping a grid that mixes shapes, read `target_source` alongside
-#' `pass`, or the cells that skipped a whole diagnostic group will look
-#' like the cells that cleared it.
+#' `pass = TRUE` means the literal status is PASS. It does not imply that every
+#' group was runnable. When sweeping a grid that mixes shapes, require both
+#' `pass` and `audit_complete` if the decision needs all A/B/C/D groups.
 #'
 #' A manual Group C check is still available for any shape: draw a
 #' reference sample from the declared distribution and pass it as the
@@ -293,8 +292,8 @@ scenario_audit <- function(
 .audit_scenario_replicate <- function(design, cell_id, rep_id, seed) {
   dat <- .simulate_scenario_replicate(design, seed)
   diag <- attr(dat, "diagnostics", exact = TRUE)
-  # Group C needs a reference quantile function for the declared shape, and only
-  # Gaussian and StudentT have one. v0.1.x called the diagnostics unconditionally,
+  # Group C needs a package-defined reference distribution for the declared
+  # shape, and only Gaussian and StudentT have one. v0.1.x called the diagnostics unconditionally,
   # so auditing a SkewN / ALD / Mixture / PointMassSlab design aborted the whole
   # run — four of the seven shapes could not be audited at all (D-031). Report
   # the metric as unmeasured instead; .scenario_fail_reasons() is told not to
@@ -360,9 +359,13 @@ scenario_audit <- function(
 
   tibble::tibble(
     status = status,
-    pass = !identical(status, "FAIL"),
+    pass = identical(status, "PASS"),
+    audit_complete = isTRUE(group_c),
+    groups_evaluated = if (group_c) "A,B,C,D" else "A,B,D",
     target_source = if (group_c) "auto" else "not_available",
+    threshold_profile = "replicate-grid-audit-v1",
     n_violations = length(fail_reasons),
+    n_warnings = length(warn_reasons),
     fail_reasons = paste(fail_reasons, collapse = "; "),
     warn_reasons = paste(warn_reasons, collapse = "; "),
     med_I_hat = med(rep_metrics$I_hat),

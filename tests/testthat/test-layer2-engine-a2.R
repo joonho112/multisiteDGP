@@ -74,9 +74,40 @@ test_that("Engine A2 deterministic CV zero path consumes no RNG", {
 test_that("Engine A2 conditioning warnings are soft guidance", {
   warn_conditioning <- multisitedgp_internal(".warn_trunc_gamma_conditioning")
 
-  expect_warning(warn_conditioning(n_bar = 50, cv = 0.0005, n_min = 5L), "cannot verify this site-size fit")
+  expect_silent(warn_conditioning(n_bar = 50, cv = 0.0005, n_min = 5L))
   expect_warning(warn_conditioning(n_bar = 50, cv = 1.6, n_min = 5L), "large")
   expect_warning(warn_conditioning(n_bar = 6, cv = 0.5, n_min = 5L), "close to the lower")
+})
+
+test_that("Engine A2 verifies the former tiny-CV counterexample on both moments", {
+  solution <- a2_solve(n_bar = 100, cv = 1e-5, n_min = 5L)
+  moments <- a2_moments(solution$alpha, solution$beta, 5L)
+
+  expect_equal(moments$mean, 100, tolerance = 1e-8)
+  expect_equal(moments$sd, 0.001, tolerance = 1e-8)
+  expect_lte(abs(solution$residual[["mean"]]), solution$tol_effective[["mean"]])
+  expect_lte(abs(solution$residual[["sd"]]), solution$tol_effective[["sd"]])
+  expect_identical(solution$tol_effective[["mean"]], 1e-6)
+})
+
+test_that("Engine A2 never applies SD verification tolerance to a bad mean", {
+  # mean = 5 and sd = 0.001 for an effectively untruncated Gamma. Under the
+  # old shared floor this 95% mean error was accepted at tiny cv.
+  testthat::local_mocked_bindings(
+    .nleqslv_solve = function(...) {
+      list(
+        x = log(c(2.5e7, 5e6)),
+        termcd = 1L,
+        message = "mocked bad mean / correct SD"
+      )
+    },
+    .package = "multisiteDGP"
+  )
+
+  expect_multisitedgp_error(
+    a2_solve(n_bar = 100, cv = 1e-5, n_min = 5L),
+    "multisitedgp_solver_error"
+  )
 })
 
 test_that("Engine A2 accepts mocked solver term code when residuals verify", {

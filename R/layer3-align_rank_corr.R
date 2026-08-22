@@ -14,11 +14,12 @@
 #'
 #' @details
 #' \strong{Hill-climb algorithm.} The package starts from the upstream
-#' (Layer 2) ordering of `(se2_j, se_j, n_j)` and proposes random pair
-#' swaps. A swap is accepted if it brings the realized residual Spearman
-#' correlation closer to `rank_corr`; otherwise it is rejected. The search
-#' continues until the realized correlation lands within `tol` of the
-#' target or until `max_iter` swaps have been proposed. The result is the
+#' (Layer 2) ordering of `(se2_j, se_j, n_j)` and a deterministic
+#' target-sorted starting permutation, keeps whichever is closer, and then
+#' scans every possible pair swap. At each iteration it accepts the first
+#' best improving swap (lexicographic tie break). The search continues until
+#' the realized correlation lands within `tol` of the target, no improving
+#' pair remains, or `max_iter` improving swaps have been accepted. The result is the
 #' best-effort permutation found within budget — for moderate
 #' \eqn{|rank_{corr}| \le 0.7} and `max_iter = 20,000` (the default) the
 #' algorithm converges reliably; near \eqn{|rank_{corr}| \approx 1} the
@@ -47,10 +48,8 @@
 #' dependence — three injection methods} vignette.
 #'
 #' @section RNG policy:
-#' Built-in hill-climb proposes swaps via `sample.int()` and accepts /
-#' rejects deterministically based on the resulting correlation. The
-#' active `sample.int()` RNG is consumed; under a wrapper seed
-#' (`sim_multisite()` / `sim_meta()` with `seed`), runs are bit-identical.
+#' The built-in hill-climb is deterministic and consumes no RNG: it scans all
+#' pair swaps and uses stable index order to break equal improvements.
 #' Custom `dependence_fn` callbacks own their own RNG.
 #'
 #' @param upstream A Layer 2 data frame with canonical columns
@@ -61,8 +60,8 @@
 #'   values: `0.3` (moderate positive — small sites tend to have larger
 #'   effects), `-0.5` (moderate negative — selection-on-effect-size in
 #'   meta-analysis). `|rank_corr| > 0.95` triggers a near-boundary warning.
-#' @param max_iter Integer (\eqn{\ge 100}). Maximum number of swap
-#'   proposals. Default `20000L`.
+#' @param max_iter Integer (\eqn{\ge 100}). Maximum number of improving
+#'   pair swaps accepted after initialization. Default `20000L`.
 #' @param tol Numeric (> 0). Absolute tolerance for the realized residual
 #'   Spearman correlation. Default `0.02`.
 #' @param dependence_fn Optional callback. See Details for the contract.

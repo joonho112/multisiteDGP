@@ -16,10 +16,18 @@
 #' run \code{\link{align_copula_corr}} with `pearson_corr` chosen so the
 #' implied Spearman matches `rank_corr`. (Alternative: `init = "rank"`
 #' starts from a partial-sort permutation seeded by ordered indexing.)
-#' Stage 2 — polish. By default, run a hill-climb on the Stage 1 output
+#' Stage 2 — polish. By default, run a deterministic hill-climb on the Stage 1 output
 #' until the realized Spearman lands within `tol` of `rank_corr` or
-#' `max_iter` swaps have been proposed. Stage 2 can be skipped with
+#' `max_iter` improving swaps have been accepted. Stage 2 can be skipped with
 #' `polish = "none"` for a copula-only result.
+#'
+#' \strong{Null-target convention.} `rank_corr = 0` returns the upstream
+#' ordering unchanged and consumes no RNG. This encodes the population null
+#' of no injected dependence; finite-sample realized Spearman is therefore
+#' allowed to differ from zero by ordinary Monte Carlo variation and may lie
+#' outside `tol`. Likewise, `init = "rank", polish = "none"` is the explicit
+#' non-targeting identity configuration and can be unconverged for a nonzero
+#' target.
 #'
 #' \strong{Why it's the default.} Pure copula (Stage 1 only) is fast but
 #' has finite-J slack on the realized Spearman; pure hill-climb is exact
@@ -37,10 +45,9 @@
 #' dependence — three injection methods} vignette.
 #'
 #' @section RNG policy:
-#' Stage 1 (copula init) consumes one `rnorm()` draw per site at finite
-#' `pearson_corr`. Stage 2 (hill-climb polish) proposes swaps via
-#' `sample.int()` and accepts deterministically; consumes the active
-#' `sample.int()` RNG. Both stages are wrapped in the caller's seed when
+#' Stage 1 (copula init) consumes one `rnorm()` draw per site at finite,
+#' nonzero `pearson_corr`. Stage 2 scans all pair swaps deterministically
+#' and consumes no RNG. Both stages are wrapped in the caller's seed when
 #' invoked through \code{\link{sim_multisite}} / \code{\link{sim_meta}}.
 #'
 #' @param upstream A Layer 2 data frame with canonical columns
@@ -52,8 +59,8 @@
 #'   recommended) or `"rank"` (partial-sort start).
 #' @param polish Character. Polishing mode — `"hill_climb"` (default,
 #'   recommended) or `"none"` (copula-only).
-#' @param max_iter Integer (\eqn{\ge 100}). Maximum swap proposals during
-#'   the polish stage. Default `20000L`.
+#' @param max_iter Integer (\eqn{\ge 100}). Maximum improving pair swaps
+#'   accepted during the polish stage. Default `20000L`.
 #' @param tol Numeric (> 0). Absolute tolerance for the realized residual
 #'   Spearman. Default `0.02`.
 #' @param dependence_fn Optional callback. See \code{\link{align_rank_corr}}

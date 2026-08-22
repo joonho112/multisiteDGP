@@ -33,6 +33,8 @@ test_that("every catalog shape can be audited without aborting", {
 test_that("shapes with an automatic reference report target_source auto", {
   for (a in list(audit_shape("Gaussian"), audit_shape("StudentT", list(nu = 5)))) {
     expect_identical(a$target_source, "auto")
+    expect_true(a$audit_complete)
+    expect_identical(a$groups_evaluated, "A,B,C,D")
     expect_false(is.na(a$med_bhattacharyya))
     expect_false(is.na(a$med_ks))
   }
@@ -42,6 +44,8 @@ test_that("shapes without one report not_available and NA Group C columns", {
   for (nm in names(shapes_without_reference)) {
     a <- audit_shape(nm, shapes_without_reference[[nm]])
     expect_identical(a$target_source, "not_available")
+    expect_false(a$audit_complete)
+    expect_identical(a$groups_evaluated, "A,B,D")
     for (col in c("med_bhattacharyya", "q05_bhattacharyya", "med_ks", "q95_ks")) {
       expect_true(is.na(a[[col]]), info = sprintf("%s / %s", nm, col))
     }
