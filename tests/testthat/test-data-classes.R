@@ -26,9 +26,10 @@ test_that("multisitedgp_data constructor creates canonical tibble subclass", {
   expect_identical(attr(dat, "diagnostics"), diagnostics)
   expect_identical(attr(dat, "paradigm"), "site_size")
   expect_named(attr(dat, "provenance"), c(
-    "seed", "multisitedgp_version", "R_version", "platform", "canonical_hash",
+    "seed", "multisitedgp_version", "R_version", "platform", "rng_kind",
+    "rng_policy", "canonical_hash",
     "design_hash", "hash_algo", "hash_schema_version", "paradigm", "preset",
-    "call", "function_exclusion_policy", "custom_hooks"
+    "preset_metadata", "call", "function_exclusion_policy", "custom_hooks"
   ))
   expect_identical(attr(dat, "provenance")$seed, 1L)
   expect_identical(attr(dat, "provenance")$paradigm, "site_size")

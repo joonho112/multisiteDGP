@@ -1,176 +1,127 @@
-# Reproducibility Policy
+# Cross-OS Reproducibility Verification Policy
 
-Status: multisiteDGP 0.2.0. Supersedes the v0.1 policy in full — see [What
-changed in v0.2.0](#what-changed-in-v020) for why the old structure is gone.
+Status: release policy for multisiteDGP 0.2.0. Public-facing language is
+defined in `inst/REPRODUCIBILITY.md`; this file specifies maintainer checks.
 
-## The contract
+## Contract under test
 
-**The same design and the same seed produce the same data, on any platform,
-bit for bit — and therefore the same `canonical_hash()`.**
+For the same validated design, non-`NULL` seed, package code, and hash schema,
+supported platforms must agree on canonical numerical content and on
+`canonical_hash()`. A seeded wrapper pins `Mersenne-Twister` / `Inversion` /
+`Rejection` and restores the caller's prior RNG kind and `.Random.seed`.
 
-That is the whole promise. There is no platform hierarchy, no authoritative
-operating system, and no per-OS exemption. A hash you record on your laptop is
-a hash a reviewer can reproduce on theirs.
+The following claims are intentionally out of scope:
 
-Two things follow from it.
+- byte identity of in-memory R objects or `.rds` serialization;
+- equality below the nine-significant-digit canonical precision;
+- replay from design alone when `seed = NULL`;
+- identity of custom callback implementations that share a hook name.
 
-- **`canonical_hash()` is a portable identity.** Quote it in a manuscript, a
-  log, or an issue and it means the same thing everywhere.
-- **A hash mismatch is a real difference.** It means the design, the seed, the
-  package version or the data genuinely differ. It is never platform noise.
+## Hash payload: schema v4
 
-## What is covered
+The v4 payload contains canonicalized data, column names, factor semantics,
+paradigm, design hash, schema version, and callback hook names. Numeric values
+are rounded to nine significant digits. Derived diagnostics are excluded by
+default; named opt-in diagnostics are numerically canonicalized before
+hashing. Package version, R runtime, and platform remain provenance fields,
+not hash fields.
 
-`canonical_hash()` covers the simulated data columns, the column names, and a
-manifest that carries the paradigm, `design_hash`, the schema version and the
-names of any user callbacks.
+This definition admits two edge cases that tests must document:
 
-**The package version is deliberately not hashed.** A hash gets quoted in a
-manuscript or an issue as an anchor for "this data, this design", and a version
-in the payload made every release invalidate every recorded hash even when
-nothing about the data moved. v0.1.x worked around that with a hardcoded lineage
-bucket collapsing `0.0.0.9000` and `0.1.*` into one string; it had no rule for
-`0.2` and the bump moved every hash. What moves the hash when the package
-changes what the hash *means* is `hash_schema_version`, and that is the thing
-worth pinning. The producing version is still recorded on the object's
-provenance attribute and printed.
+1. sub-precision raw differences can have the same canonical hash;
+2. values straddling a rounding boundary can have different hashes despite a
+   very small absolute difference.
 
-**Data columns are hashed exactly, with no rounding.** Each is platform stable
-for a specific reason:
+Neither outcome is a contradiction. The hash identifies the defined
+canonical equivalence class, not the raw byte stream.
 
-| Column | Why it is stable |
-|---|---|
-| `n_j` | rounded to an integer before it leaves Layer 2 |
-| `z_j`, `tau_j` | drawn from R's own RNG, which is identical across platforms |
-| `se_j`, `se2_j`, `tau_j_hat` | IEEE arithmetic on the above |
-| `site_index` | integer |
+## Required tests
 
-## What is deliberately excluded
+### RNG isolation
 
-**Derived diagnostics** — `I_hat`, `R_hat`, `rho_S_*`, `rho_P_*`,
-`sigma_tau_*`. They are computed with `cor()`, `sd()` and `mean()`, whose
-floating-point accumulation order varies by platform. The drift is visible even
-on a single machine: for a covariate-free design `rho_P_marginal` and
-`rho_P_residual` are mathematically identical yet differ in their last digits.
+Run every locked seeded case after at least two caller RNG configurations,
+including `Mersenne-Twister` and `L'Ecuyer-CMRG`. Assert:
 
-Excluding them costs nothing. They are functions of the hashed data and the
-hashed design, so they add no provenance the hash does not already carry — only
-noise.
+- identical generated columns and canonical hashes;
+- exact restoration of the caller's RNG triple;
+- exact restoration of an existing `.Random.seed`;
+- continued absence of `.Random.seed` when none existed before the call;
+- provenance records the pinned triple and `rng_policy = "package-pinned"`.
 
-A caller who wants one pinned deliberately can still ask:
+### Hash semantics
+
+Assert that factor labels, level ordering, orderedness, column order, and
+schema changes affect the hash. Assert that data-frame and tibble
+representations with the same supported semantics agree. Lock examples for
+the two rounding-boundary edge cases above.
+
+### Provenance
+
+For every full-object golden fixture, assert:
 
 ```r
-canonical_hash(dat, diagnostics_to_include = "I_hat")
+identical(
+  attr(fixture, "provenance")$canonical_hash,
+  canonical_hash(fixture)
+)
 ```
 
-**Function bodies and environments.** Callbacks (`g_fn`, `se_fn`,
-`dependence_fn`) are recorded by presence and hook name, not by body. Two runs
-that pass different closures with the same role hash the same; the manifest
-records that a hook was present.
+`provenance_string()` must display the stored producing R version, platform,
+RNG triple, and schema separately from the current verifier runtime. Mutated
+test provenance must trigger an R/platform mismatch warning.
 
-## What this rests on
+### Cross-platform matrix
 
-The contract holds because every hashed column is platform stable. **Adding a
-libm-dependent quantity to a data column would break it**, and the symptom
-would be a cross-platform hash mismatch that looks like the v0.1 problem all
-over again. Weigh that before introducing one.
+Required `R CMD check` targets:
 
-Engine A2's truncated-Gamma solver is the case that made this concrete. It
-calls `nleqslv` with `ftol = 1e-12`, so its solution is pinned only to about
-1e-12 relative — five starting points land roughly 5,000 ULP apart and all
-satisfy the tolerance. Two guards keep that out of the data:
+- Linux release, devel, and oldrel;
+- macOS release;
+- Windows release.
 
-- the solution is quantised to `.TRUNC_GAMMA_SOLUTION_DIGITS` significant
-  digits before anything downstream sees it, and start selection compares
-  residual norms at a coarser precision so libm differences cannot reorder
-  near-ties;
-- `n_j` is an integer, which absorbs what is left.
+The matrix compares v4 canonical hashes for a small locked corpus covering
+both wrappers, every built-in effect family, both site-size engines, direct
+precision, and dependence methods. Platform reports must include package
+version, R version, platform, RNG triple, schema, design hash, and canonical
+hash.
 
-## Verification precision, not just verification
+## Fixture manifests
 
-Engine A2's post-solve check compares a scaled residual against a tolerance.
-Below a certain conditioning that comparison measures floating-point noise
-rather than fit quality, and the verdict becomes platform dependent — the same
-design passed on macOS and aborted on Linux.
+Each manifest row must record:
 
-The tolerance is therefore derived, not fixed:
+- fixture path and file SHA-256;
+- canonical hash and hash schema;
+- package version and source revision;
+- R version and platform;
+- RNG triple and resolved seed;
+- generator script path and SHA-256.
 
-```
-tol_effective = max(tol, noise_floor(alpha, cv))
-```
+Binary SHA equality is only an integrity check for the checked-in artifact.
+Canonical-hash equality is the cross-platform numerical criterion.
 
-where the floor comes from the two cancellations in the moment evaluation —
-`lgamma(alpha + k) - lgamma(alpha)` and `sd^2 = E[X^2] - E[X]^2` — and was
-calibrated against a measured `(n_bar, cv, n_min)` grid. `solve_trunc_gamma()`
-returns `tol_effective` so the decision is inspectable.
+## Regeneration and release gates
 
-When the floor exceeds a relative error of `1e-3` on the realized site-size SD,
-the fit is accepted but a warning says so and quotes the number. The design
-still runs; the user is told its SD is only checkable to that level.
+Regeneration requires a stated reason and a clean comparison of old versus new
+canonical hashes. A release is blocked when:
 
-## Same-machine reproducibility
+- caller RNG configuration changes a seeded result;
+- the wrapper leaks or manufactures caller RNG state;
+- supported platforms disagree on a locked v4 canonical hash;
+- a fixture's stored provenance, manifest hash, and recomputed hash disagree;
+- source, generator, artifact, or validation evidence hashes are stale;
+- the schema changes without updating policy, NEWS, fixtures, literals, and
+  validation evidence together.
 
-Unchanged and still required. Given the same package version, R runtime,
-machine, design and seed, repeated calls return identical
-`canonical_hash()` values, and a seed-supplied wrapper call leaves the
-caller's `.Random.seed` untouched. Invariant T20 covers this on every OS.
+The environment marker for CI is:
 
-## CI
-
-Required `R CMD check` matrix, all treated identically:
-
-- `linux-release`, `linux-devel`, `linux-oldrel`
-- `macos-release`
-- `windows-release`
-
-Required environment:
-
-```
-_R_CHECK_FORCE_SUGGESTS_=false
-MULTISITEDGP_REPRODUCIBILITY_POLICY=portable-hash-v3
+```text
+MULTISITEDGP_REPRODUCIBILITY_POLICY=portable-numerical-hash-v4
 ```
 
-`extended-tests` runs weekly on a schedule and opens a GitHub issue when it
-fails, so a red scheduled run cannot pass unnoticed. GitHub disables scheduled
-workflows after 60 days of repository inactivity; the same job reports that it
-ran, so a silent stop is visible too.
+## Migration record
 
-## Regenerating fixtures
-
-Any platform. Golden fixtures, print examples and the JEBS manifest produce the
-same bytes everywhere, so there is no authoritative machine and no
-`ALLOW_NON_LINUX_*` gate on correctness. The environment variables remain as a
-speed bump against accidental regeneration, not as a platform claim.
-
-```sh
-Rscript tests/data-raw/generate_golden_fixtures.R
-Rscript tests/data-raw/generate_print_examples.R
-Rscript tools/jebs-golden-fixtures/generate-jebs-golden-fixtures.R
-```
-
-Regenerate only when a change is *meant* to move the data, and say why in the
-commit. A fixture diff that nobody intended is a regression, not a refresh.
-
-## Release-blocking failures
-
-- `canonical_hash()` differs across the CI matrix for the same design and seed.
-- Same-machine reproducibility fails on any OS.
-- A seed-supplied wrapper call mutates the caller's RNG state.
-- Golden fixtures change without a stated reason.
-- The hash schema changes without a documented decision and a `NEWS.md` entry.
-
-## What changed in v0.2.0 {#what-changed-in-v020}
-
-The v0.1 policy named Ubuntu Linux the strict baseline and demoted macOS and
-Windows from hash equality. That structure existed because the hash could not
-be made portable — and it did not work. The checked-in fixtures were generated
-on macOS while the policy named Linux authoritative, so the two contradicted
-each other, `test-golden.R` compared `.rds` files byte-for-byte with no
-platform gate at all, and the weekly `extended-tests` run failed for ten
-consecutive weeks.
-
-The v0.1 diagnosis was that the drift could not be removed. It was half right:
-the data was already portable, and only the derived diagnostics were not.
-Dropping them from the hash (schema v3) made the contract achievable, and the
-platform hierarchy became unnecessary. See defect ledger rows D-002, D-007,
-D-022 and D-024 in `log/log-version-up-2026-08-14/`.
+v3 excluded package version and default diagnostics, but its published policy
+mixed exact-data and rounded-data claims and did not pin the RNG kind. v4
+defines a single numerical-equivalence contract, pins seeded RNG behavior,
+retains factor semantics, normalizes opt-in diagnostics, and separates
+producer from verifier provenance. Consequently all v3 hash literals and
+full-object fixture provenance must be regenerated before release.

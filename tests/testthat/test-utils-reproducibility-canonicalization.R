@@ -97,10 +97,9 @@ test_that("atomic vectors are stripped of names and attributes", {
 })
 
 test_that("doubles are rounded so sub-1e-9 drift cannot move the hash", {
-  # v3 drops the derived diagnostics *and* rounds what is left. An earlier
-  # attempt dropped the diagnostics only, on the reasoning that the data must
-  # be portable since the golden .rds fixtures compare byte-identical across
-  # platforms. CI disproved it — other designs still drift below 1e-9.
+  # v3 dropped the derived diagnostics and rounded what remained; v4 retains
+  # that precision policy. Limited fixtures had appeared byte-stable, but
+  # broader CI cases still drifted below 1e-9.
   x1 <- c(1.2345678901234, 2, 3)
   x2 <- x1
   x2[1] <- x2[1] * (1 + 2 * .Machine$double.eps)
@@ -121,7 +120,7 @@ test_that("integer and logical columns keep their type", {
   expect_identical(canon(c(TRUE, FALSE, NA)), c(TRUE, FALSE, NA))
 })
 
-test_that("the diagnostics allowlist is empty in schema v3", {
+test_that("the diagnostics allowlist is empty in schema v4", {
   # The diagnostics are computed from the hashed data and the hashed design, so
   # they add no provenance — only cor()/sd() accumulation noise, which is what
   # made the cross-platform contract unachievable (D-002).
@@ -142,8 +141,8 @@ test_that("a caller can still pin diagnostics explicitly", {
   expect_false(identical(with_diag, without))
 })
 
-test_that("the hash schema version is v3", {
-  expect_identical(.hash_schema_version(), "multisiteDGP-canonical-hash-v3")
+test_that("the hash schema version is v4", {
+  expect_identical(.hash_schema_version(), "multisiteDGP-canonical-hash-v4")
 })
 
 # ── payload 조립 ──────────────────────────────────────────────────────

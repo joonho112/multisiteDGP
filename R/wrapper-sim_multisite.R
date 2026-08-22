@@ -19,7 +19,7 @@
 #' @details
 #' The simulation runs four generative layers in order:
 #' \describe{
-#'   \item{\strong{Layer 1 — latent effects} (\code{\link{gen_effects}})}{Draws standardized site effects \eqn{z_j} from one of seven \eqn{G} distributions and rescales to \eqn{\tau_j = \tau + \sigma_\tau\,z_j}.}
+#'   \item{\strong{Layer 1 — latent effects} (\code{\link{gen_effects}})}{Draws standardized site effects \eqn{z_j} from six built-ins or a `User` callback and rescales to \eqn{\tau_j = \tau + \sigma_\tau\,z_j}.}
 #'   \item{\strong{Layer 2 — site-level precision} (\code{\link{gen_site_sizes}})}{Builds the per-site sampling variance \eqn{\widehat{se}_j^2 = \kappa / n_j} from generated site sizes \eqn{n_j}.}
 #'   \item{\strong{Layer 3 — precision dependence} (\code{\link{align_rank_corr}}, \code{\link{align_copula_corr}}, \code{\link{align_hybrid_corr}})}{Optionally aligns \eqn{\widehat{se}_j^2} against \eqn{\tau_j} to a target Spearman correlation, preserving both marginals exactly.}
 #'   \item{\strong{Layer 4 — observation draws} (\code{\link{gen_observations}})}{Draws the observed estimate \eqn{\widehat{\tau}_j \sim \mathcal{N}(\tau_j,\, \widehat{se}_j^2)}.}
@@ -29,8 +29,9 @@
 #' to the returned `multisitedgp_data` alongside the `diagnostics` and
 #' `provenance` attributes. The canonical hash is stored at
 #' `attr(x, "provenance")$canonical_hash` (not as a top-level attribute) and
-#' is the cross-machine reproducibility identifier — two machines producing
-#' the same hash will have generated bit-identical site-level tibbles.
+#' is the cross-machine reproducibility identifier. Equal hashes establish
+#' equality of the canonicalized numerical content under the recorded hash
+#' schema; they do not assert byte-for-byte identity of the in-memory object.
 #'
 #' For a workflow walkthrough see the
 #' \href{../articles/a1-getting-started.html}{Getting started} vignette. For
@@ -40,10 +41,10 @@
 #' @section RNG policy:
 #' If `seed` is `NULL`, the pipeline runs under the caller's active RNG state
 #' and consumes the ordinary Layer 1/2/3/4 draws. No seed is manufactured. If
-#' `seed` is a single integer, the full pipeline is wrapped in
-#' \code{\link[withr]{with_seed}}, so the caller's global RNG state is
-#' restored on exit. The resolved seed is recorded in the `provenance`
-#' attribute.
+#' `seed` is a single integer, the full pipeline uses the package-pinned RNG
+#' triple `Mersenne-Twister` / `Inversion` / `Rejection`. The caller's RNG
+#' kind and global RNG state are restored exactly on exit. The resolved seed,
+#' RNG triple, and RNG policy are recorded in the `provenance` attribute.
 #'
 #' @param design Optional `multisitedgp_design`. If `NULL`, `...` is forwarded
 #'   to \code{\link{multisitedgp_design}} with `paradigm = "site_size"`.
@@ -56,9 +57,9 @@
 #'   `paradigm = "site_size"`; use \code{\link{sim_meta}} for direct-precision
 #'   designs.
 #' @param seed Optional integer seed override. When supplied, replaces
-#'   `design$seed` and gives bit-identical reruns. Use a small integer (e.g.
-#'   `1L`) for examples; use a 9-digit integer in production for cross-run
-#'   uniqueness.
+#'   `design$seed` and gives canonical numerical replays independent of the
+#'   caller's active RNG kind. Use a small integer (e.g. `1L`) for examples;
+#'   use a 9-digit integer in production for cross-run uniqueness.
 #'
 #' @return A `multisitedgp_data` tibble with one row per site and columns:
 #' \describe{
@@ -73,7 +74,7 @@
 #' \describe{
 #'   \item{`design`}{The locked `multisitedgp_design` object.}
 #'   \item{`diagnostics`}{Group A / B / C / D diagnostics — `I_hat`, `R_hat`, realized Spearman and Pearson correlations (residual and marginal), `sigma_tau` realized vs. target, dependence and observation diagnostics; see \code{\link{compute_I}} and \code{\link{informativeness}}.}
-#'   \item{`provenance`}{Package version, R version, platform, resolved seed, `canonical_hash`, `design_hash`, and the call expression.}
+#'   \item{`provenance`}{Package version, producing R version and platform, resolved seed, pinned RNG triple and policy, hash schema, `canonical_hash`, `design_hash`, and the call expression.}
 #'   \item{`multisitedgp_version`, `paradigm`}{Convenience copies for quick attribute lookup.}
 #' }
 #'
@@ -150,7 +151,7 @@ sim_multisite <- function(design = NULL, ..., seed = NULL) {
   out <- if (is.null(design$seed)) {
     run_layer_pipeline()
   } else {
-    withr::with_seed(design$seed, run_layer_pipeline())
+    .with_reproducible_seed(design$seed, run_layer_pipeline())
   }
 
   diagnostics <- .initial_sim_diagnostics(out, design = design)

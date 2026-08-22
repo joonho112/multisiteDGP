@@ -1,27 +1,29 @@
 # nolint start: object_name_linter, object_length_linter, cyclocomp_linter, object_usage_linter
-#' Canonical hash for cross-machine reproducibility checks
+#' Canonical numerical-content hash for reproducibility checks
 #'
 #' @encoding UTF-8
 #'
 #' @description
-#' Compute a stable content hash of a multisiteDGP simulation object —
-#' the hash that identifies whether two simulation runs produced
-#' bit-identical results. The hash is *canonical*: it normalizes column
-#' order, drops row names, excludes the derived diagnostics, and
-#' replaces callback functions with presence sentinels (so the hash is
-#' invariant under callback identity but sensitive to callback presence).
+#' Compute a stable numerical-content hash of a multisiteDGP simulation
+#' object. The hash is *canonical*: it normalizes column order, drops row
+#' names, rounds doubles to nine significant digits, excludes derived
+#' diagnostics by default, and replaces callback functions with presence
+#' sentinels. Equal hashes mean equal canonical payloads under the named
+#' schema; they do not prove byte-identical R objects or serialized files.
 #'
 #' @details
-#' \strong{The hash is portable.} The same design and the same seed give the
-#' same hash on any platform — checked on every release across Linux
-#' (release, devel, oldrel), macOS and Windows. There is no baseline
-#' operating system. A mismatch means the design, the seed, or the hash
-#' schema genuinely differs; it is never platform noise.
+#' \strong{The hash is a numerical equivalence contract.} Seeded package
+#' front doors pin the RNG algorithm, normal generator, and sample generator.
+#' Supported-platform CI checks that representative designs produce the same
+#' nine-significant-digit payload. Decimal rounding is discontinuous, so a
+#' negligible difference at a rounding boundary can still move the hash, while
+#' a genuine difference below the declared precision can be intentionally
+#' treated as equivalent.
 #'
-#' \strong{The package version is not hashed.} Upgrading multisiteDGP does not
-#' invalidate a hash you already published. What moves the hash when the
-#' package changes what the hash *means* is `hash_schema_version`, carried in
-#' the manifest. See
+#' \strong{The package version is not part of numerical content.} The producing
+#' version remains in provenance. Changes to payload meaning advance
+#' `hash_schema_version`; changes to exact serialized bytes belong in a
+#' separate artifact SHA-256. See
 #' `system.file("REPRODUCIBILITY.md", package = "multisiteDGP")` for the full
 #' installed policy.
 #'
@@ -44,11 +46,9 @@
 #'   include for data-frame-like objects. Columns are sorted before
 #'   hashing. Default `NULL` (all canonical columns).
 #' @param diagnostics_to_include Optional character vector of diagnostic
-#'   names to include. Default `NULL` (the blueprint's numeric-diagnostics
-#'   allowlist).
+#'   names to include. Default `NULL` (no derived diagnostics).
 #'
-#' @return A single character hash string of length 16 (xxhash64) or 32
-#'   (xxhash32) etc.
+#' @return A single algorithm-dependent character hash string.
 #'
 #' @family family-reproducibility
 #' @seealso
@@ -65,7 +65,7 @@
 #' dat <- sim_multisite(J = 10L, seed = 1L)
 #' canonical_hash(dat)
 #'
-#' # Same design / seed → same hash.
+#' # Same seeded design and schema -> same canonical numerical payload.
 #' identical(canonical_hash(dat), canonical_hash(sim_multisite(J = 10L, seed = 1L)))
 #' @export
 canonical_hash <- function(
@@ -93,11 +93,12 @@ canonical_hash <- function(
 #' single pipe-delimited string suitable for reports, preregistration
 #' appendices, paper appendices, and reviewer-facing figure captions.
 #' Includes package version, paradigm, seed, canonical hash, design hash,
-#' R version, and any custom-callback hooks.
+#' schema, producer runtime/platform/RNG, verifier runtime/platform, and
+#' custom-callback hooks.
 #'
 #' @details
 #' Output format:
-#' \preformatted{multisiteDGP 0.1.0 | paradigm=site_size | seed=1 | canonical_hash=... | design_hash=... | hash_algo=xxhash64 | R=4.5 | hooks=none}
+#' \preformatted{multisiteDGP 0.2.0 | paradigm=site_size | seed=1 | canonical_hash=... | design_hash=... | hash_schema=... | producer_R=4.6.0 | producer_platform=... | producer_rng=Mersenne-Twister/Inversion/Rejection | verifier_R=4.6.0 | verifier_platform=... | hooks=none}
 #'
 #' Drop the result into a paper appendix or a vignette caption to make
 #' your simulation cite-able and reproducible. For an end-to-end
@@ -132,14 +133,21 @@ provenance_string <- function(x, ...) {
 provenance_string.multisitedgp_data <- function(x, ...) {
   provenance <- attr(x, "provenance", exact = TRUE)
   design <- attr(x, "design", exact = TRUE)
+  .warn_provenance_runtime_mismatch(provenance)
   parts <- c(
     sprintf("multisiteDGP %s", .provenance_version(x, provenance)),
     sprintf("paradigm=%s", .provenance_field(provenance$paradigm, attr(x, "paradigm", exact = TRUE))),
+    if (!is.null(provenance$preset)) sprintf("preset=%s", provenance$preset),
     sprintf("seed=%s", .format_provenance_value(provenance$seed)),
     sprintf("canonical_hash=%s", canonical_hash(x)),
     sprintf("design_hash=%s", .provenance_field(provenance$design_hash, .canonical_design_hash(design, .provenance_hash_algo(provenance)))),
     sprintf("hash_algo=%s", .provenance_hash_algo(provenance)),
-    sprintf("R=%s", .short_r_version()),
+    sprintf("hash_schema=%s", .provenance_field(provenance$hash_schema_version, .hash_schema_version())),
+    sprintf("producer_R=%s", .short_stored_r_version(provenance$R_version)),
+    sprintf("producer_platform=%s", .provenance_field(provenance$platform)),
+    sprintf("producer_rng=%s", .format_rng_kind(provenance$rng_kind)),
+    sprintf("verifier_R=%s", .short_r_version()),
+    sprintf("verifier_platform=%s", R.version$platform),
     sprintf("hooks=%s", .format_hooks(.provenance_hooks(provenance, design)))
   )
   paste(parts, collapse = " | ")
@@ -147,15 +155,19 @@ provenance_string.multisitedgp_data <- function(x, ...) {
 
 #' @export
 provenance_string.multisitedgp_design <- function(x, ...) {
+  preset_name <- attr(x, "preset_name", exact = TRUE)
   parts <- c(
     sprintf("multisiteDGP %s", .multisitedgp_version()),
     "object=multisitedgp_design",
     sprintf("paradigm=%s", x$paradigm),
+    if (!is.null(preset_name)) sprintf("preset=%s", preset_name),
     sprintf("engine=%s", x$engine),
     sprintf("seed=%s", .format_provenance_value(x$seed)),
     sprintf("design_hash=%s", canonical_hash(x)),
     sprintf("hash_algo=%s", "xxhash64"),
+    sprintf("hash_schema=%s", .hash_schema_version()),
     sprintf("R=%s", .short_r_version()),
+    sprintf("rng=%s", .format_rng_kind(.provenance_rng_kind(x$seed))),
     sprintf("hooks=%s", .format_hooks(.custom_hook_names(x)))
   )
   paste(parts, collapse = " | ")
@@ -218,7 +230,6 @@ provenance_string.default <- function(x, ...) {
 
 # The manifest deliberately omits the package version. A hash is quoted in a
 # manuscript or an issue as an anchor for "this data, this design", and a version
-# in the payload made every release invalidate every recorded hash even when
 # nothing about the data moved. v0.1.x papered over that with a hardcoded lineage
 # bucket that collapsed 0.0.0.9000 and 0.1.* to one string; it had no rule for
 # 0.2 and the bump moved every hash. Provenance is already carried by
@@ -258,17 +269,25 @@ provenance_string.default <- function(x, ...) {
   if (is.null(seed) && !is.null(design) && !is.null(design$seed)) {
     seed <- design$seed
   }
+  preset_name <- if (is.null(preset)) {
+    attr(design, "preset_name", exact = TRUE)
+  } else {
+    preset
+  }
   list(
     seed = seed,
     multisitedgp_version = .multisitedgp_version(),
     R_version = R.version.string,
     platform = R.version$platform,
+    rng_kind = .provenance_rng_kind(seed),
+    rng_policy = if (is.null(seed)) "caller-controlled" else "package-pinned",
     canonical_hash = canonical_hash,
     design_hash = .canonical_design_hash(design, algo),
     hash_algo = algo,
     hash_schema_version = .hash_schema_version(),
     paradigm = if (!is.null(design)) design$paradigm else NULL,
-    preset = preset,
+    preset = preset_name,
+    preset_metadata = attr(design, "preset_metadata", exact = TRUE),
     call = call,
     function_exclusion_policy = .function_exclusion_policy(),
     custom_hooks = .custom_hook_names(design)
@@ -290,6 +309,13 @@ provenance_string.default <- function(x, ...) {
     return(list(
       kind = "formula",
       expression = paste(deparse(x), collapse = "\n")
+    ))
+  }
+  if (is.factor(x)) {
+    return(list(
+      kind = if (is.ordered(x)) "ordered_factor" else "factor",
+      levels = enc2utf8(levels(x)),
+      values = enc2utf8(as.character(x))
     ))
   }
   if (is.environment(x)) {
@@ -374,10 +400,10 @@ provenance_string.default <- function(x, ...) {
   numeric_scalar <- vapply(selected, function(x) {
     is.numeric(x) && length(x) == 1L && is.finite(x)
   }, logical(1))
-  lapply(selected[numeric_scalar], unname)
+  lapply(selected[numeric_scalar], .canonicalize_for_hash)
 }
 
-# Empty since schema v3. The diagnostics these named are derived from the
+# Empty since schema v3 and retained in v4. The diagnostics these named are derived from the
 # hashed data and the hashed design, so they added no provenance — only the
 # platform-dependent accumulation noise of `cor()` and `sd()`.
 #
@@ -412,19 +438,16 @@ provenance_string.default <- function(x, ...) {
   "callback bodies, bytecode, and environments are excluded; presence sentinels are hashed"
 }
 
-# Hash schema v3 — the hash covers the simulated data and the design, and
-# nothing derived from them.
+# Hash schema v4 — canonical numerical content, not byte identity.
 #
 # v1 hashed raw IEEE-754 doubles including a set of derived diagnostics, and a
 # single ULP flipped the hash. That made the cross-platform contract
 # unachievable, but not for the reason it looked like: the *data* is platform
-# stable, and only the diagnostics were not.
+# not generally bit-portable, and the diagnostics were also unstable.
 #
-#   data columns  `n_j` is rounded to an integer; `z_j` and `tau_j` come from
-#                 R's own RNG; `se_j`, `se2_j` and `tau_j_hat` follow by IEEE
-#                 arithmetic from those. All bit-identical across platforms,
-#                 confirmed by byte-comparing the golden .rds fixtures on
-#                 macOS, Linux and Windows.
+#   data columns  `n_j` is rounded to an integer; seeded front doors pin R's
+#                 RNG triple. Other numerical columns can still drift below
+#                 nine significant digits on supported platforms.
 #   diagnostics   `I_hat`, `R_hat`, `rho_*` and `sigma_tau_*` are computed with
 #                 `cor()`, `sd()` and `mean()`, whose accumulation order varies
 #                 by platform. The gap shows even on one machine, where
@@ -436,23 +459,24 @@ provenance_string.default <- function(x, ...) {
 # digits. That worked, but the nine was arbitrary and it blunted the hash
 # against genuine regressions below 1e-9.
 #
-# v3 does both. It drops the diagnostics, which are computed from the data and
+# v3 did both. It dropped the diagnostics, which are computed from the data and
 # from a design already covered by `design_hash`, so they added no provenance —
 # only noise. And it keeps the rounding for what remains.
 #
 # The rounding is still needed. An earlier v3 attempt dropped the diagnostics
-# and hashed the rest exactly, on the reasoning that the data must be portable
-# because the nine golden .rds fixtures compare byte-identical across macOS,
-# Linux and Windows. CI disproved it: other designs — the print examples and
-# the snapshot presets — still drifted below 1e-9, so byte-identity holds for
-# those nine fixtures but does not generalise.
+# and hashed the rest exactly after a limited fixture set appeared byte-stable.
+# Broader CI disproved the generalization: print examples and snapshot presets
+# still drifted below 1e-9.
 #
-# Nine significant digits sits far above that drift and far below anything a
-# numerical regression would produce. Defect ledger D-002.
+# v4 retains the nine-digit content policy, canonicalizes factor labels and
+# orderedness instead of their internal integer codes, and applies the same
+# rounding rule to explicitly requested diagnostics. The schema advance also
+# records the pinned RNG triple in run provenance. Equal v4 hashes identify
+# equal canonical payloads only; exact artifact identity is a separate SHA-256.
 .HASH_SIGNIF_DIGITS <- 9L
 
 .hash_schema_version <- function() {
-  "multisiteDGP-canonical-hash-v3"
+  "multisiteDGP-canonical-hash-v4"
 }
 
 .object_hash_type <- function(x) {
@@ -520,6 +544,38 @@ provenance_string.default <- function(x, ...) {
   .custom_hook_names(design)
 }
 
+.warn_provenance_runtime_mismatch <- function(provenance) {
+  if (!is.list(provenance)) {
+    return(invisible(FALSE))
+  }
+  mismatch <- character()
+  if (!is.null(provenance$R_version) &&
+      !identical(as.character(provenance$R_version), R.version.string)) {
+    mismatch <- c(mismatch, sprintf(
+      "producer R `%s` differs from verifier R `%s`",
+      .short_stored_r_version(provenance$R_version),
+      .short_r_version()
+    ))
+  }
+  if (!is.null(provenance$platform) &&
+      !identical(as.character(provenance$platform), R.version$platform)) {
+    mismatch <- c(mismatch, sprintf(
+      "producer platform `%s` differs from verifier platform `%s`",
+      provenance$platform,
+      R.version$platform
+    ))
+  }
+  if (length(mismatch) == 0L) {
+    return(invisible(FALSE))
+  }
+  cli::cli_warn(c(
+    "!" = "Stored producer runtime differs from the current verifier runtime.",
+    "i" = paste(mismatch, collapse = "; "),
+    ">" = "Use the stored producer fields for replay and the verifier fields for the current check."
+  ))
+  invisible(TRUE)
+}
+
 .provenance_field <- function(...) {
   values <- list(...)
   for (value in values) {
@@ -544,11 +600,26 @@ provenance_string.default <- function(x, ...) {
   paste(.stable_sort_character(unique(hooks)), collapse = ",")
 }
 
+.format_rng_kind <- function(x) {
+  if (is.null(x) || length(x) == 0L || all(is.na(x))) {
+    return("NA")
+  }
+  paste(as.character(x), collapse = "/")
+}
+
 .stable_sort_character <- function(x) {
   sort(x, method = "radix")
 }
 
 .short_r_version <- function() {
   paste(R.version$major, R.version$minor, sep = ".")
+}
+
+.short_stored_r_version <- function(x) {
+  if (is.null(x) || length(x) == 0L || all(is.na(x))) {
+    return("NA")
+  }
+  value <- as.character(x[[1L]])
+  sub("^R version ([0-9]+[.][0-9]+[.][0-9]+).*$", "\\1", value)
 }
 # nolint end

@@ -81,8 +81,9 @@
 #' @param framing Character. Sampling-frame interpretation —
 #'   `"superpopulation"` (default) or `"finite"`.
 #' @param seed Optional integer. Single seed for the full pipeline; if
-#'   non-`NULL`, the wrapper wraps the call in
-#'   \code{\link[withr]{with_seed}} for bit-identical replays.
+#'   non-`NULL`, the wrapper uses the package-pinned RNG triple
+#'   `Mersenne-Twister` / `Inversion` / `Rejection`, restores the caller's RNG
+#'   kind and state on exit, and provides canonical numerical replays.
 #' @param record_permutation Logical. Retain Layer 3 permutation
 #'   metadata for inspection. Default depends on `dependence`.
 #' @param x A `multisitedgp_design` object — used by `print` and
@@ -167,7 +168,7 @@ multisitedgp_design <- function(
   true_dist <- .match_choice(
     true_dist,
     "true_dist",
-    c("Gaussian", "StudentT", "SkewN", "ALD", "Mixture", "PointMassSlab", "User", "DPM")
+    .accepted_g_shape_values()
   )
   g_returns <- .match_choice(g_returns, "g_returns", c("standardized", "raw"))
   engine <- .match_choice(engine, "engine", c("A2_modern", "A1_legacy"))
@@ -340,7 +341,8 @@ is_multisitedgp_design <- function(x) {
 #' @details
 #' Validation enforces every constraint the constructor enforces — for
 #' example, the Decision-C contract (engine A1 with non-trivial
-#' precision dependence is rejected), the seven-shape `true_dist`
+#' precision dependence is rejected), the six-built-in-plus-`User`
+#' generated-shape `true_dist`
 #' allowlist, the `theta_G` per-shape required keys, and the unit-
 #' variance convention. Errors are emitted with full
 #' message + info + fix hints from the typed-error catalog (see
@@ -449,7 +451,7 @@ update_multisitedgp_design <- function(design, ...) {
   args <- .design_to_constructor_args(design)
 
   if (length(updates) == 0L) {
-    return(do.call(multisitedgp_design, args))
+    return(.restore_preset_metadata(do.call(multisitedgp_design, args), design))
   }
 
   bad <- setdiff(names(updates), names(args))
@@ -474,7 +476,17 @@ update_multisitedgp_design <- function(design, ...) {
   ) {
     args$record_permutation <- NULL
   }
-  do.call(multisitedgp_design, args)
+  .restore_preset_metadata(do.call(multisitedgp_design, args), design)
+}
+
+.restore_preset_metadata <- function(out, source) {
+  for (field in c("preset_name", "preset_metadata")) {
+    value <- attr(source, field, exact = TRUE)
+    if (!is.null(value)) {
+      attr(out, field) <- value
+    }
+  }
+  out
 }
 
 .new_multisitedgp_design <- function(x) {
