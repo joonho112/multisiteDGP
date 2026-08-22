@@ -27,8 +27,7 @@ if (!is_linux_x86_64() &&
     paste(
       "Golden fixtures embed canonical_hash/design_hash values.",
       "This gate is a speed bump against accidental regeneration, not a platform",
-      "requirement -- the hash is portable and these fixtures are byte-identical",
-      "wherever they are built. Set",
+      "requirement -- the canonical numerical hash is portable. Set",
       "MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN=true when you mean to regenerate,",
       "and say in the commit why the values should move."
     ),
@@ -50,6 +49,19 @@ if (!requireNamespace("pkgload", quietly = TRUE)) {
   stop("pkgload is required to generate golden fixtures.", call. = FALSE)
 }
 pkgload::load_all(package_root, quiet = TRUE)
+RNGkind("Mersenne-Twister", "Inversion", "Rejection")
+
+hash_schema_version <- multisitedgp_internal(".hash_schema_version")()
+generator_sha256 <- unname(tools::sha256sum(script_path))
+source_revision <- tryCatch(
+  system2("git", c("-C", shQuote(package_root), "rev-parse", "HEAD"), stdout = TRUE),
+  error = function(e) NA_character_
+)
+source_revision <- if (length(source_revision) == 1L) source_revision else NA_character_
+source_worktree_clean <- tryCatch(
+  length(system2("git", c("-C", shQuote(package_root), "status", "--porcelain"), stdout = TRUE)) == 0L,
+  error = function(e) NA
+)
 
 rds_sha256 <- function(object, path) {
   saveRDS(object, path, version = 2)
@@ -123,6 +135,27 @@ fixture_row <- function(
   source_canonical_hash <- canonical_hash(object)
   rds_hash <- rds_sha256(object, path)
   restored <- readRDS(path)
+  provenance <- attr(restored, "provenance", exact = TRUE)
+  stored_provenance_hash <- if (is.list(provenance)) {
+    provenance$canonical_hash
+  } else {
+    NA_character_
+  }
+  stored_provenance_hash_matches <- if (is.list(provenance)) {
+    identical(stored_provenance_hash, canonical_hash(restored))
+  } else {
+    NA
+  }
+  rng_kind <- if (is.list(provenance) && !is.null(provenance$rng_kind)) {
+    paste(provenance$rng_kind, collapse = "/")
+  } else {
+    paste(RNGkind(), collapse = "/")
+  }
+  rng_policy <- if (is.list(provenance) && !is.null(provenance$rng_policy)) {
+    provenance$rng_policy
+  } else {
+    "generator-pinned"
+  }
 
   data.frame(
     fixture_id = fixture_id,
@@ -137,9 +170,18 @@ fixture_row <- function(
     nrow = if (inherits(object, "data.frame")) nrow(object) else NA_integer_,
     ncol = if (inherits(object, "data.frame")) ncol(object) else NA_integer_,
     hash_algo = "xxhash64",
+    hash_schema_version = hash_schema_version,
     canonical_hash = canonical_hash(restored),
     source_canonical_hash = source_canonical_hash,
+    stored_provenance_hash = stored_provenance_hash,
+    stored_provenance_hash_matches = stored_provenance_hash_matches,
     rds_sha256 = rds_hash,
+    package_version = as.character(utils::packageVersion("multisiteDGP")),
+    rng_kind = rng_kind,
+    rng_policy = rng_policy,
+    source_revision = source_revision,
+    source_worktree_clean = source_worktree_clean,
+    generator_sha256 = generator_sha256,
     generated_R_version = R.version.string,
     generated_platform = R.version$platform,
     package_versions = paste(
@@ -150,7 +192,7 @@ fixture_row <- function(
       ),
       collapse = "; "
     ),
-    os_policy = "portable canonical_hash; no platform hierarchy; verified on linux-release/devel/oldrel, macos-release, windows-release (run 31889543618)",
+    os_policy = "portable schema-v4 canonical numerical hash; binary SHA verifies only the checked-in artifact",
     stringsAsFactors = FALSE
   )
 }
@@ -163,34 +205,38 @@ jebs_fixture <- list(
   ups = 2,
   nj_mean = 80,
   cv = 0.50,
-  nj_min = 4L,
+  nj_min = 5L,
   p = 0.5,
   R2 = 0
 )
 
 jebs_seeds <- c(42L, 1L, 2024L, 12345L)
-jebs_rows <- lapply(seq_along(jebs_seeds), function(idx) {
-  seed <- jebs_seeds[[idx]]
+generate_jebs_object <- function(fixture, seed) {
   set.seed(seed)
   tau_j <- jebs_prior_g_mixture(
-    J = jebs_fixture$J,
-    sigma_tau = jebs_fixture$sigma_tau,
-    delta = jebs_fixture$delta,
-    eps = jebs_fixture$eps,
-    ups = jebs_fixture$ups
+    J = fixture$J,
+    sigma_tau = fixture$sigma_tau,
+    delta = fixture$delta,
+    eps = fixture$eps,
+    ups = fixture$ups
   )
   se2 <- jebs_nj_se2j_vec_gamma(
-    J = jebs_fixture$J,
-    nj_mean = jebs_fixture$nj_mean,
-    cv = jebs_fixture$cv,
-    nj_min = jebs_fixture$nj_min,
-    p = jebs_fixture$p,
-    R2 = jebs_fixture$R2
+    J = fixture$J,
+    nj_mean = fixture$nj_mean,
+    cv = fixture$cv,
+    nj_min = fixture$nj_min,
+    p = fixture$p,
+    R2 = fixture$R2
   )
-  object <- normalize_jebs_output(
+  normalize_jebs_output(
     jebs_tau_j_hat(tau_j = tau_j, df_se2 = se2),
-    sigma_tau = jebs_fixture$sigma_tau
+    sigma_tau = fixture$sigma_tau
   )
+}
+
+jebs_rows <- lapply(seq_along(jebs_seeds), function(idx) {
+  seed <- jebs_seeds[[idx]]
+  object <- generate_jebs_object(jebs_fixture, seed)
   fixture_row(
     fixture_id = sprintf("F%02d", idx),
     fixture_file = sprintf("jebs_appendix_mixture_seed%d.rds", seed),
@@ -202,6 +248,27 @@ jebs_rows <- lapply(seq_along(jebs_seeds), function(idx) {
     generator = "tests/data-raw/generate_golden_fixtures.R"
   )
 })
+
+floor_fixture <- utils::modifyList(jebs_fixture, list(
+  J = 300L,
+  nj_mean = 10,
+  cv = 0.75
+))
+floor_seed <- 42L
+floor_object <- generate_jebs_object(floor_fixture, floor_seed)
+floor_row <- fixture_row(
+  fixture_id = "F10",
+  fixture_file = "jebs_appendix_floor_active_seed42.rds",
+  fixture_type = "JEBS appendix floor-active authority",
+  object = floor_object,
+  seed = floor_seed,
+  source_call = paste(
+    "Lee 2024 JEBS appendix normalized output, J = 300,",
+    "nj_mean = 10, cv = 0.75, nj_min = 5, seed = 42"
+  ),
+  source_policy = "paper floor n_j = 5; floor-active raw seven-column authority",
+  generator = "tests/data-raw/generate_golden_fixtures.R"
+)
 
 preset_specs <- list(
   F05 = list(
@@ -258,7 +325,7 @@ preset_rows <- Map(
   spec = preset_specs
 )
 
-manifest <- do.call(rbind, c(jebs_rows, preset_rows))
+manifest <- do.call(rbind, c(jebs_rows, preset_rows, list(floor_row)))
 write.csv(
   manifest,
   file.path(manifest_dir, "golden-fixture-manifest.csv"),
@@ -279,20 +346,21 @@ writeLines(
 	    "Rscript tests/data-raw/generate_golden_fixtures.R",
 	    "```",
 	    "",
-	    "Regenerate on any platform. These fixtures are byte-identical wherever",
-	    "they are built, and their canonical_hash agrees across the whole CI",
-	    "matrix -- linux-release, linux-devel, linux-oldrel, macos-release and",
-	    "windows-release. There is no authoritative machine.",
+	    "Regenerate on any supported platform. The canonical_hash verifies the",
+	    "schema-v4 numerical payload across platforms; rds_sha256 verifies only",
+	    "the exact checked-in binary artifact. Raw RDS byte identity is not part",
+	    "of the public contract.",
 	    "",
 	    "Off Linux the generator asks for",
 	    "MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN=true. That is a speed bump",
 	    "against regenerating by accident, not a platform claim: an unintended",
 	    "fixture diff is a regression, so say in the commit why the values moved.",
 	    "",
-	    "The inventory is nine files:",
+	    "The inventory is ten files:",
     "",
     "- four JEBS appendix normalized seed fixtures;",
     "- five package preset output fixtures.",
+    "- one floor-active JEBS appendix authority fixture.",
     "",
     "The shipped metadata manifest lives in `inst/extdata/golden/`."
   ),
@@ -300,6 +368,6 @@ writeLines(
   useBytes = TRUE
 )
 
-message("Wrote 9 golden RDS files to: tests/testthat/_snaps/golden")
+message("Wrote 10 golden RDS files to: tests/testthat/_snaps/golden")
 message("Wrote manifest to: inst/extdata/golden/golden-fixture-manifest.csv")
 # nolint end

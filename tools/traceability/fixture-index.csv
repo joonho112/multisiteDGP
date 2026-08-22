@@ -8,3 +8,4 @@ F06,preset_jebs_strict.rds,preset output,Phase 8,Step 8.1,ch18 sec18.5,rds-gener
 F07,preset_education_modest.rds,preset output,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,V0 hello-world fixture generated under tests/testthat/_snaps/golden; intentional small test-only RDS fixture tradeoff
 F08,preset_walters_2024.rds,preset output,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,Walters Gaussian v1 fixture generated under tests/testthat/_snaps/golden; intentional small test-only RDS fixture tradeoff
 F09,preset_small_area_estimation.rds,preset output,Phase 8,Step 8.1,ch18 sec18.5,rds-generated,Paradigm B SAE fixture generated under tests/testthat/_snaps/golden; intentional small test-only RDS fixture tradeoff
+F10,jebs_appendix_floor_active_seed42.rds,JEBS appendix floor-active authority,Phase 8,Step 8.1,JEBS paper lower-limit n_j=5,rds-generated,Independent appendix-code fixture activates the paper floor; test tarball RDS is an intentional authority artifact

@@ -6,7 +6,7 @@ golden_manifest <- function() {
 
 expected_golden_fixtures <- function() {
   data.frame(
-    fixture_id = sprintf("F%02d", 1:9),
+    fixture_id = c(sprintf("F%02d", 1:9), "F10"),
     fixture_file = c(
       "jebs_appendix_mixture_seed42.rds",
       "jebs_appendix_mixture_seed1.rds",
@@ -16,9 +16,14 @@ expected_golden_fixtures <- function() {
       "preset_jebs_strict.rds",
       "preset_education_modest.rds",
       "preset_walters_2024.rds",
-      "preset_small_area_estimation.rds"
+      "preset_small_area_estimation.rds",
+      "jebs_appendix_floor_active_seed42.rds"
     ),
-    fixture_type = c(rep("JEBS appendix seed", 4L), rep("preset output", 5L)),
+    fixture_type = c(
+      rep("JEBS appendix seed", 4L),
+      rep("preset output", 5L),
+      "JEBS appendix floor-active authority"
+    ),
     stringsAsFactors = FALSE
   )
 }
@@ -53,9 +58,74 @@ test_that("Step 8.1 golden RDS files match the manifest hashes", {
 
     expect_identical(unname(tools::sha256sum(path)), row$rds_sha256)
     expect_identical(canonical_hash(object), row$canonical_hash)
+    expect_identical(row$hash_schema_version, "multisiteDGP-canonical-hash-v4")
     expect_equal(nrow(object), row$nrow)
     expect_equal(ncol(object), row$ncol)
   }
+})
+
+test_that("Step 8.1 full-object fixtures carry current self-consistent provenance", {
+  manifest <- golden_manifest()
+  golden_dir <- test_path("_snaps/golden")
+  preset_rows <- manifest$fixture_id %in% sprintf("F%02d", 5:9)
+
+  for (idx in which(preset_rows)) {
+    object <- readRDS(file.path(golden_dir, manifest$fixture_file[[idx]]))
+    provenance <- attr(object, "provenance", exact = TRUE)
+
+    expect_identical(provenance$hash_schema_version, manifest$hash_schema_version[[idx]])
+    expect_identical(provenance$canonical_hash, canonical_hash(object))
+    expect_identical(provenance$canonical_hash, manifest$canonical_hash[[idx]])
+    expect_true(manifest$stored_provenance_hash_matches[[idx]])
+  }
+})
+
+test_that("Step 8.1 preset fixtures are independent live regenerations", {
+  manifest <- golden_manifest()
+  golden_dir <- test_path("_snaps/golden")
+  live_objects <- golden_live_preset_specs()
+  preset_rows <- manifest$fixture_id %in% sprintf("F%02d", 5:9)
+
+  expect_identical(manifest$fixture_file[preset_rows], names(live_objects))
+  for (file in names(live_objects)) {
+    live <- live_objects[[file]]
+    golden <- readRDS(file.path(golden_dir, file))
+    row <- manifest[manifest$fixture_file == file, , drop = FALSE]
+
+    expect_identical(as.data.frame(live), as.data.frame(golden), info = file)
+    expect_identical(class(live), class(golden), info = file)
+    expect_identical(
+      attr(live, "design", exact = TRUE),
+      attr(golden, "design", exact = TRUE),
+      info = file
+    )
+    expect_identical(
+      attr(live, "diagnostics", exact = TRUE),
+      attr(golden, "diagnostics", exact = TRUE),
+      info = file
+    )
+    expect_identical(
+      attr(live, "provenance", exact = TRUE),
+      attr(golden, "provenance", exact = TRUE),
+      info = file
+    )
+    expect_identical(canonical_hash(live), row$canonical_hash[[1L]], info = file)
+    expect_identical(live, golden, info = file)
+  }
+})
+
+test_that("Step 8.1 manifest is bound to the current fixture generator", {
+  manifest <- golden_manifest()
+  generator_path <- test_path("../data-raw/generate_golden_fixtures.R")
+  skip_if_not(
+    file.exists(generator_path),
+    "Golden fixture generator is not shipped in the package tarball."
+  )
+  generator_sha <- unname(tools::sha256sum(generator_path))
+
+  expect_true(all(manifest$generator_sha256 == generator_sha))
+  expect_true(all(manifest$package_version == as.character(utils::packageVersion("multisiteDGP"))))
+  expect_true(all(manifest$hash_schema_version == "multisiteDGP-canonical-hash-v4"))
 })
 
 test_that("Step 8.1 golden fixtures preserve object classes and schema", {
@@ -63,7 +133,7 @@ test_that("Step 8.1 golden fixtures preserve object classes and schema", {
   golden_dir <- test_path("_snaps/golden")
   canonical_cols <- c("site_index", "z_j", "tau_j", "tau_j_hat", "se_j", "se2_j", "n_j")
 
-  jebs_rows <- manifest$fixture_id %in% sprintf("F%02d", 1:4)
+  jebs_rows <- manifest$fixture_id %in% c(sprintf("F%02d", 1:4), "F10")
   preset_rows <- manifest$fixture_id %in% sprintf("F%02d", 5:9)
 
   for (file in manifest$fixture_file[jebs_rows]) {
@@ -90,7 +160,7 @@ test_that("Step 8.1 JEBS fixtures agree with the Step 4.1 provenance manifest", 
   manifest <- golden_manifest()
   jebs_manifest <- read.csv(provenance_manifest, stringsAsFactors = FALSE)
 
-  rows <- match(sprintf("F%02d", 1:4), manifest$fixture_id)
+  rows <- match(c(sprintf("F%02d", 1:4), "F10"), manifest$fixture_id)
   expect_identical(
     manifest$fixture_file[rows],
     jebs_manifest$fixture_file

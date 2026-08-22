@@ -2,9 +2,9 @@
 # nolint start: object_name_linter, object_usage_linter
 
 # Regenerate on any platform; see tools/cross-os-reproducibility-policy.md. The
-# printed R version and the package version are normalized to R=<R> and
-# <VERSION>, but canonical_hash and design_hash are preserved deliberately —
-# they are the provenance the examples exist to pin, and they are portable.
+# printed R version, producer/verifier platform, and package version are
+# normalized, but canonical_hash and design_hash are preserved deliberately —
+# they are the numerical provenance the examples exist to pin.
 is_linux_x86_64 <- function() {
   platform <- tolower(R.version$platform)
   identical(tolower(Sys.info()[["sysname"]]), "linux") &&
@@ -17,8 +17,7 @@ if (!is_linux_x86_64() &&
     paste(
       "Generated print examples embed canonical_hash/design_hash values.",
       "This gate is a speed bump against accidental regeneration, not a platform",
-      "requirement -- the hash is portable and these files are byte-identical",
-      "wherever they are built. Set",
+      "requirement -- the canonical numerical hash is portable. Set",
       "MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN=true when you mean to regenerate,",
       "and say in the commit why the values should move."
     ),
@@ -69,6 +68,7 @@ withr::local_options(list(
 # (defect ledger D-026).
 normalize_print_lines <- function(lines) {
   lines <- gsub("R=[0-9.]+", "R=<R>", lines)
+  lines <- gsub("(producer|verifier)_platform=[^ |]+", "\\1_platform=<PLATFORM>", lines)
   gsub("multisiteDGP [0-9.]+", "multisiteDGP <VERSION>", lines)
 }
 

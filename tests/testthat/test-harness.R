@@ -74,8 +74,9 @@ test_that("snapshot and golden policies track active Step 8.5 artifacts", {
   expect_identical(snapshot_policy$deferred_error_placeholder_count, 1L)
   expect_identical(snapshot_policy$warning_not_abort_count, 1L)
   expect_identical(snapshot_policy$print_snapshot_count, 24L)
-  expect_identical(golden_fixture_policy$count, 9L)
+  expect_identical(golden_fixture_policy$count, 10L)
   expect_identical(golden_fixture_policy$jebs_appendix_seed_files, 4L)
+  expect_identical(golden_fixture_policy$jebs_floor_active_files, 1L)
   expect_identical(golden_fixture_policy$preset_output_files, 5L)
   golden_files <- list.files(
     test_path("_snaps/golden"),

@@ -39,7 +39,8 @@ test_that("Engine A1 matches JEBS manifest hash after strict mixture stream", {
       n_j = as.numeric(actual),
       se2_j = compute_kappa() / actual
     )
-    manifest_row <- manifest[manifest$seed == seed, ]
+    fixture_id <- sprintf("F%02d", match(seed, c(42L, 1L, 2024L, 12345L)))
+    manifest_row <- manifest[manifest$fixture_id == fixture_id, ]
     expect_equal(nrow(manifest_row), 1L)
     expect_identical(canonical_hash(actual_frame), manifest_row$component_site_size_hash)
   }
