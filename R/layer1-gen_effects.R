@@ -1,12 +1,24 @@
 # nolint start: object_name_linter, object_usage_linter
+.builtin_g_shapes <- function() {
+  c("Gaussian", "StudentT", "SkewN", "ALD", "Mixture", "PointMassSlab")
+}
+
+.generated_g_shapes <- function() {
+  c(.builtin_g_shapes(), "User")
+}
+
+.accepted_g_shape_values <- function() {
+  c(.generated_g_shapes(), "DPM")
+}
+
 #' Generate latent site effects
 #'
 #' @encoding UTF-8
 #'
 #' @description
 #' `gen_effects()` is the Layer 1 entry point of the multisiteDGP pipeline —
-#' it draws standardized site effects \eqn{z_j} from one of seven
-#' \eqn{G} distributions (or a user callback) and returns a forward-compatible
+#' it draws standardized site effects \eqn{z_j} from six built-in
+#' \eqn{G} distributions or a `User` callback and returns a forward-compatible
 #' tibble that Layers 2 through 4 can consume. Most users invoke it indirectly
 #' through \code{\link{sim_multisite}} or \code{\link{sim_meta}}; call it
 #' directly when composing the four layers manually or auditing a single
@@ -15,8 +27,8 @@
 #' `g_fn` overrides the catalog when `true_dist = "User"`.
 #'
 #' @details
-#' The accepted `true_dist` values are the seven generated shapes plus the
-#' reserved `"DPM"` slot:
+#' Six built-ins plus `User` equal seven generated shapes. `"DPM"` is a
+#' reserved value and does not generate data without an explicit callback bridge:
 #' \describe{
 #'   \item{`"Gaussian"` (\code{\link{gen_effects_gaussian}})}{Standard normal — the canonical baseline. No `theta_G` keys.}
 #'   \item{`"StudentT"` (\code{\link{gen_effects_studentt}})}{Standardized Student-\eqn{t} with degrees of freedom `theta_G$nu` (numeric, > 2). Heavier tails than Gaussian.}
@@ -37,7 +49,7 @@
 #' testing a `g_fn` callback's output before plugging it into the full
 #' simulation.
 #'
-#' \strong{Unit-variance convention.} All seven shapes share a unit-variance
+#' \strong{Unit-variance convention.} All seven generated shapes share a unit-variance
 #' standardization: the package draws \eqn{z_j} with \eqn{E[z_j] = 0} and
 #' \eqn{\mathrm{Var}(z_j) = 1}, then rescales to
 #' \eqn{\tau_j = \tau + X_j\boldsymbol{\beta} + \sigma_\tau\,z_j}. This makes
@@ -176,7 +188,7 @@ gen_effects <- function(
   true_dist <- .match_choice(
     true_dist,
     "true_dist",
-    c("Gaussian", "StudentT", "SkewN", "ALD", "Mixture", "PointMassSlab", "User", "DPM")
+    .accepted_g_shape_values()
   )
   g_returns <- .match_choice(g_returns, "g_returns", c("standardized", "raw"))
   audit_g <- .validate_scalar_logical(audit_g, "audit_g")

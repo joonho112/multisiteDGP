@@ -15,7 +15,7 @@
 #'
 #' @details
 #' Use the user callback when none of the six built-in shapes
-#' (Gaussian, Student-t, skew-normal, ALD, mixture, point-mass slab, DPM)
+#' (Gaussian, Student-t, skew-normal, ALD, mixture, point-mass slab)
 #' captures the effect distribution you need. Typical use cases: a DPM
 #' draw fitted offline, a custom skew-mixture, a deconvolution-derived
 #' empirical \eqn{G}, or a numerical sampler from a non-standard

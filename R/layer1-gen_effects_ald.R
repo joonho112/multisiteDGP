@@ -20,7 +20,7 @@
 #' standardized \eqn{z_j} satisfies the unit-variance Layer 1 convention.
 #'
 #' `rho` is the *quantile* parameter — `rho = 0.5` is the symmetric Laplace,
-#' `rho < 0.5` skews left, `rho > 0.5` skews right. The package refuses
+#' `rho < 0.5` skews right, `rho > 0.5` skews left. The package refuses
 #' values outside `(0.05, 0.95)` because the moment standardization
 #' becomes numerically unstable near the degenerate boundaries.
 #'
@@ -38,7 +38,7 @@
 #'   on the response scale. Default `0.20`.
 #' @param rho Numeric in `(0.05, 0.95)`. Yu-Zhang quantile / asymmetry
 #'   parameter. Required — no default. `rho = 0.5` is symmetric Laplace;
-#'   `rho = 0.3` skews left; `rho = 0.7` skews right. Endpoints `0` and `1`
+#'   `rho = 0.3` skews right; `rho = 0.7` skews left. Endpoints `0` and `1`
 #'   are degenerate; the function refuses values outside `(0.05, 0.95)`.
 #' @param formula One-sided formula for site-level covariates, or `NULL`.
 #' @param beta Numeric coefficient vector matching `formula`, or `NULL`.
@@ -72,7 +72,7 @@
 #'
 #' @examples
 #' if (requireNamespace("LaplacesDemon", quietly = TRUE)) {
-#'   # Left-skewed (rho < 0.5).
+#'   # Right-skewed (rho < 0.5).
 #'   gen_effects_ald(J = 10L, rho = 0.3)
 #'
 #'   # Symmetric Laplace (rho = 0.5) — sharp peak at zero with exponential tails.
