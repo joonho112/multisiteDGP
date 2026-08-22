@@ -12,6 +12,7 @@ local_print_snapshot_output <- function() {
 
 snapshot_print_transform <- function(x) {
   x <- gsub("R=[0-9.]+", "R=<R>", x)
+  x <- gsub("(producer|verifier)_platform=[^ |]+", "\\1_platform=<PLATFORM>", x)
   gsub("multisiteDGP [0-9.]+", "multisiteDGP <VERSION>", x)
 }
 

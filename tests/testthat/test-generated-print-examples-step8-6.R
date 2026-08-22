@@ -12,6 +12,7 @@ local_generated_example_output <- function() {
 
 normalize_generated_print_lines <- function(lines) {
   lines <- gsub("R=[0-9.]+", "R=<R>", lines)
+  lines <- gsub("(producer|verifier)_platform=[^ |]+", "\\1_platform=<PLATFORM>", lines)
   gsub("multisiteDGP [0-9.]+", "multisiteDGP <VERSION>", lines)
 }
 
@@ -47,7 +48,7 @@ test_that("Step 8.6 generated print hash policy is explicit", {
     "print-examples/ch14_ch17_irb_template.txt",
     "print-examples/ch14_ch17_sae_summary.txt"
   ))
-  expect_match(snapshot_policy$hash_print_policy, "Linux x86-64 strict")
+  expect_match(snapshot_policy$hash_print_policy, "supported-platform regeneration")
   expect_match(snapshot_policy$hash_print_policy, "canonical_hash/design_hash preserved")
   expect_identical(snapshot_policy$hash_print_override_env, "MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN")
 
@@ -59,8 +60,8 @@ test_that("Step 8.6 generated print hash policy is explicit", {
     snapshot_policy$hash_print_files
   )
   expect_identical(
-    normalize_generated_print_lines("R=4.5.1 canonical_hash=abc design_hash=def"),
-    "R=<R> canonical_hash=abc design_hash=def"
+    normalize_generated_print_lines("producer_R=4.5.1 producer_platform=x86_64-pc-linux-gnu canonical_hash=abc design_hash=def"),
+    "producer_R=<R> producer_platform=<PLATFORM> canonical_hash=abc design_hash=def"
   )
 })
 

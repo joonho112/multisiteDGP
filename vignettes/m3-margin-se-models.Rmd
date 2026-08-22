@@ -597,7 +597,7 @@ the front door.
 ## References
 
 The site-size-driven path's $\kappa$ closed form and Engine A1's
-bit-identical reproducibility contract come from
+legacy RNG sequence come from
 @lee2025improving. The empirical-Bayes context for treating reported
 sampling standard errors as known — relevant to both paths but
 especially to the direct-precision path's plug-in of

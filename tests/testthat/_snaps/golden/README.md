@@ -9,19 +9,20 @@ Regenerate this directory with:
 Rscript tests/data-raw/generate_golden_fixtures.R
 ```
 
-Regenerate on any platform. These fixtures are byte-identical wherever
-they are built, and their canonical_hash agrees across the whole CI
-matrix -- linux-release, linux-devel, linux-oldrel, macos-release and
-windows-release. There is no authoritative machine.
+Regenerate on any supported platform. The canonical_hash verifies the
+schema-v4 numerical payload across platforms; rds_sha256 verifies only
+the exact checked-in binary artifact. Raw RDS byte identity is not part
+of the public contract.
 
 Off Linux the generator asks for
 MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN=true. That is a speed bump
 against regenerating by accident, not a platform claim: an unintended
 fixture diff is a regression, so say in the commit why the values moved.
 
-The inventory is nine files:
+The inventory is ten files:
 
 - four JEBS appendix normalized seed fixtures;
 - five package preset output fixtures.
+- one floor-active JEBS appendix authority fixture.
 
 The shipped metadata manifest lives in `inst/extdata/golden/`.

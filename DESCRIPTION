@@ -6,9 +6,10 @@ Authors@R:
            comment = c(ORCID = "0009-0006-4019-8703"))
 Description: Design defensible multisite trial simulations from
     summary-level building blocks. 'multisiteDGP' generates latent
-    site effects under a catalog of seven distribution shapes (Gaussian,
-    Student-t, skew-normal, asymmetric Laplace, two-component mixture,
-    point-mass slab, and a user callback), calibrated sampling-error
+    site effects under six built-in distribution shapes (Gaussian, Student-t,
+    skew-normal, asymmetric Laplace, two-component mixture, and point-mass
+    slab) plus a user callback -- seven generated shapes in all. 'DPM' is a
+    reserved value, not a built-in generator. The package adds calibrated sampling-error
     margins, intentional dependence between effects and precisions, and
     observed site estimates in a
     single call. Researchers express scenarios through intuitive

@@ -120,8 +120,9 @@ under a covariate are interpreted on the residual scale in this release.}
 \code{"superpopulation"} (default) or \code{"finite"}.}
 
 \item{seed}{Optional integer. Single seed for the full pipeline; if
-non-\code{NULL}, the wrapper wraps the call in
-\code{\link[withr]{with_seed}} for bit-identical replays.}
+non-\code{NULL}, the wrapper uses the package-pinned RNG triple
+\code{Mersenne-Twister} / \code{Inversion} / \code{Rejection}, restores the caller's RNG
+kind and state on exit, and provides canonical numerical replays.}
 
 \item{record_permutation}{Logical. Retain Layer 3 permutation
 metadata for inspection. Default depends on \code{dependence}.}

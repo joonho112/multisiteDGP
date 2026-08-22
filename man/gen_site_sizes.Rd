@@ -112,12 +112,14 @@ is scale invariant. The JEBS reference design (\code{nj_mean = 50}, \code{n_min 
 \code{cv = 0.5}) sits at ratio 0.10 against a ceiling of 1.40, well inside.
 Keeping \code{nj_mean >= 2 * n_min} and \code{cv <= 0.5} is interior everywhere.
 
-Two soft edges warn rather than refuse. Above \code{cv} about 1.5 the draw is
-heavy-tailed and the solve is delicate, so A2 says so and proceeds. Below
-\code{cv} about \code{1e-3} the moment evaluation cancels to more relative error than
-the fit tolerance, so the fit is accepted but A2 reports the precision to
-which the realized SD is actually checkable. Neither is an error; both are
-telling you the number you asked for is near a limit of the method.
+Above \code{cv} about 1.5 the draw is heavy-tailed and the solve is delicate, so
+A2 warns and proceeds. At very small \code{cv}, A2 evaluates truncated moments
+with an incomplete-Gamma recurrence to avoid subtracting two nearly equal
+raw moments. The requested mean must always pass the user's \code{tol}. The SD
+check may use a separately estimated roundoff bound, capped at relative
+\code{1e-3}; if the SD cannot be verified inside that cap, A2 refuses the design
+rather than turning numerical uncertainty into permission to miss the
+target.
 
 For the formal Paradigm A vs Paradigm B contrast and the engine
 derivation, see the

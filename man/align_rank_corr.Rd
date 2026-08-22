@@ -25,8 +25,8 @@ values: \code{0.3} (moderate positive — small sites tend to have larger
 effects), \code{-0.5} (moderate negative — selection-on-effect-size in
 meta-analysis). \verb{|rank_corr| > 0.95} triggers a near-boundary warning.}
 
-\item{max_iter}{Integer (\eqn{\ge 100}). Maximum number of swap
-proposals. Default \code{20000L}.}
+\item{max_iter}{Integer (\eqn{\ge 100}). Maximum number of improving
+pair swaps accepted after initialization. Default \code{20000L}.}
 
 \item{tol}{Numeric (> 0). Absolute tolerance for the realized residual
 Spearman correlation. Default \code{0.02}.}
@@ -54,11 +54,12 @@ recording the realized assignment.
 }
 \details{
 \strong{Hill-climb algorithm.} The package starts from the upstream
-(Layer 2) ordering of \verb{(se2_j, se_j, n_j)} and proposes random pair
-swaps. A swap is accepted if it brings the realized residual Spearman
-correlation closer to \code{rank_corr}; otherwise it is rejected. The search
-continues until the realized correlation lands within \code{tol} of the
-target or until \code{max_iter} swaps have been proposed. The result is the
+(Layer 2) ordering of \verb{(se2_j, se_j, n_j)} and a deterministic
+target-sorted starting permutation, keeps whichever is closer, and then
+scans every possible pair swap. At each iteration it accepts the first
+best improving swap (lexicographic tie break). The search continues until
+the realized correlation lands within \code{tol} of the target, no improving
+pair remains, or \code{max_iter} improving swaps have been accepted. The result is the
 best-effort permutation found within budget — for moderate
 \eqn{|rank_{corr}| \le 0.7} and \verb{max_iter = 20,000} (the default) the
 algorithm converges reliably; near \eqn{|rank_{corr}| \approx 1} the
@@ -88,10 +89,8 @@ dependence — three injection methods} vignette.
 }
 \section{RNG policy}{
 
-Built-in hill-climb proposes swaps via \code{sample.int()} and accepts /
-rejects deterministically based on the resulting correlation. The
-active \code{sample.int()} RNG is consumed; under a wrapper seed
-(\code{sim_multisite()} / \code{sim_meta()} with \code{seed}), runs are bit-identical.
+The built-in hill-climb is deterministic and consumes no RNG: it scans all
+pair swaps and uses stable index order to break equal improvements.
 Custom \code{dependence_fn} callbacks own their own RNG.
 }
 

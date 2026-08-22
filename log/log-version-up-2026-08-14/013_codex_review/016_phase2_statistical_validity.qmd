@@ -1,0 +1,169 @@
+---
+title: "Phase 2 Log — Statistical Validity and Diagnostics"
+subtitle: "multisiteDGP v0.2.0 Codex repair"
+date: "2026-08-16"
+lang: ko
+format:
+  html:
+    toc: true
+    embed-resources: true
+    code-fold: true
+    theme: cosmo
+execute:
+  echo: false
+---
+
+## 결론
+
+**Phase 2는 완료되었다.** 리뷰에서 release blocker로 판정한 Engine A2의
+adaptive tolerance 오용과 copula Pearson 진단의 척도 오류를 수정했다. KS
+진단은 analytic CDF를 사용하는 one-sample 검정으로 교체했고, ALD skew 방향,
+shrinkage 의미, rank/hybrid 알고리즘 설명도 구현과 일치시켰다.
+
+진단 결과에는 이제 적용된 임계값 계약이 명시된다. 단일 데이터셋 summary는
+`single-run-diagnostics-v1`, 반복 scenario grid는
+`replicate-grid-audit-v1`을 기록한다. `scenario_audit()$pass`는 문자 그대로
+`status == "PASS"`인 경우에만 `TRUE`이며, 진단 그룹 누락 여부는
+`audit_complete`와 `groups_evaluated`로 별도 판정한다.
+
+## Step 2.1 — Engine A2를 fail-closed solver로 수정
+
+기존 A2는 mean과 SD residual에 같은 adaptive floor를 적용했다. SD moment의
+상쇄 오차가 커지면 그 floor가 mean 오차까지 허용해, 다음 반례를 검증 성공으로
+처리할 수 있었다.
+
+| 입력 | 수정 전 fit | 수정 후 fit |
+|---|---:|---:|
+| `n_bar = 100`, `cv = 1e-5`, `n_min = 5` | mean 약 5.116, mean residual 약 -0.949인데 승인 | mean 100, SD 0.001, residual 약 `1e-15` |
+
+수정 내용은 다음과 같다.
+
+- incomplete-Gamma recurrence로 조건부 mean과 variance를 계산해 raw second
+  moment subtraction을 피했다.
+- mean은 항상 사용자가 요청한 `tol`로 검증한다.
+- SD만 별도의 roundoff bound를 사용할 수 있고, 상대 `1e-3`으로 상한을 둔다.
+- 그 상한 안에서 SD를 검증할 수 없으면 경고 후 승인하지 않고 abort한다.
+- 잘못된 mean과 정상 SD를 반환하도록 mock한 solver도 반드시 abort하는 회귀
+  테스트를 추가했다.
+- log-spaced CV grid, recurrence 교차검증, non-finite precision 경로를 테스트했다.
+
+공개 문서도 “tiny CV는 큰 adaptive floor로 승인”이라는 설명을 제거하고,
+mean/SD 분리 검증과 fail-closed 상한을 기록하도록 갱신했다.
+
+## Step 2.2 — Copula 진단을 latent target 척도로 수정
+
+`pearson_corr`는 Gaussian-copula latent 상관인데, 이전 진단은 이를 비선형
+변환 뒤의 raw `cor(z_j, se2_j)`와 비교했다. 따라서 생성기가 목표를 달성해도
+진단이 FAIL이 되는 구조였다.
+
+현재 Group B 테이블은 다음 세 척도를 분리한다.
+
+| 행 | 목표 비교 | 역할 |
+|---|---|---|
+| `realized_pearson_corr / copula_latent` | `pearson_corr`와 achieved latent Pearson 비교 | copula 계약 검증 |
+| `raw_pearson_corr / residual` | 목표 없음 | raw margin 기술통계 |
+| `raw_pearson_corr / marginal` | 목표 없음 | marginal 기술통계 |
+
+`J = 1000`, target `0.7`, seed `6310` 회귀 예제에서 latent Pearson은 약
+`0.700`으로 PASS하고 raw Pearson 약 `0.603`은 의도대로 untargeted
+기술통계로 남는다. Copula 경로에서는 Spearman도 Pearson target의 대체
+판정치로 사용하지 않는다.
+
+## Step 2.3 — KS 검정 보정
+
+기존 구현은 deterministic quantile grid를 두 번째 표본으로 넣은 two-sample
+KS p-value였다. 이는 귀무분포에서 지나치게 보수적이었다. 현재는
+`multisitedgp_data`에 대해 다음 analytic CDF를 직접 사용한다.
+
+- Gaussian: `pnorm`
+- standardized Student-t: `pt(q / sqrt((nu - 2) / nu), df = nu)`
+
+두 numeric vector를 직접 전달하는 public 경로는 기존 two-sample KS로
+유지했다. 고정 seed로 Gaussian `J = 50` 표본 2,000개를 검증한 결과,
+유의수준 0.05에서 기각은 102회, 기각률은 **0.0510**이었다. 테스트 허용범위
+`[0.03, 0.07]` 안에 있다.
+
+## Step 2.4 — ALD와 shrinkage 의미 정정
+
+- 구현과 1,000,000 draw 회귀 검증에 맞춰 ALD는 `rho < 0.5`일 때 right
+  skew, `rho > 0.5`일 때 left skew라고 문서화했다.
+- `S_j = sigma_tau^2 / (sigma_tau^2 + se2_j)`는 raw site estimator에 남는
+  reliability/data-retention weight로 정의했다.
+- 따라서 `S -> 1`은 data-dominant/no pooling, `S -> 0`은
+  prior-dominant/complete pooling이며, 실제 pooling 양은 `1 - S`다.
+- M8의 “큰 site가 더 강하게 shrink”라는 설명을 “큰 site는 덜 pooling”으로
+  바로잡았다.
+
+## Step 2.5 — 진단 상태와 알고리즘 계약 분리
+
+`scenario_audit()` 결과에 다음 필드를 추가했다.
+
+- `pass`: 오직 `status == "PASS"`일 때 `TRUE`; WARN은 `FALSE`
+- `audit_complete`: A/B/C/D 네 그룹이 모두 실행되었는지
+- `groups_evaluated`: `A,B,C,D` 또는 `A,B,D`
+- `target_source`: Group C reference availability
+- `threshold_profile`: `replicate-grid-audit-v1`
+- `n_violations`, `n_warnings`: FAIL 및 WARN gate 수
+
+단일 실행 진단 table에는 `threshold_profile =
+"single-run-diagnostics-v1"`을 기록했다. 이로써 두 rubric의 숫자와 판정이
+암묵적으로 같은 계약처럼 읽히지 않는다.
+
+rank/hybrid aligner 문서도 실제 구현에 맞췄다. built-in hill-climb은
+`sample.int()` random proposal이 아니라 모든 pair swap을 결정적으로 스캔하고
+stable index order로 tie를 해소하므로 RNG를 소비하지 않는다. Hybrid의
+`rank_corr = 0`은 upstream identity를 유지하는 population-null convention이며,
+유한 표본 realized correlation을 `tol` 안으로 강제하는 계약이 아님을 명시했다.
+
+## 검증 결과
+
+Phase 2 최종 targeted suite는 13개 test file, 158개 test block,
+993개 expectation을 실행했다.
+
+```text
+filter = (layer2-engine-a2|diagnostic|scenario-audit|align-rank|
+          align-hybrid|ald|snapshot-print|snapshot-errors)
+
+PASS 993 | FAIL 0 | WARN 0 | SKIP 0 | ERROR 0
+```
+
+의도적으로 바뀐 A2 오류 메시지와 15-row 진단 summary snapshot은 검토 후
+갱신했다. `devtools::document()`도 통과해 roxygen과 `.Rd`를 동기화했다.
+
+다음 vignette의 임시 HTML render가 모두 성공했다.
+
+- A3 Diagnostics in practice
+- A8 Cookbook
+- M2 G-distribution catalog
+- M3 Margin and SE models
+- M4 Precision dependence theory
+
+`git diff --check`의 유일한 EOF blank-line 경고도 제거했다.
+
+## 예외와 다음 Phase 의존성
+
+- Phase 1 golden data의 numerical payload는 이번 진단-only 변경으로 움직이지
+  않았지만, Phase 3의 JEBS `n_min` 및 preset 수정은 fixture hash와 snapshot을
+  이동시킬 수 있다. 따라서 final golden regeneration은 Phase 3 이후 다시 한다.
+- scenario Group C 자동 reference는 여전히 Gaussian과 Student-t만 지원한다.
+  이는 숨기지 않고 `audit_complete = FALSE`, `groups_evaluated = "A,B,D"`로
+  노출한다.
+- 전체 package check와 13개 validation job의 current-source 재실행은 Phase
+  4–6의 release closeout gate다.
+
+## Phase 2 종료 판정
+
+| Gate | 결과 |
+|---|---|
+| A2 mean target fail-closed 검증 | PASS |
+| A2 tiny-CV counterexample | PASS |
+| Copula latent Pearson target 검증 | PASS |
+| Gaussian/Student-t one-sample KS | PASS |
+| KS Monte Carlo calibration | PASS (0.0510) |
+| ALD skew/shrinkage 의미 정합성 | PASS |
+| threshold profile/status completeness | PASS |
+| rank/hybrid RNG 문서 정합성 | PASS |
+| Phase 2 targeted tests | PASS (993) |
+
+다음 실행 단위는 **Phase 3 — scientific fidelity, migration, and public
+surface**이다.

@@ -358,8 +358,10 @@ KS / Bhattacharyya numbers, not as a sole verdict).
 
 ## 5. Group D — will it work downstream?
 
-[`mean_shrinkage()`](../reference/mean_shrinkage.html) is the average
-shrinkage factor an empirical-Bayes estimator will apply [@walters2024empirical];
+[`mean_shrinkage()`](../reference/mean_shrinkage.html) is the historical API
+name for the average empirical-Bayes reliability/data-retention weight
+$\bar S$ [@walters2024empirical]; the average amount pooled toward the mean is
+$1-\bar S$.
 [`feasibility_index()`](../reference/feasibility_index.html) is an
 effective-sample-size metric that gates whether partial pooling
 stabilizes at all.
@@ -372,7 +374,8 @@ mean_shrinkage(dat)
 feasibility_index(se2_j = dat$se2_j, sigma_tau = 0.2)
 ```
 
-Realized mean shrinkage is 0.262 — slightly *below* the canonical
+Realized mean reliability is 0.262, so the average amount pooled is 0.738.
+The reliability value is slightly *below* the canonical
 threshold `mean_shrinkage_min = 0.30`. This earns a WARN status: the
 design does enough partial-pooling work to benefit from a hierarchical
 estimator, but it is below the recommended floor. Feasibility index
@@ -518,25 +521,27 @@ audit[, c("cell_id", "J", "sigma_tau", "M",
           "status", "pass", "n_violations")]
 ```
 
-`scenario_audit()` returns a wide tibble — 26 columns for this grid;
-the manifest block widens with whatever `design_grid()` varies. The nine
-you reach for first:
+`scenario_audit()` returns a wide tibble whose design-factor block widens
+with whatever `design_grid()` varies. Start with these decision columns:
 
 - **`cell_id`** — integer 1, 2, ...; matches the `design_grid()`
   printout.
 - **`M`** — replicate count actually used; carries through so the
   audit is self-documenting.
 - **`status`** — one-word verdict per cell: `PASS` / `WARN` / `FAIL`.
-- **`pass`** — logical companion; `TRUE` only if no gate fired. Use
-  it to filter the audit tibble, but read it together with
-  `target_source` — see below.
+- **`pass`** — literal logical companion; `TRUE` only when
+  `status == "PASS"`. A `WARN` row is therefore `FALSE`.
+- **`audit_complete`** and **`groups_evaluated`** — say whether all
+  A/B/C/D groups ran. Require `pass & audit_complete` when a decision
+  needs complete four-group coverage.
+- **`threshold_profile`** — `"replicate-grid-audit-v1"`; it prevents
+  these replicate-level gates from being confused with the separate
+  `"single-run-diagnostics-v1"` rubric used by `summary(dat)`.
 - **`target_source`** — `"auto"` when the Group C distributional gates
   ran, `"not_available"` when the declared shape has no reference
   distribution (everything but `Gaussian` and `StudentT`). Group C is
-  then skipped rather than failed, so `pass = TRUE` means every gate
-  that *could* run passed, not that every gate ran. On a grid that
-  mixes shapes, a cell that skipped a whole diagnostic group otherwise
-  looks identical to one that cleared it.
+  then skipped rather than failed. `pass` remains a literal status flag;
+  `audit_complete` distinguishes a skipped group from a fully cleared audit.
 - **`n_violations`** — count of distinct gates that fired. Three
   simultaneous gates point at where to look; one often resolves with
   a single override.
@@ -548,7 +553,7 @@ you reach for first:
   quantiles of realized $I$ across the cell's $M$ replicates. The
   median is the headline; the bracket says how stable the median is.
 
-The remaining 16 columns repeat the median/quantile pattern for $R$,
+The remaining diagnostic columns repeat the median/quantile pattern for $R$,
 mean shrinkage, the two flavors of feasibility, Bhattacharyya, and
 KS. Read them in groups of three, anchored on the medians:
 

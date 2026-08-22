@@ -30,8 +30,8 @@ recommended) or \code{"rank"} (partial-sort start).}
 \item{polish}{Character. Polishing mode — \code{"hill_climb"} (default,
 recommended) or \code{"none"} (copula-only).}
 
-\item{max_iter}{Integer (\eqn{\ge 100}). Maximum swap proposals during
-the polish stage. Default \code{20000L}.}
+\item{max_iter}{Integer (\eqn{\ge 100}). Maximum improving pair swaps
+accepted during the polish stage. Default \code{20000L}.}
 
 \item{tol}{Numeric (> 0). Absolute tolerance for the realized residual
 Spearman. Default \code{0.02}.}
@@ -60,10 +60,18 @@ multiset exactly via explicit permutation.
 run \code{\link{align_copula_corr}} with \code{pearson_corr} chosen so the
 implied Spearman matches \code{rank_corr}. (Alternative: \code{init = "rank"}
 starts from a partial-sort permutation seeded by ordered indexing.)
-Stage 2 — polish. By default, run a hill-climb on the Stage 1 output
+Stage 2 — polish. By default, run a deterministic hill-climb on the Stage 1 output
 until the realized Spearman lands within \code{tol} of \code{rank_corr} or
-\code{max_iter} swaps have been proposed. Stage 2 can be skipped with
+\code{max_iter} improving swaps have been accepted. Stage 2 can be skipped with
 \code{polish = "none"} for a copula-only result.
+
+\strong{Null-target convention.} \code{rank_corr = 0} returns the upstream
+ordering unchanged and consumes no RNG. This encodes the population null
+of no injected dependence; finite-sample realized Spearman is therefore
+allowed to differ from zero by ordinary Monte Carlo variation and may lie
+outside \code{tol}. Likewise, \verb{init = "rank", polish = "none"} is the explicit
+non-targeting identity configuration and can be unconverged for a nonzero
+target.
 
 \strong{Why it's the default.} Pure copula (Stage 1 only) is fast but
 has finite-J slack on the realized Spearman; pure hill-climb is exact
@@ -82,10 +90,9 @@ dependence — three injection methods} vignette.
 }
 \section{RNG policy}{
 
-Stage 1 (copula init) consumes one \code{rnorm()} draw per site at finite
-\code{pearson_corr}. Stage 2 (hill-climb polish) proposes swaps via
-\code{sample.int()} and accepts deterministically; consumes the active
-\code{sample.int()} RNG. Both stages are wrapped in the caller's seed when
+Stage 1 (copula init) consumes one \code{rnorm()} draw per site at finite,
+nonzero \code{pearson_corr}. Stage 2 scans all pair swaps deterministically
+and consumes no RNG. Both stages are wrapped in the caller's seed when
 invoked through \code{\link{sim_multisite}} / \code{\link{sim_meta}}.
 }
 

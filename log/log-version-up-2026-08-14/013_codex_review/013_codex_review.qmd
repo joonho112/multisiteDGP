@@ -1,0 +1,964 @@
+---
+title: "GPT Codex External Review — multisiteDGP v0.2.0"
+subtitle: "Reliability release: reproducibility contract, advertised surface, test suite, statistical validity"
+author: "GPT Codex"
+date: "2026-08-15"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+# Executive summary
+
+I reviewed the v0.2.0 release tree as a behavioral and contract audit, not as a fourth prose-editing round. The review concentrated on `R/utils-reproducibility.R`, Engine A2, the diagnostic attachment path, tests claiming byte identity, the JEBS reference chain, the validation harness, and factual claims on the advertised surface. I spent approximately **4.5 combined reviewer-hours**, parallelized across three bounded sub-audits and a final independent integration/reproduction pass.
+
+I ran the complete package test suite locally. It finished with **4,882 passes, 0 failures, 0 warnings, and 0 skips** in 118.6 seconds. That is meaningful evidence: the suite is broad, its previously gated statistical tests really do run, and the current tree is internally stable on this machine. It is not sufficient evidence for the release claims below. Several tests encode the same mistaken contract as the implementation, compare a rounded hash while calling the comparison byte identity, or use a reference that repeats a package-side departure from the JEBS paper.
+
+::: {.callout-danger title="Verdict: DEFER"}
+Do not release v0.2.0 from this tree. The core reproducibility promise is false as stated; the late hash-payload change did not advance the schema and left fixture provenance stale; the JEBS “strict” reference uses a lower bound of 4 where the paper specifies 5; Engine A2 can accept a fit centered near 5 for a requested mean of 100; and the copula diagnostic can mark a successful latent-correlation fit as `FAIL`. These are contract and scientific-validity issues, not cosmetic cleanup.
+:::
+
+The three findings that matter most are:
+
+1. **The portable hash is a nine-significant-digit equivalence hash, not a witness of bit-identical data.** The source records that raw output portability did not generalize beyond nine fixtures, while user-facing policy still promises the same data “bit for bit.” A real numerical change can leave the hash unchanged, and a two-ULP change at a decimal rounding boundary can move it.
+2. **Engine A2's adaptive tolerance is applied to both the mean and SD residuals without a ceiling.** For `nj_mean = 100`, `cv = 1e-5`, `nj_min = 5`, the accepted continuous distribution has mean 5.1159; the effective tolerance is 2,157.9. The warning discusses limited SD verification, not a 95% mean error.
+3. **The core copula audit compares different estimands.** `pearson_corr` is a latent Gaussian-copula correlation, but the target-versus-realized table compares it with raw Pearson `cor(z_j, se2_j)`. A run with latent target 0.7 achieved 0.707 on the latent scale, yet the attached audit reported raw 0.599 and `FAIL`.
+
+| Severity | Count | Release implication |
+|---|---:|---|
+| Critical | 8 | Must be resolved and revalidated before release |
+| Important | 11 | Should be resolved in this reliability release where they affect user decisions or evidence |
+| Polish | 3 | Trust and maintainability improvements; not independently release-blocking |
+
+# Findings by severity
+
+## Critical
+
+### C-1 — `canonical_hash()` is not a bit-identity witness
+
+**Location.** `R/utils-reproducibility.R:7-19,336-342,443-452`; `inst/REPRODUCIBILITY.md:8-21`; `tests/testthat/test-utils-reproducibility-canonicalization.R:99-117`.
+
+**What is wrong.** The exported help says the hash identifies whether runs produced “bit-identical results” (`R/utils-reproducibility.R:7-9`). The installed policy says, exactly:
+
+> “The same design and the same seed produce the same data, on any platform, bit for bit — and therefore the same `canonical_hash()`.”
+
+The implementation instead applies `signif(out, 9)` to every double before hashing (`R/utils-reproducibility.R:336-342`). The source then states that an exact-hash attempt failed because print examples and snapshot presets drifted below `1e-9`, and that “byte-identity holds for those nine fixtures but does not generalise” (`R/utils-reproducibility.R:443-448`). These statements cannot all be true. The code provides equality of a rounded canonical payload, not equality of returned IEEE-754 data.
+
+**Why it matters.** A manuscript hash cannot establish the claim the package tells a reviewer it establishes. The rounding creates both directions of error: two non-identical simulations can share a hash, while negligible drift can straddle a decimal boundary and change it. The latter also falsifies the unconditional claim that a mismatch is “never platform noise.” This remains a contract failure even if nine-digit equality is scientifically adequate for most analyses.
+
+**Reproduce or verify.**
+
+~~~r
+pkgload::load_all(".", quiet = TRUE)
+
+x <- sim_multisite(preset_jebs_paper(), seed = 1L)
+y <- x
+y$tau_j_hat[1] <- y$tau_j_hat[1] + 1e-11
+
+identical(x, y)
+canonical_hash(x)
+canonical_hash(y)
+
+v <- 1.234567885
+a <- data.frame(x = v)
+b <- data.frame(x = v + .Machine$double.eps * abs(v))
+c(delta = b$x - a$x,
+  rounded_a = signif(a$x, 9), rounded_b = signif(b$x, 9))
+c(canonical_hash(a), canonical_hash(b))
+~~~
+
+Observed locally:
+
+~~~text
+identical(x, y)                         FALSE
+canonical_hash(x)                       04b356c64fab6bd7
+canonical_hash(y)                       04b356c64fab6bd7
+
+boundary delta                          2.2204460492503131e-16
+rounded values                          1.23456788 / 1.23456789
+boundary hashes                         daa12fb008d747c1 / 16518bc8cb1fa99f
+~~~
+
+The test suite deliberately asserts the first equivalence at `test-utils-reproducibility-canonicalization.R:99-109`; it therefore cannot also prove raw identity.
+
+**Suggested fix.** Choose and name one contract. The low-risk v0.2 fix is to call this a **nine-significant-digit canonical-content hash**, state that equal hashes do not imply bit-identical R objects, and remove every byte-identity claim. If raw identity remains a requirement, add a separate exact artifact/raw-data hash and compare raw columns or artifact SHA across CI. Do not use one hash for both semantics.
+
+### C-2 — same design plus seed is insufficient because RNG kind is unpinned
+
+**Location.** `R/wrapper-sim_multisite.R:150-154`; `R/class-multisitedgp_design.R:83-85`; `R/utils-reproducibility.R:250-275`.
+
+**What is wrong.** The wrapper calls `withr::with_seed(design$seed, ...)`, which preserves/restores caller state but uses the active `RNGkind()`. The contract names only design and seed. Provenance stores seed, R version, and platform, but not the RNG algorithm, normal generator, or sample generator.
+
+**Why it matters.** Two users can supply the same design and integer seed on the same R version and get different data and hashes because one session selected `L'Ecuyer-CMRG`. The omitted state is a true DGP input and is not diagnosable from saved provenance.
+
+**Reproduce or verify.**
+
+~~~r
+old <- RNGkind()
+on.exit(do.call(RNGkind, as.list(old)))
+
+RNGkind("Mersenne-Twister", "Inversion", "Rejection")
+a <- sim_multisite(J = 10L, seed = 123L)
+
+RNGkind("L'Ecuyer-CMRG", "Inversion", "Rejection")
+b <- sim_multisite(J = 10L, seed = 123L)
+
+c(MT = canonical_hash(a), LECuyer = canonical_hash(b))
+names(attr(a, "provenance"))
+~~~
+
+Observed hashes were `5d8081f6bbc44d24` and `093e1e3365545364`; the returned data were not identical. No RNG-kind field was present.
+
+**Suggested fix.** Either locally pin and restore a documented RNG triple inside seeded front doors, or weaken the contract to require the same `RNGkind()` and record all three components in design/provenance/manifest. Add a regression that deliberately switches RNG kind.
+
+### C-3 — a late payload change retained schema “v3” and left provenance internally stale
+
+**Location.** `R/utils-reproducibility.R:132-145,219-237,250-275,454-455,503-508`; `tests/testthat/test-golden-fixtures-step8-1.R:45-58`; `vignettes/m7-reproducibility-provenance.Rmd:396-407`; the five preset RDS files under `tests/testthat/_snaps/golden/`.
+
+**What is wrong.** Commit `dd32638` removed `multisitedgp_version` from `.hash_manifest()` after the validation run, changing every payload while `.hash_schema_version()` remained `multisiteDGP-canonical-hash-v3`. That contradicts the package's own rule that the schema moves when the meaning of the hash changes. The five preset fixtures now contain an old stored v3 hash but recompute to a different current v3 hash:
+
+| Fixture | Stored provenance hash | Current recomputation |
+|---|---|---|
+| `preset_jebs_paper.rds` | `dab943488dc9d8ae` | `df7a9af6d6f144c1` |
+| `preset_jebs_strict.rds` | `f3559e416199fede` | `b3258e9906a5fc0e` |
+| `preset_education_modest.rds` | `3b231c3435ca29e1` | `0f894e8af844912e` |
+| `preset_walters_2024.rds` | `ab20d21f74355079` | `e16cfbbea1691f02` |
+| `preset_small_area_estimation.rds` | `8f87ca4944a40d24` | `ec2abe8b7f83a645` |
+
+The fixture test recomputes the current hash and compares it with a regenerated CSV; it never asserts `attr(object, "provenance")$canonical_hash == canonical_hash(object)`.
+
+There is a second provenance defect. `provenance_string.multisitedgp_data()` prints `.short_r_version()` from the **current** session (`R/utils-reproducibility.R:142`), not stored producer `provenance$R_version`. M7 says a producer/current R mismatch emits a warning, but no such comparison exists.
+
+**Why it matters.** Two meanings share one schema label, stored fixture provenance disagrees with live verification, and the human-readable string can combine a stored package version, current recomputed hash, and verifier R version while presenting them as one producing run. This defeats the intended diagnosis across machines and versions.
+
+**Reproduce or verify.**
+
+~~~r
+files <- list.files("tests/testthat/_snaps/golden",
+                    pattern = "^preset.*[.]rds$", full.names = TRUE)
+for (f in files) {
+  x <- readRDS(f)
+  p <- attr(x, "provenance")
+  print(c(file = basename(f), stored = p$canonical_hash,
+          current = canonical_hash(x), schema = p$hash_schema_version))
+}
+
+x <- sim_multisite(J = 10L, seed = 1L)
+p <- attr(x, "provenance")
+p$R_version <- "R version 3.6.3 (2020-02-29)"
+p$platform <- "x86_64-pc-linux-gnu"
+attr(x, "provenance") <- p
+provenance_string(x)
+~~~
+
+Under R 4.6.0 the last call printed `R=4.6.0` and emitted no warning.
+
+**Suggested fix.** Advance the schema for the payload change, regenerate or deliberately migrate all fixture provenance, and assert stored-versus-recomputed equality. Print **producer** and **verifier** runtime/platform/RNG fields separately and include schema in `provenance_string()`. Removing package version from a content hash is defensible only if producer lineage remains immutable outside that hash.
+
+### C-4 — the “JEBS strict” authority uses `nj_min = 4`, not the paper's 5, and T1a compares rounded hashes
+
+**Location.** `../dev/references/lee-et-al-2024-improving-the-estimation-of-site-specific-effects-and-their-distribution-in-multisite.md:233-243` (especially line 239); `../dev/Bayes-deconvolution/posts/2024-01-21_JEBS_Software_Appendix/2024-01-21_JEBS_Software_Appendix_E.qmd:99-113`; `R/presets.R:205-220`; `tools/jebs-golden-fixtures/generate-jebs-golden-fixtures.R:95-110,187-195`; `tests/testthat/test-T1a-jebs-bit-identical.R:2-16`; `inst/REPRODUCIBILITY.md:119-124`.
+
+**What is wrong.** The paper states, exactly, “We then truncate \(n_j\) at the lower limit of \(n_j=5\).” The appendix defaults to 5 and its demonstration does not override it. `preset_jebs_strict()` and the supposedly independent generator both use 4; the generator records the mismatch in its `nj_min_policy`. The four T1a seeds do not reach the floor in the `nj_mean = 80`, `cv = 0.5` anchor, so the wrong bound is invisible.
+
+T1a calls `expect_identical(canonical_hash(actual), canonical_hash(ref))`. Because C-1 shows both hashes round, this is not the seven-column `identical()` comparison promised by installed policy.
+
+**Why it matters.** The scientific authority is wrong precisely where truncation matters. At a real paper-grid condition (`J = 300`, `nj_mean = 10`, `cv = 0.75`), the floor changes dozens of sites and changes `se2_j` by as much as 0.2. The test proves package/reference agreement after both adopted the same departure; it does not prove strict reproduction of the paper.
+
+**Reproduce or verify.**
+
+~~~r
+for (seed in c(42L, 1L, 2024L, 12345L)) {
+  a <- sim_multisite(
+    preset_jebs_strict(J = 300L, nj_mean = 10, cv = .75, nj_min = 4L),
+    seed = seed
+  )
+  b <- sim_multisite(
+    preset_jebs_strict(J = 300L, nj_mean = 10, cv = .75, nj_min = 5L),
+    seed = seed
+  )
+  print(c(seed = seed, sites_changed = sum(a$n_j != b$n_j),
+          max_se2_delta = max(abs(a$se2_j - b$se2_j))))
+}
+~~~
+
+Observed sites changed were 76, 84, 75, and 72; maximum `se2_j` change was 0.2 for every seed.
+
+**Suggested fix.** Set the strict preset/reference generator to 5, regenerate and revalidate affected fixtures, and add a low-mean/high-CV boundary fixture. Assert raw `expect_identical(actual, ref)` column by column, with canonical hash separate. If the package intends a package-specific floor of 4, rename the preset and stop calling it paper-strict.
+
+### C-5 — Engine A2 can accept a solution whose mean is 95% below the requested mean
+
+**Location.** `R/layer2-engine-a2.R:125-127,168-210,309-325,407-435`; `R/layer2-gen_site_sizes.R:16-20,62-67`; `tests/testthat/test-layer2-engine-a2-edges.R:203-265`.
+
+**What is wrong.** The adaptive residual floor derived for cancellation in the truncated-Gamma variance is applied to **both** the SD residual and the mean residual, without a useful cap. As `cv` approaches zero, the inferred shape grows, the computed floor explodes, and a numerically collapsed solution can pass the post-solve check even when it does not remotely match the requested mean. The emitted warning discusses reduced SD-verification precision; it does not say that the returned distribution's mean is wrong by nearly a factor of 20.
+
+**Why it matters.** Layer 2 advertises continuous pre-rounding moments matching `nj_mean` and `cv`. This failure changes the actual data-generating process, site sizes, and sampling variances while reporting only a generic precision warning. A scientifically unreasonable but valid input therefore returns materially false design parameters instead of failing closed.
+
+**Reproduce or verify.**
+
+~~~r
+x <- suppressWarnings(
+  multisiteDGP:::solve_trunc_gamma(
+    n_bar = 100, cv = 1e-5, n_min = 5L
+  )
+)
+c(
+  alpha = x$alpha,
+  beta = x$beta,
+  fitted_mean = x$mean,
+  target_mean = 100,
+  mean_residual = x$residual[["mean"]],
+  fitted_sd = x$sd,
+  target_sd = 0.001,
+  sd_residual = x$residual[["sd"]],
+  tol_effective = x$tol_effective
+)
+
+set.seed(1)
+z <- suppressWarnings(
+  multisiteDGP:::engine_trunc_gamma_moment(
+    J = 20000L, nj_mean = 100, cv = 1e-5, nj_min = 5L
+  )
+)
+c(draw_mean = mean(z$n_j), draw_sd = sd(z$n_j))
+~~~
+
+The solver returned `alpha = 15610573.46` and `beta = 3051381.457`, but `fitted_mean = 5.1159035` for target 100 (`mean_residual = -0.948841`). Its `tol_effective = 2157.87` accepted that residual. With seed 1, the 20,000 generated continuous values had mean `5.1159031` and SD `0.0013000`.
+
+**Suggested fix.** Use separate, dimension-specific acceptance criteria for mean and variance/SD. Never relax the mean residual with a variance-cancellation bound; cap any adaptive tolerance and fail closed outside a documented numerical domain. Prefer stable incomplete-gamma recurrences or a deterministic limiting route for very small `cv`. Add achieved-moment tests against requested moments, not merely solver self-consistency and finiteness.
+
+### C-6 — the core diagnostic compares a latent copula target with raw Pearson correlation
+
+**Location.** `R/layer3-align_copula_corr.R:15-27,48-52,118-140`; `R/diagnostics-core.R:290-301,348-356,678-682`.
+
+**What is wrong.** `align_copula_corr(pearson_corr = ...)` correctly treats the argument as the latent Gaussian-copula correlation and records achieved latent Pearson and realized Spearman. The core `target_vs_realized` diagnostic instead compares that latent target with raw Pearson `cor(z_j, se2_j)`. Those are different estimands after nonlinear marginal transforms. The diagnostic can therefore fail a correctly calibrated copula run—the exact parameterization mistake the upgrade notes warn reviewers not to make.
+
+**Why it matters.** Users can reject a valid scenario or tune the copula toward the wrong target based on an authoritative-looking `FAIL`. This is a false statistical verdict, not a wording problem.
+
+**Reproduce or verify.**
+
+~~~r
+d <- sim_multisite(
+  J = 1000L, sigma_tau = .2, nj_mean = 100, cv = .5,
+  dependence = "copula", pearson_corr = .7, seed = 1L
+)
+attr(d, "diagnostics")$dependence_diagnostics[
+  c("target", "achieved_latent_pearson",
+    "achieved_spearman", "residual")
+]
+tab <- attr(d, "diagnostics")$target_vs_realized
+tab[
+  tab$diagnostic == "realized_pearson_corr" &
+    tab$basis == "residual",
+]
+~~~
+
+In the reviewed run, achieved latent Pearson was `0.7069514` (residual `0.0069514`), achieved Spearman was `0.6913947`, and raw Pearson was `0.5993002`. The core diagnostic classified target-versus-realized as `FAIL` because it used the last number.
+
+**Suggested fix.** For copula alignment, compare the latent target with the recorded achieved latent Pearson. Report raw Pearson only as an explicitly untargeted descriptive quantity; report the implied/realized rank correlation separately. Add a regression with non-Gaussian marginals. The roxygen sentence that makes realized Spearman sound approximately equal to latent Pearson should also show the transformation \(6\arcsin(\rho_P/2)/\pi\).
+
+### C-7 — the migration guide silently changes the covariate and grand-mean scale
+
+**Location.** `vignettes/m8-migration-from-siteBayes2.Rmd:53-69,87-96,159-205`; predecessor `../dev/code/siteBayes2/R/gen_priorG2.R:158-180,223-224`; `R/layer1-effects-common.R:28-32`.
+
+**What is wrong.** M8 maps `gen_priorG2()` to `gen_effects()` as the same operation and says other arguments retain their meanings. The predecessor constructs \(\tau + X\beta + z\) and then multiplies the **entire** draw by `sigma_tau`. The new implementation constructs \(\tau + X\beta + \sigma_\tau z\). Thus copied `tau` and `beta` values no longer mean the same thing.
+
+**Why it matters.** A migration can preserve the random residual distribution while silently multiplying every covariate effect and the grand mean by \(1/\sigma_\tau\). That changes the intended DGP and scientific estimand without an error or warning.
+
+**Reproduce or verify.** With Gaussian effects, \(J=10\), `sigma_tau = 0.2`, formula `~ 0 + x`, `beta = 0.3`, and the same normal draw, the structural coefficient multiplying \(x\) is `0.06` in the predecessor and `0.30` in the new package:
+
+~~~r
+old_env <- new.env(parent = globalenv())
+sys.source(
+  "../dev/code/siteBayes2/R/gen_priorG2.R",
+  envir = old_env
+)
+d <- data.frame(x = seq_len(10))
+old <- old_env$gen_priorG2(
+  "Gaussian", J = 10, sigma_tau = .2,
+  formula = ~ 0 + x, beta = .3, data = d,
+  seed = 123, set_seed = TRUE
+)
+set.seed(123)
+new <- gen_effects_gaussian(
+  J = 10, sigma_tau = .2,
+  formula = ~ 0 + x, beta = .3, data = d
+)
+max(abs(
+  (new$tau_j - old$site_effect) - (.30 - .06) * d$x
+))
+~~~
+
+The maximum residual was \(4.44\times10^{-16}\). Algebraically, the implementations are \(\text{old}=\sigma_\tau(\tau+X\beta+z)\) and \(\text{new}=\tau+X\beta+\sigma_\tau z\).
+
+**Suggested fix.** Document migration per predecessor function and distribution, backed by executable old-versus-new fixtures. For the Gaussian `gen_priorG2()` path, the direct conversion is `tau_new = sigma_old * tau_old` and `beta_new = sigma_old * beta_old`. Cover non-Gaussian shape/parameter changes and the predecessor's RNG-consuming shuffle as separate compatibility cases.
+
+### C-8 — “V0–V12 all pass in full mode” was not re-established on the final v0.2.0 tree
+
+**Location.** `tools/validation/reports/v0.2.0-validation-synthesis.md:8-34,48-66,125-136`; `tools/validation/generated/validation-run-manifest.csv`; `DESCRIPTION`; `tools/validation/jobs/run-v0-validation.R`; `tools/validation/jobs/run-v12-validation.R`.
+
+**What is wrong.** Every latest `full` row in the validation manifest records package version `0.1.1`; none records `0.2.0`, and `git_sha` is empty. The full runs predate the late hash-payload change and version bump. At least the V0 and V12 scripts have changed since their recorded full runs. V12's artifact records `dab943488dc9d8ae`, while the current script, current fixture recomputation, and live run expect `df7a9af6d6f144c1`.
+
+The manifest is not a binding record of executed code: for example, the recorded V0 script SHA is `6c30…` while the current script is `9c67…`; V12 is `072ec…` versus current `8f11…`. The synthesis nevertheless presents the thirteen passes as final release evidence.
+
+**Why it matters.** The package's strongest end-to-end evidence does not describe the source that will ship. It cannot support claims about the late schema, version, fixture, or documentation changes, and its missing source revision prevents a reader from reconstructing what was tested.
+
+**Reproduce or verify.**
+
+~~~r
+m <- read.csv(
+  "tools/validation/generated/validation-run-manifest.csv",
+  stringsAsFactors = FALSE
+)
+full_pass <- m[m$mode == "full" & m$status == "pass", ]
+latest <- full_pass[
+  !duplicated(full_pass$experiment_id, fromLast = TRUE),
+]
+latest[, c(
+  "experiment_id", "run_id", "package_version",
+  "script_sha256", "git_sha"
+)]
+read.dcf("DESCRIPTION", fields = "Version")
+tools::sha256sum(c(
+  "tools/validation/jobs/run-v0-validation.R",
+  "tools/validation/jobs/run-v12-validation.R"
+))
+~~~
+
+Then compare the recorded and current script digests, and search V12's summary/current pin for `dab943488dc9d8ae` versus `df7a9af6d6f144c1`.
+
+**Suggested fix.** Freeze the intended release commit, then rerun V0–V12 in `full` mode with `RESUME=false` and `OVERWRITE=true` after resolving the Critical defects. Bind every result to a non-empty source revision, package version, script digest, parameter digest, runtime/RNG metadata, and artifact digests. Generate the synthesis only from rows whose bindings match the release candidate.
+
+## Important
+
+### I-1 — M7 and the maintainer policy contain mutually incompatible contracts
+
+**Location.** `tools/cross-os-reproducibility-policy.md:38-46`; `vignettes/m7-reproducibility-provenance.Rmd:63-86,113-121,180-191,333-375,396-437`; `R/utils-reproducibility.R:282-287,380-389`; `index.md:95`; `vignettes/m5-custom-g-distributions.Rmd:324-325`.
+
+**What is wrong.** The maintainer policy says doubles are hashed “exactly, with no rounding,” while the code rounds to nine significant digits. M7 opens with v0.2 portability, later retains the old v0.1 package-version/platform hierarchy and denies cross-platform equality, then promises cross-platform equality again. It says numeric diagnostics enter through a stable allowlist and callback identity changes the hash; v3's allowlist is empty and same-role callback bodies canonicalize to the same presence sentinel. It also promises a saved/current R-version warning that does not exist (C-3).
+
+Several public examples retain the old seed-1 hash `c52e75f276d82836`: M7 lines 117 and 355, `index.md:95`, and M5 lines 324–325. The current seed-1 JEBS-paper hash is `04b356c64fab6bd7`, which `README.md:93` now shows.
+
+**Why it matters.** A user cannot infer one stable procedure or interpret a mismatch consistently. Stale examples make correct runs appear irreproducible, and the contradictions survived policy tests that search for a few required phrases without rejecting obsolete ones.
+
+**Reproduce or verify.**
+
+~~~sh
+rg -n 'exactly|round|c52e75f276d82836|callback|allowlist|cross-platform|0[.]1[.]0' \
+  tools/cross-os-reproducibility-policy.md \
+  vignettes/m7-reproducibility-provenance.Rmd index.md \
+  vignettes/m5-custom-g-distributions.Rmd
+Rscript -e 'pkgload::load_all(".", quiet=TRUE); cat(canonical_hash(sim_multisite(preset_jebs_paper(), seed=1L)), "\n")'
+~~~
+
+**Suggested fix.** Rewrite M7 and the maintainer policy from one normative contract after C-1–C-3 are resolved. Generate displayed hashes from executable examples. Replace phrase-presence tests with semantic assertions covering rounding, callback treatment, diagnostics, schema, version, platform, and RNG requirements.
+
+### I-2 — validation resume can bless stale artifacts with current provenance
+
+**Location.** `tools/validation/R/validation-harness.R:130-132,179-221`; `tools/validation/jobs/run-v12-validation.R:19-37`; `tools/validation/generated/validation-run-manifest.csv:2`; `tools/validation/README.md:25-27`.
+
+**What is wrong.** “Existing run complete” means only that the result and summary files exist. Jobs default to `RESUME=true` and `OVERWRITE=false`; they read the old summary, re-report its pass, and exit. Manifest writing can then describe the reused result with current script/package fields even though those fields were not verified against the artifact.
+
+**Why it matters.** This is the mechanism by which validation can appear fresh when it is not. Manifest row 2 records a 0.002-second reused pass, so the footgun has already fired; it is not hypothetical.
+
+**Reproduce or verify.**
+
+~~~sh
+MULTISITEDGP_VALIDATION_RESUME=true \
+MULTISITEDGP_VALIDATION_OVERWRITE=false \
+Rscript tools/validation/jobs/run-v12-validation.R
+tail -n 2 tools/validation/generated/validation-run-manifest.csv
+~~~
+
+Run this only on a disposable copy if preserving the current manifest matters; source inspection at the cited lines verifies the behavior without mutation.
+
+**Suggested fix.** Default resume off. Require a sidecar whose source revision, script, package, parameters, mode, repetitions, seed, schema, runtime, and artifact digests all match before reuse. Record status `reused`, not `pass`, and retain the producing metadata rather than stamping verifier metadata.
+
+### I-3 — `scenario_audit()` says `pass = TRUE` for `WARN`
+
+**Location.** `R/scenario_audit.R:60-64,335-365`; `vignettes/a3-diagnostics-in-practice.Rmd:529-546`; `tests/testthat/test-scenario-audit-step7-6.R:117-124`.
+
+**What is wrong.** Documentation defines `pass = TRUE` as every runnable gate passing, but the implementation is `pass = !identical(status, "FAIL")`. A `WARN` therefore has `pass = TRUE`, and the test explicitly locks that combination. Separately, Group C can be unavailable while `pass` remains true; `target_source` exposes the omission, but completeness and outcome are still compressed into one convenient Boolean.
+
+**Why it matters.** Downstream automation will naturally filter on `pass` and accept warning cells as if every threshold passed. The field name is stronger than its semantics.
+
+**Reproduce or verify.**
+
+~~~r
+metrics <- tibble::tibble(
+  I_hat = rep(.3, 5), R_hat = rep(1.2, 5),
+  mean_shrinkage = c(.2, rep(.7, 4)),
+  feasibility_efron = rep(20, 5),
+  feasibility_morris = rep(20, 5),
+  bhattacharyya = rep(.9, 5), ks = rep(.1, 5)
+)
+th <- modifyList(default_thresholds(), list(
+  mean_shrinkage_min = .5, feasibility_min = 10,
+  R_max = 2, bhattacharyya_min = .8, ks_max = .2
+))
+multisiteDGP:::.summarize_scenario_metrics(metrics, th)[
+  c("status", "pass", "warn_reasons")
+]
+~~~
+
+**Suggested fix.** Define `pass = identical(status, "PASS")`, or deprecate it in favor of an honestly named `not_fail`. Add separate fields for `complete` / runnable gate groups and outcome. Preserve `target_source` as useful provenance.
+
+### I-4 — the KS p-value treats a deterministic quantile grid as a random sample
+
+**Location.** `R/diagnostics-core.R:236-264,522-531,714-765`.
+
+**What is wrong.** The automatic reference is `qnorm(ppoints(J))` or a scaled Student-t quantile grid: it is deterministic conditional on \(J\). The code then passes it to the ordinary two-sample `ks.test()` as though both vectors were random samples. The source also says `KS < 0.10` corresponds to two-sample \(p>0.05\) at \(J=50\), but the equal-size two-sample 5% critical distance is about 0.27.
+
+**Why it matters.** The distance remains descriptive, but the reported p-value and PASS/WARN/FAIL calibration are not valid for the statistic being computed. Under the null the test is extremely conservative and has little diagnostic power.
+
+**Reproduce or verify.**
+
+~~~r
+set.seed(20260815)
+B <- 10000L
+J <- 50L
+ref <- qnorm(ppoints(J))
+p_two <- replicate(
+  B,
+  suppressWarnings(ks.test(rnorm(J), ref)$p.value)
+)
+p_one <- replicate(B, ks.test(rnorm(J), "pnorm")$p.value)
+c(
+  two_sample_reject = mean(p_two <= .05),
+  two_sample_median = median(p_two),
+  one_sample_reject = mean(p_one <= .05)
+)
+~~~
+
+The reviewed run gave a two-sample rejection rate of 0.16% and median p-value 0.869; the correctly specified one-sample test rejected about 5% of null draws.
+
+**Suggested fix.** Use a one-sample KS test against the analytic Gaussian or standardized Student-t CDF. If the fixed-grid distance is preferred, calibrate that statistic by Monte Carlo and do not label an ordinary two-sample result as its p-value. Regression-test null size and power.
+
+### I-5 — asymmetric-Laplace help reverses the direction of skew
+
+**Location.** `R/layer1-gen_effects_ald.R:22-25,39-42,73-79,103-108`; `vignettes/m2-g-distribution-catalog.Rmd:674-680`.
+
+**What is wrong.** Function help and examples say `rho = 0.3` is left-skewed and `rho = 0.7` right-skewed. The implementation and M2 have the opposite direction.
+
+**Why it matters.** A user choosing `rho` to model asymmetric impacts will generate the mirror image of the intended distribution.
+
+**Reproduce or verify.**
+
+~~~r
+skew <- function(x) mean((x - mean(x))^3) / sd(x)^3
+set.seed(1)
+a <- gen_effects_ald(J = 200000L, rho = .3)$z_j
+set.seed(1)
+b <- gen_effects_ald(J = 200000L, rho = .7)$z_j
+c(rho_03 = skew(a), rho_07 = skew(b))
+~~~
+
+The reviewed run gave approximately \(+1.45\) for `rho = .3` (right-skewed) and \(-1.42\) for `rho = .7` (left-skewed).
+
+**Suggested fix.** Reverse the direction in roxygen, generated Rd, and examples so it agrees with M2 and the generator. Add a large-sample signed-skewness property test at symmetric parameter values.
+
+### I-6 — the formula for \(S_j\) is right, but its endpoint interpretation is reversed
+
+**Location.** `R/layer2-diagnostics.R:133-176,207-216,349-374,494-495`; JEBS paper `../dev/references/lee-et-al-2024-improving-the-estimation-of-site-specific-effects-and-their-distribution-in-multisite.md:81-96`; `vignettes/m8-migration-from-siteBayes2.Rmd:331-334`.
+
+**What is wrong.** The code correctly computes
+\[
+S_j=\frac{\sigma_\tau^2}{\sigma_\tau^2+\widehat{se}_j^2},
+\qquad
+\widehat{\tau}^{EB}_j=\tau+S_j(\widehat{\tau}_j-\tau).
+\]
+The help then says \(S_j\to1\) means the prior dominates and \(S_j\to0\) means the data dominate. Those meanings are reversed: \(S_j\) is the data/reliability weight. M8 likewise says larger sites experience stronger shrinkage toward the mean, when their smaller sampling variance raises \(S_j\) and causes **less** pooling.
+
+**Why it matters.** Users can rank sites and interpret Group D in exactly the wrong direction, even though estimates computed from the formula are correct.
+
+**Reproduce or verify.**
+
+~~~r
+S <- compute_shrinkage(c(0.01, 10), sigma_tau = .2)
+cbind(se2 = c(0.01, 10), S = S, amount_pooled = 1 - S)
+~~~
+
+The precise site has \(S=0.8\) and retains 80% of its raw deviation; the noisy site has \(S\approx0.004\) and is almost fully pooled.
+
+**Suggested fix.** Call \(S_j\) reliability, retention, or data weight everywhere. When prose asks “how much shrinkage,” report \(1-S_j\). Correct the endpoint descriptions, examples, Group D action text, and M8; keep the numeric implementation.
+
+### I-7 — two public “canonical” diagnostic rubrics disagree materially
+
+**Location.** `R/diagnostics-core.R:348-361,553-588`; `R/layer2-diagnostics.R:630-729`.
+
+**What is wrong.** The attached single-run diagnostic calls mean shrinkage PASS on \([0.10,0.95]\) and feasibility PASS only at 30 or more. `default_thresholds()` calls itself canonical but uses mean-shrinkage minimum 0.30 and feasibility minimum 5. The code does not name these as two different rubrics or explain why their directions differ by a factor of six.
+
+**Why it matters.** The same design can be PASS under one official surface and WARN or FAIL under the other. Users cannot tell whether a discrepancy is a statistical signal or merely a hidden rubric change.
+
+**Reproduce or verify.**
+
+~~~r
+x <- sim_meta(
+  J = 50L, I = .2, R = 1, sigma_tau = .2, seed = 1L
+)
+tab <- attr(x, "diagnostics")$target_vs_realized
+tab[tab$diagnostic %in% c("mean_shrinkage", "feasibility_index"),
+    c("diagnostic", "realized", "status", "pass_rule")]
+default_thresholds()
+~~~
+
+For this design the attached rubric treats mean shrinkage 0.20 as PASS and feasibility 10 as WARN; the scenario rubric fails the former threshold and passes the latter.
+
+**Suggested fix.** Establish one versioned rubric, or explicitly name one `single_run_descriptive` and the other `replicate_scenario_gate` in code and output. Document their calibration and never call both unqualified “canonical.”
+
+### I-8 — the seven-shape correction is still inconsistent across the advertised surface
+
+**Location.** `NEWS.md:53-62`; `DESCRIPTION:7-12`; `vignettes/m1-statistical-dgp.Rmd:289-293,584-588`; `vignettes/m2-g-distribution-catalog.Rmd:525`; `vignettes/m5-custom-g-distributions.Rmd:330`; `tools/traceability/validation-index.csv:8`.
+
+**What is wrong.** NEWS and DESCRIPTION correctly describe six built-ins plus `User` as seven generated shapes, with DPM reserved. M1 says seven but lists eight including DPM, then says “seven non-Gaussian”; M2 says seven built-ins; M5 calls DPM the eighth shape; the validation ledger says “8 G shape.”
+
+**Why it matters.** The runtime DPM error is clear and actionable, but catalog counts remain a reliability signal and can make a user plan for a generator that does not exist.
+
+**Reproduce or verify.**
+
+~~~sh
+rg -n 'seven|eight|8 G shape|DPM|built-in|non-Gaussian' \
+  DESCRIPTION NEWS.md vignettes tools/traceability/validation-index.csv
+~~~
+
+**Suggested fix.** Generate one catalog fragment or test from the dispatch table. Use exactly “six built-ins plus `User` = seven generated shapes; `DPM` is a reserved value and does not generate data.” Remove DPM from enumerated generated-shape lists.
+
+### I-9 — `preset_walters_2024()` overstates which parameters the source anchors
+
+**Location.** `R/presets.R:230-247`; `_pkgdown.yml:227-233`; `vignettes/a2-choosing-a-preset.Rmd:138-164`; `README.Rmd:279-284`; blueprint `../multisiteDGP-design-archive/blueprint-multisiteDGP-book/13-presets.qmd:293-309`; Walters short source `../dev/references/Walters - 2024 - Empirical Bayes Methods in Labor Economics_Short version.md:801-819`.
+
+**What is wrong.** Public surfaces call all preset values Walters calibration/parameters. The local source supports \(J=46\), average \(s^2=0.010\), \(\sigma_\tau=0.197\), and weak precision dependence. It does not directly support `nj_mean = 240`, `cv = .30`, `nj_min = 50`, or outcome \(R^2=.40\). The blueprint correctly records the first as back-calculated under an assumed \(R^2\) and the latter values as assumptions. The nearby \(R^2=.502\) in Walters concerns a conditional prior for charter quality, not the package's outcome \(R^2\).
+
+**Why it matters.** A researcher may cite assumptions as empirical estimates from Walters and treat a proxy as a replication design.
+
+**Reproduce or verify.** Compare the cited source paragraphs with the preset constructor and the blueprint's “Directly anchored / Derived / Assumed” notes at the lines above.
+
+**Suggested fix.** Rename the description “Walters-anchored proxy,” and expose direct, derived, and assumed inputs in help and provenance. Prefer calibrating the direct-precision margin to the reported average \(se^2=0.010\) if the goal is source fidelity.
+
+### I-10 — T12 no longer enforces the RNG-order invariant recorded by the blueprint and ledger
+
+**Location.** Blueprint `../multisiteDGP-design-archive/blueprint-multisiteDGP-book/04-statistical-dgp.qmd:283-294` and `18-test-strategy.qmd:456-483`; `tools/traceability/invariant-index.csv:14`; `tests/testthat/test-T12-A1-rng-order.R:13-42`.
+
+**What is wrong.** The blueprint and ledger require the exact call vector `runif-rnorm-rnorm-rgamma-sample.int-rnorm` with no additional RNG calls. T12 traces only `rnorm`, `rgamma`, and `sample.int` and explicitly declines to freeze the Layer 1 prefix. It checks only one Gamma, a later shuffle, and a following normal draw. Added/reordered `runif` or Layer 1 `rnorm` calls would pass.
+
+**Why it matters.** The declared legacy reproduction invariant is stronger than its regression. A seemingly harmless internal refactor can move every seeded legacy fixture while T12 remains green.
+
+**Reproduce or verify.**
+
+~~~sh
+sed -n '13,42p' tests/testthat/test-T12-A1-rng-order.R
+sed -n '14p' tools/traceability/invariant-index.csv
+~~~
+
+A full live trace during review still matched the ledger; the finding is that the test would not detect departure.
+
+**Suggested fix.** Trace and assert the complete ordered vector, including `runif`, or deliberately narrow the invariant in the blueprint, ledger, fixture policy, and release notes. Do not leave the authority and the executable test at different strengths.
+
+### I-11 — the binary “golden” snapshot test compares checked files with themselves
+
+**Location.** `tests/testthat/test-golden.R:2-18`; `tests/testthat/test-golden-fixtures-step8-1.R:45-58`; `tests/testthat/test-snapshot-print.R:32-39`.
+
+**What is wrong.** `expect_snapshot_file()` is given `tests/testthat/_snaps/golden/<name>` as the actual file and resolves the expected file to that same golden-snapshot path. The manifest test reads each checked file and compares it with SHA/hash/shape metadata generated from that file. Neither path regenerates the preset output and compares it with the binary authority.
+
+**Why it matters.** A stale or internally inconsistent fixture can pass. C-3 is the concrete example: all five stored provenance hashes drifted, but the golden tests stayed green. Live print snapshots mitigate this by regenerating presets, but they compare formatted output and a canonical hash, not the full binary object and attributes.
+
+**Reproduce or verify.**
+
+~~~r
+readLines("tests/testthat/test-golden.R", n = 20L)
+# Then compare golden_dir/name with testthat's expected snapshot location:
+testthat::test_path("_snaps", "golden", "preset_jebs_paper.rds")
+~~~
+
+**Suggested fix.** Regenerate every preset into a temporary object/file with its fixed seed and compare canonical columns, classes, design, diagnostics, and provenance against the checked authority. Keep exact artifact SHA as a separate immutability check. Assert stored provenance hash equals live recomputation.
+
+## Polish
+
+### P-1 — Layer 3 algorithm and RNG documentation describes an older implementation
+
+**Location.** `R/layer3-align_rank_corr.R:15-25,49-54,178-234`; `R/layer3-align_hybrid_corr.R:14-29,39-44,140-142,224-240`; `tests/testthat/test-layer3-align-rank-corr.R:101-125`.
+
+**What is wrong.** Rank and hybrid help describe random `sample.int()` swap proposals starting from upstream order. The implementation deterministically compares identity with a perfect-rank candidate and exhaustively scans all pairs for the best swap; tests require RNG neutrality. Hybrid also has a statistically reasonable but undocumented zero-target identity exception that need not meet the ordinary realized-tolerance promise.
+
+**Why it matters.** Users cannot budget RNG streams or interpret `iterations` and convergence from the stated algorithm. Current behavior itself is coherent.
+
+**Reproduce or verify.**
+
+~~~sh
+rg -n 'sample[.]int|random|swap|identity|all pairs|zero' \
+  R/layer3-align_rank_corr.R R/layer3-align_hybrid_corr.R \
+  tests/testthat/test-layer3-align-rank-corr.R
+~~~
+
+**Suggested fix.** Document the deterministic exhaustive best-swap search and distinguish pairs evaluated from swaps accepted. State that zero means a population-independence/identity choice and can report non-convergence relative to a sample tolerance.
+
+### P-2 — the deferred E01–E30 installed catalog is still incomplete
+
+**Location.** `R/multisitedgp-package.R:152-190`; `tools/traceability/error-index.csv`; prior Round 2 synthesis `../multisiteDGP-design-archive/documentation-updates/log/056_review-synthesis-round-2/03-validity-assessment.qmd:91-104`.
+
+**What is wrong.** `?multisiteDGP` now gives a useful condition-class hierarchy, but it still does not expose the 30 stable error IDs, affected entry points, or remedies tracked in the development-only CSV. This is the live carry-over explicitly identified in the review prompt.
+
+**Why it matters.** It does not change behavior, but users who receive an ID cannot discover its meaning from the installed package.
+
+**Reproduce or verify.**
+
+~~~sh
+wc -l tools/traceability/error-index.csv
+rg -n 'E0[1-9]|E[12][0-9]|E30' R/multisitedgp-package.R man
+~~~
+
+**Suggested fix.** Generate a compact installed ID → condition class → API → remedy table from `error-index.csv` and link every typed error to it.
+
+### P-3 — conformance and traceability tests mostly validate their own ledgers or syntax
+
+**Location.** `tests/testthat/test-error-message-conformance.R:26-108`; `tests/testthat/test-traceability.R:1-249`; `tools/traceability/docs-index.csv:5-11`; `tests/testthat/helper-policy.R:91-109`; `tests/testthat/helper-skip-policy.R:3-14`.
+
+**What is wrong.** The error scanner recognizes a narrow subset of literal/sprintf fix arguments and checks imperative prefix, length, and punctuation—not whether the suggested remedy works. Traceability tests largely assert hard-coded ledger counts and status/file existence. The docs ledger tracks seven legacy V1–V7 entries while pkgdown exposes 16 current A1–A8/M1–M8 vignettes. One helper still says property tests are environment-gated while another says those gates were removed.
+
+**Why it matters.** These checks add confidence about formatting and inventory discipline, but their names imply semantic conformance. The stale validation and documentation records in this review passed them.
+
+**Reproduce or verify.**
+
+~~~sh
+sed -n '1,120p' tests/testthat/test-error-message-conformance.R
+sed -n '1,260p' tests/testthat/test-traceability.R
+wc -l tools/traceability/docs-index.csv
+rg -n '^  - (a|m)[1-8]-' _pkgdown.yml
+~~~
+
+**Suggested fix.** Inventory all abort call sites with a fail-closed AST walk, sample remedies as executable tests, and bind traceability rows to semantic sources (namespace exports, the actual 16-vignette registry, and provenance-compatible validation artifacts). Remove stale helper metadata.
+
+# Focus 1 — the reproducibility contract
+
+## What v3 actually establishes
+
+The implementation is a useful **numerical-content fingerprint**, but it is not the bit-portable identity witness described in public policy. The default data-frame payload contains:
+
+| Included | Excluded or normalized |
+|---|---|
+| all column names and values, with columns sorted | row order metadata and atomic attributes |
+| every double after nine-significant-digit rounding | raw low-order IEEE-754 bits |
+| a design hash built under the same canonicalizer | function/environment bodies; only hook presence/name remains |
+| paradigm, schema, function-exclusion policy, custom hook names | package version, R version, platform, RNG kind |
+| no derived diagnostics by default | diagnostics unless the caller explicitly opts them in |
+
+That boundary is mostly sensible for asking “are these simulations numerically equivalent under this design?” Dropping derived `cor()`/`sd()` quantities avoids hashing redundant platform-sensitive accumulation. Sorting named structures and recording the schema are also sound choices.
+
+It does **not** answer “are these R objects bit-identical?” The one-in-\(10^{11}\) perturbation in C-1 is reachable as genuine numerical change and intentionally disappears. Conversely, decimal rounding is discontinuous: a two-ULP perturbation at a boundary can move the hash. Nine digits is therefore an equivalence policy, not a cryptographic-collision problem and not an absolute bound against platform-noise mismatches.
+
+Atomic attribute removal adds another semantic edge: factors with the same integer codes but different labels canonicalize identically. For example, a two-level factor coded 1/2 as `control/treatment` and one coded 1/2 as `low/high` receive the same data-frame hash. That matters if user covariates or custom outputs contain factors. Canonicalize factor values and orderedness explicitly, or narrow the accepted hash input contract.
+
+## Portability and replay
+
+The five-cell CI matrix and nine current fixtures are useful finite evidence. They show that selected runs agree after v3 normalization. They cannot prove the universal “any design, any platform, bit for bit” statement; source comments already record counterexamples to raw equality.
+
+A user attempting replay on a different computer must, in practice, preserve:
+
+1. the exact design values, including covariate data and the source/behavior of every callback;
+2. the integer seed;
+3. the producing package source/version;
+4. the R version and all three `RNGkind()` components;
+5. hash schema and significant-digit policy; and
+6. relevant optional-package versions for callback or distribution implementations.
+
+The current contract names only design and seed, canonicalizes callback bodies away, and does not record RNG kind. “Same design” is consequently ambiguous for callbacks, factors, formula environments, and package-default changes.
+
+## Recommended identity model
+
+Use three intentionally different identifiers:
+
+| Identifier | Purpose | Suggested content |
+|---|---|---|
+| `content_hash` | compare scientifically equivalent simulated content | named canonical values, declared precision, design content, schema |
+| `artifact_sha256` | prove exact file/byte identity | the serialized or exported artifact bytes |
+| `run_provenance_digest` | reproduce the generating computation | content hash, exact source/package revision, R/platform/RNG triple, dependencies, callback source digests, seed, parameters |
+
+Removing package version from `content_hash` is defensible: equal content should not become unequal merely because a release number changed. Treating design hash and schema as a complete replacement for producer lineage is not defensible, especially after C-3 showed that the schema did not move when payload meaning moved. The version belongs in immutable run provenance, not necessarily in numerical content identity.
+
+# Focus 2 — honesty: advertised versus implemented
+
+The advertised surface is substantially more disciplined than it was in the prior review cycle, but it has not reached “advertised == implemented.”
+
+## What is honest and working
+
+- The `DESCRIPTION` and v0.2 NEWS entry correctly describe the generated catalog as six built-ins plus `User`. At the point of use, `true_dist = "DPM"` aborts with an actionable explanation that the sampler is reserved rather than implemented.
+- Keeping `target_marginal_rho` as a reserved design field while removing the old inert front-door `upstream` argument is coherent. The former explicitly aborts on non-NULL use and has snapshot/update tests. Current Layer 2/3 functions legitimately use `upstream` for required preceding-layer data; that is not the removed inert wrapper knob.
+- The typed condition hierarchy exists and the sampled runtime errors I exercised had the promised three-part structure: failure, rule, and an actionable fix. P-3 is about the scanner's strength, not evidence that the sampled messages are unusable.
+- Group C's skip for a distribution without an automatic reference is statistically preferable to manufacturing a failure. `target_source = "not_available"` is useful and should remain.
+
+## Where the surface is not honest enough
+
+The largest gaps are behavioral: the bit-identity contract (C-1), JEBS strictness (C-4), continuous A2-moment promise (C-5), copula audit (C-6), and siteBayes2 migration equivalence (C-7). These are all statements a competent user could act on.
+
+The catalog-count contradictions in I-8 are narrower: DPM's runtime state is clear, but the number “seven” is used for different sets. Walters is a second provenance problem: the constructor is a reasonable proxy, yet its assumed and derived fields are advertised as empirical chapter calibration. M8's map also omits real predecessor exports and shape conversions (`T`/`Skew` names, the old ALD parameterization, and the old `precision_dependence = FALSE` RNG-consuming shuffle). That incompleteness should be corrected alongside C-7 rather than presented as a rename-only migration.
+
+For `scenario_audit()`, the stronger argument is to split two questions:
+
+1. Were all **runnable** gates measured, and which groups were unavailable?
+2. Did the measured gates pass, warn, or fail?
+
+Skipping Group C can remain non-failing, but `pass = TRUE` should not also cover a `WARN`. A Boolean that means “not an outright failure among whatever happened to run” invites incorrect filtering. Use `status` for outcome, `complete`/group fields for availability, and reserve `pass` for literal PASS.
+
+# Focus 3 — do the tests verify anything?
+
+## What a green suite establishes
+
+The suite is meaningful. On this release tree it established, on the reviewed macOS/R session:
+
+- the package loads and 4,882 assertions execute with no skips;
+- exported front doors, validators, typed conditions, and snapshot surfaces are internally consistent;
+- all six built-in Layer 1 generators satisfy substantial ordinary-case moment/property checks;
+- seeded wrappers restore caller RNG state;
+- current JEBS package and independent-generator paths agree for four selected seeds under their shared inputs;
+- preset print outputs and canonical hashes are stable on this machine; and
+- previously environment-gated statistical tests now genuinely run.
+
+This is much stronger than a high coverage percentage by itself. The suite caught many upgrade regressions and gives a solid base for remediation.
+
+## What it does not establish
+
+It does not establish:
+
+- raw cross-OS bit identity, because T1a compares rounded hashes and no job aggregates raw columns/artifact bytes across operating systems;
+- fidelity to the JEBS lower bound, because both the package and reference use 4 and chosen fixtures never hit the floor;
+- A2's advertised moments outside ordinary `cv`, because edge tests reuse the solver's permissive tolerance and check finite/self-consistent output;
+- correct copula audit scale, because alignment tests and diagnostic tests do not assert that a successfully fitted latent target avoids a raw-Pearson `FAIL`;
+- calibrated KS p-values, the signed direction of ALD skew, or the endpoint meaning of \(S_j\);
+- a fresh golden binary produced from current code, because I-11 compares checked artifacts and derived metadata; or
+- validation of the final v0.2.0 source, because the full artifacts predate it.
+
+## One concrete defect that passes
+
+C-5 is the clearest answer. The public call corresponding to `nj_mean = 100`, `cv = 1e-5`, and `nj_min = 5` returns a continuous distribution centered at 5.1159. The solver marks it verified because a variance-cancellation floor of 2,157.9 is applied to the \(-0.949\) **mean** residual. The targeted edge tests pass because they check the same `tol_effective` and finite parameters rather than independent achieved moments. The full suite therefore remains green in the presence of a 95% mean error.
+
+## Self-reference and weakened authorities
+
+Four patterns deserve attention:
+
+1. Canonicalization tests correctly lock the nine-digit implementation, but their names and surrounding policy infer byte identity that the oracle cannot prove.
+2. The JEBS generator is independent code, yet it copied the package's `nj_min = 4` departure. Agreement between implementations does not validate the shared authority.
+3. Golden snapshot and manifest checks treat checked files as both subject and authority. C-3 demonstrates the missed inconsistency.
+4. Error/traceability scanners validate syntax or ledger self-consistency. They do not validate scientific semantics, current source binding, or whether a suggested fix works.
+
+T12 was explicitly narrowed while the blueprint and ledger retained the exact call-sequence claim. That is a reasonable design decision only if all authorities are narrowed together.
+
+## Golden fixtures and validation harness
+
+Four JEBS seeds and five preset artifacts are useful regression sentinels, not a sufficient external authority. Add boundary-stratified JEBS fixtures (especially floor-active designs), regenerate preset objects inside tests, and separate numerical-content, raw-object, and binary-artifact assertions.
+
+The validation harness needs provenance-compatible resume before its results can serve as release evidence. Existence is not completion. A reused artifact must prove it came from the same source, script, parameters, runtime policy, and schema, and it must remain labeled reused. After fixes, rerunning all thirteen full validations from a frozen commit is necessary.
+
+# Focus 4 — statistical validity
+
+## Layer 1 distributions
+
+The population unit-variance constructions are correct for all six implemented built-ins:
+
+- Gaussian uses a standard normal;
+- Student-t multiplies by \(\sqrt{(\nu-2)/\nu}\);
+- skew-normal subtracts its analytic mean and divides by analytic SD;
+- Yu–Zhang asymmetric Laplace uses the stated analytic first two moments;
+- the two-component mixture standardizes its analytic mixture moments; and
+- point-mass slab solves the component scale from its mixture variance.
+
+A 500,000-draw audit found absolute means below 0.0025 and variances from 0.9981 to 1.0047 across representative parameters. The ALD formula is correct; only its public left/right labels are reversed (I-5).
+
+The Student-t explanation is also correct. For \(\nu=2.5\), the population variance exists but the fourth moment does not, so sample variance is unbiased yet extremely right-skewed. In 10,000 replications at \(J=200\), the review obtained median 0.683, mean 1.007, 80.8% below 1, and maximum 370.9. That supports the vignette's explanation rather than indicating a standardization error.
+
+## Dependence injection
+
+The copula generator's parameterization and recorded latent diagnostic are mathematically coherent: `pearson_corr` targets the correlation of latent normal scores, and population Spearman for a Gaussian copula is \(6\arcsin(\rho_P/2)/\pi\). The documentation needs a worked example because a raw marginal Pearson coefficient is not that target. More importantly, the core diagnostic currently makes precisely that miscomparison (C-6).
+
+Rank and hybrid alignment preserve empirical marginals as intended. Their current search is deterministic, not the random-swap algorithm described in help (P-1). Hybrid's zero-target identity return is a defensible population-independence convention, but it is an exception to the claimed realized-tolerance contract and should be explicit.
+
+## Diagnostics
+
+The numeric kernels for \(\kappa\), informativeness \(I\), raw/trimmed \(R\), \(S_j\), and both feasibility sums match the blueprint/JEBS equations. The defects are in interpretation and calibration:
+
+- \(S_j\) is labeled as amount shrunk when it is the retained data/reliability weight (I-6);
+- two public threshold rubrics conflict (I-7);
+- copula target-versus-realized uses the wrong scale (C-6); and
+- the fixed-grid two-sample KS p-value is not calibrated (I-4).
+
+Those defects can change a PASS/WARN/FAIL decision even where the underlying generated data are correct.
+
+## Engine A2
+
+The scale-invariance claim is mathematically right. With \(Y=X/\bar n\), the conditional truncated-Gamma family depends on \(\alpha\), \(\beta\bar n\), and \(n_{\min}/\bar n\); therefore its theoretical feasible boundary depends on the ratio, not the absolute scale. Numerical checks at fixed ratio 0.2 and \(\bar n\) from 10 through 500 preserved \(\alpha\) and \(\beta\bar n\).
+
+The vignette's boundary table is a coarse empirical grid, however. It should say “largest passing grid value at step 0.05,” not imply an exact attainable boundary.
+
+The adaptive tolerance is not sound as implemented. A cancellation bound for variance verification cannot be used without limit for the mean equation. C-5 is release-blocking. Fix the numerical evaluation and fail-closed domain first; then repeat scale and boundary validation using independent achieved moments.
+
+## Covariates and residual scale
+
+The new implementation correctly uses
+\[
+\tau_j=\tau+X_j\beta+\sigma_\tau z_j,
+\]
+so `sigma_tau` is residual conditional heterogeneity while marginal heterogeneity also contains \(X\beta\). Model-matrix handling and residual/marginal diagnostics are coherent. Point-of-use parameter help should say “residual conditional SD when covariates are present,” because generic “between-site SD” is ambiguous. The code is right; C-7 arises because M8 falsely says predecessor `tau`/`beta` values can be copied into this different scale convention.
+
+# Answers to the five direct questions
+
+## 1. What must a user do to get identical results on another computer?
+
+For the package's **actual rounded-content equality**, the user must preserve the exact design values, seed, active RNG algorithm/normal/sample methods, package source/version, R version, relevant dependency implementations, callback behavior, and hash schema/precision. Then the user compares `canonical_hash()` under the same schema.
+
+For genuinely **identical returned R data**, no general recipe is currently established. The source states that some non-fixture designs drift below \(10^{-9}\) across platforms. A separate raw-object or artifact comparison is required, and it may fail even when the rounded content hash agrees.
+
+Ambiguities in the present contract are:
+
+- “same design” does not say whether callback bodies, formula environments, factor labels, or defaults are part of identity;
+- `RNGkind()` is neither pinned nor required;
+- “bit for bit” is used for a rounded comparison;
+- producer versus verifier R/platform is not distinguished; and
+- package version was removed from the content payload without a complete immutable run-provenance substitute.
+
+## 2. Does the package advertise anything that does not work?
+
+**Yes.** The most consequential examples are:
+
+- cross-platform bit-identical data inferred from a rounded hash (C-1);
+- same design plus seed as sufficient replay state (C-2);
+- the M7 producer/current-R warning and several M7 payload rules (C-3, I-1);
+- “JEBS strict” with the paper's site-size floor (C-4);
+- A2 exact continuous mean/CV matching at valid extreme inputs (C-5);
+- a target-versus-realized copula audit on the target's scale (C-6);
+- same-meaning siteBayes2 migration arguments (C-7);
+- final-tree V0–V12 validation (C-8);
+- ALD left/right skew direction (I-5);
+- \(S_j\) endpoint/shrinkage interpretation (I-6); and
+- Walters as direct calibration for all preset fields (I-9).
+
+DPM and `target_marginal_rho` are **not** examples: both are clearly reserved and abort usefully at the point of use.
+
+## 3. What defect would pass the test suite?
+
+Engine A2 can accept a site-size distribution with requested mean 100 and achieved mean 5.1159 at `cv = 1e-5`. The adaptive SD-cancellation tolerance is also applied to the mean residual, so the solver calls the result verified. Existing edge tests check finiteness and the same internal acceptance rule rather than an independent achieved mean. The full 4,882-assertion suite passes with this defect present.
+
+## 4. Which mathematical claim is not demonstrated by the implementation?
+
+The clearest is A2's claim that the continuous truncated-Gamma construction preserves `nj_mean` and matches `cv`. Scale invariance of the theoretical family is demonstrated; moment matching by the implemented numerical solver is not. C-5 supplies a counterexample, so this is stronger than “not yet proved.”
+
+The KS p-value calibration is another unsupported mathematical claim: a deterministic quantile grid is not a second random sample from the null distribution.
+
+## 5. What would embarrass a referee reading the JEBS paper alongside the package?
+
+Three items stand out:
+
+1. the paper explicitly truncates at \(n_j=5\), while the “strict” preset and independent authority use 4 and choose fixtures that never expose the difference;
+2. a correctly calibrated latent-copula run is labeled `FAIL` by comparing the latent target with raw marginal Pearson correlation; and
+3. policy repeatedly says “bit for bit” even though the implementation rounds and its own source says raw identity does not generalize.
+
+The Walters over-attribution and stale final-validation evidence would also weaken confidence, but the three above are the most likely to trigger a referee's substantive objection.
+
+# Improvement suggestions, ranked by value-to-effort
+
+These are durable trust improvements, not a substitute for resolving the Critical findings.
+
+| Rank | Improvement | Value | Effort | Concrete deliverable |
+|---:|---|:---:|:---:|---|
+| 1 | Split numerical content, exact artifact, and run-provenance identities | Very high | Medium | Export/record `content_hash`, `artifact_sha256`, and a provenance digest with explicit non-overlapping guarantees |
+| 2 | Make release evidence commit-locked | Very high | Low–medium | One command that rejects dirty/unbound source, disables resume, runs V0–V12, and generates synthesis only from matching manifest rows |
+| 3 | Add external scientific oracles | Very high | Medium | JEBS floor-active fixtures, a hand/analytic copula example, and Walters direct/derived/assumed source assertions |
+| 4 | Add an adversarial A2 conditioning grid | Very high | Medium | Independent achieved-mean/SD tests over log-spaced `cv`, floor ratios, scales, and solver starts; fail-closed expectations outside support |
+| 5 | Put one worked copula example at point of use | High | Low | For latent \(\rho_P=0.7\), show achieved latent Pearson, implied and realized Spearman, and untargeted raw Pearson side by side |
+| 6 | Separate scenario outcome from measurement completeness | High | Low | `status`, `pass`, `complete`, and runnable/skipped group fields with unambiguous truth tables |
+| 7 | Generate every published hash literal | High | Low | A single checked script/chunk feeding README, index, M5, M7, fixtures, and V12; CI rejects hand-entered drift |
+| 8 | Give presets source-field provenance | High | Low–medium | Machine-readable per-field tags `direct` / `derived` / `assumed` with citation and derivation notes |
+| 9 | Maintain executable predecessor-migration fixtures | High | Medium | Old/new parity cases by predecessor function, shape, covariate, dependence, and RNG behavior |
+| 10 | Calibrate and version diagnostic rubrics | Medium–high | Medium | Null/alternative simulation note, one-sample Group C tests, named single-run vs scenario profiles, version recorded in output |
+| 11 | Install the typed error catalog | Medium | Low | Generated E01–E30 help table linked from every condition class and API |
+| 12 | Replace phrase-count documentation tests with semantic scans | Medium | Medium | Reject contradictory contract clauses, stale catalog membership, missing public vignettes, and unexecutable fix guidance |
+
+# Verdict
+
+::: {.callout-danger title="DEFER"}
+The release should wait. Resolve **C-1 through C-8**, then rerun the complete test, check, cross-OS, fixture, and V0–V12 validation stack from one frozen v0.2.0 release candidate.
+:::
+
+The minimum release path is:
+
+1. Decide and state the identity contract; pin or record RNG kind; advance/finalize the schema; repair fixture and producer/verifier provenance (C-1–C-3).
+2. Correct the JEBS strict floor and strengthen raw/reference fixtures (C-4).
+3. Fix A2 acceptance and the copula diagnostic estimand, with independent regressions (C-5–C-6).
+4. Correct the migration conversion and its executable parity coverage (C-7).
+5. Resolve the release-relevant Important factual errors—especially M7, resume, ALD skew, \(S_j\) interpretation, and diagnostic calibration—then freeze the candidate.
+6. Run all thirteen full validations with resume disabled, bind them to that source, and regenerate the synthesis (C-8).
+
+A passing rerun on the unchanged final tree would support **RELEASE WITH FIXES**. The current evidence does not.
+
+# Appendix: methodology
+
+## Review organization and independence
+
+I used three independent, read-only sub-audits in parallel—reproducibility/provenance, statistical kernel, and advertised surface/tests—then independently reproduced the highest-severity results before integrating them. Sub-auditors did not edit package or report files. Findings were retained only when the cited source and either an executable reproduction or a direct authority comparison supported them.
+
+The review took approximately **4.5 combined reviewer-hours**. Parallel work reduced wall-clock time; that number is effort, not elapsed time.
+
+## Read in full
+
+- `R/utils-reproducibility.R`
+- `inst/REPRODUCIBILITY.md`
+- `tools/cross-os-reproducibility-policy.md`
+- `vignettes/m7-reproducibility-provenance.Rmd`
+- `R/layer2-engine-a2.R`
+- `R/layer3-align_copula_corr.R`
+- `R/diagnostics-core.R`
+- `R/scenario_audit.R`
+- `tools/validation/R/validation-harness.R` and the V12 job
+- all three prior review-cycle `03-validity-assessment.qmd` files (Rounds 1–3), for severity and false-positive calibration
+
+## Read closely or spot-checked
+
+- `DESCRIPTION`, `NEWS.md`, `README.md`/`README.Rmd`, `index.md`, `_pkgdown.yml`
+- all 16 vignette files by inventory; M1, M2, M5, M7, M8, A2, and A3 closely; other vignettes by targeted claims/search
+- Layer 1 family implementations and their standardization derivations
+- Layer 2 A1/front-door documentation and diagnostic helpers
+- rank/hybrid/copula Layer 3 code and targeted tests
+- wrapper/design/provenance construction paths
+- all test inventories, with close reading of canonicalization, T1a, T12, golden fixture, scenario, traceability, A2 edge, Layer 3, and error-conformance tests
+- validation synthesis, manifest, README, V0/V12 scripts, and selected generated results
+- JEBS paper sections on site-size generation/shrinkage, the software appendix generator, fixture generator/manifests
+- predecessor `siteBayes2` exports and relevant generators/dependence paths
+- Walters source paragraphs and replication/preset blueprint notes
+- relevant blueprint sections on DGP, distributions, A2, dependence, diagnostics, tests, validation, and presets
+
+## Executed
+
+- `devtools::test(stop_on_failure = TRUE)`: **4,882 pass, 0 fail, 0 warning, 0 skip**, 118.6 seconds.
+- Hash equivalence and decimal-boundary experiments in C-1.
+- Cross-`RNGkind()` seeded replay in C-2.
+- Stored-versus-current hashes for all five preset RDS objects and producer-R mutation in C-3.
+- Floor-active JEBS simulations for four seeds in C-4.
+- The extreme-conditioning A2 solve and 20,000-draw check in C-5.
+- The \(J=1000\) copula fit/audit reproduction in C-6.
+- Old/new covariate-scale parity algebra and execution in C-7.
+- Validation manifest/script/artifact digest reconciliation in C-8.
+- 10,000-replicate KS null calibration.
+- Large-sample ALD skew checks, 500,000-draw Layer 1 moment checks, and 10,000-replicate Student-t sample-variance check.
+- Selected scenario-rubric, factor-canonicalization, RNG-order, fixture, and hash-literal checks.
+
+All report code chunks are shown but set `eval: false` so rendering does not mutate evidence or silently refresh outputs.
+
+## Gaps and confidence limits
+
+- I did **not** run Linux, Windows, Intel macOS, alternate BLAS/libm, or remote CI. Cross-OS conclusions use repository CI structure, stored evidence, source comments, and local counterexamples to what the hash can prove.
+- I did **not** rerun the approximately two-hour V0–V12 full matrix because C-8 requires a frozen post-remediation source; rerunning the current defective tree would not repair provenance.
+- I did not run `R CMD check --as-cran`, lint, coverage, or rebuild all pkgdown articles. The supplied clean states were not the central question, and the complete tests plus report render consumed the execution budget.
+- Quarto rendered the self-contained HTML successfully, and I statically verified its ten required top-level sections, 22 finding anchors, embedded resources, and absence of external script/style/image URLs. The in-app browser's local-file security policy blocked an independent visual screenshot, so I do not claim browser-level layout verification.
+- I verified the JEBS lower-bound and generator logic closely but did not line-by-line reimplement every JEBS distribution shape or reproduce Figure 4(b), whose source data are unavailable by stated scope.
+- Layer 1 numerical checks sampled representative parameters, not every admissible callback/shape boundary. Custom callback bodies and mixed-measure PointMassSlab distribution-distance behavior were not exhaustively audited.
+- A2 scale invariance was checked by nondimensionalization and representative numerical scales; I did not prove the exact feasible boundary for every truncation ratio.
+- The KS Monte Carlo was local and finite. Its conclusion about using an ordinary two-sample p-value against a deterministic grid does not depend on cross-platform replication, but exact rejection percentages will vary by seed/runtime.
+- Documentation outside the targeted factual claims was not reopened for prose/style, consistent with scope.
+
+Confidence is **high** in all Critical reproductions: each can be repeated from the cited commands or source comparisons. Confidence is moderate-to-high in the Important/Polish inventory; further targeted review may find additional surface inconsistencies, which is why final validation should be generated mechanically rather than treated as a one-time audit.

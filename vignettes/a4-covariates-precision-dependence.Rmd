@@ -176,7 +176,7 @@ dep_dat <- sim_multisite(dep_design)
 canonical_hash(dep_dat)
 ```
 
-The hash `5fc7e768a2581b35` is a determinism smoke check — a local
+The hash `ae9cb935c869fd6c` is a determinism smoke check — a local
 re-run at `seed = 77L` should produce the same value. Now the two
 rank correlations:
 

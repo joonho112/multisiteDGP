@@ -92,7 +92,7 @@ Before drafting any vignette, confirm each of the following.
                                                               gloss on first use only
        2. "Layer 1-4 pipeline"                            -> "the four generative layers"
        3. "dispatches to"                                 -> "selects from" / describe behavior
-       4. "catalog Layer 1 routes"                        -> "the eight built-in G distributions"
+       4. "catalog Layer 1 routes"                        -> "six built-ins plus User (seven generated shapes); DPM reserved"
        5. "v1" / "v0.1 release candidate" / "Gate E"      -> drop (internal jargon)
        6. "P0 blocker" / "validation blocker"             -> drop or describe issue
        7. "V0-V12"                                        -> use vignette pkgdown slug
@@ -107,8 +107,8 @@ Before drafting any vignette, confirm each of the following.
 [ ]  set.seed(1L) in the setup chunk; primary calls also pass seed = 1L
      where the function accepts a seed argument (sim_multisite,
      sim_meta). The deterministic hash for
-     sim_multisite(preset_jebs_paper(), seed = 1L) is
-     c52e75f276d82836 - use as a smoke check.
+     sim_multisite(preset_jebs_paper(), seed = 1L) under hash schema v4 is
+     680d52a539b62f1d - use as a canonical numerical smoke check.
 
 
 -----------------------------------------------------------------------
@@ -225,9 +225,9 @@ NOTES ON OPTIONS
 - collapse = TRUE      collapses code+output into a single block.
 - fig.retina = 2       crisp plots on hidpi displays.
 - out.width = "100%"   plots fill the article column.
-- set.seed(1L)         determinism. The hash for
+- set.seed(1L)         determinism. The schema-v4 canonical numerical hash for
                        sim_multisite(preset_jebs_paper(), seed = 1L)
-                       is c52e75f276d82836 - use as a smoke check.
+                       is 680d52a539b62f1d - use as a smoke check.
 - library(multisiteDGP), library(ggplot2): load both up front. If a
   vignette needs a soft dep (metafor, baggr, multisitepower), load it
   inside a \dontrun-style guarded chunk - do NOT add it to the setup.
@@ -348,7 +348,7 @@ description, then mitigation.
         accepts a seed argument (sim_multisite, sim_meta, gen_effects,
         gen_observations, etc.). The hash
         sim_multisite(preset_jebs_paper(), seed = 1L) ->
-        c52e75f276d82836 is a determinism smoke check.
+        680d52a539b62f1d is a schema-v4 canonical numerical determinism check.
 
 5.8  Stale post-adapter column names
      F-3 in Phase 6 caught examples that, after as_metafor(dat),
@@ -453,7 +453,7 @@ description, then mitigation.
     pkgload::load_all(".", quiet = TRUE)
     dat <- sim_multisite(preset_jebs_paper(), seed = 1L)
     h <- canonical_hash(dat)
-    stopifnot(h == "c52e75f276d82836")
+    stopifnot(h == "680d52a539b62f1d")
     cat("hash OK\n")
   '
 

@@ -395,8 +395,8 @@ Group A row confirms it on simulated inputs (realized $\sigma_\tau =
 calibration has a coding error, not a methodological gap.
 
 Third, *the resulting design is auditable via canonical_hash*. The §7
-manifest freezes the audit's hash (`f305c1bb926e3d2a`) and the
-simulated data's hash (`5eac731a6c96e9d1`); a reader who re-runs the
+manifest freezes the audit's hash (`39e6fd72f650c5e5`) and the
+simulated data's hash (`1948eb204224e642`); a reader who re-runs the
 code at the same package version and seed reproduces both. Every
 input either appears in the back-calc chunk (observed
 $\widehat{se}^2$, target $I$) or in the override chunk (`J`,
@@ -450,7 +450,7 @@ hash. Saving it as an `.rds` next to the manuscript draft makes the
 calibration auditable by a methods reviewer without re-running the
 simulation. `provenance_string()` is the same information in a single
 line — useful for a figure caption or footnote. The two hashes —
-`5eac731a6c96e9d1` for the simulated data and `f305c1bb926e3d2a` for
+`1948eb204224e642` for the simulated data and `39e6fd72f650c5e5` for
 the audit — are deterministic at this package version, this seed, and
 this source `observed_se2`; they are the calibration's contract with
 the reader.

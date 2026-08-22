@@ -45,8 +45,11 @@ snapshot_adapter_data <- function(seed = 8501L) {
 
 snapshot_solver_transform <- function(x) {
   gsub(
-    "Maximum scaled residual was [^ ]+",
-    "Maximum scaled residual was <residual>",
+    "Scaled residuals were mean = [^ ]+ \\(tolerance [^)]+\\) and SD = [^ ]+ \\(tolerance [^)]+\\)\\.",
+    paste0(
+      "Scaled residuals were mean = <residual> (tolerance <tolerance>) ",
+      "and SD = <residual> (tolerance <tolerance>)."
+    ),
     x
   )
 }

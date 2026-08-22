@@ -76,8 +76,8 @@ the package's classes on top.
 }
 \description{
 \code{gen_effects()} is the Layer 1 entry point of the multisiteDGP pipeline —
-it draws standardized site effects \eqn{z_j} from one of seven
-\eqn{G} distributions (or a user callback) and returns a forward-compatible
+it draws standardized site effects \eqn{z_j} from six built-in
+\eqn{G} distributions or a \code{User} callback and returns a forward-compatible
 tibble that Layers 2 through 4 can consume. Most users invoke it indirectly
 through \code{\link{sim_multisite}} or \code{\link{sim_meta}}; call it
 directly when composing the four layers manually or auditing a single
@@ -86,8 +86,8 @@ shape-specific parameters travel through \code{theta_G}, and a user callback
 \code{g_fn} overrides the catalog when \code{true_dist = "User"}.
 }
 \details{
-The accepted \code{true_dist} values are the seven generated shapes plus the
-reserved \code{"DPM"} slot:
+Six built-ins plus \code{User} equal seven generated shapes. \code{"DPM"} is a
+reserved value and does not generate data without an explicit callback bridge:
 \describe{
 \item{\code{"Gaussian"} (\code{\link{gen_effects_gaussian}})}{Standard normal — the canonical baseline. No \code{theta_G} keys.}
 \item{\code{"StudentT"} (\code{\link{gen_effects_studentt}})}{Standardized Student-\eqn{t} with degrees of freedom \code{theta_G$nu} (numeric, > 2). Heavier tails than Gaussian.}
@@ -108,7 +108,7 @@ suspected downstream diagnostic by verifying Layer 1 in isolation; and
 testing a \code{g_fn} callback's output before plugging it into the full
 simulation.
 
-\strong{Unit-variance convention.} All seven shapes share a unit-variance
+\strong{Unit-variance convention.} All seven generated shapes share a unit-variance
 standardization: the package draws \eqn{z_j} with \eqn{E[z_j] = 0} and
 \eqn{\mathrm{Var}(z_j) = 1}, then rescales to
 \eqn{\tau_j = \tau + X_j\boldsymbol{\beta} + \sigma_\tau\,z_j}. This makes

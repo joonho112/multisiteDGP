@@ -1,0 +1,437 @@
+---
+title: "multisiteDGP v0.2.0 — Codex Review Remediation Implementation Plan"
+subtitle: "Phase-by-phase repair plan for reproducibility, statistical validity, scientific fidelity, tests, and release evidence"
+author: "GPT Codex"
+date: "2026-08-15"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+# Technical summary
+
+This plan converts the 22 findings in `013_codex_review.qmd` into six executable phases. The work is ordered by dependency rather than severity alone: reproducibility semantics and hash schema come first because they change fixture identities; numerical/statistical repairs follow; scientific authorities and migration guidance are then corrected; tests are strengthened before the validation harness is trusted; and final release evidence is regenerated only from the frozen repaired tree.
+
+The target completion state is:
+
+- all eight Critical findings are resolved with independent regression tests;
+- the eleven Important findings no longer expose misleading behavior or release evidence;
+- the three Polish findings are closed where they can be addressed without destabilizing v0.2.0;
+- package tests, lint, documentation, and `R CMD check --as-cran` pass;
+- V0–V12 are rerun in full mode with reuse disabled and provenance bound to the final source;
+- every phase has a rendered QMD/HTML execution log in the review folder.
+
+::: {.callout-warning title="Release rule"}
+No final validation artifact may be cited as v0.2.0 evidence until Phase 6. Earlier phase checks are development evidence only.
+:::
+
+# Scope and operating rules
+
+## In scope
+
+- `R/` implementation and roxygen
+- `tests/testthat/`, fixtures, snapshots, and test helpers
+- `inst/REPRODUCIBILITY.md` and generated help
+- README, index, NEWS, pkgdown configuration, and all affected vignettes
+- JEBS and preset fixture generators
+- `tools/traceability/` and `tools/validation/`
+- rendered phase logs and final release evidence
+
+## Constraints
+
+- Preserve unrelated user-owned work and the pre-existing untracked review prompt.
+- Use `apply_patch` for hand edits; use existing generators for mechanical fixture/document regeneration.
+- Do not keep compatibility claims that cannot be tested.
+- A phase is complete only after its acceptance checks pass and its QMD/HTML log is rendered.
+- If a phase exposes a new release-blocking defect, record it in that phase log and repair it before advancing when it invalidates downstream evidence.
+- Steps within a phase may run concurrently only when they do not edit the same contract or generated artifact.
+
+## Log convention
+
+| Phase | Log source | Rendered log |
+|---|---|---|
+| Phase 1 | `015_phase1_reproducibility_contract.qmd` | `015_phase1_reproducibility_contract.html` |
+| Phase 2 | `016_phase2_statistical_validity.qmd` | `016_phase2_statistical_validity.html` |
+| Phase 3 | `017_phase3_scientific_fidelity.qmd` | `017_phase3_scientific_fidelity.html` |
+| Phase 4 | `018_phase4_test_authority.qmd` | `018_phase4_test_authority.html` |
+| Phase 5 | `019_phase5_validation_harness.qmd` | `019_phase5_validation_harness.html` |
+| Phase 6 | `020_phase6_release_closeout.qmd` | `020_phase6_release_closeout.html` |
+
+# Finding-to-step traceability
+
+| Finding | Planned owner |
+|---|---|
+| C-1, C-2, C-3, I-1 | Phase 1 |
+| C-5, C-6, I-3, I-4, I-5, I-6, I-7, P-1 | Phase 2 |
+| C-4, C-7, I-8, I-9, P-2 | Phase 3 |
+| I-10, I-11, P-3 and cross-cutting regression strength | Phase 4 |
+| I-2 and reusable validation provenance | Phase 5 |
+| C-8 and final release verdict | Phase 6 |
+
+# Phase 1 — Reproducibility contract, RNG, hash schema, and provenance
+
+## Step 1.1 — Capture the pre-repair baseline
+
+Record the current source revision, dirty-worktree inventory, package/R/platform/RNG state, current schema, canonical hashes, stored fixture provenance, hash literals, and targeted reproducibility-test results.
+
+**Outputs**
+
+- a machine-readable baseline evidence file under the review folder;
+- an explicit list of user-owned files that will not be modified;
+- a before/after table for all five full-object golden fixtures.
+
+**Acceptance**
+
+- baseline commands are repeatable;
+- every later identity change can be attributed to a planned schema/contract change.
+
+## Step 1.2 — Replace the false bit-identity contract with explicit identity layers
+
+Revise `canonical_hash()` help, installed policy, maintainer policy, M7, README/index references, and comments so the default guarantee is “nine-significant-digit canonical numerical content equality,” not raw or binary equality.
+
+Define three distinct concepts:
+
+1. canonical numerical-content hash;
+2. exact artifact SHA-256;
+3. producing-run provenance.
+
+Preserve factor labels and orderedness in canonicalization rather than hashing only internal integer codes. State exclusions for callbacks and environments precisely.
+
+**Acceptance**
+
+- no current-policy surface claims that equal canonical hashes imply bit-identical R objects;
+- factor-label differences change the canonical payload;
+- the contract explains both rounding equivalence and boundary mismatches.
+
+## Step 1.3 — Pin seeded RNG behavior and record the complete RNG contract
+
+Introduce one internal seeded-execution helper used by seeded front doors. Pin and restore:
+
+- RNG algorithm;
+- normal generator;
+- sample generator;
+- caller `.Random.seed` existence/value.
+
+Record the producing RNG triple in provenance. Distinguish seeded pinned execution from unseeded caller-controlled execution.
+
+**Acceptance**
+
+- the same seeded design is invariant to the caller's initial `RNGkind()`;
+- caller RNG kind and state are restored exactly;
+- provenance exposes the producing triple;
+- unseeded behavior remains caller-controlled and documented.
+
+## Step 1.4 — Advance the schema and repair provenance/fixtures
+
+Advance the canonical schema because the payload semantics and factor treatment changed. Correct `provenance_string()` so it reports the stored producer runtime separately from the current verifier runtime and warns on relevant mismatch.
+
+Regenerate or migrate the five full-object golden fixtures and manifests so:
+
+```r
+attr(object, "provenance")$canonical_hash == canonical_hash(object)
+```
+
+Update every public hash literal from executable authorities rather than hand copying.
+
+**Acceptance**
+
+- all stored/current hashes agree under the new schema;
+- producer R/platform/RNG and verifier runtime are distinguishable;
+- no stale v3 or `c52e75…`/pre-version-removal literals remain in current policy/examples;
+- Phase 1 targeted tests pass.
+
+## Step 1.5 — Render the Phase 1 execution log
+
+Write and render `015_phase1_reproducibility_contract.qmd`/HTML with:
+
+- files changed;
+- contract decision;
+- before/after hashes;
+- exact test commands and outcomes;
+- remaining risks and downstream invalidations.
+
+# Phase 2 — Statistical kernel and diagnostic correctness
+
+## Step 2.1 — Make Engine A2 fail closed under ill-conditioning
+
+Separate mean and SD/variance acceptance tolerances. Never apply the variance-cancellation floor to the mean residual. Use stable Gamma recurrences/moment evaluation where possible, cap verification relaxation, and reject designs whose requested moments cannot be independently verified.
+
+Add public-path tests over log-spaced `cv` and truncation ratios. Verify achieved continuous mean and SD independently of the solver's stored residual.
+
+**Acceptance**
+
+- the `nj_mean=100, cv=1e-5, nj_min=5` counterexample either meets both moments or aborts with an accurate typed error;
+- ordinary documented A2 designs retain expected results;
+- scale-invariance tests remain valid.
+
+## Step 2.2 — Compare copula targets on the correct latent scale
+
+For copula dependence, compare the latent Gaussian target with `achieved_latent_pearson`. Keep raw marginal Pearson as an explicitly untargeted descriptive quantity and report realized Spearman separately.
+
+Add a worked numerical example and a regression with nonlinear margins.
+
+**Acceptance**
+
+- a latent target 0.7 / achieved latent approximately 0.707 design no longer fails because raw Pearson is approximately 0.599;
+- target type and achieved scale are explicit in diagnostic output.
+
+## Step 2.3 — Calibrate Group C distribution diagnostics correctly
+
+Replace the deterministic-grid two-sample KS p-value with an analytic one-sample test for Gaussian and standardized Student-t references, or a documented Monte Carlo calibration when no analytic CDF exists.
+
+Retain the descriptive KS distance but separate it from any p-value whose null distribution differs.
+
+**Acceptance**
+
+- a fixed-seed null simulation at \(J=50\) has approximately nominal rejection behavior within a predeclared Monte Carlo tolerance;
+- help no longer equates `KS < 0.10` with an incorrect two-sample p-value statement.
+
+## Step 2.4 — Correct ALD direction and shrinkage interpretation
+
+Reverse the ALD left/right labels so they match the Yu–Zhang implementation. Describe \(S_j\) consistently as reliability/data-retention weight and use \(1-S_j\) for amount pooled toward the mean.
+
+Correct M8 and diagnostic examples that say larger sites shrink more.
+
+**Acceptance**
+
+- signed-skew tests pass at `rho=.3` and `rho=.7`;
+- endpoint descriptions agree with the EB formula and JEBS paper.
+
+## Step 2.5 — Unify diagnostic status semantics and algorithm documentation
+
+Resolve the two threshold rubrics by naming/versioning their purposes or consolidating them. Make `scenario_audit()$pass` mean literal PASS and expose completeness/runnable groups separately.
+
+Update rank/hybrid documentation to describe deterministic exhaustive best-swap search and the zero-target identity exception.
+
+**Acceptance**
+
+- `WARN` cannot be represented as `pass=TRUE`;
+- single-run and replicate-audit thresholds cannot both appear as an unnamed “canonical” rubric;
+- Layer 3 documentation matches RNG-neutral implementation.
+
+## Step 2.6 — Render the Phase 2 execution log
+
+Write and render `016_phase2_statistical_validity.qmd`/HTML with counterexample-before/fix-after evidence, targeted tests, Monte Carlo settings, and any revised admissible-domain statement.
+
+# Phase 3 — Scientific fidelity, migration, presets, and advertised surface
+
+## Step 3.1 — Restore JEBS strict fidelity
+
+Set the paper-strict lower site-size bound to 5 in the preset and independent generator. Add a floor-active low-mean/high-CV authority fixture and raw column-by-column comparisons. Distinguish literal appendix reproduction from arbitrary-seed algorithm parity.
+
+**Acceptance**
+
+- the strict preset and source generator agree with the paper and appendix;
+- at least one fixture activates the floor;
+- raw seven-column equality is tested separately from canonical hash equality.
+
+## Step 3.2 — Make siteBayes2 migration conversions executable
+
+Correct M8 so it does not claim all old arguments retain their meaning. Document:
+
+- `tau_new = sigma_old * tau_old`;
+- `beta_new = sigma_old * beta_old` for the relevant `gen_priorG2()` path;
+- old `T`/`Skew` names and distribution-parameter conversions;
+- old `precision_dependence=FALSE` shuffle/RNG behavior;
+- real predecessor exports rather than nonexistent help-topic names.
+
+Add old/new executable parity fixtures.
+
+**Acceptance**
+
+- copied examples reproduce equivalent DGPs after explicit conversion;
+- the guide distinguishes statistical equivalence from RNG-sequence parity.
+
+## Step 3.3 — Make preset provenance honest
+
+Relabel `preset_walters_2024()` as a Walters-anchored proxy and identify every material field as direct, derived, or assumed. Correct the \(R^2=.502\) versus assumed outcome \(R^2=.40\) distinction.
+
+**Acceptance**
+
+- no surface describes assumed `nj_mean`/`cv`/`nj_min`/outcome \(R^2\) as direct Walters estimates;
+- preset help exposes the empirical `se^2=.010` anchor.
+
+## Step 3.4 — Normalize catalog and installed error surface
+
+Use one exact catalog statement everywhere: six built-ins plus `User` equals seven generated shapes; `DPM` is reserved.
+
+Generate/install a compact E01–E30 ID → condition → API → remedy table from the traceability ledger.
+
+**Acceptance**
+
+- no current surface lists DPM as a generated eighth shape or calls all seven shapes built-in;
+- installed help resolves every stable error ID.
+
+## Step 3.5 — Render the Phase 3 execution log
+
+Write and render `017_phase3_scientific_fidelity.qmd`/HTML with authority quotations, fixture changes, migration parity evidence, and catalog/preset scans.
+
+# Phase 4 — Test authority and traceability
+
+## Step 4.1 — Replace self-referential golden checks with live regeneration
+
+Generate preset outputs in temporary files/objects and compare data, classes, design, diagnostics, provenance, canonical hash, and exact artifact contracts with the checked authority. Keep binary immutability separate from numerical-content equality.
+
+**Acceptance**
+
+- stale stored provenance fails;
+- changed generation logic fails even if the manifest was regenerated from the same stale file.
+
+## Step 4.2 — Enforce or deliberately narrow T12
+
+Choose one contract:
+
+- enforce the complete legacy RNG call vector; or
+- narrow the blueprint, ledger, documentation, and fixture promise together.
+
+The default implementation choice is to enforce the complete vector while the release promises legacy parity.
+
+**Acceptance**
+
+- added/reordered Layer 1 RNG calls fail T12;
+- caller-state restoration remains covered independently.
+
+## Step 4.3 — Make conformance tests semantic
+
+Strengthen abort-call inventory to include named/dynamic fix arguments and fail closed on unclassified sites. Add executable samples for remedies.
+
+Bind traceability to:
+
+- actual namespace exports;
+- the 16-vignette pkgdown registry;
+- current invariant definitions;
+- validation artifacts whose provenance matches their scripts/source.
+
+Remove stale helper-policy statements.
+
+**Acceptance**
+
+- ledger self-consistency alone cannot pass stale docs/validation evidence;
+- all public vignettes and error IDs are discovered from current sources.
+
+## Step 4.4 — Run the strengthened authority suite
+
+Run targeted tests for fixtures, T1a, T12, error conformance, traceability, hash canonicalization, scenario semantics, and migration.
+
+## Step 4.5 — Render the Phase 4 execution log
+
+Write and render `018_phase4_test_authority.qmd`/HTML with old oracle weakness, new independent authority, mutation tests where practical, and targeted results.
+
+# Phase 5 — Validation harness provenance and safe reuse
+
+## Step 5.1 — Replace existence-based resume with compatibility-based reuse
+
+Default resume to false. Before reuse, require a sidecar that matches:
+
+- source revision or explicit dirty-source digest;
+- package version;
+- script SHA;
+- parameter/mode/repetition/seed digest;
+- schema and RNG policy;
+- result and summary digests.
+
+## Step 5.2 — Preserve producer metadata and label reuse honestly
+
+A reused result retains its producing metadata. Record `reused` as a distinct status/event rather than silently reporting a fresh pass. Do not stamp current script/package fields onto old artifacts.
+
+## Step 5.3 — Add harness regression tests and manifest checks
+
+Test compatible reuse, incompatible refusal, missing sidecars, changed scripts, changed parameters, changed schema, and overwrite behavior.
+
+## Step 5.4 — Run non-destructive smoke validation
+
+Use temporary output roots or unique run IDs to verify fresh execution and compatible reuse without overwriting full evidence.
+
+## Step 5.5 — Render the Phase 5 execution log
+
+Write and render `019_phase5_validation_harness.qmd`/HTML with the reuse state machine, sidecar schema, tests, smoke results, and migration handling for old manifests.
+
+# Phase 6 — Final release verification and evidence regeneration
+
+## Step 6.1 — Freeze and identify the release candidate
+
+Record the exact source revision and dirty-state digest. Ensure only intended review/remediation files differ. Regenerate roxygen, README/index/pkgdown outputs, fixtures, and hash literals before the freeze.
+
+## Step 6.2 — Run package-level gates
+
+Run:
+
+- targeted regression suites;
+- full `devtools::test(stop_on_failure=TRUE)`;
+- lint under CI policy;
+- `R CMD check --as-cran` with the documented environment;
+- rendered-document/link/hash-literal consistency scans.
+
+## Step 6.3 — Rerun V0–V12 in full mode
+
+Run all thirteen validations from the frozen candidate with resume disabled and overwrite explicitly enabled. Record producing source, scripts, parameters, RNG/schema, result/summary/artifact digests, and runtimes.
+
+No prior result may be promoted as fresh evidence.
+
+## Step 6.4 — Regenerate the validation synthesis
+
+Generate the v0.2.0 synthesis only from compatible Phase 6 rows. Reconcile every acceptance claim with the manifest and artifacts.
+
+## Step 6.5 — Close the review findings
+
+Create a 22-row closure matrix:
+
+- finding;
+- implementation step;
+- files changed;
+- regression test;
+- final status;
+- residual limitation.
+
+Assign the final verdict:
+
+- RELEASE if all gates and findings close;
+- RELEASE WITH FIXES only if remaining items are explicitly non-blocking;
+- DEFER if any Critical counterexample or evidence-binding failure remains.
+
+## Step 6.6 — Render the Phase 6 closeout log
+
+Write and render `020_phase6_release_closeout.qmd`/HTML. This is the authoritative remediation handoff and must identify any unexecuted or inconclusive check plainly.
+
+# Expected change surfaces
+
+| Area | Expected files |
+|---|---|
+| Reproducibility | `R/utils-reproducibility.R`, wrappers, policy docs, M7, fixtures |
+| Statistical kernel | A2 engine, diagnostics core, Layer 2 diagnostics, Layer 3 docs |
+| Scientific authority | presets, JEBS generator/fixtures, M8, A2, README/pkgdown |
+| Tests | canonicalization, provenance, A2 edges, copula, KS, ALD, scenario, T1a/T12, golden, traceability |
+| Validation | harness, jobs, sidecars/manifests, generated full artifacts, synthesis |
+| Logs | this plan plus six phase QMD/HTML pairs |
+
+# Risk controls
+
+| Risk | Control |
+|---|---|
+| Schema change makes every hash move | one intentional schema advance; generated literal inventory; fixture before/after table |
+| RNG pin changes legacy data | choose the current default triple; raw JEBS parity before promotion; restore caller state |
+| A2 fix rejects previously accepted inputs | document verified domain; typed fail-closed error; ordinary-grid regression |
+| Diagnostic threshold change breaks snapshots | version/naming decision before snapshot update; preserve raw values |
+| Fixture regeneration hides a regression | compare against external JEBS authority and pre-change raw data before rewriting |
+| Validation rerun reuses stale output | Phase 5 compatibility sidecars; Phase 6 resume disabled |
+| Generated docs drift from source | regenerate once after source fixes; scan source and rendered surfaces together |
+
+# Completion criteria
+
+The remediation is complete only when:
+
+1. every planned phase log exists in both QMD and self-contained HTML;
+2. all eight Critical findings have a passing regression and closure evidence;
+3. no Important finding remains capable of changing a user's scientific interpretation or release-evidence decision;
+4. full tests/check/lint pass on the final candidate;
+5. V0–V12 full results are freshly produced and provenance-compatible;
+6. the Phase 6 log reports RELEASE or an explicit remaining blocker.
+

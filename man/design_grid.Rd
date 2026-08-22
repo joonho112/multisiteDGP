@@ -57,9 +57,9 @@ all other parameters constant.
 \strong{Seed allocation.} When \code{seed_stream = TRUE} (default), the
 package allocates one deterministic 9-digit integer seed per row
 from \code{seed_root} via the local-seed-stream policy. Re-running with
-the same \code{seed_root} produces bit-identical results across runs and
-across machines, and parallel workers get non-overlapping RNG
-streams.
+the same \code{seed_root} produces the same schema-v4 canonical numerical
+results across supported machines, and parallel workers get distinct
+deterministic seeds.
 
 For a worked scenario-grid example see the
 \href{../articles/a6-case-study-multisite.html}{Case study —

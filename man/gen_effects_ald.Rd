@@ -25,7 +25,7 @@ on the response scale. Default \code{0.20}.}
 
 \item{rho}{Numeric in \verb{(0.05, 0.95)}. Yu-Zhang quantile / asymmetry
 parameter. Required — no default. \code{rho = 0.5} is symmetric Laplace;
-\code{rho = 0.3} skews left; \code{rho = 0.7} skews right. Endpoints \code{0} and \code{1}
+\code{rho = 0.3} skews right; \code{rho = 0.7} skews left. Endpoints \code{0} and \code{1}
 are degenerate; the function refuses values outside \verb{(0.05, 0.95)}.}
 
 \item{formula}{One-sided formula for site-level covariates, or \code{NULL}.}
@@ -57,7 +57,7 @@ quantile parameter \code{rho} and converted scale, then standardizes via
 standardized \eqn{z_j} satisfies the unit-variance Layer 1 convention.
 
 \code{rho} is the \emph{quantile} parameter — \code{rho = 0.5} is the symmetric Laplace,
-\code{rho < 0.5} skews left, \code{rho > 0.5} skews right. The package refuses
+\code{rho < 0.5} skews right, \code{rho > 0.5} skews left. The package refuses
 values outside \verb{(0.05, 0.95)} because the moment standardization
 becomes numerically unstable near the degenerate boundaries.
 
@@ -71,7 +71,7 @@ and standardization} vignette.
 }
 \examples{
 if (requireNamespace("LaplacesDemon", quietly = TRUE)) {
-  # Left-skewed (rho < 0.5).
+  # Right-skewed (rho < 0.5).
   gen_effects_ald(J = 10L, rho = 0.3)
 
   # Symmetric Laplace (rho = 0.5) — sharp peak at zero with exponential tails.

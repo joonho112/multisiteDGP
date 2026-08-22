@@ -24,22 +24,22 @@ A numeric vector of length \code{length(se2_j)}, each entry in
 \verb{[0, 1)}. Sorted ascending when \code{monotone = TRUE}.
 }
 \description{
-Compute the classical empirical-Bayes shrinkage weight per site,
+Compute the classical empirical-Bayes reliability (data-retention) weight,
 \eqn{S_j = \sigma_\tau^2 / (\sigma_\tau^2 + \widehat{se}_j^2)} —
-the fraction by which a partial-pooling estimator pulls each site's
-estimate toward the grand mean. \strong{Group D diagnostic} (downstream
+the fraction of each raw site estimate retained by a partial-pooling
+estimator. The amount pooled toward the grand mean is \eqn{1-S_j}.
+\strong{Group D diagnostic} (downstream
 shrinkage — Dr. Chen's question 4: "How much does empirical Bayes
 pool toward the mean?").
 }
 \details{
-\eqn{S_j} ranges over \verb{[0, 1)}. \eqn{S_j \to 1} means "the prior
-dominates" — site \eqn{j} has so much sampling noise that
-partial-pooling collapses its estimate toward the overall mean.
-\eqn{S_j \to 0} means "the data dominate" — the site identifies its
-own latent effect cleanly. Sites with intermediate \eqn{S_j} are
+\eqn{S_j} ranges over \verb{[0, 1)}. \eqn{S_j \to 1} means the site data
+dominate and there is little pooling; \eqn{S_j \to 0} means the prior
+mean dominates and the site is pooled almost completely. Sites with
+intermediate \eqn{S_j} are
 where empirical-Bayes pooling does real work.
-\eqn{\sigma_\tau = 0} returns zero for every site (no heterogeneity
-to recover).
+\eqn{\sigma_\tau = 0} returns zero for every site, corresponding to
+complete pooling under a degenerate between-site distribution.
 
 \strong{Reading guide.} For diagnostic plots — funnel- or
 caterpillar-style traces of shrinkage against site precision — pass
@@ -55,12 +55,12 @@ Diagnostics in practice} vignette.
 \examples{
 # Two sites, the second twice as noisy as the first.
 compute_shrinkage(c(0.05, 0.10), sigma_tau = 0.20)
-# First site keeps more of its own information; second is shrunk harder.
+# First site keeps more of its own information; second is pooled harder.
 
 # Sorted view — useful for a per-site shrinkage curve plot.
 compute_shrinkage(c(0.10, 0.04, 0.07), sigma_tau = 0.20, monotone = TRUE)
 
-# No heterogeneity collapses every site to zero shrinkage.
+# No heterogeneity gives zero retention (complete pooling).
 compute_shrinkage(c(0.05, 0.10), sigma_tau = 0)
 }
 \references{
@@ -85,6 +85,7 @@ Other family-diagnostics:
 \code{\link[=compute_I]{compute_I()}},
 \code{\link[=compute_kappa]{compute_kappa()}},
 \code{\link[=default_thresholds]{default_thresholds()}},
+\code{\link[=error_catalog]{error_catalog()}},
 \code{\link[=feasibility_index]{feasibility_index()}},
 \code{\link[=heterogeneity_ratio]{heterogeneity_ratio()}},
 \code{\link[=informativeness]{informativeness()}},

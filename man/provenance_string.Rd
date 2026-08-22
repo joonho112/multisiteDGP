@@ -21,11 +21,12 @@ Format the key reproducibility fields of a multisiteDGP object as a
 single pipe-delimited string suitable for reports, preregistration
 appendices, paper appendices, and reviewer-facing figure captions.
 Includes package version, paradigm, seed, canonical hash, design hash,
-R version, and any custom-callback hooks.
+schema, producer runtime/platform/RNG, verifier runtime/platform, and
+custom-callback hooks.
 }
 \details{
 Output format:
-\preformatted{multisiteDGP 0.1.0 | paradigm=site_size | seed=1 | canonical_hash=... | design_hash=... | hash_algo=xxhash64 | R=4.5 | hooks=none}
+\preformatted{multisiteDGP 0.2.0 | paradigm=site_size | seed=1 | canonical_hash=... | design_hash=... | hash_schema=... | producer_R=4.6.0 | producer_platform=... | producer_rng=Mersenne-Twister/Inversion/Rejection | verifier_R=4.6.0 | verifier_platform=... | hooks=none}
 
 Drop the result into a paper appendix or a vignette caption to make
 your simulation cite-able and reproducible. For an end-to-end

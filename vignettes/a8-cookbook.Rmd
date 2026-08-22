@@ -84,7 +84,7 @@ Use the table below when scanning for a pattern you can copy.
 | R5.2 | Custom calibration with `sigma_tau` and `R2` | Preset override of two anchor knobs | Pinning a substantive heterogeneity target with a covariate proxy |
 | R5.3 | Compare two presets side by side | `preset_education_small()` vs `preset_education_substantial()` | Bracketing an evidence claim across the field's regime |
 | R5.4 | Bridge to downstream adapters | `as_metafor()` and `as_baggr()` with namespace guards | Handing simulated data to an external estimator |
-| R5.5 | User `g_fn` callback | A custom Layer 1 G-distribution callback | A site-effect distribution that none of the seven shapes covers |
+| R5.5 | User `g_fn` callback | A custom Layer 1 G-distribution callback | A site-effect distribution that none of the six built-ins covers |
 | R5.6 | Custom `dependence_fn` | A custom Layer 3 alignment callback | Replacing the built-in copula/rank/hybrid alignment |
 | R5.7 | Design grid and scenario audit | `design_grid()` + `scenario_audit()` for a small factorial | Pre-registration; defending a chosen cell |
 | R5.8 | Canonical hash reproducibility | Hash determinism across reruns and column orderings | Provenance; cache invalidation |
@@ -356,7 +356,7 @@ wires it into a `multisitedgp_design()` with `true_dist = "User"`,
 and verifies the realized standardized SD recovers $\sigma_\tau$.
 
 When to reach for it: a site-effect distribution that none of the
-seven built-in G distributions covers — a bimodal or lopsided shape
+six built-in G distributions covers — a bimodal or lopsided shape
 the analyst wants to inject directly. The callback contract (input
 `J` plus `...`, return either the standardized $z$-vector or a list
 with `z`) is documented at
@@ -548,8 +548,10 @@ audit_r57[, c("cell_id", "I", "R", "J", "pass",
               "med_I_hat", "med_feasibility_efron")]
 ```
 
-The full audit object carries 29 columns — design factors, status
-flags, and the diagnostic medians and tail quantiles per cell.
+The full audit object carries design factors, literal status flags,
+completeness metadata, and diagnostic medians and tail quantiles per cell.
+Here `pass` is `TRUE` only for `status == "PASS"`; `WARN` is `FALSE`.
+Require `pass & audit_complete` when all A/B/C/D groups must have run.
 Render the pass/fail mosaic:
 
 ```{r r57-plot, fig.cap = "R5.7: scenario-audit pass/fail mosaic across the I x J grid faceted by R — green cells pass the diagnostic ladder at M = 1; the cells that fail concentrate where I is small and J is small, the regime where shrinkage cannot recover the between-site signal.", fig.alt = "Faceted mosaic plot of scenario_audit pass/fail status across an informativeness I and study-count J grid, faceted by heterogeneity ratio R; cells are color-coded green for pass and red for fail, with failures concentrated at low I and low J."}

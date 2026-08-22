@@ -297,9 +297,9 @@ into the methods appendix. `provenance_string()` returns it.
 provenance_string(dat)
 ```
 
-The string carries the package version, the paradigm, the seed, the
-canonical hash of the simulation output, the design hash, the hash
-algorithm, the R version, and any active hooks. The canonical hash
+The string carries the package version, paradigm, seed, canonical and design
+hashes, hash schema, stored producer R/platform/RNG, current verifier runtime,
+and active hooks. The canonical hash
 itself can be pulled directly:
 
 ```{r canonical-hash}
@@ -307,9 +307,10 @@ canonical_hash(dat)
 ```
 
 If a coauthor reruns `sim_multisite(preset_jebs_paper(), seed = 1L)`
-on the same package version, that 16-character hash is the contract:
-identical hash means byte-identical simulation. A different hash flags
-a drift in the design, the seed, or the package — exactly what a
+under the same hash schema, that 16-character hash is the numerical contract:
+identical hashes mean identical canonical payloads, not necessarily
+byte-identical raw R objects. A different hash flags
+a drift in the design, seed, schema, or canonical data — exactly what a
 methods reviewer wants to be sure cannot happen silently. You can
 verify this directly:
 

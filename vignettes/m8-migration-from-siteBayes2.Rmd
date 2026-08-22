@@ -5,9 +5,10 @@ date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 abstract: >
   For users of the internal `siteBayes2` package who need to migrate
   scripts to multisiteDGP. The new package keeps the data-generating
-  process and drops the Stan-based fitting, so the migration is mostly
-  a rename map plus a removal list. You leave with eight worked
-  before/after patterns, a function rename table, an explicit
+  process and drops the Stan-based fitting. The four-layer design is not a
+  rename-only compatibility layer: several location, scale, shape, and RNG
+  arguments require explicit conversion. You leave with eight worked
+  before/after patterns, a conversion table, an explicit
   deprecated-functions table that points to downstream Bayesian
   packages, and the boundary check confirming `siteBayes2` exports
   are absent from the multisiteDGP namespace.
@@ -64,11 +65,12 @@ practical consequences for an existing script:
   [`gen_site_sizes()`](../reference/gen_site_sizes.html),
   [`align_rank_corr()`](../reference/align_rank_corr.html) plus
   [`gen_observations()`](../reference/gen_observations.html), and
-  [`mean_shrinkage()`](../reference/mean_shrinkage.html) — same idea,
-  cleaner separation across the four generative layers
+  [`mean_shrinkage()`](../reference/mean_shrinkage.html). These are conceptual
+  successors, not uniformly argument-compatible aliases; the conversion rules
+  below are required for statistical equivalence
   [@lee2025improving].
 - **Removed surface.** `fit_rubin_normal()`, `lm_stan()`,
-  `data_prep_rubin_normal()` and the `inst/stan/` model objects do
+  `build_standata_rubin_normal()` and the `inst/stan/` model objects do
   not move. multisiteDGP installs without a C++ compiler. Fit with
   `metafor`, `baggr`, or `rstan` directly via the adapters in
   [M6: Adapters and downstream packages](m6-adapters-downstream.html).
@@ -87,13 +89,60 @@ target name in the right column appears in NAMESPACE; verify with
 | siteBayes2                     | multisiteDGP                                                                               | Notes                                                                                |
 |--------------------------------|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
 | `sim_multisite_data()`         | [`sim_multisite()`](../reference/sim_multisite.html)                                       | Front door; refactored into the four-layer pipeline                                  |
-| `gen_priorG()`                 | [`gen_effects()`](../reference/gen_effects.html)                                           | Layer 1; selects from seven $G$ shapes                                              |
-| `gen_priorG2()`                | [`gen_effects()`](../reference/gen_effects.html) with `formula`, `beta`, `data`            | Same function; covariate-aware path is an argument set, not a separate function       |
+| `gen_priorG()`                 | [`gen_effects()`](../reference/gen_effects.html)                                           | Layer 1 successor; convert names and response scale below                              |
+| `gen_priorG2()`                | [`gen_effects()`](../reference/gen_effects.html) with `formula`, `beta`, `data`            | Covariate-aware successor; **do not copy `tau` or `beta` unchanged**                   |
 | `sim_sitesize_withinvar()`     | [`gen_site_sizes()`](../reference/gen_site_sizes.html)                                     | Layer 2; engine choice replaces the implicit JEBS algorithm                          |
 | `sim_observed_effects()`       | [`align_rank_corr()`](../reference/align_rank_corr.html) + [`gen_observations()`](../reference/gen_observations.html) | Layer 3 (dependence) and Layer 4 (observation) are now explicit       |
 | `get_shrinkage_factor()`       | [`mean_shrinkage()`](../reference/mean_shrinkage.html)                                     | Vectorized over `nj_mean`; returns the mean-shrinkage scalar diagnostic              |
 | `precision_dependence = TRUE`  | [`sim_multisite()`](../reference/sim_multisite.html) with `dependence = "rank"` and `rank_corr` | Three named injection methods replace the boolean flag                            |
-| `precision_dependence = FALSE` | [`sim_multisite()`](../reference/sim_multisite.html) with `dependence = "none"` (default)  | Same intent: precision and effect are sampled independently                          |
+| `precision_dependence = FALSE` | [`sim_multisite()`](../reference/sim_multisite.html) with `dependence = "none"` (default)  | Same population intent; RNG/order parity requires `engine = "A1_legacy"`              |
+
+### 2.1 Response-scale conversion
+
+The predecessor `gen_priorG2()` formed an unscaled draw and multiplied the
+**entire expression** by `sigma_tau`:
+
+$$
+\tau_j^{old} = \sigma_{old}\{\tau_{old} + X_j\beta_{old}
+                + \sqrt{v_{old}}z_j\}.
+$$
+
+multisiteDGP instead uses
+
+$$
+\tau_j^{new} = \tau_{new} + X_j\beta_{new} + \sigma_{new}z_j.
+$$
+
+For a predecessor path whose $z_j$ already has mean zero and variance one,
+the exact conversion is
+
+```r
+tau_new       <- sigma_old * tau_old
+beta_new      <- sigma_old * beta_old
+sigma_tau_new <- sigma_old * sqrt(variance_old)
+```
+
+With the common `variance_old = 1`, only the first two values move. Copying
+`beta_old = 0.30` with `sigma_old = 0.20` would produce a new slope of 0.30;
+the statistically equivalent slope is 0.06.
+
+### 2.2 Shape and parameter conversion
+
+The predecessor functions did not even share one parameterization with each
+other, so migrate by source function:
+
+| Old source/value | New value | Equivalence note |
+|---|---|---|
+| `"Gaussian"` | `"Gaussian"` | Exact after the response-scale conversion |
+| `"T"`, `nu` in `gen_priorG()` | `"StudentT"`, `theta_G = list(nu = nu)` | Exact standardized shape |
+| `"T"`, `nu` in `gen_priorG2()` | `"StudentT"`; multiply `sigma_tau_new` above by `sqrt(nu / (nu - 2))` | `gen_priorG2()` used raw rather than variance-standardized Student-t draws |
+| `"Skew"`, `slant` | `"SkewN"`, `theta_G = list(slant = slant)` | `gen_priorG()` maps by standardized moments; `gen_priorG2()` used `xi`/`omega`, so recalibrate location/scale rather than copy |
+| old ALD `rho` (LaplacesDemon `kappa`) | `"ALD"`, `theta_G = list(rho = rho_old^2 / (1 + rho_old^2))` | Converts positive tail-rate `kappa` to the Yu-Zhang quantile parameter; new value must be in `(0.05, 0.95)` |
+| `"Mixture"` | `"Mixture"`, `theta_G = list(delta, eps, ups)` | `gen_priorG()` has the standardized JEBS mapping; `gen_priorG2()` used different component locations and needs target-moment recalibration |
+
+For the rows marked recalibrate, equality of argument names is not equality of
+the DGP. Freeze target mean, SD, skewness/quantiles, and compare those targets
+before adopting the new script.
 
 ## 3. Deprecated functions — no equivalent in multisiteDGP
 
@@ -105,11 +154,10 @@ packages are the destination.
 |------------------------------|----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
 | `fit_rubin_normal()`         | `metafor::rma()` after [`as_metafor()`](../reference/as_metafor.html); `baggr::baggr()` after [`as_baggr()`](../reference/as_baggr.html) | Frequentist and Bayesian random-effects fitting are first-class in `metafor`/`baggr` |
 | `lm_stan()`                  | `rstanarm::stan_lm()`, `brms::brm()`                                                         | General-purpose Bayesian linear regression belongs in a general-purpose package      |
-| `data_prep_rubin_normal()`   | [`as_metafor()`](../reference/as_metafor.html), [`as_baggr()`](../reference/as_baggr.html)   | The adapter renames effect, SE, and site columns to the target convention            |
-| `prior_rubin_normal()`       | `baggr::baggr()` argument `prior_hypermean`, `prior_hypersd`                                 | Prior elicitation is the fitting package's responsibility                            |
+| `build_standata_rubin_normal()`; `prepare_summary_data_rubin()` | [`as_metafor()`](../reference/as_metafor.html), [`as_baggr()`](../reference/as_baggr.html) | Replace predecessor-specific Stan data assembly with a documented downstream adapter |
+| `auto_prior_rubin_normal()`; `prepare_prior_settings_rubin_normal()` | Explicit prior arguments in `baggr`, `brms`, `rstanarm`, or `rstan` | Prior selection belongs to the fitting package |
+| `cauchy_prior()`, `half_cauchy_prior()`, `half_student_t_prior()`, `student_t_prior()`, `normal_prior()`, `lognormal_prior()`, `uniform_prior()`, `multinormal()`, `lkj()` | The corresponding downstream package's prior syntax | These predecessor constructors are not multisiteDGP data-generating functions |
 | `inst/stan/`, `src/`         | `rstan::stan_model()`, `cmdstanr::cmdstan_model()` (user-managed)                            | multisiteDGP installs without a C++ compiler; no compiled artifacts ship             |
-| `pp_check_rubin_normal()`    | `bayesplot::pp_check()`, `posterior::summarise_draws()`                                      | Posterior diagnostics belong with the posterior, not the DGP                         |
-| `loo_rubin_normal()`         | `loo::loo()` on the fit object                                                               | Model comparison is downstream of fitting                                            |
 
 The split makes both packages smaller. multisiteDGP is pure R and
 ships only the four generative layers plus diagnostics; whichever
@@ -160,8 +208,10 @@ front door applies it through the four layers.
 
 When the script needs the arguments visible (e.g. for a sweep), pass
 them directly to [`sim_multisite()`](../reference/sim_multisite.html).
-The mixture parameters now live inside `theta_G`; everything else is
-a named argument with the original meaning.
+The mixture parameters now live inside `theta_G`. The example below keeps
+`tau = 0`, `variance = 1`, and no covariates, so the Layer 1 scale conversion
+is numerically invisible; this is not a general statement that every old
+argument retains its meaning.
 
 ```{r mv2-flat}
 flat_dat <- sim_multisite(
@@ -192,20 +242,55 @@ $G$-shape parameter convention `theta_G` enforces.
 `gen_priorG()` and `gen_priorG2()` collapse to a single
 [`gen_effects()`](../reference/gen_effects.html). The covariate-aware
 path is an argument set (`formula`, `beta`, `data`), not a separate
-function.
+function. Apply the response-scale conversion from Section 2.1.
 
 ```{r mv3-effects}
-x <- data.frame(X1 = as.numeric(scale(seq_len(30L))))
+old_j <- 30L
+x <- data.frame(X1 = as.numeric(scale(seq_len(old_j))))
+sigma_old <- 0.20
+tau_old <- -0.10
+beta_old <- 0.30
+
 effects <- gen_effects(
-  J         = 30L,
+  J         = old_j,
   true_dist = "Gaussian",
-  sigma_tau = 0.15,
+  tau       = sigma_old * tau_old,
+  sigma_tau = sigma_old,
   formula   = ~ X1,
-  beta      = 0.30,
+  beta      = sigma_old * beta_old,
   data      = x
 )
 head(effects, 3)
 ```
+
+The following executable oracle uses the predecessor Gaussian equation with
+the same normal stream. The maximum difference is zero (up to floating-point
+roundoff), which tests statistical equivalence rather than merely matching
+argument names.
+
+```{r mv3-parity}
+set.seed(123L)
+z_old <- rnorm(old_j)
+old_effect <- sigma_old * (tau_old + beta_old * x$X1 + z_old)
+
+set.seed(123L)
+converted <- gen_effects_gaussian(
+  J = old_j,
+  tau = sigma_old * tau_old,
+  sigma_tau = sigma_old,
+  formula = ~ 0 + X1,
+  beta = sigma_old * beta_old,
+  data = x
+)
+max(abs(old_effect - converted$tau_j))
+```
+
+This parity says nothing about identical whole-pipeline RNG streams. In
+particular, old `precision_dependence = FALSE` always shuffled `se2_j` and
+consumed RNG. multisiteDGP preserves that shuffle only in the explicit
+`engine = "A1_legacy"` observation path. Modern A2 with
+`dependence = "none"` leaves the upstream order unchanged, so it preserves the
+population independence intent but not the predecessor RNG sequence.
 
 For a non-built-in $G$, switch to `true_dist = "User"` and pass
 `g_fn`. The callback returns standardized residuals by default;
@@ -231,7 +316,7 @@ informativeness(custom_dat)
 The full custom-$G$ contract — including the `g_returns = "raw"`
 escape hatch — is in
 [M5: Custom G distributions](m5-custom-g-distributions.html). The
-seven shapes are catalogued in
+six built-ins plus `User` (seven generated shapes) are catalogued in
 [M2: G-distribution catalog](m2-g-distribution-catalog.html), which
 includes the `gen_priorG` rename map under each shape.
 
@@ -328,8 +413,10 @@ mean_shrinkage(
 )
 ```
 
-The three values are the mean shrinkage factors at $\bar n_j = 20, 50,
-100$. Larger sites see stronger shrinkage toward the global mean.
+The three values are the historical shrinkage-factor API's reliability
+(data-retention) weights at $\bar n_j = 20, 50, 100$. Larger sites have more
+precise estimates, so $S$ increases and they are pooled **less** toward the
+global mean. The amount pooled is $1-S$.
 The diagnostic also has a `multisitedgp_data` method that reads
 `varY` and `p` from the design's provenance.
 
@@ -377,9 +464,15 @@ target $0.000$ (PASS within tolerance). The funnel plot is the visual
 companion: symmetric scatter widening with SE confirms the
 precision-effect independence the JEBS preset targets.
 
-## 13. Three points where the new API diverges, not just renames
+## 13. Four points where the new API diverges, not just renames
 
-Most patterns above are pure renames. Three are not.
+Treat the migration as a DGP conversion, not a search-and-replace operation.
+
+- **Layer 1 response scale and shapes (MV3).** `gen_priorG2()` multiplied
+  `tau`, $X\beta$, and the residual by `sigma_tau`; multisiteDGP applies
+  `sigma_tau` only to the standardized residual. Convert `tau`, `beta`, and
+  (when needed) `variance` as in Section 2.1. Old `T`/`Skew` names and ALD
+  `kappa` also require the Section 2.2 mappings.
 
 - **Layer separation (MV4).** `sim_observed_effects()` mixed
   dependence injection and observation sampling. multisiteDGP
@@ -425,7 +518,7 @@ For an end-to-end migrated workflow:
 For the methodological mapping behind the renames:
 
 - [M2: G-distribution catalog](m2-g-distribution-catalog.html) — the
-  seven $G$ shapes and the `gen_priorG` → `gen_effects`
+  six built-ins plus `User`, with reserved DPM, and the `gen_priorG` → `gen_effects`
   parameter map per shape.
 - [M3: Margin and SE models](m3-margin-se-models.html) — the
   site-size-driven and direct-precision paths,
