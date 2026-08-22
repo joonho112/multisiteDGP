@@ -92,25 +92,45 @@ test_that("Step 8.1 preset fixtures are independent live regenerations", {
     golden <- readRDS(file.path(golden_dir, file))
     row <- manifest[manifest$fixture_file == file, , drop = FALSE]
 
-    expect_identical(as.data.frame(live), as.data.frame(golden), info = file)
+    # The canonical hash is the portable authority; raw doubles differ by one or
+    # two ULP between the platform that generated the fixture and any other, and
+    # the derived diagnostics differ more because cor()/sd() accumulate in a
+    # platform-dependent order. Those diagnostics are exactly what schema v3
+    # removed from the payload. Comparing them with identical() asserted the
+    # opposite of the contract (D-060).
+    expect_identical(canonical_hash(live), canonical_hash(golden), info = file)
+    expect_identical(canonical_hash(live), row$canonical_hash[[1L]], info = file)
+
     expect_identical(class(live), class(golden), info = file)
+    expect_identical(names(live), names(golden), info = file)
+    expect_identical(dim(as.data.frame(live)), dim(as.data.frame(golden)), info = file)
+    expect_equal(as.data.frame(live), as.data.frame(golden),
+                 tolerance = 1e-12, info = file)
+
+    # The design is exact — it is the input, not a computed result.
     expect_identical(
       attr(live, "design", exact = TRUE),
       attr(golden, "design", exact = TRUE),
       info = file
     )
-    expect_identical(
+    expect_equal(
       attr(live, "diagnostics", exact = TRUE),
       attr(golden, "diagnostics", exact = TRUE),
-      info = file
+      tolerance = 1e-10, info = file
     )
-    expect_identical(
-      attr(live, "provenance", exact = TRUE),
-      attr(golden, "provenance", exact = TRUE),
-      info = file
-    )
-    expect_identical(canonical_hash(live), row$canonical_hash[[1L]], info = file)
-    expect_identical(live, golden, info = file)
+
+    # Provenance records the producing runtime, so a fixture built under one R
+    # version can never match a verifier running another. Compare the fields
+    # that identify the run, not the ones that identify the machine.
+    live_prov <- attr(live, "provenance", exact = TRUE)
+    golden_prov <- attr(golden, "provenance", exact = TRUE)
+    for (field in c("seed", "paradigm", "design_hash", "hash_algo",
+                    "hash_schema_version", "rng_kind")) {
+      if (!is.null(golden_prov[[field]])) {
+        expect_identical(live_prov[[field]], golden_prov[[field]],
+                         info = paste(file, field))
+      }
+    }
   }
 })
 

@@ -11,6 +11,13 @@ local_print_snapshot_output <- function() {
 }
 
 snapshot_print_transform <- function(x) {
+  # Mask the whole R-version value, not just a short "4.6.0" form. Under
+  # R-devel the recorded version is "R Under development (unstable) (...)",
+  # which the short form does not match, so the raw string leaked into the
+  # comparison and every snapshot failed on CI while passing on the release-R
+  # machine that generated it (D-060).
+  x <- gsub("(producer|verifier)_R=.*?(?=( \\| )|( [a-z_]+=)|$)",
+             "\\1_R=<R>", x, perl = TRUE)
   x <- gsub("R=[0-9.]+", "R=<R>", x)
   x <- gsub("(producer|verifier)_platform=[^ |]+", "\\1_platform=<PLATFORM>", x)
   gsub("multisiteDGP [0-9.]+", "multisiteDGP <VERSION>", x)

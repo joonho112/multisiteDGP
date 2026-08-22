@@ -67,6 +67,11 @@ withr::local_options(list(
 # version where the test expected <VERSION> and the comparison failed
 # (defect ledger D-026).
 normalize_print_lines <- function(lines) {
+  # Mask the whole R-version value: under R-devel the recorded version is
+  # "R Under development (unstable) (...)", which a short numeric form does
+  # not match, and the raw string then leaks into the comparison (D-060).
+  lines <- gsub("(producer|verifier)_R=.*?(?=( \\| )|( [a-z_]+=)|$)",
+             "\\1_R=<R>", lines, perl = TRUE)
   lines <- gsub("R=[0-9.]+", "R=<R>", lines)
   lines <- gsub("(producer|verifier)_platform=[^ |]+", "\\1_platform=<PLATFORM>", lines)
   gsub("multisiteDGP [0-9.]+", "multisiteDGP <VERSION>", lines)
