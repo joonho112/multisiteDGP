@@ -47,6 +47,8 @@ Suggests:
     baggr,
     deconvolveR,
     furrr,
+    future,
+    pkgload,
     yaml,
     arrow,
     moments,

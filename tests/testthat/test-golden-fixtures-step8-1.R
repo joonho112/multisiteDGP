@@ -103,9 +103,10 @@ test_that("Step 8.1 preset fixtures are independent live regenerations", {
 
     expect_identical(class(live), class(golden), info = file)
     expect_identical(names(live), names(golden), info = file)
-    expect_identical(dim(as.data.frame(live)), dim(as.data.frame(golden)), info = file)
-    expect_equal(as.data.frame(live), as.data.frame(golden),
-                 tolerance = 1e-12, info = file)
+    live_columns <- golden_column_payload(live)
+    golden_columns <- golden_column_payload(golden)
+    expect_identical(dim(live_columns), dim(golden_columns), info = file)
+    expect_equal(live_columns, golden_columns, tolerance = 1e-12, info = file)
 
     # The design is exact — it is the input, not a computed result.
     expect_identical(

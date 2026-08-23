@@ -43,6 +43,8 @@ jobs:
           dependencies: '"hard"'
           extra-packages: |
             any::covr
+            any::furrr
+            any::future
             any::xml2
             any::pkgload
             any::testthat

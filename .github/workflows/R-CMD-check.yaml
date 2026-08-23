@@ -53,6 +53,8 @@ jobs:
           dependencies: '"hard"'
           extra-packages: |
             any::rcmdcheck
+            any::furrr
+            any::future
             any::testthat
             any::knitr
             any::rmarkdown

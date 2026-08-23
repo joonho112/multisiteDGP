@@ -62,4 +62,18 @@ golden_live_jebs_specs <- function() {
     )
   )
 }
+# as.data.frame() on a simulated object carries every object-level attribute
+# through -- design, diagnostics, paradigm, multisitedgp_version, provenance --
+# so comparing two frames also compares the producing R version and platform.
+# A fixture built on macOS under R 4.6.0 can never match a verifier on Linux
+# under 4.6.1, and REPRODUCIBILITY.md says so outright: provenance records the
+# producer, and a producer/verifier difference is diagnostic context, not a
+# verification failure. This is the same mistake as D-060, one attribute deeper.
+# Compare the column payload; the attributes are checked on their own terms.
+golden_column_payload <- function(x) {
+  out <- as.data.frame(x)
+  attributes(out) <- attributes(out)[c("names", "row.names")]
+  class(out) <- "data.frame"
+  out
+}
 # nolint end

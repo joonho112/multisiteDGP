@@ -1,0 +1,327 @@
+---
+title: "Phase 10 — 병렬 경로의 워커 버전 결함과 validation 재확립"
+subtitle: "D-060 후속 · D-061~D-064 신규 · golden fixture 경로 이동 · CI 5 cell"
+author: "Claude Opus 5"
+date: "2026-08-22"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  eval: false
+---
+
+## 요약
+
+D-060(이식 불가능한 원시 바이트 비교) 수정의 뒷정리에서 세 가지가 나왔다.
+
+1. **내가 golden fixture 10 개를 지웠다.** `expect_snapshot_file()` 을 걷어내자 testthat 이 `_snaps/` 를 정리하며 파일을 프루닝했다. 복구한 뒤, 아예 testthat 관리 밖으로 옮겼다.
+2. **경로 이동에서 파일 3 개를 빠뜨렸다.** V02 validation 이 `anchor_hash_pass = FALSE` 로 잡았다.
+3. **병렬 감사가 실행되지 않은 코드에 대해 통과를 보고하고 있었다** (D-061). 그리고 그것을 검사한다던 내 Phase 5 테스트는 실제로는 병렬로 돈 적이 없었다.
+
+그리고 로컬이 전부 초록색인 상태로 CI 를 돌리자 **세 가지가 더 나왔다** — D-062, D-063, D-064. 셋 다 로컬 단일 플랫폼에서는 원리적으로 보이지 않는 것들이었다.
+
+---
+
+## D-061 — 워커는 다른 패키지를 감사하고 있었다
+
+### 증상
+
+`future::multisession` 워커는 깨끗한 R 세션이다. `multisiteDGP` 를 **설치된 라이브러리**에서 찾는다. `pkgload::load_all()` 개발 세션에서 `scenario_audit(parallel = TRUE)` 를 호출하면:
+
+| | 패키지 버전 | 해시 스키마 |
+|---|---|---|
+| 주 세션 | 0.2.0 | v4 |
+| 워커 | 0.1.1 | v1 |
+
+감사는 통과를 보고했다. 실행된 적 없는 코드에 대해서.
+
+격자 감사 결과가 **열 수부터 달랐다 — 26 대 31**. 값이 조금 다른 것이 아니라 다른 함수였다.
+
+### 두 겹의 원인
+
+이것은 결함 하나가 아니라 두 개가 포개진 것이다.
+
+**(1)** `scenario_audit()` 의 병렬 분기가 워커에 패키지를 넘기지 않는다.
+
+**(2)** 그것을 검사한다던 테스트가 `future::plan()` 을 설정하지 않았다. future 의 기본 plan 은 `sequential` 이다. 따라서 `parallel = TRUE` 도 같은 프로세스에서 돌았고, 테스트는 **순차 실행 두 번을 비교하면서 "병렬이 같다" 고 주장**했다.
+
+::: {.callout-warning title="가짜 보증이 진짜 결함을 가렸다"}
+(2)가 없었다면 (1)은 훨씬 일찍 드러났을 것이다. 테스트가 초록색이었기 때문에 아무도 그 경로를 다시 보지 않았다.
+
+그 테스트는 **내가 Phase 5 에서 쓴 것**이다. Codex 리뷰가 P-3 으로 지적한 부류 — *"독립적 권위처럼 보이지만 아닌 테스트"* — 에 내 것이 하나 더 있었다.
+:::
+
+### 같은 함정에 한 번 더
+
+수정 첫 시도에서 워커 안에 이렇게 썼다:
+
+```r
+if (pkgload::is_dev_package("multisiteDGP")) {
+  pkgload::load_all(root)
+}
+```
+
+**새 워커에는 dev 패키지가 등록되어 있지 않다.** 그래서 이 질문은 워커에서 **항상 FALSE** 를 답한다. 워커는 조용히 설치본을 쓴다 — 그것이 결함 자체다.
+
+한 층 아래에 같은 함정이 있었다. 판정을 주 세션으로 옮겼다:
+
+```r
+# is_dev_package() has to be asked in this session. A fresh worker has no dev
+# package registered, so asking there always answers FALSE and the worker
+# quietly uses the installed library -- which is the defect itself.
+dev_load <- .is_dev_load()
+```
+
+### 수정
+
+- `scenario_audit()` 에 `.warn_parallel_dev_package()` 가드. **dev load 이면서 plan 이 multiprocess 일 때만** 경고한다. 설치본을 쓰는 일반 사용자와 `sequential` plan 에서는 조용하다.
+- 테스트가 실제 `multisession` plan 을 설정하고, `expect_false(inherits(future::plan(), "sequential"))` 로 plan 자체를 검사한다.
+- 격자 대 셀이 아니라 **셀 대 셀**로 비교한다. 전체 격자 감사는 `design_grid()` 가 변화시키는 것마다 manifest 열을 달고 나오므로, 한 셀 감사와는 shape 가 다르다.
+
+### 부수 효과 — V11 병렬화
+
+같은 방식으로 `run-v11-validation.R` 의 셀 루프를 병렬화했다. 워커가 `pkgload::load_all(worker_root)` 를 먼저 부른다.
+
+| | 시간 |
+|---|---|
+| 순차 | 2477 초 |
+| 병렬 | 388 초 |
+
+결과는 `identical()`. 셀 시드가 셀마다 유도되므로 실행 순서가 결과를 움직일 수 없다.
+
+---
+
+## golden fixture — 내가 지웠고, 복구했고, 옮겼다
+
+### 무슨 일이 있었나
+
+D-060 수정에서 `expect_snapshot_file(compare = compare_file_binary)` 를 걷어냈다. 원시 바이트 비교는 플랫폼을 건너 성립할 수 없기 때문이다 — 그것이 D-060 의 요지였다.
+
+그런데 `_snaps/` 는 **testthat 이 관리하는 디렉터리**다. `expect_snapshot_file()` 이 청구하지 않는 파일은 프루닝된다. 청구를 걷어내자 fixture 10 개가 삭제됐고, `git add -A` 가 그 삭제를 스테이징했다.
+
+::: {.callout-note title="스위트는 초록색이었다"}
+fixture 를 지운 바로 그 실행이 통과 보고를 냈다. 삭제는 테스트가 끝난 뒤 정리 단계에서 일어나기 때문이다.
+:::
+
+### 복구와 이동
+
+`92095a3` 에서 복구했다. **SHA-256 과 canonical_hash 를 전부 대조**해 동일함을 확인했다. 그 다음 testthat 관리 밖으로 옮겼다:
+
+```
+tests/testthat/_snaps/golden/*.rds  ->  tests/testthat/fixtures/golden/*.rds
+```
+
+스위트를 연속 두 번 돌려 파일이 살아남는 것을 확인했다.
+
+`_snaps/golden/README.md` 는 `expect_snapshot_file()` 청구를 유지한다(PI 결정). 청구된 파일은 프루닝되지 않으므로 안정적이다.
+
+### 경로 이동에서 3 개를 빠뜨렸다
+
+`tools/validation/jobs/run-v02-validation.R`, `run-v12-validation.R`, `tools/validation/R/validation-harness.R`.
+
+**V02 validation 이 잡았다** — `anchor_hash_pass = FALSE`. 14:11:56 실행 기록이 원장 증거로 남아 있다.
+
+---
+
+## validation 재확립
+
+`R/scenario_audit.R` 에 가드를 넣자 source digest 가 움직였다. digest 는 `R/`, `inst/extdata`, `tests/testthat/fixtures/golden`, `tools/jebs-golden-fixtures`, `tools/validation/R`, `DESCRIPTION`, `NAMESPACE` 를 덮는다. 따라서 이전 증거는 더 이상 현재 트리를 증명하지 못한다.
+
+`test-traceability.R` 13 건이 정확히 그것을 막고 있었다. **가드가 제대로 동작한 것이지 결함이 아니다.**
+
+### 실행 순서를 바꾼 이유
+
+PI 승인은 세 갈래였고 그중 둘이 충돌했다 — ③(패키지 가드 추가)은 `R/` 을 건드리므로 ②("지금 도는 실행을 그대로 둔다")를 무효화한다.
+
+②의 취지가 *"재실행을 한 번만"* 이었으므로, 그 취지를 살리려면 **먼저 멈추고 ①·③을 적용한 뒤 한 번 돌리는 것**이 맞다고 판단했다. 나중에 적용했다면 35 분짜리 실행을 한 번 더 해야 했다. 10 분을 버리고 35 분을 아꼈다.
+
+### 결과 — 13/13 pass
+
+source digest `cddecdce10ce0974`.
+
+| ID | 결과 | 시간 |
+|---|---|---|
+| V0 | pass | 221 s |
+| V01 | pass | 1423 s |
+| V02 | pass | 70 s |
+| V03 | pass | 4 s |
+| V04 | pass | 91 s |
+| V05 | pass | 2 s |
+| V06 | pass | 4 s |
+| V07 | pass | 8 s |
+| V08 | pass | 6 s |
+| V09 | pass | 1850 s |
+| V10 | pass | 8 s |
+| V11 | pass | **388 s** |
+| V12 | pass | 2 s |
+
+V09 병렬화는 PI 결정으로 이번에 보류했다. 1850 초로 이제 가장 느린 항목이다.
+
+---
+
+## 스위트
+
+```
+lint 위반: 0
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 5350 ]
+파일 76
+```
+
+::: {.callout-important title="skip 0 은 NOT_CRAN=true 를 켰을 때의 값이다"}
+`Rscript` 로 그냥 돌리면 `NOT_CRAN` 이 없어 `skip_on_cran()` 이 발동한다. 그러면 **병렬 테스트 2 건이 건너뛰어진다** — 이번 사이클의 핵심 테스트가 정확히 그 둘이다.
+
+CI 워크플로에는 `NOT_CRAN: "true"` 가 설정되어 있으므로 CI 에서는 실제로 돈다.
+:::
+
+---
+
+## CI 라운드 — 로컬이 초록색인 채로 세 가지가 더 나왔다
+
+로컬에서 validation 13/13, 스위트 5350 pass / 0 fail / 0 skip, lint 0 을 확인하고 커밋(`db7ea19`)한 뒤 CI 를 돌렸다. **5 cell 전부 실패**했다.
+
+### D-062 — `as.data.frame()` 이 provenance 를 달고 나온다
+
+실패는 5 cell 모두 한 지점이었다 — `test-golden-fixtures-step8-1.R:107`.
+
+```
+Expected `as.data.frame(live)` to equal `as.data.frame(golden)`.
+`attr(actual,   'provenance')$R_version`: "R version 4.6.1 (2026-06-24)"
+`attr(expected, 'provenance')$R_version`: "R version 4.6.0 (2026-04-24)"
+`attr(actual,   'provenance')$platform`:  "x86_64-pc-linux-gnu"
+`attr(expected, 'provenance')$platform`:  "aarch64-apple-darwin23"
+```
+
+**데이터는 같았다.** 다른 것은 생산자 런타임뿐이었다.
+
+`as.data.frame()` 은 객체 수준 속성을 그대로 통과시킨다:
+
+```
+object attrs        : design, diagnostics, multisitedgp_version, paradigm, provenance
+as.data.frame attrs : design, diagnostics, multisitedgp_version, paradigm, provenance
+```
+
+그래서 "데이터 프레임 비교" 가 실제로는 **생산 런타임 비교**였다. `REPRODUCIBILITY.md` 는 정반대를 명시한다 — provenance 는 생산자를 기록하고, 생산자와 검증자의 차이는 진단 맥락이지 검증 실패가 아니다.
+
+::: {.callout-warning title="D-060 과 같은 오류가 속성 한 겹 아래에 남아 있었다"}
+D-060 에서 원시 바이트 비교를 걷어냈다. 그런데 그 자리에 놓은 프레임 비교가 같은 주장을 한 겹 안쪽에서 계속하고 있었다. `multisitedgp_version` 도 같이 새므로, 버전이 다른 검증자에게도 같은 함정이었다.
+:::
+
+수정은 열 payload 만 남기는 헬퍼다:
+
+```r
+golden_column_payload <- function(x) {
+  out <- as.data.frame(x)
+  attributes(out) <- attributes(out)[c("names", "row.names")]
+  class(out) <- "data.frame"
+  out
+}
+```
+
+T1a 는 이 함정을 이미 피하고 있었다 — `t_invariant_jebs_plain_frame()` 이 열을 지정해 새 `data.frame` 을 만들기 때문이다. 같은 방식을 옮겼다.
+
+**음성 대조를 붙였다.** 통과만으로는 무엇을 검사하는지 알 수 없다.
+
+| 조건 | 결과 | 기대 |
+|---|---|---|
+| 런타임만 다름 (CI 실패 재현) | 통과 | 통과해야 함 |
+| 데이터 한 값이 `1e-6` 다름 | **실패** | 실패해야 함 |
+| ULP 2 단위 차이 | 통과 | 통과해야 함 |
+
+### D-063 — 회귀 테스트가 CI 에서 한 번도 돌지 않았다
+
+같은 CI 로그에 이런 줄이 있었다:
+
+```
+{furrr} is not installed (2): 'test-scenario-audit-validation.R:154:3',
+                              'test-scenario-audit-validation.R:207:3'
+```
+
+**D-061 을 막으라고 쓴 회귀 테스트 두 건이다.** R-CMD-check 5 cell, extended-tests, test-coverage — 어디에서도 실행되지 않았다.
+
+원인은 워크플로의 `dependencies: '"hard"'` 다. Suggests 는 `extra-packages` 에 명시한 것만 설치되는데, `furrr` 가 세 워크플로 어디에도 없었다. **skip 은 실패가 아니므로 CI 는 그 부분을 초록색으로 보고했다.**
+
+::: {.callout-important title="D-061 과 같은 형태가 한 층 더 밖에 있었다"}
+D-061 에서는 plan 이 `sequential` 이라 병렬 테스트가 병렬이 아니었다. 여기서는 의존성이 없어 아예 돌지 않았다.
+
+**둘 다 초록색으로 보고됐다.** 테스트가 존재한다는 것과 테스트가 실행된다는 것은 다른 사실이고, 초록색은 그 둘을 구별해 주지 않는다.
+:::
+
+세 워크플로의 `extra-packages` 에 `any::furrr` 와 `any::future` 를 추가했다. `NOT_CRAN: "true"` 는 이미 설정되어 있으므로 `skip_on_cran()` 은 발동하지 않는다.
+
+### D-064 — 가드가 선언되지 않은 패키지를 호출했다
+
+```
+checking dependencies in R code ... WARNING
+  '::' or ':::' imports not declared from: 'future' 'pkgload'
+```
+
+내가 D-061 수정으로 넣은 `.warn_parallel_dev_package()` 가 원인이다. CRAN 기준으로 릴리스를 막는 WARNING 이다.
+
+- `future` 는 Suggests 에 선언했다. 병렬 경로의 정당한 soft dependency 다.
+- `pkgload` 는 **패키지 코드에서 걷어냈다.** 런타임 패키지가 개발 도구를 참조할 이유가 없다.
+
+```r
+# Ask the namespace, not a development tool. pkgload marks a source-loaded
+# namespace with `.__DEVTOOLS__`, so the question can be answered without the
+# package depending on pkgload at run time -- and it is still answered
+# correctly when pkgload is not installed, because then no dev load exists.
+.is_dev_load <- function() {
+  isTRUE(tryCatch(
+    exists(".__DEVTOOLS__", envir = asNamespace("multisiteDGP"), inherits = FALSE),
+    error = function(e) FALSE
+  ))
+}
+```
+
+확인: dev load 에서 `TRUE`, 설치본에서 `FALSE`.
+
+수정 후 로컬 `R CMD check --as-cran`: **0 errors, 0 warnings, 0 notes.**
+
+### 대가
+
+`R/scenario_audit.R` 과 `DESCRIPTION` 이 바뀌었으므로 source digest 가 다시 움직였다.
+
+```
+cddecdce10ce0974  ->  32be81ee679fe9ec
+```
+
+validation 13 개를 **한 번 더** 돌려야 했다. PI 지시는 "한 번만" 이었고, 이것은 그 지시를 어긴 것이 아니라 CI 가 찾은 결함이 강제한 재실행이다. 68 분을 아끼려고 68 분짜리 실행 위에 미검증 코드를 얹을 수는 없다.
+
+낭비를 줄이기 위해 순서를 바꿨다 — **로컬 `R CMD check` 를 먼저 통과시킨 뒤** validation 을 돌렸다. 6 분을 써서 68 분이 헛되지 않게 했다.
+
+재실행 결과 **13/13 pass**, digest `32be81ee679fe9ec`. 스위트 5350 pass / 0 fail / 0 skip, lint 0.
+
+---
+
+## 이번 사이클에서 반복된 것
+
+같은 패턴이 세 번 나왔다.
+
+| | 무엇이 잘못됐나 | 무엇이 잡았나 |
+|---|---|---|
+| 1 | D-060 수정이 fixture 를 지웠다 | CI (로컬은 green) |
+| 2 | 경로 이동에서 3 파일 누락 | V02 validation |
+| 3 | 병렬 테스트가 워커 컨텍스트를 오판 | 실제 plan 을 켠 테스트 |
+| 4 | 프레임 비교가 생산자 런타임을 비교 (D-062) | CI 5 cell (로컬은 green) |
+| 5 | 회귀 테스트가 CI 에서 skip (D-063) | CI 로그의 Skipped 절 |
+| 6 | 가드가 미선언 패키지 호출 (D-064) | R CMD check |
+
+**여섯 다 로컬 스위트가 초록색이라 안 보였다.** 그리고 여섯 다 **다른 검증 층이 잡았다.** 층을 겹쳐놓은 것이 실제로 값을 했다.
+
+1·4 는 원리적으로 단일 플랫폼에서 보이지 않는다 — 생산자와 검증자가 같은 기계이기 때문이다. 5 는 로컬에서 `NOT_CRAN=true` 로 돌면 통과하므로, CI 로그의 **Skipped 절을 직접 읽어야만** 보인다.
+
+기록해 둘 문장은 이것이다 — **초록색 한 번은 무엇이 성립하는지 말해주지 않는다.** 무엇을 검사했는지, 그 검사가 실제로 실행됐는지를 따로 물어야 한다.
+
+---
+
+## 산출물
+
+- 커밋 `db7ea19` — 207 파일, +70818 행 (대부분 validation 증거 CSV)
+- 결함 원장 **61 행** (fixed 60, documented-limitation 1)
+- validation 증거: `tools/validation/generated/` — 오늘 실행 30 건 전량 보존. 14:11:56 의 **V02 fail** 도 포함한다(경로 누락을 잡은 기록).

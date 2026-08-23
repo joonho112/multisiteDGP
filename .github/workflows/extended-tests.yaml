@@ -47,6 +47,8 @@ jobs:
           dependencies: '"hard"'
           extra-packages: |
             any::testthat
+            any::furrr
+            any::future
             any::knitr
             any::rmarkdown
             any::sn

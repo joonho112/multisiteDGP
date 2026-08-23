@@ -138,10 +138,13 @@ scenario_audit <- function(
   invisible(TRUE)
 }
 
+# Ask the namespace, not a development tool. pkgload marks a source-loaded
+# namespace with `.__DEVTOOLS__`, so the question can be answered without the
+# package depending on pkgload at run time -- and it is still answered
+# correctly when pkgload is not installed, because then no dev load exists.
 .is_dev_load <- function() {
   isTRUE(tryCatch(
-    requireNamespace("pkgload", quietly = TRUE) &&
-      pkgload::is_dev_package("multisiteDGP"),
+    exists(".__DEVTOOLS__", envir = asNamespace("multisiteDGP"), inherits = FALSE),
     error = function(e) FALSE
   ))
 }
