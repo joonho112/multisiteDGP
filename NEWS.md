@@ -188,6 +188,19 @@ collided into an unreadable smear — worse at the `J = 200` designs the
 presets encourage. Labels are thinned to at most 25 in effect order.
 Every data row still draws.
 
+### `scenario_audit(parallel = TRUE)` says when its workers see another package
+
+A `future::multisession` worker is a clean R session, so it resolves
+multisiteDGP from the installed library. That is what you want from an
+installed package and exactly what you do not want under `pkgload::load_all()`,
+where the workers audit the installed version while you are developing another
+one. The audit would report a verdict on code that never ran.
+
+The parallel branch now warns when a development load meets a multiprocess
+plan, and names the two ways out: run sequentially, or have each worker call
+`pkgload::load_all()` first. An installed package under any plan, and a
+development load under the default sequential plan, are both silent.
+
 ## Error messages
 
 - Integer arguments beyond the 32-bit range (`J`, `seed`, `max_iter`,
@@ -209,6 +222,11 @@ Every data row still draws.
   `as_multisitepower()` adapter is unchanged and works the moment you
   install the package yourself; the adapter's error tells you how.
 - `hedgehog` was declared but never used, and is removed.
+- **`future` and `pkgload` are declared in `Suggests`.** The parallel branch
+  of `scenario_audit()` inspects the active `future` plan, and the test suite
+  loads the package into workers. Both were being called without being
+  declared, which `R CMD check` reports as a warning. Neither is needed for
+  any sequential call.
 
 ## Known limitations resolved since v0.1.0
 
