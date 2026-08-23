@@ -1,0 +1,158 @@
+---
+title: "Phase 6 Log — Final Release Verification and Closeout"
+subtitle: "multisiteDGP v0.2.0 Codex repair"
+date: "2026-08-16"
+lang: ko
+format:
+  html:
+    toc: true
+    embed-resources: true
+    code-fold: true
+    theme: cosmo
+execute:
+  echo: false
+---
+
+## 결론
+
+**Phase 6은 완료되었고 최종 판정은 RELEASE다.** 리뷰의 Critical 8건,
+Important 11건, Polish 3건, 총 22건이 모두 코드·문서·독립 회귀 테스트 또는
+명시적 계약 변경으로 닫혔다. 현재 소스에서 slow/property를 포함한 전체 테스트
+5,330건이 통과했고, CRAN check는 오류 0·경고 0·“New submission” NOTE 1건이다.
+V0–V12 열세 full 검증도 이전 산출물을 재사용하지 않고 전부 새로 생성해 PASS했다.
+
+공개 계약을 과장하지 않기 위해 cross-OS raw bit identity, plot 미감, V11 broad
+grid의 운영 pass-rate, 외부 자료가 필요한 Lee Figure 4(b) exact 수치 재현은
+각각 비보장·수동 검토·보고 전용·deferred로 명시했다. 이 제한들은 현재 공개
+API가 약속하는 범위 밖이며 release blocker가 아니다.
+
+## Step 6.1 — Release candidate 식별과 freeze
+
+- 기준 Git revision: `efb7ff4c7a1938eb25094cf1cfb3c989a223d33e`
+- package version: `0.2.0`
+- canonical hash schema: `multisiteDGP-canonical-hash-v4`
+- seeded RNG: `Mersenne-Twister/Inversion/Rejection`
+- 최종 validation source digest:
+  `902b4add7f139e5eedf8d1e9a5307c0ead2a7dc951aee56c6aabb4a82ab95cb6`
+
+수정 사항이 아직 commit되지 않았으므로 manifest의
+`source_worktree_clean = FALSE`는 사실 그대로 유지했다. 대신 package source,
+설치 error catalog, golden artifacts, JEBS authority, validation harness를 내용
+기반 SHA-256 digest로 묶었다. 이 digest는 commit ID를 대신하는 척하지 않으며,
+검증에 실제 사용된 dirty candidate를 정확히 식별한다.
+
+Phase 6 중 source digest가 일반 R과 testthat에서 달라지는 현상을 추가로
+발견했다. 원인은 locale-dependent `sort()`였다. validation harness의 path
+ordering을 radix로 고정하고 13개 full 검증을 모두 다시 실행했다. 따라서 아래
+`phase6b-*` 행만 최종 권위로 사용한다.
+
+## Step 6.2 — Package-level gates
+
+| Gate | 결과 | 증거 |
+|---|:---:|---|
+| roxygen / NAMESPACE / Rd 재생성 | PASS | source와 generated help 동기화 |
+| README / print / golden 재생성 | PASS | v4 hash와 저장 provenance 일치 |
+| slow + property 전체 testthat | PASS | `FAIL 0 · WARN 0 · SKIP 0 · PASS 5,330`, 104.0초 |
+| validation traceability targeted | PASS | 168/168 |
+| lintr | PASS | `No lints found` |
+| whitespace / conflict scan | PASS | `git diff --check` 무출력 |
+| `R CMD check --as-cran --no-manual` | PASS | 0 ERROR · 0 WARNING · 1 NOTE (`New submission`), 3분 9.1초 |
+| pkgdown full build | PASS | URL, favicon, Open Graph, article/reference metadata 모두 OK |
+| 공개 hash literal scan | PASS | README/index/M5/M7/A4/A5/A7 값 재생성·정합화 |
+
+pkgdown의 16개 warning은 16개 vignette 모두에서 ASCII
+`VignetteIndexEntry`와 사람이 읽는 YAML title을 의도적으로 분리한 기존 정책에
+따른 것이다. 각 setup에서 해당 mismatch를 명시적으로 허용하며, URL 또는 렌더
+오류가 아니다.
+
+## Step 6.3 — V0–V12 full 재실행
+
+모든 실행은 `resume = false`, `overwrite = true`, 고유 run ID로 생산했다.
+
+| ID | Run ID | 규모 | 결과 | 소요 |
+|---|---|---:|:---:|---:|
+| V0 | `phase6b-v0-full-20260816` | 7 shape × 1,000 | PASS | 206.7 s |
+| V01 | `phase6b-v01-full-20260816` | 7 shape × 1,000 | PASS | 1,371.7 s |
+| V02 | `phase6b-v02-full-20260816` | 2,000 rows | PASS | 65.6 s |
+| V03 | `phase6b-v03-full-20260816` | 200 reps | PASS | 3.6 s |
+| V04 | `phase6b-v04-full-20260816` | 100 fixtures | PASS | 87.7 s |
+| V05 | `phase6b-v05-full-20260816` | 200 abort attempts | PASS | 1.5 s |
+| V06 | `phase6b-v06-full-20260816` | 35 × 1,000,000 draws | PASS | 2.3 s |
+| V07 | `phase6b-v07-full-20260816` | 500 rows | PASS | 7.9 s |
+| V08 | `phase6b-v08-full-20260816` | 250 reruns | PASS | 4.2 s |
+| V09 | `phase6b-v09-full-20260816` | 3,600 rows | PASS | 1,793.5 s |
+| V10 | `phase6b-v10-full-20260816` | 24 plots | PASS | 6.1 s |
+| V11 | `phase6b-v11-full-20260816` | 150,000 simulations | PASS | 2,287.3 s |
+| V12 | `phase6b-v12-full-20260816` | golden/pattern evidence | PASS | 1.5 s |
+
+총 5,839.6초, 약 97.3분이다. 모든 manifest 행은 `event = produced`,
+`producer_status = pass`, 같은 package/source/schema/RNG identity를 기록한다.
+script·result·summary·contract 파일은 13개씩 모두 존재하며 실제 SHA-256이
+manifest 및 sidecar와 일치한다.
+
+주요 수치는 A2 최대 잔차 `4.921332e-10`, V07 최대 I/R 오차
+`1.11e-16`/`1.78e-15`, V09 unexpected failure 0, V11 error cell 0 및
+finite-metric rate 1.0, V12 hash `1cb59345862bc1f8`이다.
+
+## Step 6.4 — Validation synthesis 재생성
+
+`tools/validation/reports/v0.2.0-validation-synthesis.qmd`를 새 current-source
+행만으로 작성하고 HTML과 GFM Markdown을 렌더했다. 이전 문서의 다음 오해를
+제거했다.
+
+- 존재 기반 resume가 허용된다는 설명
+- v0.1.1 또는 이전 v0.2.0 산출물을 현재 증거로 취급하는 서술
+- canonical hash를 raw bit identity로 해석하는 표현
+- V11 broad grid의 empirical public pass-rate를 release gate처럼 읽는 표현
+
+## Step 6.5 — 22개 finding 폐쇄 매트릭스
+
+| Finding | 구현 Step | 핵심 변경 파일 | 회귀/증거 | 상태 | 잔여 제한 |
+|---|---|---|---|:---:|---|
+| C-1 `canonical_hash()`는 bit-identity 증거가 아님 | 1.2–1.4 | `R/utils-reproducibility.R`; `inst/REPRODUCIBILITY.md`; M7 | `test-utils-reproducibility-canonicalization.R`; `test-rng-hash-policy.R` | CLOSED | v4는 9자리 canonical numerical equality; binary는 RDS SHA-256로 별도 검증 |
+| C-2 design+seed만으로 RNG가 고정되지 않음 | 1.3 | `R/utils-rng.R`; 두 wrapper; mixture generator | `test-rng-hash-policy.R`; wrapper tests | CLOSED | `seed = NULL`은 의도적으로 caller stream 사용 |
+| C-3 v3 payload/provenance가 stale | 1.4 | v4 schema; golden/JEBS generators와 manifests | golden fixture tests; stored-vs-current provenance assertions | CLOSED | schema 변경 시 의도적 hash migration 필요 |
+| C-4 JEBS strict `nj_min=4`, rounded T1a | 3.1 | JEBS generator/manifest; floor-active F10 RDS | `test-T1a-jebs-bit-identical.R`; golden tests; V02 | CLOSED | cross-OS는 v4 canonical hash 계약 |
+| C-5 A2가 평균 95% 오차도 승인 | 2.1 | `R/layer2-engine-a2.R`; site-size docs | A2 edge/solver tests; V04 100 fixtures | CLOSED | 수치적으로 확인 불가능한 입력은 typed fail-closed |
+| C-6 latent copula target과 raw Pearson 비교 | 2.2 | `R/diagnostics-core.R`; diagnostics docs | latent-vs-raw worked test; scenario diagnostics; V01 | CLOSED | raw Pearson은 target 없는 descriptive row |
+| C-7 migration이 covariate/grand-mean scale 변경 | 3.2 | M8 migration vignette | `test-migration-sitebayes2.R` old/new raw-effect parity | CLOSED | 비-Gaussian predecessor 모형은 shape별 recalibration 필요성을 명시 |
+| C-8 final v0.2.0에서 V0–V12 미재확립 | 5.1–6.4 | validation harness/jobs/manifests/synthesis | 13 fresh `phase6b-*` runs; traceability 168/168 | CLOSED | dirty candidate는 source digest로 결박; commit은 별도 배포 절차 |
+| I-1 M7/maintainer policy 상호 모순 | 1.2–1.3 | M7 전면 개정; 두 reproducibility policy | cross-OS policy tests; semantic traceability | CLOSED | raw cross-platform bit equality는 보장하지 않음 |
+| I-2 resume가 stale artifact를 현재 provenance로 승인 | 5.1–5.4 | `validation-harness.R`; jobs; README | `test-validation-harness-reuse.R` 81 assertions; stale-row rejection | CLOSED | legacy sidecar 없는 결과는 재사용 불가 |
+| I-3 `scenario_audit()`가 WARN에도 `pass=TRUE` | 2.5 | `R/scenario_audit.R`; docs | scenario WARN/PASS/FAIL tests | CLOSED | `audit_complete`는 Group C 실행 여부를 별도 표시 |
+| I-4 deterministic quantile grid를 two-sample KS로 검정 | 2.3 | `R/diagnostics-core.R` | analytic one-sample equality + null calibration tests | CLOSED | 자동 analytic CDF는 Gaussian/StudentT에 한정 |
+| I-5 ALD help가 skew 방향을 반대로 설명 | 2.4 | ALD roxygen/Rd; catalog vignette | ALD skew-sign simulation test | CLOSED | 없음 |
+| I-6 shrinkage endpoint 해석 반대 | 2.4 | Layer 2 diagnostics roxygen/Rd; M8 | formula/endpoint tests; V03 oracle consistency | CLOSED | 없음 |
+| I-7 공개 diagnostic rubric 두 개가 불일치 | 2.3–2.5 | `default_thresholds()`; diagnostics/scenario docs | threshold and scenario semantic tests | CLOSED | V11 broad-grid pass-rate는 calibration-only |
+| I-8 seven-shape correction이 surface마다 불일치 | 3.4 | shape docs, pkgdown, validation labels | `test-g-shape-catalog.R`; docs traceability | CLOSED | DPM은 예약 stub로 명시 |
+| I-9 Walters preset가 source anchor를 과장 | 3.3 | `R/presets.R`; README; A2; pkgdown | preset metadata tests; V03 | CLOSED | direct/derived/assumed proxy이며 chapter replication 아님 |
+| I-10 T12가 full RNG-order invariant를 검사하지 않음 | 4.2 | T12 test; invariant ledger | exact full call-vector assertion | CLOSED | 구현 순서 변경은 의도적 invariant migration 필요 |
+| I-11 golden snapshot가 파일을 자기 자신과 비교 | 4.1 | independent golden helper/generator/test | live regeneration of 10 RDS plus README | CLOSED | binary와 canonical 계약을 각각 비교 |
+| P-1 Layer 3 algorithm/RNG docs가 구 구현 설명 | 2.5 | rank/hybrid roxygen/Rd | RNG-neutral and zero-target behavior tests | CLOSED | zero target은 population-independence special case |
+| P-2 설치형 E01–E30 catalog 미완성 | 3.4 | `R/error-catalog.R`; installed CSV/Rd; generator | `test-error-catalog-installed.R`; conformance scan | CLOSED | catalog 변경은 generator로 수행 |
+| P-3 conformance/traceability가 ledger 자체만 검사 | 4.3–5.3 | semantic scanners; traceability ledgers/tests | source-discovered API/docs/errors; artifact SHA/sidecar verification | CLOSED | 외부 cross-OS runner 상태는 repo-local test 밖 |
+
+폐쇄 수: **22/22**. Critical 미해결 0, Important 미해결 0, Polish 미해결 0.
+
+## Step 6.6 — Release 판정과 인계
+
+판정 규칙에 따라 모든 release-blocking counterexample가 제거되고, 전체 package
+gate와 current-source validation이 통과했으므로 **RELEASE**다.
+
+남아 있는 운영 단계는 수정 내용의 검토·commit·push·실제 CRAN 제출이며, 이번
+요청은 그 외부 상태 변경을 포함하지 않는다. commit 전에 source 파일 또는
+source-digest 대상 fixture/harness를 추가로 바꾸면 V0–V12 evidence를 다시
+생성해야 한다. 문서·로그만 바꾸는 것은 현재 statistical source digest를
+변경하지 않는다.
+
+## Phase 6 종료 판정
+
+| 종료 기준 | 결과 |
+|---|:---:|
+| QMD/HTML Phase 1–6 로그 존재 | PASS |
+| Critical 8건 회귀 증거 | PASS |
+| Important 11건 과학적/증거 결정 위험 제거 | PASS |
+| full tests/check/lint | PASS |
+| V0–V12 fresh full evidence | PASS |
+| 22-row closure matrix | PASS |
+| 최종 판정 | **RELEASE** |

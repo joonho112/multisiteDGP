@@ -286,11 +286,11 @@ $$
 $$
 
 This corresponds to JEBS Equation (2) when $G$ is taken to be Gaussian
-[@lee2025improving]. The package implements seven choices for $G$ —
-Gaussian, two-component mixture, asymmetric Laplace
+[@lee2025improving]. Six built-ins plus `User` equal seven generated
+choices for $G$: Gaussian, two-component mixture, asymmetric Laplace
 [@yu2005three], Student-t, skew-normal [@azzalini1985class],
-point-mass-plus-slab, a user-supplied callback, and a Dirichlet
-process mixture stub. The catalog and standardization details live in
+point-mass-plus-slab, and a user-supplied callback. `DPM` is a reserved
+value and does not generate data without a callback bridge. The catalog and standardization details live in
 [M2: G-distribution catalog](m2-g-distribution-catalog.html); for the
 purposes of M1, the only contract that matters is that every member
 of the catalog has mean $\tau$ and variance $\sigma_\tau^{\,2}$ on the
@@ -581,8 +581,8 @@ specification, expand the package beyond the JEBS scope:
 - **Precision dependence** — setting `dependence` to `rank`, `copula`,
   or `hybrid` activates Layer 3's rearrangement (Section 4.3). With
   `dependence = "none"`, the rearrangement reduces to identity (T7).
-- **G-shape choice** — setting `true_dist` to one of the seven
-  non-Gaussian shapes (Section 4.1) selects from
+- **G-shape choice** — setting `true_dist` to one of the six built-ins or
+  `User` (Section 4.1) selects from
   [M2's catalog](m2-g-distribution-catalog.html). With
   `true_dist = "Gaussian"`, the latent effects follow JEBS Equation
   (2) exactly.
@@ -625,7 +625,7 @@ that have no JEBS counterpart.
 | Precision dependence (copula) | Target Pearson $\rho_P$ via Gaussian copula | [`align_copula_corr()`](../reference/align_copula_corr.html) | M4 vignette covers selection criteria |
 | Precision dependence (hybrid) | Copula initialization + rank refinement | [`align_hybrid_corr()`](../reference/align_hybrid_corr.html) | M4 vignette covers when each path is appropriate |
 | Direct-precision path | Inverse design from $(I, R)$ to $\widehat{se}_j^{\,2}$ marginal | [`gen_se_direct()`](../reference/gen_se_direct.html) | M3 vignette covers feasibility region |
-| Five new G shapes | Student-t, skew-normal [@azzalini1985class], point-mass-plus-slab, user, DPM stub | [`gen_effects()`](../reference/gen_effects.html) `true_dist` ∈ {StudentT, SkewN, PointMassSlab, User, DPM} | Four of the package's seven shapes plus the reserved DPM slot; `Gaussian` default preserves JEBS Eq. (2) |
+| Four generated G extensions plus a reserved value | Student-t, skew-normal [@azzalini1985class], point-mass-plus-slab, User; DPM reserved | [`gen_effects()`](../reference/gen_effects.html) `true_dist` ∈ {StudentT, SkewN, PointMassSlab, User}; DPM requires a bridge | Six built-ins plus User equal seven generated shapes; `Gaussian` default preserves JEBS Eq. (2) |
 
 ## 7. Twelve testable invariants
 
@@ -844,7 +844,7 @@ explicit in blueprint Ch. 4 §8 and worth surfacing here:
 ## 9. Where to next
 
 - [M2: G-distribution catalog and standardization](m2-g-distribution-catalog.html)
-  — the seven choices for $G$, their parameterizations, and how
+  — the six built-ins plus `User` for $G$, their parameterizations, and how
   standardization is enforced (T2 is operationalized there).
 - [M3: Margin and SE models](m3-margin-se-models.html) — Engine A1
   vs. Engine A2, and the *direct-precision* path.

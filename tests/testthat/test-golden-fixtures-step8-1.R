@@ -6,7 +6,7 @@ golden_manifest <- function() {
 
 expected_golden_fixtures <- function() {
   data.frame(
-    fixture_id = sprintf("F%02d", 1:9),
+    fixture_id = c(sprintf("F%02d", 1:9), "F10"),
     fixture_file = c(
       "jebs_appendix_mixture_seed42.rds",
       "jebs_appendix_mixture_seed1.rds",
@@ -16,9 +16,14 @@ expected_golden_fixtures <- function() {
       "preset_jebs_strict.rds",
       "preset_education_modest.rds",
       "preset_walters_2024.rds",
-      "preset_small_area_estimation.rds"
+      "preset_small_area_estimation.rds",
+      "jebs_appendix_floor_active_seed42.rds"
     ),
-    fixture_type = c(rep("JEBS appendix seed", 4L), rep("preset output", 5L)),
+    fixture_type = c(
+      rep("JEBS appendix seed", 4L),
+      rep("preset output", 5L),
+      "JEBS appendix floor-active authority"
+    ),
     stringsAsFactors = FALSE
   )
 }
@@ -26,7 +31,7 @@ expected_golden_fixtures <- function() {
 test_that("Step 8.1 golden fixture inventory matches the shipped manifest", {
   manifest <- golden_manifest()
   expected <- expected_golden_fixtures()
-  golden_dir <- test_path("_snaps/golden")
+  golden_dir <- test_path("fixtures/golden")
   rds_files <- sort(list.files(golden_dir, pattern = "\\.rds$", full.names = FALSE))
   inst_golden_dir <- dirname(golden_extdata_path("golden-fixture-manifest.csv"))
   inst_rds_files <- list.files(inst_golden_dir, pattern = "\\.rds$", full.names = FALSE)
@@ -39,12 +44,12 @@ test_that("Step 8.1 golden fixture inventory matches the shipped manifest", {
   expect_identical(manifest$fixture_type, expected$fixture_type)
   expect_identical(sort(manifest$fixture_file), rds_files)
   expect_true(file.exists(golden_extdata_path("README.md")))
-  expect_true(file.exists(test_path("_snaps/golden/README.md")))
+  expect_true(file.exists(test_path("fixtures/golden/README.md")))
 })
 
 test_that("Step 8.1 golden RDS files match the manifest hashes", {
   manifest <- golden_manifest()
-  golden_dir <- test_path("_snaps/golden")
+  golden_dir <- test_path("fixtures/golden")
 
   for (idx in seq_len(nrow(manifest))) {
     row <- manifest[idx, ]
@@ -53,17 +58,103 @@ test_that("Step 8.1 golden RDS files match the manifest hashes", {
 
     expect_identical(unname(tools::sha256sum(path)), row$rds_sha256)
     expect_identical(canonical_hash(object), row$canonical_hash)
+    expect_identical(row$hash_schema_version, "multisiteDGP-canonical-hash-v4")
     expect_equal(nrow(object), row$nrow)
     expect_equal(ncol(object), row$ncol)
   }
 })
 
+test_that("Step 8.1 full-object fixtures carry current self-consistent provenance", {
+  manifest <- golden_manifest()
+  golden_dir <- test_path("fixtures/golden")
+  preset_rows <- manifest$fixture_id %in% sprintf("F%02d", 5:9)
+
+  for (idx in which(preset_rows)) {
+    object <- readRDS(file.path(golden_dir, manifest$fixture_file[[idx]]))
+    provenance <- attr(object, "provenance", exact = TRUE)
+
+    expect_identical(provenance$hash_schema_version, manifest$hash_schema_version[[idx]])
+    expect_identical(provenance$canonical_hash, canonical_hash(object))
+    expect_identical(provenance$canonical_hash, manifest$canonical_hash[[idx]])
+    expect_true(manifest$stored_provenance_hash_matches[[idx]])
+  }
+})
+
+test_that("Step 8.1 preset fixtures are independent live regenerations", {
+  manifest <- golden_manifest()
+  golden_dir <- test_path("fixtures/golden")
+  live_objects <- golden_live_preset_specs()
+  preset_rows <- manifest$fixture_id %in% sprintf("F%02d", 5:9)
+
+  expect_identical(manifest$fixture_file[preset_rows], names(live_objects))
+  for (file in names(live_objects)) {
+    live <- live_objects[[file]]
+    golden <- readRDS(file.path(golden_dir, file))
+    row <- manifest[manifest$fixture_file == file, , drop = FALSE]
+
+    # The canonical hash is the portable authority; raw doubles differ by one or
+    # two ULP between the platform that generated the fixture and any other, and
+    # the derived diagnostics differ more because cor()/sd() accumulate in a
+    # platform-dependent order. Those diagnostics are exactly what schema v3
+    # removed from the payload. Comparing them with identical() asserted the
+    # opposite of the contract (D-060).
+    expect_identical(canonical_hash(live), canonical_hash(golden), info = file)
+    expect_identical(canonical_hash(live), row$canonical_hash[[1L]], info = file)
+
+    expect_identical(class(live), class(golden), info = file)
+    expect_identical(names(live), names(golden), info = file)
+    live_columns <- golden_column_payload(live)
+    golden_columns <- golden_column_payload(golden)
+    expect_identical(dim(live_columns), dim(golden_columns), info = file)
+    expect_equal(live_columns, golden_columns, tolerance = 1e-12, info = file)
+
+    # The design is exact — it is the input, not a computed result.
+    expect_identical(
+      attr(live, "design", exact = TRUE),
+      attr(golden, "design", exact = TRUE),
+      info = file
+    )
+    expect_equal(
+      attr(live, "diagnostics", exact = TRUE),
+      attr(golden, "diagnostics", exact = TRUE),
+      tolerance = 1e-10, info = file
+    )
+
+    # Provenance records the producing runtime, so a fixture built under one R
+    # version can never match a verifier running another. Compare the fields
+    # that identify the run, not the ones that identify the machine.
+    live_prov <- attr(live, "provenance", exact = TRUE)
+    golden_prov <- attr(golden, "provenance", exact = TRUE)
+    for (field in c("seed", "paradigm", "design_hash", "hash_algo",
+                    "hash_schema_version", "rng_kind")) {
+      if (!is.null(golden_prov[[field]])) {
+        expect_identical(live_prov[[field]], golden_prov[[field]],
+                         info = paste(file, field))
+      }
+    }
+  }
+})
+
+test_that("Step 8.1 manifest is bound to the current fixture generator", {
+  manifest <- golden_manifest()
+  generator_path <- test_path("../data-raw/generate_golden_fixtures.R")
+  skip_if_not(
+    file.exists(generator_path),
+    "Golden fixture generator is not shipped in the package tarball."
+  )
+  generator_sha <- unname(tools::sha256sum(generator_path))
+
+  expect_true(all(manifest$generator_sha256 == generator_sha))
+  expect_true(all(manifest$package_version == as.character(utils::packageVersion("multisiteDGP"))))
+  expect_true(all(manifest$hash_schema_version == "multisiteDGP-canonical-hash-v4"))
+})
+
 test_that("Step 8.1 golden fixtures preserve object classes and schema", {
   manifest <- golden_manifest()
-  golden_dir <- test_path("_snaps/golden")
+  golden_dir <- test_path("fixtures/golden")
   canonical_cols <- c("site_index", "z_j", "tau_j", "tau_j_hat", "se_j", "se2_j", "n_j")
 
-  jebs_rows <- manifest$fixture_id %in% sprintf("F%02d", 1:4)
+  jebs_rows <- manifest$fixture_id %in% c(sprintf("F%02d", 1:4), "F10")
   preset_rows <- manifest$fixture_id %in% sprintf("F%02d", 5:9)
 
   for (file in manifest$fixture_file[jebs_rows]) {
@@ -90,7 +181,7 @@ test_that("Step 8.1 JEBS fixtures agree with the Step 4.1 provenance manifest", 
   manifest <- golden_manifest()
   jebs_manifest <- read.csv(provenance_manifest, stringsAsFactors = FALSE)
 
-  rows <- match(sprintf("F%02d", 1:4), manifest$fixture_id)
+  rows <- match(c(sprintf("F%02d", 1:4), "F10"), manifest$fixture_id)
   expect_identical(
     manifest$fixture_file[rows],
     jebs_manifest$fixture_file

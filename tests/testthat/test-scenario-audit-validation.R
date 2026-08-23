@@ -113,6 +113,8 @@ test_that("the tail gates fire on their own, without the median gates", {
   out <- suppressWarnings(scenario_audit(g, M = 30L, thresholds = thresholds))
 
   expect_identical(out$status, "WARN")
+  expect_false(out$pass)
+  expect_gt(out$n_warnings, 0L)
   expect_identical(out$fail_reasons, "")
   for (gate in c("mean_shrinkage", "feasibility", "R", "bhattacharyya", "ks")) {
     expect_match(out$warn_reasons, gate, fixed = TRUE)
@@ -128,6 +130,9 @@ test_that("a cell with no violations reports PASS and empty reason strings", {
 
   expect_identical(out$status, "PASS")
   expect_true(out$pass)
+  expect_true(out$audit_complete)
+  expect_identical(out$groups_evaluated, "A,B,C,D")
+  expect_identical(out$threshold_profile, "replicate-grid-audit-v1")
   expect_identical(out$n_violations, 0L)
   expect_identical(out$fail_reasons, "")
   expect_identical(out$warn_reasons, "")
@@ -147,15 +152,71 @@ test_that("a FAIL suppresses the warn reasons rather than reporting both", {
 
 test_that("the parallel path returns what the sequential path returns", {
   skip_if_not_installed("furrr")
+  skip_if_not_installed("future")
+  skip_on_cran()
+
+  # This test used to call scenario_audit(parallel = TRUE) without setting a
+  # future plan. future's default is sequential, so both calls ran in-process
+  # and the test compared sequential against sequential while claiming to check
+  # parallelism. That fake assurance hid a real defect: multisession workers
+  # resolve multisiteDGP from the installed library, so under a development load
+  # they audit a different version entirely (D-061).
   g <- design_grid(J = 25L, sigma_tau = c(0.15, 0.20), nj_mean = 60,
                    seed_root = 777L)
+  root <- normalizePath(test_path("..", ".."), mustWork = FALSE)
 
-  sequential <- suppressWarnings(scenario_audit(g, M = 5L, parallel = FALSE))
-  concurrent <- suppressWarnings(scenario_audit(g, M = 5L, parallel = TRUE))
+  audit_cell <- function(i) {
+    cell <- g[i, , drop = FALSE]
+    class(cell) <- class(g)
+    multisiteDGP::scenario_audit(cell, M = 5L, parallel = FALSE)
+  }
+  # Compare cell against cell. A whole-grid audit carries manifest columns for
+  # whatever design_grid() varies, so a one-cell audit is narrower and the two
+  # shapes are not comparable.
+  sequential <- suppressWarnings(
+    do.call(rbind, lapply(seq_len(nrow(g)), audit_cell))
+  )
 
-  # Same cell seeds, so the two must agree exactly — parallelism must not change
-  # which replicates a cell draws.
-  expect_equal(concurrent, sequential)
+  oplan <- future::plan(future::multisession, workers = 2L)
+  on.exit(future::plan(oplan), add = TRUE)
+  expect_false(inherits(future::plan(), "sequential"))
+
+  # is_dev_package() has to be asked in this session. A fresh worker has no dev
+  # package registered, so asking there always answers FALSE and the worker
+  # quietly uses the installed library -- which is the defect itself.
+  dev_load <- .is_dev_load()
+
+  concurrent <- suppressWarnings(do.call(rbind, furrr::future_map(
+    seq_len(nrow(g)),
+    function(i) {
+      if (isTRUE(dev_load)) {
+        suppressMessages(pkgload::load_all(root, quiet = TRUE))
+      }
+      audit_cell(i)
+    },
+    .options = furrr::furrr_options(
+      seed = TRUE, globals = c("g", "root", "audit_cell", "dev_load")
+    )
+  )))
+
+  # Cell seeds are derived per cell, so execution order cannot move a result.
+  expect_equal(as.data.frame(concurrent), as.data.frame(sequential))
+})
+
+test_that("parallel under a development load warns that workers see another version", {
+  skip_if_not_installed("furrr")
+  skip_if_not_installed("future")
+  skip_if_not(.is_dev_load(), "Guard only applies to a pkgload development session.")
+  skip_on_cran()
+
+  g <- design_grid(J = 25L, sigma_tau = 0.15, nj_mean = 60, seed_root = 777L)
+
+  # Silent under the default sequential plan — nothing is resolved separately.
+  expect_no_warning(scenario_audit(g, M = 2L, parallel = TRUE))
+
+  oplan <- future::plan(future::multisession, workers = 2L)
+  on.exit(future::plan(oplan), add = TRUE)
+  expect_warning(scenario_audit(g, M = 2L, parallel = TRUE), "development load")
 })
 
 # ── 정수 범위 (D-032) ─────────────────────────────────────────────────

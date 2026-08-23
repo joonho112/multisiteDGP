@@ -1,4 +1,4 @@
-test_that("the policy document states the portable hash contract", {
+test_that("the policy document states the portable numerical hash contract", {
   policy_file <- test_path("../../tools/cross-os-reproducibility-policy.md")
   skip_if_not(
     file.exists(policy_file),
@@ -6,9 +6,10 @@ test_that("the policy document states the portable hash contract", {
   )
 
   policy <- paste(readLines(policy_file, warn = FALSE), collapse = "\n")
-  expect_match(policy, "the same data, on any platform", fixed = TRUE)
-  expect_match(policy, "Same-machine reproducibility", fixed = TRUE)
+  expect_match(policy, "canonical numerical content", fixed = TRUE)
+  expect_match(policy, "byte identity", fixed = TRUE)
   expect_match(policy, "Derived diagnostics", fixed = TRUE)
+  expect_match(policy, "package-pinned", fixed = TRUE)
 })
 
 test_that("the policy document no longer claims a platform hierarchy", {
@@ -33,7 +34,7 @@ test_that("Step 10.7 CI workflows advertise the reproducibility policy", {
   for (workflow_file in workflow_files) {
     workflow_text <- paste(readLines(workflow_file, warn = FALSE), collapse = "\n")
     expect_match(workflow_text, "MULTISITEDGP_REPRODUCIBILITY_POLICY", fixed = TRUE)
-    expect_match(workflow_text, "portable-hash-v3", fixed = TRUE)
+    expect_match(workflow_text, "portable-numerical-hash-v4", fixed = TRUE)
   }
 })
 
@@ -86,8 +87,8 @@ test_that("the golden fixture generator keeps its accidental-regeneration gate",
 
   generator_text <- paste(readLines(generator_file, warn = FALSE), collapse = "\n")
   # The gate survives as a speed bump against accidental regeneration. It is no
-  # longer a platform claim — fixtures are byte-identical wherever they are
-  # built.
+  # longer a platform claim; exact artifact SHA and canonical numerical hash
+  # have separate roles.
   expect_match(generator_text, "MULTISITEDGP_ALLOW_NON_LINUX_GOLDEN_REGEN", fixed = TRUE)
 })
 

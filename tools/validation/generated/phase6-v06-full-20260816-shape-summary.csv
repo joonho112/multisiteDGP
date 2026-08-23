@@ -1,0 +1,8 @@
+"run_id","experiment_id","mode","shape","rows","completed","acceptance_pass_rate","mean_pass_rate","var_pass_rate","max_abs_mean","max_abs_var_delta","max_var_tolerance","heavy_tail_tolerance_rows"
+"phase6-v06-full-20260816","V06","full","ALD",5,5,1,1,1,0.00132423439572705,0.00600980013465691,0.01,0
+"phase6-v06-full-20260816","V06","full","Gaussian",5,5,1,1,1,0.0019350073155324,0.00319036892653657,0.01,0
+"phase6-v06-full-20260816","V06","full","Mixture",5,5,1,1,1,0.00105610450162269,0.00228195793507879,0.01,0
+"phase6-v06-full-20260816","V06","full","PointMassSlab",5,5,1,1,1,0.00276424083083951,0.00426906558773665,0.01,0
+"phase6-v06-full-20260816","V06","full","SkewN",5,5,1,1,1,0.00101100622613013,0.00235727432356247,0.01,0
+"phase6-v06-full-20260816","V06","full","StudentT",5,5,1,1,1,0.0021262495740273,0.0115971291758372,0.05,1
+"phase6-v06-full-20260816","V06","full","User",5,5,1,1,1,9.76978498101744e-17,3.3939009247419e-07,0.01,0

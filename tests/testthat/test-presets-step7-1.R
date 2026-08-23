@@ -46,7 +46,7 @@ test_that("JEBS presets keep UX and strict anchors separate", {
   expect_identical(strict$J, 100L)
   expect_identical(strict$sigma_tau, 0.15)
   expect_identical(strict$nj_mean, 80)
-  expect_identical(strict$nj_min, 4L)
+  expect_identical(strict$nj_min, 5L)
 
   for (des in list(paper, strict)) {
     expect_identical(des$paradigm, "site_size")

@@ -93,8 +93,8 @@ test_that("canonical hash column ordering is locale independent", {
   )
 })
 
-test_that("canonical hash ignores diagnostics entirely under schema v3", {
-  # v1 and v2 hashed an allowlist of numeric diagnostics. v3 drops them: they
+test_that("canonical hash ignores diagnostics entirely under schema v4", {
+  # v1 and v2 hashed an allowlist of numeric diagnostics. v3 and v4 drop them:
   # are derived from the hashed data and the hashed design, so they carry no
   # provenance the hash lacks, and their cor()/sd() accumulation order varies
   # by platform, which is what made the cross-platform contract unachievable
@@ -123,6 +123,17 @@ test_that("a diagnostic still moves the hash when the caller asks for it", {
   ))
 })
 
+test_that("opt-in diagnostics use the canonical numerical precision", {
+  dat <- new_hash_data()
+  sub_precision <- dat
+  attr(sub_precision, "diagnostics")$I_hat <- 0.20 + 1e-11
+
+  expect_identical(
+    canonical_hash(dat, diagnostics_to_include = "I_hat"),
+    canonical_hash(sub_precision, diagnostics_to_include = "I_hat")
+  )
+})
+
 test_that("data still drives the hash", {
   dat <- new_hash_data()
   changed <- dat
@@ -130,6 +141,32 @@ test_that("data still drives the hash", {
   changed$tau_j_hat[1] <- changed$tau_j_hat[1] * (1 + 1e-6)
 
   expect_false(identical(canonical_hash(dat), canonical_hash(changed)))
+})
+
+test_that("the hash defines numerical equivalence rather than raw identity", {
+  dat <- new_hash_data()
+  sub_precision <- dat
+  sub_precision$tau_j_hat[1] <- sub_precision$tau_j_hat[1] + 1e-11
+
+  expect_false(identical(as.data.frame(dat), as.data.frame(sub_precision)))
+  expect_identical(canonical_hash(dat), canonical_hash(sub_precision))
+
+  boundary <- 1.234567895
+  below <- data.frame(x = boundary - .Machine$double.eps)
+  above <- data.frame(x = boundary + .Machine$double.eps)
+  expect_lt(abs(below$x - above$x), 1e-14)
+  expect_false(identical(canonical_hash(below), canonical_hash(above)))
+})
+
+test_that("factor semantics are part of schema v4", {
+  base <- data.frame(group = factor(c("a", "b"), levels = c("a", "b")))
+  relabelled <- data.frame(group = factor(c("x", "y"), levels = c("x", "y")))
+  reversed_levels <- data.frame(group = factor(c("a", "b"), levels = c("b", "a")))
+  ordered <- data.frame(group = ordered(c("a", "b"), levels = c("a", "b")))
+
+  expect_false(identical(canonical_hash(base), canonical_hash(relabelled)))
+  expect_false(identical(canonical_hash(base), canonical_hash(reversed_levels)))
+  expect_false(identical(canonical_hash(base), canonical_hash(ordered)))
 })
 
 test_that("canonical hash supports explicit column and diagnostic subsets", {
@@ -220,6 +257,68 @@ test_that("canonical hash is final wrapper provenance and same-seed stable", {
   expect_identical(after, before)
 })
 
+test_that("seeded wrappers pin RNG kind and restore the caller stream", {
+  original_kind <- RNGkind()
+  original_has_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  original_seed <- if (original_has_seed) .Random.seed else NULL
+  on.exit({
+    do.call(RNGkind, as.list(original_kind))
+    if (original_has_seed) {
+      assign(".Random.seed", original_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
+  RNGkind("L'Ecuyer-CMRG", "Inversion", "Rejection")
+  set.seed(7101L)
+  le_kind <- RNGkind()
+  le_seed <- .Random.seed
+  from_lecuyer <- sim_multisite(J = 20L, seed = 7102L)
+  expect_identical(RNGkind(), le_kind)
+  expect_identical(.Random.seed, le_seed)
+
+  RNGkind("Mersenne-Twister", "Inversion", "Rejection")
+  set.seed(7103L)
+  mt_kind <- RNGkind()
+  mt_seed <- .Random.seed
+  from_mt <- sim_multisite(J = 20L, seed = 7102L)
+  expect_identical(RNGkind(), mt_kind)
+  expect_identical(.Random.seed, mt_seed)
+
+  expect_identical(as.data.frame(from_lecuyer), as.data.frame(from_mt))
+  expect_identical(canonical_hash(from_lecuyer), canonical_hash(from_mt))
+  provenance <- attr(from_lecuyer, "provenance", exact = TRUE)
+  expect_identical(
+    unname(provenance$rng_kind),
+    c("Mersenne-Twister", "Inversion", "Rejection")
+  )
+  expect_identical(provenance$rng_policy, "package-pinned")
+})
+
+test_that("seeded wrappers do not manufacture caller RNG state", {
+  original_kind <- RNGkind()
+  original_has_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  original_seed <- if (original_has_seed) .Random.seed else NULL
+  on.exit({
+    do.call(RNGkind, as.list(original_kind))
+    if (original_has_seed) {
+      assign(".Random.seed", original_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    rm(".Random.seed", envir = .GlobalEnv)
+  }
+  before_kind <- RNGkind()
+  invisible(sim_meta(J = 10L, I = 0.4, R = 2, seed = 7104L))
+
+  expect_identical(RNGkind(), before_kind)
+  expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+})
+
 test_that("canonical_hash is the contract where raw digest is fragile", {
   dat <- new_hash_data()
   reordered <- dat[, rev(names(dat))]
@@ -254,12 +353,32 @@ test_that("provenance_string is exported for data design and default paths", {
   expect_match(data_line, "seed=6507", fixed = TRUE)
   expect_match(data_line, sprintf("canonical_hash=%s", canonical_hash(out)), fixed = TRUE)
   expect_match(data_line, sprintf("design_hash=%s", canonical_hash(design)), fixed = TRUE)
+  expect_match(data_line, "hash_schema=multisiteDGP-canonical-hash-v4", fixed = TRUE)
+  expect_match(data_line, "producer_R=", fixed = TRUE)
+  expect_match(data_line, "producer_platform=", fixed = TRUE)
+  expect_match(data_line, "producer_rng=Mersenne-Twister/Inversion/Rejection", fixed = TRUE)
+  expect_match(data_line, "verifier_R=", fixed = TRUE)
   expect_match(data_line, "hooks=none", fixed = TRUE)
 
   expect_match(design_line, "object=multisitedgp_design", fixed = TRUE)
   expect_match(design_line, sprintf("design_hash=%s", canonical_hash(design)), fixed = TRUE)
   expect_match(default_line, "object=data.frame", fixed = TRUE)
   expect_match(default_line, sprintf("canonical_hash=%s", canonical_hash(data.frame(x = 1:3))), fixed = TRUE)
+})
+
+test_that("provenance_string distinguishes producer and verifier runtimes", {
+  out <- sim_multisite(J = 10L, seed = 6510L)
+  provenance <- attr(out, "provenance", exact = TRUE)
+  provenance$R_version <- "R version 3.6.3 (2020-02-29)"
+  attr(out, "provenance") <- provenance
+
+  expect_warning(
+    line <- provenance_string(out),
+    "Stored producer runtime differs"
+  )
+  expect_match(line, "producer_R=3.6.3", fixed = TRUE)
+  expect_match(line, sprintf("verifier_R=%s.%s", R.version$major, R.version$minor), fixed = TRUE)
+  expect_no_match(line, "producer_R=4.6.0", fixed = TRUE)
 })
 
 test_that("provenance_string records custom hook presence without hashing bodies", {

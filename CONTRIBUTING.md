@@ -57,7 +57,7 @@ That is a speed bump against regenerating by accident, not a platform claim.
 **Regenerate only when a change is meant to move the data, and say why in the
 commit.** An unintended fixture diff is a regression, not a refresh. If a hash
 moved and you are not sure which happened, the golden `.rds` files in
-`tests/testthat/_snaps/golden/` settle it — they compare exactly and do not
+`tests/testthat/fixtures/golden/` settle it — they compare exactly and do not
 depend on the hash schema.
 
 ## Validation experiments

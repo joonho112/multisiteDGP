@@ -14,7 +14,7 @@ dependencies plus targeted test/docs tooling. This keeps the package build
 pure-R and avoids pulling Stan or other heavy optional Suggests into required
 PR checks.
 
-Cross-OS reproducibility follows `tools/cross-os-reproducibility-policy.md`:
-Linux is the strict `canonical_hash()` baseline, while macOS and Windows are
-held to same-machine reproducibility and distributional parity rather than
-Linux byte-identical golden hashes.
+Cross-OS reproducibility follows `tools/cross-os-reproducibility-policy.md`.
+All five matrix cells must agree on locked schema-v4 canonical numerical
+hashes. No operating system is privileged; exact RDS byte identity is a
+separate artifact-integrity check rather than the cross-platform contract.

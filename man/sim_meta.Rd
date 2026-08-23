@@ -27,9 +27,9 @@ it). Site-size arguments (\code{nj_mean}, \code{cv}, \code{engine}, \code{n_per_
 trigger a coherence error pointing to \code{\link{sim_multisite}}.}
 
 \item{seed}{Optional integer seed override. When supplied, replaces
-\code{design$seed} and gives bit-identical reruns. Use a small integer (e.g.
-\code{1L}) for examples; use a 9-digit integer in production for cross-run
-uniqueness.}
+\code{design$seed} and gives canonical numerical replays independent of the
+caller's active RNG kind. Use a small integer (e.g. \code{1L}) for examples;
+use a 9-digit integer in production for cross-run uniqueness.}
 }
 \value{
 A \code{multisitedgp_meta} tibble (which inherits from
@@ -46,7 +46,7 @@ Plus the following attributes:
 \describe{
 \item{\code{design}}{The locked \code{multisitedgp_design} with \code{paradigm = "direct"}.}
 \item{\code{diagnostics}}{Group A / B / C / D diagnostics — \code{I_hat}, \code{R_hat}, realized Spearman / Pearson correlations, plus the meta-specific extras \code{target_I}, \code{target_R}, \code{I_error}, \code{R_error} (zero under the deterministic grid; \code{NA_real_} under custom \code{se_fn}), \code{I_exact}, \code{R_exact} (logical exactness flags), \code{shuffle}, \code{direct_se_method} (\code{"grid"} or \code{"custom"}), \code{direct_se_diagnostics}, \code{margin_engine}. See \code{\link{compute_I}}.}
-\item{\code{provenance}}{Package version, R version, platform, resolved seed, \code{canonical_hash}, \code{design_hash}, and the call expression.}
+\item{\code{provenance}}{Package version, producing R version and platform, resolved seed, pinned RNG triple and policy, hash schema, \code{canonical_hash}, \code{design_hash}, and the call expression.}
 \item{\code{multisitedgp_version}, \code{paradigm}}{Convenience copies for quick attribute lookup.}
 }
 }
@@ -70,7 +70,7 @@ rather than derived from per-site sample sizes.
 \details{
 The simulation runs four generative layers in order:
 \describe{
-\item{\strong{Layer 1 — latent effects} (\code{\link{gen_effects}})}{Draws standardized site effects \eqn{z_j} from one of seven \eqn{G} distributions and rescales to \eqn{\tau_j = \tau + \sigma_\tau\,z_j}.}
+\item{\strong{Layer 1 — latent effects} (\code{\link{gen_effects}})}{Draws standardized site effects \eqn{z_j} from six built-ins or a \code{User} callback and rescales to \eqn{\tau_j = \tau + \sigma_\tau\,z_j}.}
 \item{\strong{Layer 2 — direct precision margin} (\code{\link{gen_se_direct}})}{Builds the per-site sampling variance \eqn{\widehat{se}_j^2} as a deterministic grid that exactly hits the user-specified \eqn{(I, R)} targets. The site-size column \eqn{n_j} is \code{NA_integer_} because no site-size margin is involved.}
 \item{\strong{Layer 3 — precision dependence} (\code{\link{align_rank_corr}}, \code{\link{align_copula_corr}}, \code{\link{align_hybrid_corr}})}{Optionally aligns \eqn{\widehat{se}_j^2} against \eqn{\tau_j} to a target Spearman correlation, preserving both marginals exactly.}
 \item{\strong{Layer 4 — observation draws} (\code{\link{gen_observations}})}{Draws \eqn{\widehat{\tau}_j \sim \mathcal{N}(\tau_j,\, \widehat{se}_j^2)}.}
@@ -102,9 +102,10 @@ models — site-size and direct-precision paths}.
 \section{RNG policy}{
 
 If \code{seed} is \code{NULL}, the pipeline runs under the caller's active RNG state.
-If \code{seed} is a single integer, the full pipeline is wrapped in
-\code{\link[withr]{with_seed}}, so the caller's global RNG state is
-restored on exit. The direct SE grid is deterministic except for
+If \code{seed} is a single integer, the full pipeline uses the package-pinned
+RNG triple \code{Mersenne-Twister} / \code{Inversion} / \code{Rejection}, and restores the
+caller's RNG kind and global state exactly on exit. The direct SE grid is
+deterministic except for
 \code{shuffle = TRUE} with \code{R > 1}, which uses the active sample RNG inside
 the same wrapper seed.
 }

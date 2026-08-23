@@ -30,18 +30,19 @@ methods; a numeric vector (recycled over the closed-form
 arguments) for the closed-form path.
 }
 \description{
-Compute the across-site mean of the empirical-Bayes shrinkage,
+Compute the across-site mean of the empirical-Bayes reliability weight,
 \eqn{\bar{S} = J^{-1} \sum_{j=1}^{J} \sigma_\tau^2 / (\sigma_\tau^2 + \widehat{se}_j^2)},
 from a simulated dataset, a bare \eqn{\widehat{se}_j^2} vector, or a
 closed-form approximation that uses only design parameters.
 \strong{Group D diagnostic} (downstream shrinkage — Dr. Chen's question 4
-on average pooling toward the overall mean).
+on average information retention; average pooling toward the mean is
+\eqn{1 - \bar{S}}).
 }
 \details{
-\eqn{\bar{S}} is the natural single-number summary of how much
-partial-pooling work a hierarchical model will do across the design.
-Values near 0 indicate the prior dominates almost everywhere; values
-near 1 indicate near-no pooling. The canonical quality gate is
+\eqn{\bar{S}} is the historical \code{mean_shrinkage} API's reliability or
+data-retention summary. Values near 0 indicate the prior dominates almost
+everywhere (heavy pooling); values near 1 indicate near-no pooling. The
+actual mean amount pooled toward the grand mean is \eqn{1-\bar{S}}. The quality gate is
 \code{mean_shrinkage_min = 0.30} (see \code{\link{default_thresholds}}).
 
 \strong{Method dispatch.} \code{mean_shrinkage()} resolves to one of
@@ -112,6 +113,7 @@ Other family-diagnostics:
 \code{\link[=compute_kappa]{compute_kappa()}},
 \code{\link[=compute_shrinkage]{compute_shrinkage()}},
 \code{\link[=default_thresholds]{default_thresholds()}},
+\code{\link[=error_catalog]{error_catalog()}},
 \code{\link[=feasibility_index]{feasibility_index()}},
 \code{\link[=heterogeneity_ratio]{heterogeneity_ratio()}},
 \code{\link[=informativeness]{informativeness()}},

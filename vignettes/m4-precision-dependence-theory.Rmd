@@ -122,13 +122,13 @@ sit close to zero up to Monte Carlo noise — the print method's
 
 ### 2.1 Mathematical form
 
-The rank method takes the input pair $(z_j, \widehat{se}_j^{\,2})$
-and proposes random pair-swaps on the precision column. A swap is
-accepted if the post-swap residual Spearman correlation between $z_j$
-and $\widehat{se}_j^{\,2}$ is closer to the user's target `rank_corr`
-than before; otherwise rejected. The procedure terminates when the
-realized Spearman lands within `tol` of the target or when `max_iter`
-swaps have been proposed.
+The rank method takes the input pair $(z_j, \widehat{se}_j^{\,2})$,
+chooses the better of the upstream order and a deterministic target-sorted
+initialization, and exhaustively scores every possible pair-swap on the
+precision column. It accepts the best improving swap, with index order as
+the stable tie break. The procedure terminates when the realized Spearman
+lands within `tol` of the target, no improving pair remains, or `max_iter`
+improving swaps have been accepted. The built-in method consumes no RNG.
 
 Formally, write $\sigma$ for the realized site-to-grid permutation of
 the pre-alignment precision multiset. The rank aligner returns the $\sigma$
@@ -160,7 +160,8 @@ $|\rho_S^\star| \to 1$ the rank aligner can produce visibly
 "step-shaped" plots because the swap-reachable subspace becomes
 thinner.
 
-**Cost in compute:** one acceptance test per proposed swap. For
+**Cost in compute:** every accepted step scores all $J(J-1)/2$ possible
+pair swaps. For
 $J = 80$ and a target of $\rho_S = 0.40$ the algorithm typically
 converges in a handful of swaps from a near-zero baseline.
 
@@ -571,7 +572,7 @@ A compact decision rule:
 | Production / cited simulation           | `align_hybrid_corr()`   | Default; smooth shape + tight target accuracy                 |
 | Fast smoke test, joint shape irrelevant | `align_rank_corr()`     | Fewest swaps; no `rnorm()` draws; exact multiset              |
 | Direct-precision designs                | `align_copula_corr()`   | Latent-Pearson target is natural; one-pass speed              |
-| Bit-deterministic replay                | `align_rank_corr()`     | Hill-climb proposes via `sample.int()`; copula uses `rnorm()` |
+| RNG-neutral alignment                   | `align_rank_corr()`     | Exhaustive deterministic pair scan; copula initialization uses `rnorm()` |
 | Boundary targets ($|\rho_S| \to 1$)     | `align_hybrid_corr()`   | Copula init narrows the search; pure rank may stall           |
 
 For users who pass arguments to `multisitedgp_design()` without

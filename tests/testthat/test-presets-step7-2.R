@@ -22,6 +22,17 @@ test_that("Walters and twin-towers presets return ch13 site-size designs", {
   expect_identical(walters$nj_min, 50L)
   expect_identical(walters$R2, 0.40)
   expect_identical(walters$engine, "A2_modern")
+  metadata <- attr(walters, "preset_metadata", exact = TRUE)
+  expect_identical(attr(walters, "preset_name", exact = TRUE), "preset_walters_2024")
+  expect_identical(metadata$direct$average_se2, 0.010)
+  expect_identical(metadata$derived$nj_mean, 240)
+  expect_identical(metadata$assumed$outcome_R2, 0.40)
+  expect_identical(metadata$excluded_source_quantity$conditional_prior_R2, 0.502)
+
+  simulated <- sim_multisite(walters, seed = 1L)
+  provenance <- attr(simulated, "provenance", exact = TRUE)
+  expect_identical(provenance$preset, "preset_walters_2024")
+  expect_identical(provenance$preset_metadata, metadata)
 
   expect_true(is_multisitedgp_design(twin))
   expect_identical(twin$J, 1000L)

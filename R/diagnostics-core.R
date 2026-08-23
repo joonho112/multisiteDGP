@@ -186,7 +186,8 @@ realized_rank_corr_marginal <- function(x, ...) {
 #' `bins = 50`).
 #'
 #' @param x,y Numeric vectors. If `x` is a `multisitedgp_data` object and
-#'   `y` is `NULL`, `x$z_j` is compared with the target G's quantile grid.
+#'   `y` is `NULL`, `x$z_j` is compared with the target G's deterministic
+#'   quantile grid.
 #' @param bins Integer. Number of histogram bins. Default `50L`.
 #'
 #' @return A scalar double in `[0, 1]`.
@@ -234,14 +235,16 @@ bhattacharyya_coef <- function(x, y = NULL, bins = 50L) {
 #' shape.
 #'
 #' @details
-#' Lower KS = closer agreement. KS < 0.10 corresponds to two-sample KS
-#' p > 0.05 at \eqn{J = 50}, the package's default flag threshold.
-#' For `multisitedgp_data` inputs, `z_j` is compared against the target G's
-#' deterministic reference quantile grid (same protocol as
-#' \code{\link{bhattacharyya_coef}}).
+#' Lower KS = closer agreement. For a `multisitedgp_data` input with no `y`,
+#' the distance is the one-sample KS statistic against the analytic target CDF
+#' for Gaussian or standardized Student-t designs. The diagnostics table uses
+#' the matching one-sample p-value. When two numeric vectors are supplied,
+#' this function returns the ordinary two-sample distance; no fixed distance
+#' cutoff is equivalent to a p-value without accounting for sample sizes.
 #'
 #' @param x,y Numeric vectors. If `x` is a `multisitedgp_data` object and
-#'   `y` is `NULL`, `x$z_j` is compared with the target G's quantile grid.
+#'   `y` is `NULL`, `x$z_j` is compared with the analytic target CDF for a
+#'   Gaussian or standardized Student-t design.
 #'
 #' @return A scalar double in `[0, 1]`.
 #' @family family-diagnostics
@@ -260,6 +263,11 @@ bhattacharyya_coef <- function(x, y = NULL, bins = 50L) {
 #' ks_distance(dat)
 #' @export
 ks_distance <- function(x, y = NULL) {
+  if (is_multisitedgp_data(x) && is.null(y)) {
+    .validate_diagnostic_data(x, "ks_distance")
+    cdf <- .reference_z_cdf(x)
+    return(unname(suppressWarnings(stats::ks.test(x$z_j, cdf)$statistic)))
+  }
   pair <- .resolve_distribution_pair(x, y, caller = "ks_distance")
   unname(suppressWarnings(stats::ks.test(pair$x, pair$y)$statistic))
 }
@@ -289,6 +297,7 @@ ks_distance <- function(x, y = NULL) {
   }
   target_rank <- .target_rank_corr(design, diagnostics)
   target_pearson <- .target_pearson_corr(design, diagnostics)
+  achieved_latent_pearson <- .achieved_latent_pearson(diagnostics)
 
   table <- list(
     .diagnostic_row("A", "informativeness", "overall", target_i$value, compute_I(x$se2_j, sigma_tau = sigma_tau, tau_j = x$tau_j), target_i$source, "compute_I", "API026", NA_real_, ""),
@@ -297,9 +306,10 @@ ks_distance <- function(x, y = NULL) {
     .diagnostic_row("A", "GM_se2", "overall", gm_target, exp(mean(log(x$se2_j))), .gm_target_source(target_i), "exp_mean_log", NA_character_, NA_real_, ""),
     .diagnostic_row("B", "realized_rank_corr", "residual", target_rank$value, realized_rank_corr(x, on = "residual"), target_rank$source, "realized_rank_corr", "API034", NA_real_, target_rank$note),
     .diagnostic_row("B", "realized_rank_corr", "marginal", NA_real_, realized_rank_corr(x, on = "marginal"), "not_available", "realized_rank_corr", "API034", NA_real_, "marginal reporting diagnostic"),
-    .diagnostic_row("B", "realized_pearson_corr", "residual", target_pearson$value, .safe_cor(x$z_j, x$se2_j, method = "pearson"), target_pearson$source, "stats::cor", NA_character_, NA_real_, target_pearson$note),
-    .diagnostic_row("B", "realized_pearson_corr", "marginal", NA_real_, .safe_cor(x$tau_j, x$se2_j, method = "pearson"), "not_available", "stats::cor", NA_character_, NA_real_, "marginal reporting diagnostic"),
-    .diagnostic_row("C", "ks_distance", "target_G", 0, .safe_distribution_distance(ks_distance, x), "ideal", "ks_distance", "API039", .safe_distribution_p_value(x), ""),
+    .diagnostic_row("B", "realized_pearson_corr", "copula_latent", target_pearson$value, achieved_latent_pearson, target_pearson$source, "dependence_diagnostics", NA_character_, NA_real_, target_pearson$note),
+    .diagnostic_row("B", "raw_pearson_corr", "residual", NA_real_, .safe_cor(x$z_j, x$se2_j, method = "pearson"), "not_targeted", "stats::cor", NA_character_, NA_real_, "descriptive raw-margin Pearson; not the Gaussian-copula target"),
+    .diagnostic_row("B", "raw_pearson_corr", "marginal", NA_real_, .safe_cor(x$tau_j, x$se2_j, method = "pearson"), "not_targeted", "stats::cor", NA_character_, NA_real_, "descriptive marginal Pearson"),
+    .diagnostic_row("C", "ks_distance", "target_G", 0, .safe_distribution_distance(ks_distance, x), "ideal", "ks_distance", "API039", .safe_distribution_p_value(x), "one-sample KS against analytic target CDF"),
     .diagnostic_row("C", "bhattacharyya_coef", "target_G", 1, .safe_distribution_distance(bhattacharyya_coef, x), "ideal", "bhattacharyya_coef", "API038", NA_real_, ""),
     .diagnostic_row("C", "qq_residuals", "target_G", 0, .safe_distribution_distance(.qq_residual_max_abs, x), "ideal", ".qq_residual_max_abs", NA_character_, NA_real_, "max absolute standardized quantile residual"),
     .diagnostic_row("D", "mean_shrinkage", "overall", NA_real_, mean_shrinkage(x), "not_available", "mean_shrinkage", "API033", NA_real_, ""),
@@ -328,6 +338,7 @@ ks_distance <- function(x, y = NULL) {
   out$fail_rule <- NA_character_
   out$threshold_source <- NA_character_
   out$threshold_note <- NA_character_
+  out$threshold_profile <- "single-run-diagnostics-v1"
 
   for (idx in seq_len(nrow(out))) {
     spec <- .threshold_spec_for_row(out[idx, ], specs, design = design, J = nrow(x))
@@ -352,8 +363,8 @@ ks_distance <- function(x, y = NULL) {
     sigma_tau = .threshold_spec("rel_delta_abs", "abs(rel_delta) < 0.05", "0.05 <= abs(rel_delta) < 0.15", "abs(rel_delta) >= 0.15", "derived"),
     GM_se2 = .threshold_spec("rel_delta_abs", "abs(rel_delta) < 0.05", "0.05 <= abs(rel_delta) < 0.15", "abs(rel_delta) >= 0.15", "derived"),
     realized_rank_corr = .threshold_spec("abs_delta", "abs(delta) < 0.02", "0.02 <= abs(delta) < 0.05", "abs(delta) >= 0.05", "simulation-calibrated", "residual target rows only"),
-    realized_pearson_corr = .threshold_spec("abs_delta", "abs(delta) < 0.03", "0.03 <= abs(delta) < 0.08", "abs(delta) >= 0.08", "heuristic", "residual target rows only"),
-    ks_distance = .threshold_spec("p_value", "p_value > 0.05", "0.01 < p_value <= 0.05", "p_value <= 0.01", "simulation-calibrated"),
+    realized_pearson_corr = .threshold_spec("abs_delta", "abs(delta) < 0.03", "0.03 <= abs(delta) < 0.08", "abs(delta) >= 0.08", "heuristic", "Gaussian-copula latent scale only"),
+    ks_distance = .threshold_spec("p_value", "p_value > 0.05", "0.01 < p_value <= 0.05", "p_value <= 0.01", "analytic-one-sample"),
     bhattacharyya_coef = .threshold_spec("realized", "realized >= 0.90", "0.80 <= realized < 0.90", "realized < 0.80", "heuristic"),
     qq_residuals = .threshold_spec("deferred", "band metadata available", "band metadata near boundary", "band metadata fail", "derived", "order-statistic band metadata deferred"),
     mean_shrinkage = .threshold_spec("realized_range", "0.10 <= realized <= 0.95", "0.05 <= realized < 0.10 or 0.95 < realized <= 0.99", "realized < 0.05 or realized > 0.99", "heuristic"),
@@ -668,6 +679,7 @@ ks_distance <- function(x, y = NULL) {
     if (identical(design$dependence_spec$method, "none")) {
       return(list(value = 0, source = "design", note = "independence baseline"))
     }
+    return(list(value = NA_real_, source = "not_available", note = "realized Spearman is descriptive for Gaussian-copula mode"))
   }
   if (is.list(diagnostics) && !is.null(diagnostics$target_rank_corr)) {
     return(list(value = diagnostics$target_rank_corr, source = "diagnostics", note = "diagnostics"))
@@ -680,14 +692,27 @@ ks_distance <- function(x, y = NULL) {
     if (identical(design$dependence_spec$method, "copula")) {
       return(list(value = design$dependence_spec$pearson_corr, source = "design", note = "latent Gaussian copula target"))
     }
-    if (identical(design$dependence_spec$method, "none")) {
-      return(list(value = 0, source = "design", note = "independence baseline"))
-    }
+    return(list(value = NA_real_, source = "not_available", note = "no latent Pearson target for this dependence mode"))
   }
   if (is.list(diagnostics) && !is.null(diagnostics$target_pearson_corr)) {
     return(list(value = diagnostics$target_pearson_corr, source = "diagnostics", note = "diagnostics"))
   }
   list(value = NA_real_, source = "not_available", note = "no Pearson target for this dependence mode")
+}
+
+.achieved_latent_pearson <- function(diagnostics) {
+  if (!is.list(diagnostics) || !identical(diagnostics$dependence_method, "copula")) {
+    return(NA_real_)
+  }
+  dependence <- diagnostics$dependence_diagnostics
+  if (!is.list(dependence) || is.null(dependence$achieved_latent_pearson)) {
+    return(NA_real_)
+  }
+  value <- dependence$achieved_latent_pearson
+  if (!is.numeric(value) || length(value) != 1L || !is.finite(value)) {
+    return(NA_real_)
+  }
+  unname(value)
 }
 
 .gm_target_source <- function(target_i) {
@@ -712,14 +737,41 @@ ks_distance <- function(x, y = NULL) {
 }
 
 .safe_distribution_p_value <- function(x) {
-  pair <- tryCatch(
-    .resolve_distribution_pair(x, NULL, caller = "ks_distance"),
+  test <- tryCatch(
+    {
+      .validate_diagnostic_data(x, ".safe_distribution_p_value")
+      stats::ks.test(x$z_j, .reference_z_cdf(x))
+    },
     error = function(e) NULL
   )
-  if (is.null(pair)) {
+  if (is.null(test)) {
     return(NA_real_)
   }
-  unname(suppressWarnings(stats::ks.test(pair$x, pair$y)$p.value))
+  unname(suppressWarnings(test$p.value))
+}
+
+.reference_z_cdf <- function(x) {
+  design <- attr(x, "design", exact = TRUE)
+  if (is.null(design) || is.null(design$true_dist)) {
+    .abort_arg(
+      "Automatic one-sample KS diagnostics require a design.",
+      "The target CDF is read from `attr(x, \"design\")$true_dist`.",
+      "Use a simulation object with an attached Gaussian or StudentT design."
+    )
+  }
+  switch(design$true_dist,
+    Gaussian = stats::pnorm,
+    StudentT = {
+      nu <- design$theta_G$nu
+      scale <- sqrt((nu - 2) / nu)
+      function(q) stats::pt(q / scale, df = nu)
+    },
+    .abort_arg(
+      "Automatic one-sample KS diagnostics are implemented for Gaussian and StudentT targets only.",
+      sprintf("Got `true_dist = \"%s\"`.", design$true_dist),
+      "Pass two numeric vectors to `ks_distance()` for an explicit two-sample comparison."
+    )
+  )
 }
 
 .resolve_distribution_pair <- function(x, y = NULL, caller) {

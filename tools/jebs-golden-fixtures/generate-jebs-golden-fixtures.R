@@ -27,6 +27,10 @@ if (!requireNamespace("pkgload", quietly = TRUE)) {
   stop("pkgload is required to load multisiteDGP for canonical_hash().", call. = FALSE)
 }
 pkgload::load_all(package_root, quiet = TRUE)
+RNGkind("Mersenne-Twister", "Inversion", "Rejection")
+
+hash_schema_version <- multisitedgp_internal(".hash_schema_version")()
+generator_sha256 <- unname(tools::sha256sum(script_path))
 
 rds_sha256 <- function(object, path = NULL) {
   out_path <- if (is.null(path)) {
@@ -92,7 +96,7 @@ normalize_for_multisiteDGP <- function(raw_observed, sigma_tau) {
   )
 }
 
-fixture <- list(
+strict_fixture <- list(
   J = 100L,
   tau = 0,
   sigma_tau = 0.15,
@@ -102,14 +106,30 @@ fixture <- list(
   ups = 2,
   nj_mean = 80,
   cv = 0.50,
-  nj_min = 4L,
+  nj_min = 5L,
   p = 0.5,
   R2 = 0,
   engine = "A1_legacy",
   dependence = "none"
 )
 seeds <- c(42L, 1L, 2024L, 12345L)
-fixture_ids <- sprintf("F%02d", seq_along(seeds))
+fixture_specs <- lapply(seq_along(seeds), function(idx) {
+  utils::modifyList(strict_fixture, list(
+    fixture_id = sprintf("F%02d", idx),
+    seed = seeds[[idx]],
+    fixture_file = sprintf("jebs_appendix_mixture_seed%d.rds", seeds[[idx]]),
+    fixture_type = "JEBS appendix A1 mixture package-normalized"
+  ))
+})
+fixture_specs[[length(fixture_specs) + 1L]] <- utils::modifyList(strict_fixture, list(
+  fixture_id = "F10",
+  seed = 42L,
+  fixture_file = "jebs_appendix_floor_active_seed42.rds",
+  fixture_type = "JEBS appendix A1 mixture floor-active authority",
+  J = 300L,
+  nj_mean = 10,
+  cv = 0.75
+))
 
 qmd_hash <- digest::digest(normalizePath(source_qmd, mustWork = TRUE), file = TRUE, algo = "sha256")
 seed_policy <- "single_stream_package_T1a"
@@ -133,9 +153,10 @@ package_versions <- paste(
   collapse = "; "
 )
 
-manifest <- vector("list", length(seeds))
-for (idx in seq_along(seeds)) {
-  seed <- seeds[[idx]]
+manifest <- vector("list", length(fixture_specs))
+for (idx in seq_along(fixture_specs)) {
+  fixture <- fixture_specs[[idx]]
+  seed <- fixture$seed
   set.seed(seed)
   tau_j <- jebs_prior_g_mixture(
     J = fixture$J,
@@ -155,7 +176,7 @@ for (idx in seq_along(seeds)) {
   raw_observed <- jebs_tau_j_hat(tau_j = tau_j, df_se2 = df_se2)
   normalized <- normalize_for_multisiteDGP(raw_observed, sigma_tau = fixture$sigma_tau)
 
-  fixture_file <- sprintf("jebs_appendix_mixture_seed%d.rds", seed)
+  fixture_file <- fixture$fixture_file
   fixture_path <- file.path(artifact_dir, fixture_file)
   rds_hash <- if (isTRUE(write_rds)) {
     rds_sha256(normalized, fixture_path)
@@ -164,10 +185,10 @@ for (idx in seq_along(seeds)) {
   }
 
   manifest[[idx]] <- data.frame(
-    fixture_id = fixture_ids[[idx]],
+    fixture_id = fixture$fixture_id,
     seed = seed,
     fixture_file = fixture_file,
-    fixture_type = "JEBS appendix A1 mixture package-normalized",
+    fixture_type = fixture$fixture_type,
     J = fixture$J,
     tau = fixture$tau,
     sigma_tau = fixture$sigma_tau,
@@ -186,7 +207,7 @@ for (idx in seq_along(seeds)) {
     seed_policy = seed_policy,
     qmd_demo_seed_policy = "stage_reset_seed_2562_before_each_stage",
     rng_sequence_expected = rng_sequence_expected,
-    nj_min_policy = "blueprint strict preset uses 4L; JEBS QMD function default is 5 and demo call does not override",
+    nj_min_policy = "paper and JEBS appendix lower limit: n_j = 5",
     source_qmd = source_qmd,
     source_qmd_sha256 = qmd_hash,
     source_mixture_lines = "62-78",
@@ -196,6 +217,10 @@ for (idx in seq_along(seeds)) {
     generation_script = script_path,
     output_schema = "site_index,z_j,tau_j,n_j,se2_j,se_j,tau_j_hat",
     hash_algo = "xxhash64",
+    hash_schema_version = hash_schema_version,
+    rng_kind = paste(RNGkind(), collapse = "/"),
+    rng_policy = "generator-pinned",
+    generator_sha256 = generator_sha256,
     component_tau_hash = canonical_hash(tau_j),
     component_site_size_hash = canonical_hash(df_se2),
     component_observed_raw_hash = canonical_hash(raw_observed),
@@ -204,7 +229,7 @@ for (idx in seq_along(seeds)) {
     generated_R_version = R.version.string,
     generated_platform = R.version$platform,
     package_versions = package_versions,
-    os_policy = "portable canonical_hash; no platform hierarchy; verified on linux-release/devel/oldrel, macos-release, windows-release (run 31889543618)",
+    os_policy = "portable schema-v4 canonical numerical hash; binary SHA verifies only the generated artifact",
     stringsAsFactors = FALSE
   )
 }

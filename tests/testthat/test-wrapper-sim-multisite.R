@@ -163,7 +163,7 @@ test_that("sim_multisite A1 legacy path matches JEBS normalized fixture hash", {
   skip_if_not(file.exists(manifest_file), "Step 4.1 JEBS manifest is not shipped in the package tarball.")
 
   manifest <- read.csv(manifest_file, stringsAsFactors = FALSE)
-  manifest_row <- manifest[manifest$seed == 42L, , drop = FALSE]
+  manifest_row <- manifest[manifest$fixture_id == "F01", , drop = FALSE]
   out <- sim_multisite(
     J = 100L,
     tau = 0,

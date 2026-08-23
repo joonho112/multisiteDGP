@@ -142,7 +142,7 @@ override column is the field most studies need to change first.
 | Education trial, substantial effects (~0.30), large J | `preset_education_substantial()` | J = 100 / 0.30 / site-size | @weiss2017howmuch | `nj_mean` |
 | Reproduce the JEBS paper design (mixture-shape latent effects) | `preset_jebs_paper()` | J = 50 / 0.20 / site-size | @lee2025improving | (none — verbatim) |
 | JEBS strict parity grid (validation / benchmarking) | `preset_jebs_strict()` | J = 100 / 0.15 / site-size | @lee2025improving | (none — verbatim) |
-| Replicate the Walters Handbook chapter calibration | `preset_walters_2024()` | J = 46 / 0.197 / site-size; locks $R^2 = 0.4$, $\bar n_j = 240$ | @walters2024empirical | `R2` |
+| Walters-anchored school value-added proxy | `preset_walters_2024()` | J = 46 / 0.197 / site-size; $\overline{s^2}=.010$ direct, $\bar n_j=240$ derived, outcome $R^2=.40$ assumed | @walters2024empirical + package assumptions | `R2`, `nj_mean` |
 | Large-J / extreme heterogeneity stress test | `preset_twin_towers()` | J = 1000 / 2.0 / site-size | Package-curated | `J` |
 | Meta-analysis warm-up (direct-precision path) | `preset_meta_modest()` | J = 50 / 0.20 / direct; locks $I = 0.30$, $R = 1.5$ | Package-curated | `I`, `R` |
 | Small-area-estimation prior calibration | `preset_small_area_estimation()` | J = 30 / 0.20 / direct; locks $I = 0.20$, $R = 3$ | Package-curated | `I`, `R` |
@@ -158,15 +158,19 @@ Second — *source* tells you what published number you are inheriting.
 The three education presets share Weiss et al. (2017) as their
 sigma-tau anchor [@weiss2017howmuch]. The two JEBS presets implement
 the simulation design from @lee2025improving. `preset_walters_2024()`
-reproduces the calibration in the *Handbook of Labor Economics*,
-volume 5 chapter by @walters2024empirical. The
+uses the *Handbook of Labor Economics* chapter by
+@walters2024empirical only for its direct anchors: $J=46$, average
+$s^2=.010$, $\sigma_\tau=.197$, and weak precision dependence. Its
+$\bar n_j=240$ is derived under assumed outcome $R^2=.40$; `cv=.30` and
+`nj_min=50` are package assumptions. The chapter's nearby $R^2=.502$ is
+for a conditional prior on charter quality, not this outcome-R2 input. The
 remaining three presets are package-curated rather than
 paper-anchored and carry no external citation.
 
 Third — *override* is the field most studies change first. Education
 presets retain $\sigma_\tau$ but adjust $J$ to match the local sample
-of schools; the Walters preset retains $J$ and $\sigma_\tau$ but
-adjusts the covariate $R^2$. JEBS rows show no
+of schools; the Walters proxy should be re-calibrated through `R2` and
+`nj_mean` if the study has a different precision margin. JEBS rows show no
 override because their value is reproducing the published number
 exactly — change a JEBS field and the preset name no longer applies.
 
@@ -409,22 +413,23 @@ chosen_dat <- sim_multisite(preset_jebs_paper(), seed = 1L)
 provenance_string(chosen_dat)
 ```
 
-The string contains the package version, the paradigm, the seed, the
-canonical hash of the simulation, the design hash, the hashing
-algorithm, the R version, and any active hooks. Pasting this into a
-methods appendix gives a reviewer the exact contract: identical
-package version + identical seed + identical preset → identical
-canonical hash → byte-identical simulation. The hash itself is the
-short anchor:
+The string contains the package version, paradigm, seed, canonical and design
+hashes, hash schema, producer R/platform/RNG, verifier runtime, and active
+hooks. Pasting this into a methods appendix gives a reviewer the numerical
+contract: identical seed + identical preset + identical schema → identical
+canonical numerical hash. This does not assert raw-object byte identity. The
+hash itself is the short anchor:
 
 ```{r canonical-hash}
 canonical_hash(chosen_dat)
 ```
 
-Cite the source for the chosen preset in prose. For
+Cite the source for the chosen preset in prose, but distinguish direct source
+values from package assumptions. For
 `preset_jebs_paper()` and `preset_jebs_strict()` cite
 @lee2025improving; for `preset_walters_2024()` cite
-@walters2024empirical; for the three education presets cite
+@walters2024empirical for the direct anchors and report the proxy assumptions
+listed by `attr(preset_walters_2024(), "preset_metadata")`; for the three education presets cite
 @weiss2017howmuch. The three remaining presets are package-curated
 and carry no external citation; describe each by role ("a stress-test
 preset for J = 1000 with extreme heterogeneity"; "a meta-analysis
@@ -433,9 +438,9 @@ prior calibration") rather than naming a paper.
 
 A reviewer-ready methods-appendix line ties it all together:
 
-> Simulation generated with multisiteDGP (version 0.1.0, Lee 2025)
+> Simulation generated with multisiteDGP (version 0.2.0, Lee 2025)
 > using `preset_education_modest(J = 20L, nj_mean = 60, sigma_tau =
-> 0.25)`, seed = 2027L, canonical hash 4f9399b626d1c71f.
+> 0.25)`, seed = 2027L, canonical hash 10146fb041585992.
 
 Three lines, every load-bearing claim grounded in either a citation
 or a hash.
@@ -464,8 +469,10 @@ M4 in order.
 
 The three education presets inherit their $\sigma_\tau$ ladder from
 @weiss2017howmuch. The two JEBS presets reproduce the simulation
-design in @lee2025improving. `preset_walters_2024()` is calibrated to
-the Handbook chapter @walters2024empirical. The remaining three
+design in @lee2025improving. `preset_walters_2024()` is a
+Walters-anchored proxy: cite @walters2024empirical for $J$, average $s^2$,
+and $\sigma_\tau$, and report its derived/assumed margin fields separately.
+The remaining three
 presets — `preset_meta_modest()`, `preset_small_area_estimation()`,
 `preset_twin_towers()` — are package-curated and carry no published
 anchor at this writing.

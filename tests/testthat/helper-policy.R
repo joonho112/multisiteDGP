@@ -1,10 +1,10 @@
 expected_traceability_counts <- c(
-  "api-index.csv" = 60L,
+  "api-index.csv" = 61L,
   "conflict-checklist.csv" = 21L,
   "decision-index.csv" = 27L,
   "docs-index.csv" = 22L,
   "error-index.csv" = 30L,
-  "fixture-index.csv" = 9L,
+  "fixture-index.csv" = 10L,
   "invariant-index.csv" = 22L,
   "preset-index.csv" = 9L,
   "validation-index.csv" = 13L
@@ -74,8 +74,8 @@ snapshot_policy <- list(
     "print-examples/ch14_ch17_sae_summary.txt"
   ),
   hash_print_policy = paste(
-    "Linux x86-64 strict regeneration;",
-    "R version normalized;",
+    "supported-platform regeneration;",
+    "R version and platform normalized;",
     "canonical_hash/design_hash preserved"
   ),
   hash_print_override_env = "MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN"
@@ -83,8 +83,9 @@ snapshot_policy <- list(
 
 golden_fixture_policy <- list(
   owner = "Step 8.1",
-  count = 9L,
+  count = 10L,
   jebs_appendix_seed_files = 4L,
+  jebs_floor_active_files = 1L,
   preset_output_files = 5L
 )
 

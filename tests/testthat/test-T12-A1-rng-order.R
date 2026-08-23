@@ -10,12 +10,14 @@
   )
 }
 
-test_that("T12 Engine A1 full path preserves contract-level RNG milestones", {
+test_that("T12 Engine A1 full path preserves the complete legacy RNG vector", {
   assign(".t12_rng_calls", character(), envir = .GlobalEnv)
+  suppressMessages(trace(stats::runif, tracer = .t12_record_call("runif"), print = FALSE))
   suppressMessages(trace(stats::rnorm, tracer = .t12_record_call("rnorm"), print = FALSE))
   suppressMessages(trace(stats::rgamma, tracer = .t12_record_call("rgamma"), print = FALSE))
   suppressMessages(trace(base::sample.int, tracer = .t12_record_call("sample.int"), print = FALSE))
   on.exit({
+    suppressMessages(untrace(stats::runif))
     suppressMessages(untrace(stats::rnorm))
     suppressMessages(untrace(stats::rgamma))
     suppressMessages(untrace(base::sample.int))
@@ -24,21 +26,14 @@ test_that("T12 Engine A1 full path preserves contract-level RNG milestones", {
 
   invisible(sim_multisite(preset_jebs_strict(), seed = 42L))
   rng_calls <- get(".t12_rng_calls", envir = .GlobalEnv)
-  rgamma_pos <- which(rng_calls == "rgamma")
-  sample_pos <- which(rng_calls == "sample.int")
 
-  expect_length(rgamma_pos, 1L)
-  expect_length(sample_pos, 1L)
-  expect_gt(sample_pos, rgamma_pos)
-
-  # Contract boundary: A1 sizes use one Gamma stream, then Layer 4 applies one
-  # precision shuffle before the Gaussian observation draw. Layer 1 internals are
-  # intentionally not frozen as an exact runif/rnorm prefix.
-  post_shuffle_rnorm <- which(rng_calls == "rnorm" & seq_along(rng_calls) > sample_pos)
-  expect_gt(length(post_shuffle_rnorm), 0L)
-  if (length(post_shuffle_rnorm) > 0L) {
-    expect_identical(post_shuffle_rnorm[[1L]], sample_pos + 1L)
-  }
+  # JEBS strict is the complete A1 mixture path: component indicator, two
+  # component-normal streams, Gamma site sizes, legacy precision shuffle, and
+  # observation noise. Any added or reordered RNG call is a T12 regression.
+  expect_identical(
+    rng_calls,
+    c("runif", "rnorm", "rnorm", "rgamma", "sample.int", "rnorm")
+  )
 })
 
 test_that("T12 Engine A1 seeded wrapper restores caller RNG state", {

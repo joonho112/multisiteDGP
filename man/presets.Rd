@@ -46,8 +46,8 @@ or \code{paradigm = "direct"} depending on the preset. Pass to
 Presets package a defensible starting design — site count, latent-effect
 shape, heterogeneity, sample-size or precision targets — for a common
 multisite-trial or meta-analysis scenario. Each preset returns a locked
-\code{multisitedgp_design} object whose parameter values are anchored to a
-published reference, so a reviewer can defend the choice. Pass any
+\code{multisitedgp_design} object whose published anchors and package-curated
+assumptions are documented, so a reviewer can defend the choice. Pass any
 named \code{multisitedgp_design()} argument through \code{...} to override the
 locked defaults.
 }
@@ -68,9 +68,9 @@ for general use; \code{\link{preset_jebs_strict}}
 reproduction. Both use A1 legacy engine — the JEBS Mixture fixture.
 }
 \item{Empirical-Bayes school value-added}{
-\code{\link{preset_walters_2024}} — J = 46 schools, Boston charter
-value-added, calibrated to the Walters (2024) Handbook chapter
-reanalysis of the BPS dataset.
+\code{\link{preset_walters_2024}} — a Walters-anchored proxy with
+J = 46 schools and \eqn{\sigma_\tau = 0.197}; its site-size margin
+makes explicit derived and assumed choices beyond the source.
 }
 \item{Deconvolution / shape-recovery benchmark}{
 \code{\link{preset_twin_towers}} — bimodal mixture, J = 1000,
@@ -94,9 +94,10 @@ site count: \code{preset_education_modest(J = 100L)}. To use a preset's
 calibration but switch on rank-correlated dependence:
 \code{preset_education_modest(dependence = "rank", rank_corr = 0.3)}.
 
-\strong{Citing presets in published work.} Each preset locks parameter
-values from a published reference; cite that reference, not the
-preset name. The relevant citations are listed in
+\strong{Citing presets in published work.} Cite a preset's published
+empirical anchors and separately report any derived or assumed fields;
+do not cite the preset name as if every value came from the source. The
+relevant citations are listed in
 \code{\link{multisiteDGP}} package help and in
 \code{citation("multisiteDGP")}.
 
@@ -116,7 +117,7 @@ vignette.
 
 \item \code{preset_jebs_strict()}: JEBS strict paper-grid Mixture (J = 100, \eqn{\sigma_\tau = 0.15}). Use this for bit-identical reproduction of the JEBS paper's strict simulation grid (the T1a invariant). Engine A1 legacy.
 
-\item \code{preset_walters_2024()}: Boston charter / BPS value-added empirical-Bayes design from Walters (2024) Handbook of Labor Economics chapter. J = 46 schools, \eqn{\sigma_\tau \approx 0.197}, mean per-school sample 240, with \eqn{R^2 = 0.40} from covariate adjustment. Use when calibrating to school-effect or teacher-effect Empirical Bayes literature.
+\item \code{preset_walters_2024()}: Walters-anchored proxy for the Boston charter / BPS value-added example. Direct source anchors are J = 46, average reported sampling variance \eqn{\overline{s^2} = 0.010}, \eqn{\sigma_\tau \approx 0.197}, and weak precision dependence. The site-size implementation derives \code{nj_mean = 240} from \eqn{\kappa / \bar n = 0.010} under the package assumptions \code{p = 0.5}, outcome \code{R2 = 0.40}, and \code{var_outcome = 1}; \code{cv = 0.30} and \code{nj_min = 50} are also package assumptions. Walters' nearby \eqn{R^2 = 0.502} describes a conditional prior for charter quality, not the outcome-R2 input used here. This is a defensible proxy, not a chapter-replication preset. Inspect \code{attr(x, "preset_metadata")} for the direct/derived/assumed provenance.
 
 \item \code{preset_twin_towers()}: Twin-towers bimodal mixture benchmark for deconvolution and shape-recovery method evaluation. J = 1000 sites with equal sample sizes; mixture parameters \eqn{\delta = 4}, \eqn{\epsilon = 0.5}, \eqn{\Upsilon = 1}. Standard test bed for nonparametric Empirical Bayes methods.
 

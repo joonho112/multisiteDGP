@@ -260,10 +260,10 @@ test_that("core target-vs-realized diagnostics table is attached to wrapper outp
     "group", "diagnostic", "basis", "target", "realized", "delta", "rel_delta",
     "target_source", "helper", "api_id", "p_value", "note", "status",
     "threshold_metric", "pass_rule", "warn_rule", "fail_rule",
-    "threshold_source", "threshold_note"
+    "threshold_source", "threshold_note", "threshold_profile"
   ))
   expect_setequal(tab$group, c("A", "B", "C", "D"))
-  expect_identical(nrow(tab), 14L)
+  expect_identical(nrow(tab), 15L)
   expect_true(all(c("API030", "API034", "API038", "API039") %in% tab$api_id))
 
   row_i <- tab[tab$diagnostic == "informativeness" & tab$basis == "overall", ]
@@ -282,8 +282,81 @@ test_that("core target-vs-realized diagnostics table is attached to wrapper outp
   expect_equal(row_rank$target, 0, tolerance = tol_deterministic)
   expect_equal(row_ks$target, 0, tolerance = tol_deterministic)
   expect_true(is.finite(row_ks$p_value))
+  expect_identical(row_ks$threshold_source, "analytic-one-sample")
+  expect_identical(row_ks$note, "one-sample KS against analytic target CDF")
   expect_identical(row_feas$helper, "feasibility_index")
+  expect_true(all(tab$threshold_profile == "single-run-diagnostics-v1"))
   expect_equal(row_feas$realized, sum(compute_shrinkage(out$se2_j, sigma_tau = 0.2)), tolerance = tol_deterministic)
+})
+
+test_that("Group C KS p-values use the analytic one-sample null", {
+  out <- sim_multisite(J = 50L, true_dist = "Gaussian", seed = 6309L)
+  tab <- attr(out, "diagnostics", exact = TRUE)$target_vs_realized
+  row <- tab[tab$diagnostic == "ks_distance", ]
+  direct <- suppressWarnings(stats::ks.test(out$z_j, stats::pnorm))
+
+  expect_equal(row$realized, unname(direct$statistic), tolerance = tol_deterministic)
+  expect_equal(row$p_value, direct$p.value, tolerance = tol_deterministic)
+
+  student <- sim_multisite(
+    J = 100L,
+    true_dist = "StudentT",
+    theta_G = list(nu = 6),
+    seed = 6311L
+  )
+  student_row <- attr(student, "diagnostics", exact = TRUE)$target_vs_realized
+  student_row <- student_row[student_row$diagnostic == "ks_distance", ]
+  student_cdf <- function(q) stats::pt(q / sqrt((6 - 2) / 6), df = 6)
+  student_direct <- suppressWarnings(stats::ks.test(student$z_j, student_cdf))
+
+  expect_equal(student_row$realized, unname(student_direct$statistic), tolerance = tol_deterministic)
+  expect_equal(student_row$p_value, student_direct$p.value, tolerance = tol_deterministic)
+})
+
+test_that("one-sample Gaussian KS calibration is approximately nominal at J 50", {
+  p_values <- withr::with_seed(6312L, replicate(
+    2000L,
+    suppressWarnings(stats::ks.test(stats::rnorm(50L), stats::pnorm)$p.value)
+  ))
+  rejection_rate <- mean(p_values <= 0.05)
+
+  expect_gte(rejection_rate, 0.03)
+  expect_lte(rejection_rate, 0.07)
+})
+
+test_that("copula diagnostics compare target and achievement on the latent scale", {
+  out <- sim_multisite(
+    J = 1000L,
+    dependence = "copula",
+    pearson_corr = 0.7,
+    seed = 6310L
+  )
+  diagnostics <- attr(out, "diagnostics", exact = TRUE)
+  tab <- diagnostics$target_vs_realized
+  latent <- tab[
+    tab$diagnostic == "realized_pearson_corr" & tab$basis == "copula_latent",
+  ]
+  raw <- tab[
+    tab$diagnostic == "raw_pearson_corr" & tab$basis == "residual",
+  ]
+  spearman <- tab[
+    tab$diagnostic == "realized_rank_corr" & tab$basis == "residual",
+  ]
+
+  expect_identical(latent$target, 0.7)
+  expect_equal(
+    latent$realized,
+    diagnostics$dependence_diagnostics$achieved_latent_pearson,
+    tolerance = tol_deterministic
+  )
+  expect_true(latent$status %in% c("PASS", "WARN"))
+  expect_identical(latent$note, "latent Gaussian copula target")
+  expect_true(is.na(raw$target))
+  expect_true(is.na(raw$status))
+  expect_identical(raw$target_source, "not_targeted")
+  expect_gt(abs(raw$realized - latent$realized), 0.03)
+  expect_true(is.na(spearman$target))
+  expect_true(is.na(spearman$status))
 })
 
 test_that("core diagnostics table keeps unsupported automatic G references as NA", {

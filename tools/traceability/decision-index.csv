@@ -18,7 +18,7 @@ Q10,preset_education_substantial persona drift,OpenQuestion,resolved-refined,Pha
 Q11,R2-F18 rejection rationale,OpenQuestion,resolved-rejected,Phase 7,Step 7.3,Keep as_metafor soft-dep guard
 Q12,Walters G shape Gaussian vs PointMassSlab,OpenQuestion,deferred-v1.1,Phase 7,Step 7.2,Implement Gaussian v1 and sparse preset later
 Q13,twin_towers Paradigm A vs B,OpenQuestion,noted,Phase 7,Step 7.2,Implement Paradigm A v1 and record reversal cost
-Q14,OS-specific reproducibility,OpenQuestion,resolved-v0.2.0,Phase 10,Step 10.7,resolved 2026-08-15: hash schema v3 made canonical_hash portable; no platform hierarchy; verified on all five CI cells (run 31889543618)
+Q14,OS-specific reproducibility,OpenQuestion,resolved-v0.2.0,Phase 10,Step 10.7,resolved 2026-08-16: schema v4 defines portable canonical numerical equality and explicitly excludes raw-object/RDS byte identity; final v0.2.0 validation replaces pre-v4 evidence
 Q15,spearman_to_pearson export surface,OpenQuestion,resolved-internal,Phase 11,Step 11.3,Keep spearman_to_pearson internal for v0.1; align_hybrid_corr remains the public hybrid interface; no export Rd or pkgdown reference
 Q16,compute_kappa public API count,OpenQuestion,resolved-amended-inventory,Phase 11,Step 11.3,Keep compute_kappa public for v0.1 and amend release inventory to 60 API surface rows
 PA1,F-number namespace collision approval,PIApproval,resolved,Phase 1,Step 1.3,No implementation blocker

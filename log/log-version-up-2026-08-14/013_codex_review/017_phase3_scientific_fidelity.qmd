@@ -1,0 +1,175 @@
+---
+title: "Phase 3 Log — Scientific Fidelity, Migration, and Public Surface"
+subtitle: "multisiteDGP v0.2.0 Codex repair"
+date: "2026-08-16"
+lang: ko
+format:
+  html:
+    toc: true
+    embed-resources: true
+    code-fold: true
+    theme: cosmo
+execute:
+  echo: false
+---
+
+## 결론
+
+**Phase 3는 완료되었다.** JEBS strict preset의 논문 하한을 `n_j = 5`로
+복원했고, 실제로 하한이 작동하는 독립 authority fixture를 추가했다.
+siteBayes2 migration은 단순 rename 안내가 아니라 실행 가능한 scale/shape/RNG
+변환 가이드가 되었다. Walters preset은 출처가 직접 지지하는 값, 패키지가
+도출한 값, 패키지가 가정한 값을 metadata와 provenance에서 구분한다.
+
+Layer 1 공개 카탈로그는 **six built-ins + `User` = seven generated shapes;
+`DPM` reserved**라는 한 계약으로 통일했다. E01--E30 오류 ID는 이제 설치되는
+`error_catalog()`에서 condition, 관련 API, remedy와 함께 조회할 수 있다.
+
+## Step 3.1 — JEBS strict fidelity 복원
+
+JEBS appendix가 쓰는 lower site-size bound는 5다. 다음 구현과 authority를
+같이 수정했다.
+
+- `preset_jebs_strict()`의 `nj_min`을 5로 변경했다.
+- package code를 호출하지 않는 JEBS 독립 generator도 동일한 하한을 사용한다.
+- 기존 4개 ordinary-seed fixture에 더해 `J=300`, `nj_mean=10`, `cv=.75`,
+  seed 42의 floor-active fixture F10을 추가했다.
+- T1a는 7개 raw column 각각에 `expect_identical()`을 적용하고, 전체 frame
+  동일성과 canonical hash 동일성을 별도 assertion으로 둔다.
+
+Floor-active authority의 결과는 다음과 같다.
+
+| 항목 | 결과 |
+|---|---:|
+| site 수 | 300 |
+| `n_j = 5`인 site | 90 |
+| 최소 `n_j` | 5 |
+| schema-v4 canonical hash | `bb408a704f3555ff` |
+
+따라서 테스트는 하한을 선언만 하는 것이 아니라 실제 truncation branch를
+실행한다. Golden inventory는 9개에서 10개로 증가했고 fixture ledger, manifest,
+README, policy count를 함께 갱신했다.
+
+## Step 3.2 — 실행 가능한 siteBayes2 migration
+
+구 `gen_priorG2()`는 residual만이 아니라 `tau + X beta` 전체를
+`sigma_tau`로 곱했다. 새 `gen_effects()`는 표준화 residual에만
+`sigma_tau`를 적용한다. M8은 해당 경로의 변환을 다음처럼 명시한다.
+
+```r
+tau_new       <- sigma_old * tau_old
+beta_new      <- sigma_old * beta_old
+sigma_tau_new <- sigma_old * sqrt(variance_old)
+```
+
+Gaussian equation oracle에서 같은 seed로 old/new raw effect를 비교한 최대
+절대차는 **`1.1102230246251565e-16`**이었다. 변환 없이 old `beta=.30`을
+복사하면 기대 slope `.06`이 아니라 `.30`이 되므로 이 차이도 회귀 테스트로
+고정했다.
+
+추가된 migration 계약은 다음과 같다.
+
+- old `T`는 `StudentT`로 매핑하며 `gen_priorG2()` raw-t scale에는
+  `sqrt(nu/(nu-2))` 보정이 필요하다.
+- old `Skew`는 `SkewN`으로 이름을 바꾸되, `gen_priorG2()`는 scale을 다시
+  보정해야 한다.
+- old ALD `kappa`는 `rho = kappa^2 / (1 + kappa^2)`로 변환한다.
+- old `precision_dependence=FALSE`가 수행한 `sample.int()` shuffle과 RNG 소비는
+  A1 legacy observation path에서만 exact parity 대상이다. A2 modern path는
+  동일한 통계적 독립 의도를 구현하지만 같은 RNG sequence를 약속하지 않는다.
+- migration 표는 실제 predecessor `NAMESPACE`의 export를 사용하며 존재하지
+  않았던 help-topic 이름을 제거했다.
+
+## Step 3.3 — Walters preset provenance 정직성
+
+`preset_walters_2024()`는 이제 **Walters-anchored proxy; not a
+chapter-replication design**으로 표시된다. `attr(design,
+"preset_metadata")`와 생성 데이터 provenance가 다음 층위를 보존한다.
+
+| 구분 | 값 |
+|---|---|
+| 직접 source anchor | `J=46`, average `se2=.010`, `sigma_tau=.197`, weak precision dependence |
+| package-derived | `nj_mean=240`, assumed `p=.5`, outcome `R2=.40`, `var_outcome=1`에서 `kappa/.010`으로 계산 |
+| package-assumed | Gaussian shape, `p=.5`, outcome `R2=.40`, `var_outcome=1`, `cv=.30`, `nj_min=50` |
+| 명시적 제외 | Walters의 conditional-prior `R2=.502`를 outcome-R2로 해석하지 않음 |
+
+`update_multisitedgp_design()` 및 wrapper의 seed injection 뒤에도 preset metadata가
+유지된다. `provenance_string()`은 `preset=preset_walters_2024`를 출력한다.
+README, A2, package help, pkgdown navigation, landing page도 모두 proxy 표현으로
+통일했다.
+
+## Step 3.4 — 카탈로그와 설치형 오류 표면
+
+G shape 값은 내부 단일 catalog 함수에서 만들어진다.
+
+- built-in: `Gaussian`, `StudentT`, `SkewN`, `ALD`, `Mixture`,
+  `PointMassSlab`
+- callback: `User`
+- reserved: `DPM`
+
+constructor와 dispatcher validation이 같은 catalog를 사용한다. DESCRIPTION,
+README, NEWS, package help, pkgdown, index, vignette와 traceability 문구를
+정규화했고, 현재 source scan에서 “seven/eight built-ins” 또는 “DPM generated”
+주장은 남지 않았다.
+
+`tools/traceability/error-index.csv`를 source of truth로 삼는 generator를 추가해
+`inst/extdata/error-catalog.csv`를 만든다. Export된 `error_catalog()`은 전체
+E01--E30 또는 ID subset을 case-insensitive하게 반환하고 unknown/malformed ID는
+typed error로 중단한다. 설치형 table은 30행이며 ledger와 exact ID/order를
+비교하는 테스트가 있다.
+
+## 검증 결과
+
+다음 targeted suite를 변경된 golden fixture를 재생성한 뒤 실행했다.
+
+```text
+filter = (T1a|golden-fixtures|traceability|harness|presets|
+          migration-sitebayes2|g-shape-catalog|
+          error-catalog-installed|snapshot-print)
+
+10 test files: FAIL 0 | WARN 0 | ERROR 0
+```
+
+의도된 snapshot 차이는 세 가지뿐이었다.
+
+1. JEBS strict `nj_min: 4 -> 5`
+2. 그 설계 변경으로 인한 strict design/canonical hash 이동
+3. Walters summary/provenance에 preset identity 추가
+
+세 diff를 검토 후 승인하고 동일 suite를 재실행해 전부 통과했다.
+`git diff --check`도 경고 없이 통과했다.
+
+다음 여섯 vignette를 임시 output directory에 실제 render했다.
+
+- A2 Choosing a preset
+- A8 Cookbook
+- M1 Statistical DGP
+- M2 G-distribution catalog
+- M5 Custom G distributions
+- M8 Migration from siteBayes2
+
+모든 render가 성공했다. README도 source Rmd에서 다시 생성했고 package citation
+version은 0.2.0으로 갱신했다.
+
+## Phase 3 종료 판정
+
+| Gate | 결과 |
+|---|---|
+| JEBS strict paper floor | PASS (`nj_min=5`) |
+| Floor-active independent authority | PASS (90/300 sites) |
+| Raw seven-column T1a equality | PASS |
+| siteBayes2 scale conversion parity | PASS (`max diff=1.11e-16`) |
+| Statistical vs RNG parity distinction | PASS |
+| Walters direct/derived/assumed metadata | PASS |
+| G-shape single catalog | PASS |
+| Installed E01--E30 catalog | PASS |
+| Targeted suite and documentation render | PASS |
+
+## 다음 Phase 의존성
+
+Phase 3에서 fixture content를 바로잡았지만, manifest 자체에서 읽은 RDS를 다시
+manifest와 비교하는 검사는 generation logic의 독립 oracle이 아니다. Phase 4는
+각 preset을 live regeneration해서 checked authority와 비교하고, T12 전체 RNG
+호출 순서 및 semantic traceability를 강화한다. 전체 validation artifact의
+current-source binding과 resume 안전성은 Phase 5--6에서 닫는다.
+

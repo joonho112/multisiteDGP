@@ -143,13 +143,13 @@ $0.093$ against the implied target $0.093$ — PASS. Group B
 (dependence): realized residual rank correlation $0.063$ against
 target $0.000$ — PASS; the marginal-scale realized correlation
 $0.063$ matches because no covariate is in play. Group C (G shape):
-KS distance $0.250$ at $p = 0.869$ — PASS by the soft gate; the
+KS distance $0.240$ at $p = 0.430$ — PASS by the soft gate; the
 Bhattacharyya coefficient $0.333$ FAILs the strict gate at $K = 12$.
 Group D (feasibility): mean shrinkage $0.302$ PASS, but
 `feasibility_index` $3.624$ FAIL against the public floor of $5$ —
 expected at $K = 12$ studies and modest informativeness.
 
-The print's overall verdict is 6 PASS, 1 WARN, 4 FAIL. The
+The print's overall verdict is 6 PASS, 1 WARN, 3 FAIL. The
 $\sigma_\tau$ FAIL and the feasibility FAIL are *informative, not
 fatal*. Both are downstream consequences of the small-K regime the
 synthesis lives in: at $K = 12$ the realized between-study
@@ -163,7 +163,7 @@ hash:
 canonical_hash(dat)
 ```
 
-The hash `fea865758616c492` is the artifact a reviewer runs against;
+The hash `bfb7f5b09532a613` is the artifact a reviewer runs against;
 re-running the chunk at this package version on a different machine
 reproduces it. That is the determinism contract.
 
@@ -248,11 +248,9 @@ summary(dat_dep)
 The Group B reads tell the dependence story. Realized residual rank
 correlation $0.287$ against target $0.300$ — PASS at relative error
 $-4.4$ percent; the alignment landed within the $5$-percent gate
-the package uses by default. The Pearson correlation $0.325$ is
-*not* targeted (Layer 3's contract is rank-scale; Pearson is the
-diagnostic-output column, not the alignment target), so its FAIL
-against $0.000$ is a feature of the print, not a feature of the
-realized design. Groups A, C, and D are unchanged from §2 — the
+the package uses by default. The raw Pearson correlation $0.325$ is
+*not* targeted (Layer 3's contract is rank-scale), so it is reported
+with `target N/A` and no status. Groups A, C, and D are unchanged from §2 — the
 dependence injection runs on top of the residuals without disturbing
 the scale or shape contracts. The hash:
 
@@ -260,8 +258,8 @@ the scale or shape contracts. The hash:
 canonical_hash(dat_dep)
 ```
 
-Two hashes are now in play. `fea865758616c492` is the anchor (no
-dependence); `89191ceaedd2bc29` is the dependence-aware design.
+Two hashes are now in play. `bfb7f5b09532a613` is the anchor (no
+dependence); `0c7347fc73e669c8` is the dependence-aware design.
 Both go into the methods appendix because both are part of the pre-
 registered sensitivity story — the anchor establishes that the scale
 and shape diagnostics behave as expected at $\rho_S = 0$, and the
@@ -535,7 +533,7 @@ provenance_string(dat_dep)
 
 The string carries the package version, the paradigm
 (`paradigm=direct`), the seed (`seed=1`), the canonical hash for the
-simulation (`canonical_hash=89191ceaedd2bc29`), the design hash, the
+simulation (`canonical_hash=0c7347fc73e669c8`), the design hash, the
 hash algorithm, the R version, and the hook configuration — every
 input that influenced the output. A reviewer who pastes the string
 into a methods footnote and re-runs the vignette at the same package
@@ -550,8 +548,8 @@ meta-analytic case study:
 > $R = 2$, $\sigma_\tau = 0.20$, with no precision-effect dependence
 > in the anchor design and a residual rank correlation
 > $\rho_S = 0.30$ in the dependence-aware design. The anchor's
-> canonical hash is `fea865758616c492`; the dependence-aware
-> design's canonical hash is `89191ceaedd2bc29`. The full provenance
+> canonical hash is `bfb7f5b09532a613`; the dependence-aware
+> design's canonical hash is `0c7347fc73e669c8`. The full provenance
 > strings are reproduced verbatim in Supplementary Materials S1.
 >
 > **Estimator.** Pooled effects were estimated by random-effects

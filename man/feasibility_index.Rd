@@ -56,7 +56,7 @@ residual-variation form used in Morris-style empirical-Bayes
 diagnostics. The two are linked by
 \eqn{\sum_j S_j + \sum_j (1 - S_j) = J}.
 
-\strong{Reading guide.} The canonical quality gate is the Efron form
+\strong{Reading guide.} The \code{replicate-grid-audit-v1} quality gate is the Efron form
 \eqn{\sum_j S_j \ge 5} (see
 \code{default_thresholds()$feasibility_min = 5.0}). Designs that fall
 below this threshold are unlikely to support partial-pooling
@@ -115,6 +115,7 @@ Other family-diagnostics:
 \code{\link[=compute_kappa]{compute_kappa()}},
 \code{\link[=compute_shrinkage]{compute_shrinkage()}},
 \code{\link[=default_thresholds]{default_thresholds()}},
+\code{\link[=error_catalog]{error_catalog()}},
 \code{\link[=heterogeneity_ratio]{heterogeneity_ratio()}},
 \code{\link[=informativeness]{informativeness()}},
 \code{\link[=ks_distance]{ks_distance()}},

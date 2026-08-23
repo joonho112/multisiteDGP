@@ -135,22 +135,22 @@ compute_I <- function(se2_j, sigma_tau, tau_j = NULL) {
 #' @encoding UTF-8
 #'
 #' @description
-#' Compute the classical empirical-Bayes shrinkage weight per site,
+#' Compute the classical empirical-Bayes reliability (data-retention) weight,
 #' \eqn{S_j = \sigma_\tau^2 / (\sigma_\tau^2 + \widehat{se}_j^2)} —
-#' the fraction by which a partial-pooling estimator pulls each site's
-#' estimate toward the grand mean. **Group D diagnostic** (downstream
+#' the fraction of each raw site estimate retained by a partial-pooling
+#' estimator. The amount pooled toward the grand mean is \eqn{1-S_j}.
+#' **Group D diagnostic** (downstream
 #' shrinkage — Dr. Chen's question 4: "How much does empirical Bayes
 #' pool toward the mean?").
 #'
 #' @details
-#' \eqn{S_j} ranges over `[0, 1)`. \eqn{S_j \to 1} means "the prior
-#' dominates" — site \eqn{j} has so much sampling noise that
-#' partial-pooling collapses its estimate toward the overall mean.
-#' \eqn{S_j \to 0} means "the data dominate" — the site identifies its
-#' own latent effect cleanly. Sites with intermediate \eqn{S_j} are
+#' \eqn{S_j} ranges over `[0, 1)`. \eqn{S_j \to 1} means the site data
+#' dominate and there is little pooling; \eqn{S_j \to 0} means the prior
+#' mean dominates and the site is pooled almost completely. Sites with
+#' intermediate \eqn{S_j} are
 #' where empirical-Bayes pooling does real work.
-#' \eqn{\sigma_\tau = 0} returns zero for every site (no heterogeneity
-#' to recover).
+#' \eqn{\sigma_\tau = 0} returns zero for every site, corresponding to
+#' complete pooling under a degenerate between-site distribution.
 #'
 #' \strong{Reading guide.} For diagnostic plots — funnel- or
 #' caterpillar-style traces of shrinkage against site precision — pass
@@ -196,12 +196,12 @@ compute_I <- function(se2_j, sigma_tau, tau_j = NULL) {
 #' @examples
 #' # Two sites, the second twice as noisy as the first.
 #' compute_shrinkage(c(0.05, 0.10), sigma_tau = 0.20)
-#' # First site keeps more of its own information; second is shrunk harder.
+#' # First site keeps more of its own information; second is pooled harder.
 #'
 #' # Sorted view — useful for a per-site shrinkage curve plot.
 #' compute_shrinkage(c(0.10, 0.04, 0.07), sigma_tau = 0.20, monotone = TRUE)
 #'
-#' # No heterogeneity collapses every site to zero shrinkage.
+#' # No heterogeneity gives zero retention (complete pooling).
 #' compute_shrinkage(c(0.05, 0.10), sigma_tau = 0)
 #' @export
 compute_shrinkage <- function(se2_j, sigma_tau, monotone = FALSE) {
@@ -339,18 +339,19 @@ informativeness.default <- function(x, ...) {
 #' @encoding UTF-8
 #'
 #' @description
-#' Compute the across-site mean of the empirical-Bayes shrinkage,
+#' Compute the across-site mean of the empirical-Bayes reliability weight,
 #' \eqn{\bar{S} = J^{-1} \sum_{j=1}^{J} \sigma_\tau^2 / (\sigma_\tau^2 + \widehat{se}_j^2)},
 #' from a simulated dataset, a bare \eqn{\widehat{se}_j^2} vector, or a
 #' closed-form approximation that uses only design parameters.
 #' **Group D diagnostic** (downstream shrinkage — Dr. Chen's question 4
-#' on average pooling toward the overall mean).
+#' on average information retention; average pooling toward the mean is
+#' \eqn{1 - \bar{S}}).
 #'
 #' @details
-#' \eqn{\bar{S}} is the natural single-number summary of how much
-#' partial-pooling work a hierarchical model will do across the design.
-#' Values near 0 indicate the prior dominates almost everywhere; values
-#' near 1 indicate near-no pooling. The canonical quality gate is
+#' \eqn{\bar{S}} is the historical `mean_shrinkage` API's reliability or
+#' data-retention summary. Values near 0 indicate the prior dominates almost
+#' everywhere (heavy pooling); values near 1 indicate near-no pooling. The
+#' actual mean amount pooled toward the grand mean is \eqn{1-\bar{S}}. The quality gate is
 #' `mean_shrinkage_min = 0.30` (see \code{\link{default_thresholds}}).
 #'
 #' \strong{Method dispatch.} `mean_shrinkage()` resolves to one of
@@ -521,7 +522,7 @@ mean_shrinkage.default <- function(x = NULL, ..., nj_mean, sigma_tau, varY = 1, 
 #' diagnostics. The two are linked by
 #' \eqn{\sum_j S_j + \sum_j (1 - S_j) = J}.
 #'
-#' \strong{Reading guide.} The canonical quality gate is the Efron form
+#' \strong{Reading guide.} The `replicate-grid-audit-v1` quality gate is the Efron form
 #' \eqn{\sum_j S_j \ge 5} (see
 #' `default_thresholds()$feasibility_min = 5.0`). Designs that fall
 #' below this threshold are unlikely to support partial-pooling
@@ -632,8 +633,8 @@ feasibility_index <- function(se2_j, sigma_tau = NULL, kind = c("efron", "morris
 #' @encoding UTF-8
 #'
 #' @description
-#' Return the canonical quality-gate thresholds consumed by
-#' \code{\link{scenario_audit}} when scoring a design grid against
+#' Return the `replicate-grid-audit-v1` quality-gate thresholds consumed by
+#' \code{\link{scenario_audit}} when scoring replicated design-grid cells against
 #' Dr. Chen's four-question diagnostic rubric. Each gate maps a Group
 #' A/B/C/D diagnostic to a PASS / WARN / FAIL band, so the audit
 #' output is a single calibrated verdict rather than a raw diagnostic
@@ -654,7 +655,7 @@ feasibility_index <- function(se2_j, sigma_tau = NULL, kind = c("efron", "morris
 #'         \code{\link{ks_distance}}.
 #'   \item \strong{Group D — downstream shrinkage.}
 #'         `mean_shrinkage_min = 0.30` for
-#'         \code{\link{mean_shrinkage}}.
+#'         \code{\link{mean_shrinkage}} (historical name for mean reliability).
 #' }
 #'
 #' Group B diagnostics (realized rank correlation) are tracked
@@ -671,9 +672,9 @@ feasibility_index <- function(se2_j, sigma_tau = NULL, kind = c("efron", "morris
 #' @return A named list of five scalar threshold gates:
 #'   \describe{
 #'     \item{`mean_shrinkage_min`}{Numeric `0.30`. Minimum
-#'           \eqn{\bar{S}} for Group D PASS — designs below this floor
-#'           do too little partial-pooling work to benefit from a
-#'           hierarchical estimator.}
+#'           \eqn{\bar{S}} for Group D PASS — designs below this floor retain
+#'           too little site-level information. The amount pooled is
+#'           \eqn{1-\bar S}.}
 #'     \item{`feasibility_min`}{Numeric `5.0`. Minimum Efron
 #'           feasibility \eqn{\sum_j S_j} for Group A PASS —
 #'           corresponds to the equivalent of about five
@@ -711,7 +712,7 @@ feasibility_index <- function(se2_j, sigma_tau = NULL, kind = c("efron", "morris
 #' \bold{50}(5), 731--764. \doi{10.3102/10769986241254286}.
 #'
 #' @examples
-#' # Inspect the canonical gates.
+#' # Inspect the replicate-grid audit gates.
 #' default_thresholds()
 #'
 #' # Tighten the Group D gate before passing to the audit.

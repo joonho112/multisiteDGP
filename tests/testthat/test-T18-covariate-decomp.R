@@ -33,7 +33,7 @@ test_that("T18 print and summary report residual and marginal dependence", {
   expect_true(any(grepl("rho_S_marg:", printed, fixed = TRUE)))
   expect_true(any(grepl("rank_corr residual", summarized, fixed = TRUE)))
   expect_true(any(grepl("rank_corr marginal", summarized, fixed = TRUE)))
-  expect_true(any(grepl("pearson_corr residual", summarized, fixed = TRUE)))
-  expect_true(any(grepl("pearson_corr marginal", summarized, fixed = TRUE)))
+  expect_true(any(grepl("pearson_corr raw residual", summarized, fixed = TRUE)))
+  expect_true(any(grepl("pearson_corr raw marginal", summarized, fixed = TRUE)))
 })
 # nolint end

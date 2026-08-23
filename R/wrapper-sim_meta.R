@@ -23,7 +23,7 @@
 #' @details
 #' The simulation runs four generative layers in order:
 #' \describe{
-#'   \item{\strong{Layer 1 — latent effects} (\code{\link{gen_effects}})}{Draws standardized site effects \eqn{z_j} from one of seven \eqn{G} distributions and rescales to \eqn{\tau_j = \tau + \sigma_\tau\,z_j}.}
+#'   \item{\strong{Layer 1 — latent effects} (\code{\link{gen_effects}})}{Draws standardized site effects \eqn{z_j} from six built-ins or a `User` callback and rescales to \eqn{\tau_j = \tau + \sigma_\tau\,z_j}.}
 #'   \item{\strong{Layer 2 — direct precision margin} (\code{\link{gen_se_direct}})}{Builds the per-site sampling variance \eqn{\widehat{se}_j^2} as a deterministic grid that exactly hits the user-specified \eqn{(I, R)} targets. The site-size column \eqn{n_j} is `NA_integer_` because no site-size margin is involved.}
 #'   \item{\strong{Layer 3 — precision dependence} (\code{\link{align_rank_corr}}, \code{\link{align_copula_corr}}, \code{\link{align_hybrid_corr}})}{Optionally aligns \eqn{\widehat{se}_j^2} against \eqn{\tau_j} to a target Spearman correlation, preserving both marginals exactly.}
 #'   \item{\strong{Layer 4 — observation draws} (\code{\link{gen_observations}})}{Draws \eqn{\widehat{\tau}_j \sim \mathcal{N}(\tau_j,\, \widehat{se}_j^2)}.}
@@ -54,9 +54,10 @@
 #'
 #' @section RNG policy:
 #' If `seed` is `NULL`, the pipeline runs under the caller's active RNG state.
-#' If `seed` is a single integer, the full pipeline is wrapped in
-#' \code{\link[withr]{with_seed}}, so the caller's global RNG state is
-#' restored on exit. The direct SE grid is deterministic except for
+#' If `seed` is a single integer, the full pipeline uses the package-pinned
+#' RNG triple `Mersenne-Twister` / `Inversion` / `Rejection`, and restores the
+#' caller's RNG kind and global state exactly on exit. The direct SE grid is
+#' deterministic except for
 #' `shuffle = TRUE` with `R > 1`, which uses the active sample RNG inside
 #' the same wrapper seed.
 #'
@@ -77,9 +78,9 @@
 #'   it). Site-size arguments (`nj_mean`, `cv`, `engine`, `n_per_site`)
 #'   trigger a coherence error pointing to \code{\link{sim_multisite}}.
 #' @param seed Optional integer seed override. When supplied, replaces
-#'   `design$seed` and gives bit-identical reruns. Use a small integer (e.g.
-#'   `1L`) for examples; use a 9-digit integer in production for cross-run
-#'   uniqueness.
+#'   `design$seed` and gives canonical numerical replays independent of the
+#'   caller's active RNG kind. Use a small integer (e.g. `1L`) for examples;
+#'   use a 9-digit integer in production for cross-run uniqueness.
 #'
 #' @return A `multisitedgp_meta` tibble (which inherits from
 #' `multisitedgp_data`) with one row per study and columns:
@@ -95,7 +96,7 @@
 #' \describe{
 #'   \item{`design`}{The locked `multisitedgp_design` with `paradigm = "direct"`.}
 #'   \item{`diagnostics`}{Group A / B / C / D diagnostics — `I_hat`, `R_hat`, realized Spearman / Pearson correlations, plus the meta-specific extras `target_I`, `target_R`, `I_error`, `R_error` (zero under the deterministic grid; `NA_real_` under custom `se_fn`), `I_exact`, `R_exact` (logical exactness flags), `shuffle`, `direct_se_method` (`"grid"` or `"custom"`), `direct_se_diagnostics`, `margin_engine`. See \code{\link{compute_I}}.}
-#'   \item{`provenance`}{Package version, R version, platform, resolved seed, `canonical_hash`, `design_hash`, and the call expression.}
+#'   \item{`provenance`}{Package version, producing R version and platform, resolved seed, pinned RNG triple and policy, hash schema, `canonical_hash`, `design_hash`, and the call expression.}
 #'   \item{`multisitedgp_version`, `paradigm`}{Convenience copies for quick attribute lookup.}
 #' }
 #'
@@ -166,7 +167,7 @@ sim_meta <- function(design = NULL, ..., seed = NULL) {
   out <- if (is.null(design$seed)) {
     run_layer_pipeline()
   } else {
-    withr::with_seed(design$seed, run_layer_pipeline())
+    .with_reproducible_seed(design$seed, run_layer_pipeline())
   }
 
   diagnostics <- .initial_meta_diagnostics(out, design = design)

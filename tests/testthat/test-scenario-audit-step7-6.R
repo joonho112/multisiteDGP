@@ -120,7 +120,7 @@ test_that("scenario metric summarizer classifies PASS, WARN, and FAIL gates", {
   expect_identical(pass$warn_reasons, "")
 
   expect_identical(warn$status, "WARN")
-  expect_true(warn$pass)
+  expect_false(warn$pass)
   expect_match(warn$warn_reasons, "mean_shrinkage", fixed = TRUE)
   expect_identical(warn$fail_reasons, "")
 

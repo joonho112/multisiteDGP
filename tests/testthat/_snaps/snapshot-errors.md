@@ -146,8 +146,8 @@
     Condition
       Error in `.abort_multisitedgp()`:
       x Engine A2 truncated-Gamma post-solve verification failed.
-      i Maximum scaled residual was <residual> with tolerance 1e-06.
-      > Try a less extreme site-size design or increase `tol` slightly.
+      i Scaled residuals were mean = <residual> (tolerance <tolerance>) and SD = <residual> (tolerance <tolerance>).
+      > Try a less extreme site-size design; increase `tol` only when that loss of target precision is acceptable.
 
 # E16 snapshot records direct-I boundary abort
 

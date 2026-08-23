@@ -1,0 +1,187 @@
+---
+title: "Phase 4 Log — Test Authority and Semantic Traceability"
+subtitle: "multisiteDGP v0.2.0 Codex repair"
+date: "2026-08-16"
+lang: ko
+format:
+  html:
+    toc: true
+    embed-resources: true
+    code-fold: true
+    theme: cosmo
+execute:
+  echo: false
+---
+
+## 결론
+
+**Phase 4는 완료되었다.** Golden preset 검사는 checked RDS를 다시 자기
+자신과 비교하던 구조에서 벗어나, 현재 package code로 매번 live object를
+생성해 checked authority와 비교한다. T12는 Layer 1을 포함한 전체 legacy RNG
+call vector를 exact equality로 고정한다. 오류 메시지 scan은 named/dynamic
+`fix`와 delegated helper까지 모두 분류하며 미분류 call은 fail-closed다.
+
+Traceability는 더 이상 CSV row count만 확인하지 않는다. 현재 namespace의 54
+exports, pkgdown의 16개 vignette, source Rmd 16개, invariant test source, validation
+script/result/summary SHA를 실제로 발견해 ledger와 대조한다. v0.1.1에서 생성된
+13개 validation 결과는 파일이 남아 있더라도 현재 v0.2.0의 `full-pass` 증거가
+아니므로 모두 `pending-current-source`로 강등했다.
+
+## Step 4.1 — Golden test를 live regeneration으로 교체
+
+기존 `test-golden.R`은 다음 형태였다.
+
+```r
+expect_snapshot_file(
+  file.path(golden_dir, file),
+  name = file,
+  compare = testthat::compare_file_binary
+)
+```
+
+즉 actual과 snapshot destination이 같은 파일이었다. Manifest 검사도 그
+파일에서 계산한 SHA/hash를 그 파일과 비교했으므로 generation logic이 변해도
+fixture와 manifest를 함께 재생성하면 독립적으로 잡지 못했다.
+
+현재는 다섯 preset을 package API에서 live로 실행한다.
+
+| Fixture | Live call |
+|---|---|
+| `preset_jebs_paper.rds` | `sim_multisite(preset_jebs_paper(), seed=4719L)` |
+| `preset_jebs_strict.rds` | `sim_multisite(preset_jebs_strict(), seed=4719L)` |
+| `preset_education_modest.rds` | `sim_multisite(preset_education_modest(), seed=12345L)` |
+| `preset_walters_2024.rds` | `sim_multisite(preset_walters_2024(), seed=1L)` |
+| `preset_small_area_estimation.rds` | `sim_meta(preset_small_area_estimation(), seed=42L)` |
+
+각 live object에 대해 다음을 별도 비교한다.
+
+- raw data frame
+- class vector
+- attached design
+- attached diagnostics
+- stored provenance
+- canonical hash
+- full object identity
+- live object를 `version=2` temp RDS로 serialize한 binary SHA/snapshot
+
+또한 manifest의 `generator_sha256`이 현재
+`tests/data-raw/generate_golden_fixtures.R` SHA와 같아야 한다. 따라서 stale stored
+provenance, generation logic drift, binary artifact drift가 서로 다른 assertion에서
+실패한다. Binary equality는 현재 checked artifact 계약이고, public cross-platform
+계약은 schema-v4 canonical numerical equality라는 구분은 그대로 유지한다.
+
+## Step 4.2 — T12 전체 RNG call vector 고정
+
+수정 전 테스트는 `rnorm`, `rgamma`, `sample.int`만 trace하고 Layer 1 prefix는
+의도적으로 고정하지 않는다고 주석에 적었다. 그러나 invariant ledger와 실제
+JEBS strict path는 다음 여섯 call을 약속한다.
+
+```text
+runif -> rnorm -> rnorm -> rgamma -> sample.int -> rnorm
+```
+
+새 T12는 `runif`도 trace하고 수집된 **전체 vector**를 위 값과
+`expect_identical()`로 비교한다. extra call, 누락, 재정렬이 모두 실패한다.
+Caller RNG state restoration과 observation diagnostics 검사는 독립 test block으로
+유지했다. Package 내부 blueprint ch.04/ch.18 및 invariant ledger도 같은 6-call
+계약으로 통일했다.
+
+## Step 4.3 — 오류 및 traceability를 semantic test로 강화
+
+### 오류 call inventory
+
+정적 scanner는 현재 245개 `.abort_*` call을 다음 네 종류로 분류한다.
+
+- static literal 또는 `sprintf()` format
+- `fix` formal을 전달하는 dynamic propagation
+- 자체 정의 안에서 primary abort를 호출하는 delegated helper
+- unclassified — 한 건이라도 있으면 실패
+
+Named `fix=`는 실제 formal matching으로 찾는다. Unit mutation sample은 등록되지
+않은 `.abort_unregistered()`가 `unclassified`가 됨을 확인한다. Dynamic fix를
+실제로 throw/catch해 세 번째 remedy line이 condition message에 포함되는지도
+검사한다. 설치형 E01--E30 remedy는 모두 `Try|Use|Pass|Remove`로 시작하고
+마침표로 끝난다.
+
+### API와 문서
+
+| Semantic inventory | 발견 결과 | Ledger 결과 |
+|---|---:|---:|
+| Namespace exports | 54 | 54 exact |
+| API rows | 61 | 54 exports + 7 S3 rows |
+| pkgdown article slugs | 16 | 16 exact |
+| source vignette Rmd | 16 | 16 exact |
+
+`docs-index.csv`는 legacy V1--V7/recipe 가상 항목 대신 A1--A8와 M1--M8의 실제
+slug와 `source_path`를 기록한다. 모든 경로가 존재해야 하고 pkgdown registry,
+source file, ledger 세 집합이 같아야 한다. Invariant ledger의 모든 test file도
+존재해야 하며 source 안에서 해당 ID를 실제로 선언해야 한다. T12에는 6-call
+literal이 있는지 추가 확인한다.
+
+### Validation evidence
+
+기존 latest full rows는 모두 package version 0.1.1이었다. Source와 V12 literal이
+바뀌었는데도 ledger에는 13개 `full-pass`가 남아 있었다. 현재 정책은
+`full-pass` row가 다음 조건을 만족할 때만 승격을 허용한다.
+
+- full mode, status pass, 현재 package version
+- current validation script SHA
+- 존재하는 result/summary 및 각각의 current SHA
+
+기존 V12 row가 이 판정에서 `FALSE`가 되는 mutation regression을 추가했다.
+Source revision/dirty digest, parameter digest, RNG/schema policy 및 safe resume의
+완전한 compatibility gate는 Phase 5에서 이 판정을 확장한다. 그 전까지 13개
+실험은 모두 `pending-current-source`다.
+
+V12 job의 stale schema-v3 literal도 다음 current authority로 교체했다.
+
+```text
+expected_hash        = 1cb59345862bc1f8
+expected_hash_schema = multisiteDGP-canonical-hash-v4
+```
+
+## Step 4.4 — 강화된 authority suite
+
+실행한 targeted suite는 다음 14개 test file을 포함한다.
+
+```text
+filter = (golden|T1a|T12|error-message-conformance|
+          error-catalog-installed|traceability|rng-hash-policy|
+          utils-reproducibility-canonicalization|scenario-audit|
+          migration-sitebayes2)
+
+FAIL 0 | WARN 0 | ERROR 0
+```
+
+A2 preset methods hash와 A6 case-study data/audit hash도 schema-v4 live 결과로
+갱신했다. A2와 A6를 임시 directory에 다시 render해 prose literal과 chunk
+출력이 일치함을 확인했다. A6 current hashes는 다음과 같다.
+
+- data: `acb53c52e99e4be9`
+- scenario audit: `67dc735f080d0738`
+
+`git diff --check`도 통과했다.
+
+## Phase 4 종료 판정
+
+| Gate | 결과 |
+|---|---|
+| Live preset regeneration vs checked authority | PASS |
+| Full object/provenance/diagnostics equality | PASS |
+| Separate current-platform binary artifact equality | PASS |
+| T12 complete six-call vector | PASS |
+| Caller RNG restoration | PASS |
+| All abort calls classified fail-closed | PASS |
+| Namespace/API semantic binding | PASS |
+| 16 pkgdown/source/ledger vignette binding | PASS |
+| Stale validation evidence demoted | PASS (13 pending) |
+| Phase 4 authority suite | PASS |
+
+## 다음 Phase 의존성
+
+Phase 4는 stale validation을 더 이상 release pass로 보이지 않게 만들었다.
+Phase 5는 validation resume 기본값을 `FALSE`로 바꾸고, 명시적으로 resume한
+경우에도 source/parameter/RNG/schema/result compatibility sidecar가 모두 맞을
+때만 재사용하도록 harness를 수정한다. 그 후 Phase 6에서 13개 full job을 현재
+source로 다시 실행해 `pending-current-source`를 `full-pass`로 승격한다.
+

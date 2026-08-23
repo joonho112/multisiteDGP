@@ -11,7 +11,13 @@ local_generated_example_output <- function() {
 }
 
 normalize_generated_print_lines <- function(lines) {
+  # Mask the whole R-version value: under R-devel the recorded version is
+  # "R Under development (unstable) (...)", which a short numeric form does
+  # not match, and the raw string then leaks into the comparison (D-060).
+  lines <- gsub("(producer|verifier)_R=.*?(?=( \\| )|( [a-z_]+=)|$)",
+             "\\1_R=<R>", lines, perl = TRUE)
   lines <- gsub("R=[0-9.]+", "R=<R>", lines)
+  lines <- gsub("(producer|verifier)_platform=[^ |]+", "\\1_platform=<PLATFORM>", lines)
   gsub("multisiteDGP [0-9.]+", "multisiteDGP <VERSION>", lines)
 }
 
@@ -47,7 +53,7 @@ test_that("Step 8.6 generated print hash policy is explicit", {
     "print-examples/ch14_ch17_irb_template.txt",
     "print-examples/ch14_ch17_sae_summary.txt"
   ))
-  expect_match(snapshot_policy$hash_print_policy, "Linux x86-64 strict")
+  expect_match(snapshot_policy$hash_print_policy, "supported-platform regeneration")
   expect_match(snapshot_policy$hash_print_policy, "canonical_hash/design_hash preserved")
   expect_identical(snapshot_policy$hash_print_override_env, "MULTISITEDGP_ALLOW_NON_LINUX_PRINT_REGEN")
 
@@ -59,8 +65,8 @@ test_that("Step 8.6 generated print hash policy is explicit", {
     snapshot_policy$hash_print_files
   )
   expect_identical(
-    normalize_generated_print_lines("R=4.5.1 canonical_hash=abc design_hash=def"),
-    "R=<R> canonical_hash=abc design_hash=def"
+    normalize_generated_print_lines("producer_R=4.5.1 producer_platform=x86_64-pc-linux-gnu canonical_hash=abc design_hash=def"),
+    "producer_R=<R> producer_platform=<PLATFORM> canonical_hash=abc design_hash=def"
   )
 })
 
@@ -114,3 +120,19 @@ test_that("Step 8.6 generated diagnostic example is numerically consistent", {
   expect_lt(abs(observed[["heterogeneity_ratio"]] - expected[["heterogeneity_ratio"]]), 5e-3)
 })
 # nolint end
+
+test_that("the R-version mask survives an R-devel version string", {
+  # The short numeric mask matched "4.6.0" and missed
+  # "R Under development (unstable) (2026-06-21 r90185)", so every snapshot
+  # failed on the CI devel cell while passing on the release-R machine that
+  # generated it (D-060).
+  devel <- paste0(
+    "Provenance: multisiteDGP 0.2.0 | producer_R=R Under development ",
+    "(unstable) (2026-06-21 r90185) | verifier_R=4.6.0 | hooks=none"
+  )
+  out <- normalize_generated_print_lines(devel)
+
+  expect_false(grepl("Under development", out, fixed = TRUE))
+  expect_match(out, "producer_R=<R>", fixed = TRUE)
+  expect_match(out, "verifier_R=<R>", fixed = TRUE)
+})

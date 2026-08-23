@@ -59,3 +59,4 @@ API057,[.multisitedgp_data,S3,Phase 2,Step 2.3,ch10 sec10.14.4,implemented,row s
 API058,as_tibble.multisitedgp_data,S3,Phase 2,Step 2.3,ch10 sec10.14.5,implemented,S3 method registration row for the API025 adapter contract
 API059,is_multisitedgp_data,predicate,Phase 2,Step 2.3,ch10 sec10.14.5,implemented,none
 API060,compute_kappa,diagnostic,Phase 4,Step 4.2,ch04 sec3 and ch06 sec2.2,implemented,Gate E Q16 amendment keeps kappa primitive public and ch10 inventory now includes it
+API061,error_catalog,diagnostic-support,Codex repair,Phase 3 Step 3.4,external review P-2,implemented,Installed E01-E30 condition API remedy lookup generated from the traceability ledger

@@ -16,19 +16,24 @@ experiment_id <- "V06"
 mode <- Sys.getenv("MULTISITEDGP_VALIDATION_MODE", unset = "full")
 sample_n <- validation_env_int("MULTISITEDGP_VALIDATION_SAMPLE_N", if (identical(mode, "full")) 1000000L else 100000L)
 seed_root <- validation_env_int("MULTISITEDGP_VALIDATION_SEED_ROOT", 910601L)
-resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = TRUE)
+resume <- validation_env_flag("MULTISITEDGP_VALIDATION_RESUME", default = FALSE)
 overwrite <- validation_env_flag("MULTISITEDGP_VALIDATION_OVERWRITE", default = FALSE)
 run_id <- validation_run_id(experiment_id, mode)
 
 result_path <- file.path(paths$generated_dir, paste0(run_id, "-results.csv"))
 summary_path <- file.path(paths$generated_dir, paste0(run_id, "-summary.csv"))
 started_at <- Sys.time()
+parameters <- list(sample_n = sample_n)
+run_state <- validation_prepare_run(
+  paths, run_id, experiment_id, mode, seed_root, parameters, script_path,
+  result_path, summary_path, resume = resume, overwrite = overwrite
+)
 
-if (isTRUE(resume) && !isTRUE(overwrite) && validation_existing_run_complete(result_path, summary_path)) {
+if (identical(run_state$action, "reuse")) {
   summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
   status <- if (nrow(summary) == 1L && isTRUE(summary$acceptance_pass[[1L]])) "pass" else "fail"
   ended_at <- Sys.time()
-  validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, sample_n, script_path, result_path, summary_path, "Existing V06 output reused.")
+  validation_record_reuse(paths, run_state, started_at, ended_at, "Compatible V06 output reused.")
   message("Resumed existing V06 output: ", result_path)
   validation_maybe_stop_for_blocker(status, "V06 validation failed in resumed output.")
   quit(status = 0)
@@ -283,7 +288,7 @@ validation_write_csv(shape_summary, file.path(paths$generated_dir, paste0(run_id
 
 status <- if (isTRUE(summary$acceptance_pass)) "pass" else "fail"
 ended_at <- Sys.time()
-validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, nrow(results), script_path, result_path, summary_path, "V06 active G shape standardization with explicit DPM v1 skip.")
+validation_record_manifest(paths, run_id, experiment_id, mode, status, started_at, ended_at, seed_root, nrow(results), script_path, result_path, summary_path, "V06 active G shape standardization with explicit reserved-DPM skip.", parameters = parameters)
 print(summary)
 print(shape_summary)
 message("V06 status: ", status)

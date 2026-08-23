@@ -221,7 +221,7 @@ gen_effects_mixture <- function(
     return(draw())
   }
   seed <- .validate_seed(seed, "seed")
-  withr::with_seed(seed, draw())
+  .with_reproducible_seed(seed, draw())
 }
 
 .legacy_mixture_component_draw <- function(J, eps) {

@@ -7,7 +7,7 @@ abstract: >
   shape of latent-effect distribution `multisiteDGP` is putting under
   the simulation, and exactly how that shape is rescaled before it
   reaches the rest of the pipeline. This vignette is organized one
-  section per shape: each of the seven `G` distributions gets
+  section per shape: six built-ins plus `User` (seven generated shapes) get
   its own parameterization, density, unit-variance derivation,
   generator function, and decision rule for when to use it. You leave
   with seven density-and-QQ panels, a sanity table of realized
@@ -99,7 +99,7 @@ $\sigma_\tau$, so empirical-Bayes shrinkage diagnostics
 
 ## 2. The catalog at a glance
 
-The seven shapes the package generates, with their `theta_G` fields
+Six built-ins plus `User` equal the seven shapes the package generates, with their `theta_G` fields
 and their canonical use cases, followed by the reserved `DPM` slot.
 The order matches the rest of the vignette; the exported Layer-1
 generator name is given in code font.
@@ -522,7 +522,7 @@ mean-and-variance contract on a small prerun (Convention A).
 - **Convention A (standardized residuals — recommended)**:
   `g_fn(J, ...)` returns standardized residuals with mean 0 and
   variance 1. The Layer-1 wrapper applies $\tau + \sigma_\tau \cdot
-  z_j$ as for the seven built-ins. With `audit_g = TRUE` (default),
+  z_j$ as for the six built-ins. With `audit_g = TRUE` (default),
   the package draws a $10^5$-sample prerun and warns if
   $|\hat\mu| > 0.1$ or $|\hat\sigma^2 - 1| > 0.1$.
 - **Convention B (raw effects — wrapper bypass)**:
@@ -538,7 +538,7 @@ override. Under Convention B, the user owns the entire marginal.
 [`gen_effects_user()`](../reference/gen_effects_user.html) —
 required `g_fn`. Convention selection is via `g_returns`.
 
-**When to reach for it.** None of the seven built-in shapes match —
+**When to reach for it.** None of the six built-in shapes match —
 horseshoe-prior-style residuals, a finite mixture with more than two
 components, a calibrated empirical distribution from a sister study,
 or any custom $G$ that needs to be threaded through the rest of the
@@ -567,7 +567,7 @@ The example callback returns a Laplace-shaped standardized residual
 generator; the realized variance lands at 1 because the callback
 did the standardization itself.
 
-### 3.8 DPM stub
+### 3.8 Reserved DPM route
 
 **Parameterization.** Currently unimplemented; calling
 `true_dist = "DPM"` without a `g_fn` bridge raises an actionable
@@ -704,8 +704,8 @@ Cross-references for downstream interpretation:
 
 ### Known limitation — `scenario_audit()` Group C resolver
 
-The Group C gates compare realized residuals against a reference
-quantile function for the declared shape, and only Gaussian and
+The Group C gates compare realized residuals against a package-defined
+reference distribution for the declared shape, and only Gaussian and
 Student-$t$ have one. A design declaring SkewN, ALD, Mixture, or
 PointMassSlab is audited on Groups A, B, and D; its row reports
 `target_source = "not_available"` and its four Group C columns
@@ -713,10 +713,10 @@ PointMassSlab is audited on Groups A, B, and D; its row reports
 `NA`. The Group C gates are skipped rather than failed — an
 unmeasured diagnostic is not a violated one.
 
-Read `target_source` alongside `pass` when sweeping a grid that mixes
-shapes. `pass = TRUE` means every gate that *could* run passed, not
-that every gate ran, so a skipped Group C otherwise looks identical to
-a cleared one.
+Read `target_source`, `audit_complete`, and `groups_evaluated` alongside
+`pass` when sweeping a grid that mixes shapes. `pass = TRUE` is the literal
+`status == "PASS"` flag; it does not assert that every group ran. Require
+`pass & audit_complete` when complete A/B/C/D coverage is part of the gate.
 
 Manual Group C checks are available for any shape — call
 [`bhattacharyya_coef()`](../reference/bhattacharyya_coef.html) or
@@ -730,7 +730,7 @@ shapes could not be audited at all.
 
 ## 6. Plots — density and QQ panels per shape
 
-One plot per shape (seven total — the DPM stub has no density
+One plot per generated shape (six built-ins plus User — reserved DPM has no density
 panel). Each panel overlays the realized standardized residuals
 on a reference Gaussian QQ-line so the reader can read the
 shape-specific tail behavior off the figure. The bandwidth is the
@@ -819,7 +819,7 @@ heavy tails of Student-t and User-Laplace, the right skew of
 SkewN and ALD, the bimodality of Mixture, and the central spike of
 PointMassSlab.
 
-```{r plot-overlay, fig.height = 4.6, fig.cap = "Density overlay of seven shapes at J = 200. Read off: Gaussian is the symmetric reference; Student-t has heavier tails; SkewN has a longer right tail; ALD is sharper-peaked and right-skewed; Mixture is bimodal; PointMassSlab has a central spike at z = 0; User-Laplace is sharper-peaked than Gaussian. The DPM stub is not plotted.", fig.alt = "Composite density overlay of seven distinct standardized-residual shapes on a common z-axis, each in a different color, illustrating the catalog's visual signature differences."}
+```{r plot-overlay, fig.height = 4.6, fig.cap = "Density overlay of six built-ins plus User at J = 200. Read off: Gaussian is the symmetric reference; Student-t has heavier tails; SkewN has a longer right tail; ALD is sharper-peaked and right-skewed; Mixture is bimodal; PointMassSlab has a central spike at z = 0; User-Laplace is sharper-peaked than Gaussian. Reserved DPM is not plotted.", fig.alt = "Composite density overlay of the six built-in shapes plus a User callback on a common standardized z-axis, illustrating the seven generated-shape signatures."}
 df_overlay <- dplyr::bind_rows(
   tibble::tibble(z = out_gaussian$z_j, shape = "Gaussian"),
   tibble::tibble(z = out_studentt$z_j, shape = "Student-t (nu = 5)"),

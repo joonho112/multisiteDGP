@@ -1,8 +1,8 @@
 # multisiteDGP 0.2.0
 
-A reliability release. The simulated data is unchanged — every golden
-fixture reproduces bit-for-bit — but the reproducibility contract, the
-advertised surface, and a number of error paths are not what they were.
+A reliability release. The reproducibility contract, the advertised surface,
+and a number of error paths are now explicit and tested. Canonical numerical
+equality and exact binary artifact equality are treated as separate claims.
 Read the breaking changes before upgrading a script that records hashes
 or passes `upstream` to `gen_effects()`.
 
@@ -10,20 +10,29 @@ or passes `upstream` to `gen_effects()`.
 
 ### `canonical_hash()` values all move
 
-The hash no longer covers the derived diagnostics (`I_hat`, `R_hat`,
+Schema v4 no longer covers the derived diagnostics (`I_hat`, `R_hat`,
 `rho_S_*`, `rho_P_*`, `sigma_tau_*`), and the doubles it does cover are
-rounded to nine significant digits before hashing.
+rounded to nine significant digits before hashing. It also preserves factor
+labels, level ordering and orderedness, and applies the same normalization to
+diagnostics that a caller explicitly includes.
 
-**Every hash recorded under v0.1.x will differ under v0.2.0.** The data
-did not change; what the hash looks at did. Recompute and update any
-hash quoted in a manuscript, a log, or an issue.
+**Every hash recorded under an earlier schema, including v3 development
+artifacts, must be recomputed under v4.** A schema change can move the hash
+even when raw data does not move.
 
-What you get for it: **the hash is now portable.** The same design and
-the same seed produce the same `canonical_hash()` on any platform. The
+What you get for it: **the canonical numerical hash is portable.** Seeded
+wrappers pin `Mersenne-Twister` / `Inversion` / `Rejection`, so the same
+design and seed do not depend on the caller's active RNG kind. The
 old policy named Ubuntu Linux the strict baseline and exempted macOS and
 Windows from hash equality; that hierarchy is gone, because it is no
-longer needed. A hash mismatch now means a real difference — never
-platform noise.
+longer needed. This does not promise byte-identical R objects or RDS files:
+sub-precision values can share a hash, and very close values that straddle a
+decimal rounding boundary can differ.
+
+Provenance now records the producing RNG triple and whether it was
+package-pinned or caller-controlled. `provenance_string()` prints stored
+producer R/platform fields separately from the current verifier and warns on
+a runtime mismatch.
 
 The excluded diagnostics were computed with `cor()`, `sd()` and `mean()`,
 whose floating-point accumulation order varies by platform. They are
@@ -45,17 +54,19 @@ The identically named **first positional argument** of `gen_site_sizes()`,
 `align_hybrid_corr()` and `gen_observations()` is unaffected. That one is
 the real inter-layer data flow.
 
-### `scenario_audit()` gains a `target_source` column
+### `scenario_audit()` gains explicit status metadata
 
 Code that selects audit columns by position or checks the column count
-needs updating. Select by name.
+needs updating. Select by name. In addition to `target_source`, the result
+now carries `audit_complete`, `groups_evaluated`, `threshold_profile`, and
+`n_warnings`. `pass` is literal: it is `TRUE` only for `status == "PASS"`;
+a `WARN` row is `FALSE`.
 
-## The catalog is seven shapes, not eight
+## The catalog is six built-ins plus `User`, not eight built-ins
 
-`DESCRIPTION`, `README`, the pkgdown site, seven vignettes and seventeen
-roxygen blocks said eight. The package generates seven: Gaussian,
-Student-t, skew-normal, asymmetric Laplace, two-component mixture,
-point-mass slab, and a user callback.
+The package generates seven shapes: six built-ins (Gaussian, Student-t,
+skew-normal, asymmetric Laplace, two-component mixture, point-mass slab)
+plus a `User` callback.
 
 `true_dist = "DPM"` is a **reserved slot**. The argument accepts the
 string, but built-in Dirichlet-process sampling is deferred to a future
@@ -71,15 +82,15 @@ Auditing a design that declared `SkewN`, `ALD`, `Mixture` or
 not be audited at all.
 
 Groups A, B and D are now judged normally and only the Group C
-distributional gates are skipped, because they need a reference quantile
-function and only Gaussian and Student-t have one. `target_source` reports
+distributional gates are skipped, because they need a package-defined
+reference distribution and only Gaussian and Student-t have one. `target_source` reports
 which happened. The gates are skipped rather than failed: an unmeasured
 diagnostic is not a violated one.
 
-**This narrows what `pass` means.** `pass = TRUE` says every gate that
-*could* run did run and passed — not that every gate ran. On a grid that
-mixes shapes, read `target_source` alongside `pass`, or a cell that
-skipped a whole diagnostic group looks identical to one that cleared it.
+**Status and completeness are separate.** `pass = TRUE` is exactly
+`status == "PASS"`; a WARN is not silently promoted to success. On a grid
+that mixes shapes, require both `pass` and `audit_complete` when the decision
+requires all four diagnostic groups.
 
 ### A named `beta` may omit the intercept
 
@@ -94,22 +105,68 @@ non-intercept coefficient. An unnamed `beta` already allowed the same
 omission. Named and unnamed now behave the same: an omitted intercept
 defaults to zero.
 
-### Engine A2 no longer accepts a design on one platform and refuses it
-on another
+### Engine A2 verifies mean and SD separately and fails closed
 
-The post-solve tolerance was a fixed `1e-6`. Below a certain conditioning
-that comparison measures floating-point noise rather than fit quality, and
-the verdict became platform dependent — the same design passed on macOS
-and aborted on Linux.
+The former adaptive residual floor was shared by the mean and SD checks.
+An ill-conditioned SD calculation could therefore authorize an arbitrarily
+large mean miss: for example, the old solver accepted a target mean of 100
+with a fitted mean near 5.12 at `cv = 1e-5`.
 
-The tolerance is now derived from the precision at which the residual can
-actually be evaluated. Some designs that were refused near the boundary
-now solve. When the achievable precision exceeds a relative error of
-`1e-3` on the realized site-size SD, the fit is accepted and a warning
-quotes the number, so you know how far you can trust it.
+A2 now evaluates truncated-Gamma moments with a stable incomplete-Gamma
+recurrence. The requested mean must always satisfy the user's `tol`. Only
+the SD check can use its separately estimated roundoff bound, capped at
+relative `1e-3`; if the SD cannot be checked within that cap, the solver
+aborts. The counterexample now solves to mean 100 and SD 0.001.
+
+### Distribution and dependence diagnostics use their target scales
+
+Gaussian-copula `pearson_corr` is now checked against the achieved latent
+Pearson correlation. Raw Pearson correlations on residual and marginal
+scales remain available as descriptive, untargeted rows. The Group C KS
+statistic and p-value now use a calibrated one-sample test against the
+analytic Gaussian or standardized Student-t CDF rather than a deterministic
+quantile grid passed to a two-sample test.
+
+The ALD documentation now states the implemented skew direction correctly:
+`rho < 0.5` is right-skewed and `rho > 0.5` is left-skewed. Shrinkage
+documentation now treats `S = sigma_tau^2 / (sigma_tau^2 + se2_j)` as the
+site-estimate retention (reliability) weight; the amount pooled is `1 - S`.
+
+The built-in rank/hybrid hill-climb is documented as implemented: a
+deterministic exhaustive pair scan that consumes no RNG. Hybrid
+`rank_corr = 0` is an identity/population-null convention, so its realized
+sample correlation is not promised to land within `tol`.
 
 `gen_site_sizes()` now documents the feasible region, which depends only
 on the ratio `n_min / nj_mean` — `nj_mean` itself drops out.
+
+### Preset and migration claims now match their sources
+
+`preset_jebs_strict()` now uses the appendix's literal lower site-size
+bound, `nj_min = 5`. The authority suite includes a floor-active fixture and
+checks all seven raw output columns separately from the canonical hash.
+
+`preset_walters_2024()` is now labelled a Walters-anchored proxy. Its
+metadata separates direct source anchors (`J = 46`, average `se2 = .010`,
+`sigma_tau = .197`, weak precision dependence), the derived `nj_mean = 240`,
+and package assumptions such as outcome `R2 = .40`, `cv = .30`, and
+`nj_min = 50`. Walters' conditional-prior `R2 = .502` is explicitly excluded
+from the outcome-R2 interpretation. The metadata is retained in simulation
+provenance.
+
+The siteBayes2 migration guide now gives executable scale conversions for
+`gen_priorG2()`: `tau_new = sigma_old * tau_old`,
+`beta_new = sigma_old * beta_old`, and
+`sigma_tau_new = sigma_old * sqrt(variance_old)`. It also maps the legacy
+`T`, `Skew`, and ALD `kappa` parameters and distinguishes statistical parity
+from the RNG-consuming `precision_dependence = FALSE` shuffle.
+
+### Error IDs have an installed lookup table
+
+`error_catalog()` exposes the stable E01--E30 condition, affected API, and
+remedy table installed with the package. The table is generated from the
+traceability ledger, so user-facing help and conformance tests share one
+source of truth.
 
 ### The Student-t warning no longer recommends a value it warns about
 
@@ -163,13 +220,11 @@ status is here.
   macOS / aarch64 provenance with the Linux x86_64 baseline pending a
   first CI run. That run happened. The fixtures reproduce on
   `linux-release`, `linux-devel`, `linux-oldrel`, `macos-release` and
-  `windows-release`, so the platform they were generated on no longer
-  carries any meaning.
-- **Cross-OS bit parity for the legacy site-size engine.** Verified
-  through GitHub Actions, not only locally. The test that checks it runs
-  on every platform now; under v0.1.x it was skipped everywhere but
-  Linux x86_64, which left the portability claim checked on one of five
-  CI cells.
+  `windows-release`. Their canonical numerical hash is portable; the manifest
+  still records the producer platform and exact file SHA for diagnosis.
+- **Cross-OS canonical parity for the legacy site-size engine.** Verified
+  through GitHub Actions, not only locally. Exact serialized-byte identity is
+  not inferred from that numerical check.
 - **Manual visual checks for funnel and forest plots.** Done. Funnel and
   dependence plots were correct; the caterpillar's axis labels were not,
   and are fixed above.
@@ -279,10 +334,10 @@ First tagged release. Version bumped from `0.0.0.9000` to `0.1.0`.
     `update_multisitedgp_design()`, `is_multisitedgp_design()`,
     `is_multisitedgp_data()`, `design_grid()`.
 
-- **Eight latent-effect distributions** sharing a unit-variance
+- **Six built-in latent-effect distributions plus `User`** sharing a unit-variance
   convention so a heterogeneity-ratio target means the same thing
   across shapes:
-  - `gen_effects()` and the eight shape generators
+  - `gen_effects()` and the generated-shape functions
     `gen_effects_gaussian()`, `gen_effects_studentt()`,
     `gen_effects_skewn()`, `gen_effects_ald()`,
     `gen_effects_mixture()`, `gen_effects_pmslab()`,

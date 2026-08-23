@@ -11,7 +11,7 @@ You have a multisite trial to design, a meta-analysis to plan, or an estimator t
 <div class="card mb-4 h-100">
 <div class="card-body">
 <h5 class="card-title">Layered DGP</h5>
-<p class="card-text">Four generative layers — latent effects, site-size margins, precision dependence, observation draws — with seven distribution shapes and a single-call front door.</p>
+<p class="card-text">Four generative layers — latent effects, site-size margins, precision dependence, observation draws — with six built-ins plus a User shape and a single-call front door.</p>
 <a href="articles/a1-getting-started.html" class="btn btn-primary">Get started</a>
 </div>
 </div>
@@ -20,7 +20,7 @@ You have a multisite trial to design, a meta-analysis to plan, or an estimator t
 <div class="card mb-4 h-100">
 <div class="card-body">
 <h5 class="card-title">Defensible presets</h5>
-<p class="card-text">Nine bundled scenarios — JEBS-paper, Walters-2024, Weiss-style education trials — each with a citation and a locked parameter set you can defend to a reviewer.</p>
+<p class="card-text">Nine bundled scenarios — including JEBS, a Walters-anchored proxy, and Weiss-style education trials — with published anchors separated from package assumptions.</p>
 <a href="articles/a2-choosing-a-preset.html" class="btn btn-primary">Choose a preset</a>
 </div>
 </div>
@@ -89,10 +89,10 @@ attr(dat, "diagnostics")$I_hat
 # Visualize the latent and observed site effects.
 plot_effects(dat)
 
-# Stamp the scenario for reproducibility — the hash is identical
-# every time you rerun the same call.
+# Stamp the scenario for reproducibility — the v4 canonical numerical hash is
+# identical every time you rerun the same seeded call under the same schema.
 canonical_hash(dat)
-#> [1] "c52e75f276d82836"
+#> [1] "680d52a539b62f1d"
 ```
 
 In a single call you have a citable scenario, a printed dataset, a realized-target diagnostic, a publication-ready plot, and a stable provenance hash.
@@ -117,7 +117,7 @@ In a single call you have a citable scenario, a printed dataset, a realized-targ
 | Vignette | What you get |
 |----------|--------------|
 | [M1 · The two-stage DGP](articles/m1-statistical-dgp.html) | Mathematical framing of the four layers |
-| [M2 · G-distribution catalog](articles/m2-g-distribution-catalog.html) | The seven shapes, side by side |
+| [M2 · G-distribution catalog](articles/m2-g-distribution-catalog.html) | Six built-ins plus User; DPM reserved |
 | [M3 · Margin and SE models](articles/m3-margin-se-models.html) | Site-size-driven and direct-precision paths |
 | [M4 · Precision dependence theory](articles/m4-precision-dependence-theory.html) | Rank, copula, and hybrid methods compared |
 | [M5 · Custom G distributions](articles/m5-custom-g-distributions.html) | Bring your own latent distribution |

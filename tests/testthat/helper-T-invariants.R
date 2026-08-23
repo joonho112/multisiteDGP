@@ -29,7 +29,11 @@ t_invariant_seed_stream <- function(n, seed) {
 }
 
 t_invariant_jebs_seed_file <- function(seed) {
-  test_path(sprintf("_snaps/golden/jebs_appendix_mixture_seed%d.rds", seed))
+  test_path(sprintf("fixtures/golden/jebs_appendix_mixture_seed%d.rds", seed))
+}
+
+t_invariant_jebs_floor_file <- function() {
+  test_path("fixtures/golden/jebs_appendix_floor_active_seed42.rds")
 }
 
 t_invariant_jebs_plain_frame <- function(x) {

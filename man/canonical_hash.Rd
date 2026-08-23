@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{canonical_hash}
 \alias{canonical_hash}
-\title{Canonical hash for cross-machine reproducibility checks}
+\title{Canonical numerical-content hash for reproducibility checks}
 \usage{
 canonical_hash(
   x,
@@ -25,32 +25,32 @@ include for data-frame-like objects. Columns are sorted before
 hashing. Default \code{NULL} (all canonical columns).}
 
 \item{diagnostics_to_include}{Optional character vector of diagnostic
-names to include. Default \code{NULL} (the blueprint's numeric-diagnostics
-allowlist).}
+names to include. Default \code{NULL} (no derived diagnostics).}
 }
 \value{
-A single character hash string of length 16 (xxhash64) or 32
-(xxhash32) etc.
+A single algorithm-dependent character hash string.
 }
 \description{
-Compute a stable content hash of a multisiteDGP simulation object —
-the hash that identifies whether two simulation runs produced
-bit-identical results. The hash is \emph{canonical}: it normalizes column
-order, drops row names, excludes the derived diagnostics, and
-replaces callback functions with presence sentinels (so the hash is
-invariant under callback identity but sensitive to callback presence).
+Compute a stable numerical-content hash of a multisiteDGP simulation
+object. The hash is \emph{canonical}: it normalizes column order, drops row
+names, rounds doubles to nine significant digits, excludes derived
+diagnostics by default, and replaces callback functions with presence
+sentinels. Equal hashes mean equal canonical payloads under the named
+schema; they do not prove byte-identical R objects or serialized files.
 }
 \details{
-\strong{The hash is portable.} The same design and the same seed give the
-same hash on any platform — checked on every release across Linux
-(release, devel, oldrel), macOS and Windows. There is no baseline
-operating system. A mismatch means the design, the seed, or the hash
-schema genuinely differs; it is never platform noise.
+\strong{The hash is a numerical equivalence contract.} Seeded package
+front doors pin the RNG algorithm, normal generator, and sample generator.
+Supported-platform CI checks that representative designs produce the same
+nine-significant-digit payload. Decimal rounding is discontinuous, so a
+negligible difference at a rounding boundary can still move the hash, while
+a genuine difference below the declared precision can be intentionally
+treated as equivalent.
 
-\strong{The package version is not hashed.} Upgrading multisiteDGP does not
-invalidate a hash you already published. What moves the hash when the
-package changes what the hash \emph{means} is \code{hash_schema_version}, carried in
-the manifest. See
+\strong{The package version is not part of numerical content.} The producing
+version remains in provenance. Changes to payload meaning advance
+\code{hash_schema_version}; changes to exact serialized bytes belong in a
+separate artifact SHA-256. See
 \code{system.file("REPRODUCIBILITY.md", package = "multisiteDGP")} for the full
 installed policy.
 
@@ -68,7 +68,7 @@ and provenance} vignette.
 dat <- sim_multisite(J = 10L, seed = 1L)
 canonical_hash(dat)
 
-# Same design / seed → same hash.
+# Same seeded design and schema -> same canonical numerical payload.
 identical(canonical_hash(dat), canonical_hash(sim_multisite(J = 10L, seed = 1L)))
 }
 \references{

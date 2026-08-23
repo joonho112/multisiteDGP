@@ -1,0 +1,9 @@
+"run_id","experiment_id","reason_type","reason","n"
+"phase6b-v11-full-20260816","V11","fail","bhattacharyya:median<0.850",1200
+"phase6b-v11-full-20260816","V11","fail","feasibility:median<5.000",581
+"phase6b-v11-full-20260816","V11","fail","ks:median>0.100",1199
+"phase6b-v11-full-20260816","V11","fail","mean_shrinkage:median<0.300",710
+"phase6b-v11-full-20260816","V11","warn","bhattacharyya:q05<0.850",3
+"phase6b-v11-full-20260816","V11","warn","ks:q95>0.100",158
+"phase6b-v11-full-20260816","V11","warn","mean_shrinkage:q05<0.300",5
+"phase6b-v11-full-20260816","V11","warn","R:q95>30.000",18

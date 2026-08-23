@@ -66,6 +66,7 @@ Other family-diagnostics:
 \code{\link[=compute_kappa]{compute_kappa()}},
 \code{\link[=compute_shrinkage]{compute_shrinkage()}},
 \code{\link[=default_thresholds]{default_thresholds()}},
+\code{\link[=error_catalog]{error_catalog()}},
 \code{\link[=feasibility_index]{feasibility_index()}},
 \code{\link[=heterogeneity_ratio]{heterogeneity_ratio()}},
 \code{\link[=informativeness]{informativeness()}},

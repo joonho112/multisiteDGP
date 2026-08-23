@@ -11,9 +11,9 @@ default_thresholds()
 A named list of five scalar threshold gates:
 \describe{
 \item{\code{mean_shrinkage_min}}{Numeric \code{0.30}. Minimum
-\eqn{\bar{S}} for Group D PASS — designs below this floor
-do too little partial-pooling work to benefit from a
-hierarchical estimator.}
+\eqn{\bar{S}} for Group D PASS — designs below this floor retain
+too little site-level information. The amount pooled is
+\eqn{1-\bar S}.}
 \item{\code{feasibility_min}}{Numeric \code{5.0}. Minimum Efron
 feasibility \eqn{\sum_j S_j} for Group A PASS —
 corresponds to the equivalent of about five
@@ -32,8 +32,8 @@ Bhattacharyya gate.}
 }
 }
 \description{
-Return the canonical quality-gate thresholds consumed by
-\code{\link{scenario_audit}} when scoring a design grid against
+Return the \code{replicate-grid-audit-v1} quality-gate thresholds consumed by
+\code{\link{scenario_audit}} when scoring replicated design-grid cells against
 Dr. Chen's four-question diagnostic rubric. Each gate maps a Group
 A/B/C/D diagnostic to a PASS / WARN / FAIL band, so the audit
 output is a single calibrated verdict rather than a raw diagnostic
@@ -54,7 +54,7 @@ realized \code{\link{heterogeneity_ratio}}.
 \code{\link{ks_distance}}.
 \item \strong{Group D — downstream shrinkage.}
 \code{mean_shrinkage_min = 0.30} for
-\code{\link{mean_shrinkage}}.
+\code{\link{mean_shrinkage}} (historical name for mean reliability).
 }
 
 Group B diagnostics (realized rank correlation) are tracked
@@ -69,7 +69,7 @@ For the calibration rationale behind each numeric value see the
 Diagnostics in practice} vignette.
 }
 \examples{
-# Inspect the canonical gates.
+# Inspect the replicate-grid audit gates.
 default_thresholds()
 
 # Tighten the Group D gate before passing to the audit.
@@ -100,6 +100,7 @@ Other family-diagnostics:
 \code{\link[=compute_I]{compute_I()}},
 \code{\link[=compute_kappa]{compute_kappa()}},
 \code{\link[=compute_shrinkage]{compute_shrinkage()}},
+\code{\link[=error_catalog]{error_catalog()}},
 \code{\link[=feasibility_index]{feasibility_index()}},
 \code{\link[=heterogeneity_ratio]{heterogeneity_ratio()}},
 \code{\link[=informativeness]{informativeness()}},

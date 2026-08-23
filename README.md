@@ -35,10 +35,10 @@ specification through intuitive quantities:
 
 These applied questions are translated into a four-layer simulation
 pipeline — latent effects, site-size margins, precision dependence,
-observed estimates — backed by a catalog of seven distribution shapes
-for the latent site-effect distribution. Every default has a citation;
-every layer has a contract; every diagnostic answers a verification
-question.
+observed estimates — backed by a catalog of six built-in shapes plus a
+`User` callback for the latent site-effect distribution. Published
+anchors and package-curated assumptions are labeled separately; every
+layer has a contract; every diagnostic answers a verification question.
 
 ## Installation
 
@@ -87,10 +87,10 @@ attr(dat, "diagnostics")$I_hat
 # Visualize the latent and observed site effects.
 plot_effects(dat)
 
-# Stamp the scenario for reproducibility — the hash is identical
-# every time you rerun the same call.
+# Stamp the scenario for reproducibility — the v4 canonical numerical hash is
+# identical every time you rerun the same seeded call under the same schema.
 canonical_hash(dat)
-#> [1] "04b356c64fab6bd7"
+#> [1] "680d52a539b62f1d"
 ```
 
 In a single call you have a citable scenario, a printed dataset, a
@@ -116,7 +116,7 @@ dat <- sim_multisite(
 )
 ```
 
-### 2. Catalog of seven distribution shapes
+### 2. Six built-ins plus User: seven generated shapes
 
 Move beyond Gaussian site effects to study estimator behavior under
 realistic departures from normality:
@@ -129,12 +129,13 @@ dat_skew <- sim_multisite(
 )
 ```
 
-The seven shapes — Gaussian, Student-t, skew-normal, asymmetric Laplace,
-two-component mixture, point-mass slab, and a user callback — share a
-standardized-residual convention so `sigma_tau` (between-site
-heterogeneity) means the same thing across scenarios. A `"DPM"` slot is
-reserved: `true_dist` accepts the string, but built-in Dirichlet-process
-sampling is deferred, so reach it through a `g_fn` bridge.
+The six built-ins — Gaussian, Student-t, skew-normal, asymmetric
+Laplace, two-component mixture, and point-mass slab — plus a User
+callback make seven generated shapes. They share a standardized-residual
+convention so `sigma_tau` (between-site heterogeneity) means the same
+thing across scenarios. A `"DPM"` slot is reserved: `true_dist` accepts
+the string, but built-in Dirichlet-process sampling is deferred, so
+reach it through a `g_fn` bridge.
 
 ### 3. Sampling-error margins and dependence structure
 
@@ -235,7 +236,7 @@ If you use `'multisiteDGP'` in your research, please cite:
   title  = {{multisiteDGP}: Data-Generating Processes for Multisite Trial Simulations},
   author = {JoonHo Lee},
   year   = {2026},
-  note   = {R package version 0.1.0},
+  note   = {R package version 0.2.0},
   url    = {https://joonho112.github.io/multisiteDGP/}
 }
 
@@ -265,9 +266,10 @@ illustrative copy that may lag the installed package’s metadata.
 - **Walters (2024)** — empirical Bayes methods in labor economics, with
   a school value-added application using Boston charter and BPS schools
   (Angrist, Hull, Pathak, & Walters, 2017). The `preset_walters_2024()`
-  preset uses the chapter’s parameters (J = 46 schools,
-  $\sigma_\tau \approx 0.197$, mean per-school sample size 240) as a
-  defensible value-added scenario.
+  preset is a Walters-anchored proxy. The chapter directly supports J =
+  46, average $s^2 = .010$, and $\sigma_\tau \approx 0.197$; the
+  site-size mean 240 is derived under an assumed outcome $R^2=.40$,
+  while `cv=.30` and `nj_min=50` are package assumptions.
 - **Weiss et al. (2017)** — empirical cross-site variation benchmarks
   from 16 education and training multisite randomized trials. The
   `preset_education_*` family uses these ranges for site counts, mean

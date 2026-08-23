@@ -9,11 +9,12 @@ A. Realized vs Intended
 B. Dependence
    rank_corr residual:          0.413  (target 0.000)  WARN  [delta=0.413]
    rank_corr marginal:          0.413  (target N/A)  N/A   [residual target rows only; no finite target; status not assigned]
-   pearson_corr residual:       0.474  (target 0.000)  FAIL  [delta=0.474]
-   pearson_corr marginal:       0.474  (target N/A)  N/A   [residual target rows only; no finite target; status not assigned]
+   pearson_corr copula latent:      N/A  (target N/A)  N/A   [Gaussian-copula latent scale only; no finite target; status not assigned]
+   pearson_corr raw residual:    0.474  (target N/A)  N/A   [no target]
+   pearson_corr raw marginal:    0.474  (target N/A)  N/A   [no target]
 
 C. G shape fit
-   KS distance D_J:             0.167  (target 0.000)  PASS  [p=0.808]
+   KS distance D_J:             0.154  (target 0.000)  PASS  [p=0.429]
    Bhattacharyya BC:            0.527  (target 1.000)  FAIL  [rel=-47.3%]
    Q-Q residual:                0.796  (target 0.000)  N/A   [delta=0.796]
 
@@ -22,5 +23,5 @@ D. Operational feasibility
    avg MOE (95%):               0.795  (target N/A)  WARN  [no target]
    feasibility_index:           6.153  (target N/A)  WARN  [no target]
 ------------------------------------------------------------
-Overall: 5 PASS, 3 WARN, 3 FAIL.
-Provenance: multisiteDGP <VERSION> | paradigm=direct | seed=42 | canonical_hash=ec2abe8b7f83a645 | design_hash=a17c3e79218d41ff | hash_algo=xxhash64 | R=<R> | hooks=none
+Overall: 5 PASS, 3 WARN, 2 FAIL.
+Provenance: multisiteDGP <VERSION> | paradigm=direct | seed=42 | canonical_hash=fe3e4045dad296b9 | design_hash=4479f15ef27a236e | hash_algo=xxhash64 | hash_schema=multisiteDGP-canonical-hash-v4 | producer_R=<R> | producer_platform=<PLATFORM> | producer_rng=Mersenne-Twister/Inversion/Rejection | verifier_R=<R> | verifier_platform=<PLATFORM> | hooks=none

@@ -7,8 +7,8 @@
 #' Presets package a defensible starting design — site count, latent-effect
 #' shape, heterogeneity, sample-size or precision targets — for a common
 #' multisite-trial or meta-analysis scenario. Each preset returns a locked
-#' `multisitedgp_design` object whose parameter values are anchored to a
-#' published reference, so a reviewer can defend the choice. Pass any
+#' `multisitedgp_design` object whose published anchors and package-curated
+#' assumptions are documented, so a reviewer can defend the choice. Pass any
 #' named `multisitedgp_design()` argument through `...` to override the
 #' locked defaults.
 #'
@@ -29,9 +29,9 @@
 #'     reproduction. Both use A1 legacy engine — the JEBS Mixture fixture.
 #'   }
 #'   \item{Empirical-Bayes school value-added}{
-#'     \code{\link{preset_walters_2024}} — J = 46 schools, Boston charter
-#'     value-added, calibrated to the Walters (2024) Handbook chapter
-#'     reanalysis of the BPS dataset.
+#'     \code{\link{preset_walters_2024}} — a Walters-anchored proxy with
+#'     J = 46 schools and \eqn{\sigma_\tau = 0.197}; its site-size margin
+#'     makes explicit derived and assumed choices beyond the source.
 #'   }
 #'   \item{Deconvolution / shape-recovery benchmark}{
 #'     \code{\link{preset_twin_towers}} — bimodal mixture, J = 1000,
@@ -55,9 +55,10 @@
 #' calibration but switch on rank-correlated dependence:
 #' `preset_education_modest(dependence = "rank", rank_corr = 0.3)`.
 #'
-#' \strong{Citing presets in published work.} Each preset locks parameter
-#' values from a published reference; cite that reference, not the
-#' preset name. The relevant citations are listed in
+#' \strong{Citing presets in published work.} Cite a preset's published
+#' empirical anchors and separately report any derived or assumed fields;
+#' do not cite the preset name as if every value came from the source. The
+#' relevant citations are listed in
 #' \code{\link{multisiteDGP}} package help and in
 #' \code{citation("multisiteDGP")}.
 #'
@@ -216,7 +217,7 @@ preset_jebs_strict <- function(...) {
       sigma_tau = 0.15,
       nj_mean = 80,
       cv = 0.50,
-      nj_min = 4L,
+      nj_min = 5L,
       p = 0.5,
       R2 = 0,
       engine = "A1_legacy",
@@ -227,10 +228,11 @@ preset_jebs_strict <- function(...) {
   )
 }
 
-#' @describeIn presets Boston charter / BPS value-added empirical-Bayes design from Walters (2024) Handbook of Labor Economics chapter. J = 46 schools, \eqn{\sigma_\tau \approx 0.197}, mean per-school sample 240, with \eqn{R^2 = 0.40} from covariate adjustment. Use when calibrating to school-effect or teacher-effect Empirical Bayes literature.
+#' @describeIn presets Walters-anchored proxy for the Boston charter / BPS value-added example. Direct source anchors are J = 46, average reported sampling variance \eqn{\overline{s^2} = 0.010}, \eqn{\sigma_\tau \approx 0.197}, and weak precision dependence. The site-size implementation derives `nj_mean = 240` from \eqn{\kappa / \bar n = 0.010} under the package assumptions `p = 0.5`, outcome `R2 = 0.40`, and `var_outcome = 1`; `cv = 0.30` and `nj_min = 50` are also package assumptions. Walters' nearby \eqn{R^2 = 0.502} describes a conditional prior for charter quality, not the outcome-R2 input used here. This is a defensible proxy, not a chapter-replication preset. Inspect `attr(x, "preset_metadata")` for the direct/derived/assumed provenance.
 #' @export
 preset_walters_2024 <- function(...) {
-  .preset_design(
+  overrides <- list(...)
+  design <- .preset_design(
     list(
       J = 46L,
       paradigm = "site_size",
@@ -246,8 +248,36 @@ preset_walters_2024 <- function(...) {
       dependence = "none",
       framing = "superpopulation"
     ),
-    list(...)
+    overrides
   )
+  attr(design, "preset_name") <- "preset_walters_2024"
+  attr(design, "preset_metadata") <- list(
+    status = "Walters-anchored proxy; not a chapter-replication design",
+    direct = list(
+      J = 46L,
+      average_se2 = 0.010,
+      sigma_tau = 0.197,
+      precision_dependence = "weak"
+    ),
+    derived = list(
+      nj_mean = 240,
+      rule = "kappa / average_se2 with kappa = 2.4 under assumed p, R2, and var_outcome"
+    ),
+    assumed = list(
+      true_dist = "Gaussian",
+      p = 0.5,
+      outcome_R2 = 0.40,
+      var_outcome = 1,
+      cv = 0.30,
+      nj_min = 50L
+    ),
+    excluded_source_quantity = list(
+      conditional_prior_R2 = 0.502,
+      note = "Walters' conditional-prior R2 is not the preset's outcome R2"
+    ),
+    overrides = names(overrides)
+  )
+  design
 }
 
 #' @describeIn presets Twin-towers bimodal mixture benchmark for deconvolution and shape-recovery method evaluation. J = 1000 sites with equal sample sizes; mixture parameters \eqn{\delta = 4}, \eqn{\epsilon = 0.5}, \eqn{\Upsilon = 1}. Standard test bed for nonparametric Empirical Bayes methods.

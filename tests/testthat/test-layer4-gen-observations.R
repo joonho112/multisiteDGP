@@ -133,7 +133,8 @@ test_that("A1 legacy default path matches JEBS observation-component hashes", {
 
   for (seed in c(42L, 1L, 2024L, 12345L)) {
     out <- withr::with_seed(seed, gen_observations(reference_jebs_upstream()))
-    manifest_row <- manifest[manifest$seed == seed, ]
+    fixture_id <- sprintf("F%02d", match(seed, c(42L, 1L, 2024L, 12345L)))
+    manifest_row <- manifest[manifest$fixture_id == fixture_id, ]
     raw_observed <- data.frame(
       n_j = as.numeric(out$n_j),
       se2_j = out$se2_j,

@@ -122,35 +122,37 @@ solve_trunc_gamma <- function(
     .TRUNC_GAMMA_SELECTION_DIGITS
   )
   best <- verified[[which.min(scores)]]
-  noise_floor <- .trunc_gamma_residual_floor(best$alpha, cv)
-  tol_effective <- max(tol, noise_floor)
-  if (any(abs(best$residual) > tol_effective)) {
-    # The floor is only named when it is what governs. It is derived from the
-    # solver's own `alpha`, so printing it unconditionally would put a
-    # platform-dependent number into the error snapshot — reintroducing the
-    # problem the adaptive tolerance exists to remove.
-    detail <- if (noise_floor > tol) {
+  moments <- trunc_gamma_moments(best$alpha, best$beta, n_min)
+  sd_floor <- moments$sd_relative_error_bound
+  if (!is.finite(sd_floor) || sd_floor > .TRUNC_GAMMA_MAX_SD_RELAXATION) {
+    .abort_solver(
+      "Engine A2 truncated-Gamma moments cannot be verified reliably.",
       sprintf(
-        "Maximum scaled residual was %s against a tolerance of %s, widened from %s by the moment-evaluation noise floor.",
-        format(max(abs(best$residual)), digits = 3),
-        format(tol_effective, digits = 3),
-        format(tol, digits = 3)
-      )
-    } else {
-      sprintf(
-        "Maximum scaled residual was %s with tolerance %s.",
-        format(max(abs(best$residual)), digits = 3),
-        format(tol_effective, digits = 3)
-      )
-    }
+        "The estimated relative SD evaluation error is %s; the maximum permitted relaxation is %s.",
+        format(sd_floor, digits = 3),
+        format(.TRUNC_GAMMA_MAX_SD_RELAXATION, digits = 3)
+      ),
+      "Try a less extreme `cv` or move `n_bar` farther above `n_min`."
+    )
+  }
+  tol_effective <- c(mean = tol, sd = max(tol, sd_floor))
+  failed_mean <- abs(best$residual[["mean"]]) > tol_effective[["mean"]]
+  failed_sd <- abs(best$residual[["sd"]]) > tol_effective[["sd"]]
+  if (failed_mean || failed_sd) {
+    detail <- sprintf(
+      "Scaled residuals were mean = %s (tolerance %s) and SD = %s (tolerance %s).",
+      format(best$residual[["mean"]], digits = 3),
+      format(tol_effective[["mean"]], digits = 3),
+      format(best$residual[["sd"]], digits = 3),
+      format(tol_effective[["sd"]], digits = 3)
+    )
     .abort_solver(
       "Engine A2 truncated-Gamma post-solve verification failed.",
       detail,
-      "Try a less extreme site-size design or increase `tol` slightly."
+      "Try a less extreme site-size design; increase `tol` only when that loss of target precision is acceptable."
     )
   }
 
-  moments <- trunc_gamma_moments(best$alpha, best$beta, n_min)
   list(
     alpha = best$alpha,
     beta = best$beta,
@@ -165,31 +167,11 @@ solve_trunc_gamma <- function(
   )
 }
 
-# Smallest scaled residual that `.trunc_gamma_residual()` can actually resolve
-# at a given solution. Below this, a residual comparison is measuring floating
-# point noise rather than fit quality, and the verdict becomes platform
-# dependent (defect ledger D-024).
-#
-# Two cancellations set the floor.
-#
-#   1. Raw moments come from `lgamma(alpha + k) - lgamma(alpha)`. For large
-#      `alpha` this subtracts two large numbers to get a small one, so the log
-#      moment carries absolute error of order `eps * lgamma(alpha)`. After
-#      `exp()` that becomes a relative error of the same order.
-#
-#   2. `sd^2 = E[X^2] - E[X]^2` cancels again. Since `E[X^2] ~ mean^2` and
-#      `sd^2 = cv^2 * mean^2`, the relative error of `sd^2` is inflated by
-#      `1 / cv^2`, and `sd` by half that.
-#
-# Hence `eps * lgamma(alpha) / (2 * cv^2)`, plus a plain machine-epsilon term
-# that dominates once `cv` is large enough for the cancellations to vanish.
-#
-# The constants were fitted to a measured (n_bar, cv, n_min) grid: over the
-# cancellation-dominated region the empirical floor ran 0.73x to 3.05x the
-# analytic prediction, so 8x leaves roughly a factor of three of headroom.
-# Measurement: log/log-version-up-2026-08-14/evidence/phase04/residual-noise-floor.csv
-.TRUNC_GAMMA_FLOOR_SCALE <- 8
-.TRUNC_GAMMA_FLOOR_BASE <- 256
+# Maximum relative relaxation allowed for SD verification. A larger numerical
+# error estimate is not converted into permission to accept the design: the
+# solver fails closed because the requested moment cannot be checked.
+.TRUNC_GAMMA_MAX_SD_RELAXATION <- 1e-3
+.TRUNC_GAMMA_ROUNDOFF_SCALE <- 32
 
 # Significant digits kept from the nleqslv solution. The solver itself is only
 # determinate to about 1e-12 relative, so 10 digits sits two orders inside its
@@ -200,15 +182,6 @@ solve_trunc_gamma <- function(
 # differences in the residual evaluation cannot reorder near-ties, fine enough
 # to still prefer a genuinely better fit.
 .TRUNC_GAMMA_SELECTION_DIGITS <- 6L
-
-.trunc_gamma_residual_floor <- function(alpha, cv) {
-  if (!is.finite(alpha) || !is.finite(cv) || cv <= 0) {
-    return(.TRUNC_GAMMA_FLOOR_BASE * .Machine$double.eps)
-  }
-  cancellation <- .TRUNC_GAMMA_FLOOR_SCALE * .Machine$double.eps *
-    max(lgamma(alpha), 1) / (2 * cv^2)
-  cancellation + .TRUNC_GAMMA_FLOOR_BASE * .Machine$double.eps
-}
 
 trunc_gamma_moments <- function(alpha, beta, n_min) {
   alpha <- .validate_positive_scalar_number(alpha, "alpha")
@@ -222,12 +195,28 @@ trunc_gamma_moments <- function(alpha, beta, n_min) {
     )
   }
 
-  log_survival <- .trunc_gamma_log_survival(alpha, beta, n_min)
-  raw_first <- .trunc_gamma_raw_moment(1, alpha, beta, n_min, log_survival)
-  raw_second <- .trunc_gamma_raw_moment(2, alpha, beta, n_min, log_survival)
-  variance <- raw_second - raw_first^2
-  variance <- max(variance, 0)
+  components <- .trunc_gamma_recurrence_components(alpha, beta, n_min)
+  raw_first <- components$mean_numerator / beta
+  variance_numerator <- components$variance_numerator
+  roundoff_bound <- components$variance_roundoff_bound
+  if (variance_numerator < 0 && abs(variance_numerator) <= roundoff_bound) {
+    variance_numerator <- 0
+  }
+  if (!is.finite(variance_numerator) || variance_numerator < 0) {
+    variance <- NaN
+  } else {
+    variance <- variance_numerator / beta^2
+  }
   sd <- sqrt(variance)
+  raw_second <- variance + raw_first^2
+  sd_relative_error_bound <- if (variance_numerator > 0) {
+    max(
+      .TRUNC_GAMMA_ROUNDOFF_SCALE * .Machine$double.eps,
+      0.5 * roundoff_bound / variance_numerator
+    )
+  } else {
+    Inf
+  }
 
   list(
     mean = raw_first,
@@ -235,7 +224,46 @@ trunc_gamma_moments <- function(alpha, beta, n_min) {
     sd = sd,
     cv = sd / raw_first,
     raw_second = raw_second,
-    survival = exp(log_survival)
+    survival = exp(components$log_survival),
+    hazard_adjustment = components$hazard_adjustment,
+    sd_relative_error_bound = sd_relative_error_bound
+  )
+}
+
+# Stable conditional moments for Y = beta * X, where X is Gamma(alpha, beta)
+# truncated below n_min. Let z = beta * n_min and
+# h = z^alpha exp(-z) / (Gamma(alpha) Q(alpha, z)). Incomplete-Gamma
+# recurrences give
+#
+#   E[Y | Y > z]   = alpha + h
+#   Var[Y | Y > z] = alpha + (1 + z - alpha) h - h^2.
+#
+# This avoids both `lgamma(alpha + k) - lgamma(alpha)` and
+# `E[X^2] - E[X]^2`, the two cancellations that previously allowed the same
+# huge adaptive floor to excuse a 95% mean error.
+.trunc_gamma_recurrence_components <- function(alpha, beta, n_min) {
+  log_survival <- .trunc_gamma_log_survival(alpha, beta, n_min)
+  z <- beta * n_min
+  log_h <- alpha * log(z) - z - lgamma(alpha) - log_survival
+  h <- if (is.finite(log_h) && log_h > log(.Machine$double.xmin)) {
+    exp(log_h)
+  } else if (is.finite(log_h) && log_h <= log(.Machine$double.xmin)) {
+    0
+  } else {
+    NaN
+  }
+  variance_terms <- c(
+    alpha,
+    (1 + z - alpha) * h,
+    -(h^2)
+  )
+  list(
+    log_survival = log_survival,
+    hazard_adjustment = h,
+    mean_numerator = alpha + h,
+    variance_numerator = sum(variance_terms),
+    variance_roundoff_bound = .TRUNC_GAMMA_ROUNDOFF_SCALE *
+      .Machine$double.eps * sum(abs(variance_terms))
   )
 }
 
@@ -404,36 +432,7 @@ rtrunc_gamma <- function(n, alpha, beta, n_min) {
   nleqslv::nleqslv(...)
 }
 
-# Relative error in the realized site-size SD that the caller deserves to hear
-# about. Once the residual evaluation cannot resolve better than this, the fit
-# is accepted but its quality is no longer verifiable to a useful precision.
-.TRUNC_GAMMA_WEAK_VERIFICATION <- 1e-3
-
 .warn_trunc_gamma_conditioning <- function(n_bar, cv, n_min) {
-  # The old form of this warning fired on `cv < 1e-3` and described the
-  # solution as "mathematically allowed but may be numerically delicate". Both
-  # halves were wrong (defect ledger D-022): the real failure boundary sat near
-  # `cv = 0.005`, so designs at `cv = 0.002` aborted with no warning at all,
-  # while everything that did warn failed outright rather than being merely
-  # delicate.
-  #
-  # The condition is now the measured one — how precisely the post-solve
-  # residual can be evaluated at the shape this design implies. `alpha` is not
-  # known before solving, but for a Gamma `cv = 1 / sqrt(alpha)`, which is
-  # accurate enough to decide whether to warn.
-  approx_alpha <- 1 / cv^2
-  floor_estimate <- .trunc_gamma_residual_floor(approx_alpha, cv)
-  if (floor_estimate > .TRUNC_GAMMA_WEAK_VERIFICATION) {
-    cli::cli_warn(c(
-      "!" = "Engine A2 cannot verify this site-size fit to a useful precision.",
-      "i" = paste0(
-        "At `cv = ", format(cv, digits = 3), "` the truncated-Gamma moment ",
-        "evaluation cancels to about ", format(floor_estimate, digits = 2),
-        " relative error, so the realized SD is only checkable to that level."
-      ),
-      ">" = "Use a larger `cv`, or treat the realized site-size SD as approximate."
-    ))
-  }
   if (cv > 1.5) {
     cli::cli_warn(c(
       "!" = "Engine A2 received a large `cv`.",

@@ -71,6 +71,12 @@ test_that("ALD standardization matches T13 with Yu-Zhang parameter conversion", 
     )$z_j)
     expect_lt(abs(mean(z_j)), tol_mc_moment_n1e6)
     expect_lt(abs(stats::var(z_j) - 1), tol_mc_moment_n1e6)
+    skewness <- mean((z_j - mean(z_j))^3) / stats::sd(z_j)^3
+    if (rho < 0.5) {
+      expect_gt(skewness, 0)
+    } else if (rho > 0.5) {
+      expect_lt(skewness, 0)
+    }
   }
 })
 

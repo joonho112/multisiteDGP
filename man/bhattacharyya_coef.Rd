@@ -9,7 +9,8 @@ bhattacharyya_coef(x, y = NULL, bins = 50L)
 }
 \arguments{
 \item{x, y}{Numeric vectors. If \code{x} is a \code{multisitedgp_data} object and
-\code{y} is \code{NULL}, \code{x$z_j} is compared with the target G's quantile grid.}
+\code{y} is \code{NULL}, \code{x$z_j} is compared with the target G's deterministic
+quantile grid.}
 
 \item{bins}{Integer. Number of histogram bins. Default \code{50L}.}
 }
@@ -53,6 +54,7 @@ Other family-diagnostics:
 \code{\link[=compute_kappa]{compute_kappa()}},
 \code{\link[=compute_shrinkage]{compute_shrinkage()}},
 \code{\link[=default_thresholds]{default_thresholds()}},
+\code{\link[=error_catalog]{error_catalog()}},
 \code{\link[=feasibility_index]{feasibility_index()}},
 \code{\link[=heterogeneity_ratio]{heterogeneity_ratio()}},
 \code{\link[=informativeness]{informativeness()}},

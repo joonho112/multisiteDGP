@@ -1,0 +1,211 @@
+---
+title: "Phase 5 Log — Validation Harness Provenance and Safe Reuse"
+subtitle: "multisiteDGP v0.2.0 Codex repair"
+date: "2026-08-16"
+lang: ko
+format:
+  html:
+    toc: true
+    embed-resources: true
+    code-fold: true
+    theme: cosmo
+execute:
+  echo: false
+---
+
+## 결론
+
+**Phase 5는 완료되었다.** V0 smoke를 포함한 14개 validation job 모두
+`MULTISITEDGP_VALIDATION_RESUME` 기본값이 `FALSE`다. 파일 존재만으로 결과를
+재사용하는 분기는 제거했고, 공통 harness가 result, summary,
+`-contract.csv` sidecar의 완전성과 현재 실행 계약을 비교한다.
+
+명시적 reuse가 성공해도 fresh `pass`로 기록하지 않는다. Producer metadata는
+그대로 유지되고 manifest에는 `event=reuse`, `status=reused`,
+`producer_status=pass|fail`인 별도 event가 추가된다. Legacy manifest row는
+보존되지만 sidecar가 없는 legacy artifact는 재사용할 수 없다.
+
+## Step 5.1 — Compatibility 기반 state machine
+
+모든 job은 계산을 시작하기 전에 `validation_prepare_run()`을 호출한다.
+
+```text
+                         existing artifact?
+                                |
+                +---------------+---------------+
+                |                               |
+               no                              yes
+                |                               |
+        fresh execution                overwrite=true?
+                                                |
+                                  +-------------+-------------+
+                                  |                           |
+                                 yes                         no
+                                  |                           |
+                          fresh overwrite             resume=true?
+                                                              |
+                                                +-------------+-------------+
+                                                |                           |
+                                               no                          yes
+                                                |                           |
+                                      refuse collision         verify all contract fields
+                                                                            |
+                                                              +-------------+-------------+
+                                                              |                           |
+                                                           mismatch                     exact
+                                                              |                           |
+                                                           refuse                    reuse event
+```
+
+기본 timestamp run ID에는 기존 파일이 없으므로 fresh로 진행한다. 명시적 run
+ID가 충돌하면 `resume=false`에서도 조용히 덮어쓰지 않고, 새 ID 또는
+`overwrite=true`를 요구한다.
+
+## Step 5.2 — Producer sidecar 계약
+
+Fresh run은 result/summary와 함께 `RUN_ID-contract.csv`를 쓴다.
+
+| 범주 | Sidecar 필드 |
+|---|---|
+| 실행 identity | contract schema, run ID, experiment, mode, seed root |
+| parameter | 정규화된 parameter text와 SHA-256 |
+| code | job relative path/SHA-256, package version |
+| source | git SHA, clean/dirty flag, explicit source digest |
+| reproducibility | canonical hash schema, pinned RNG triple/policy |
+| artifacts | result/summary relative path와 각각의 SHA-256 |
+| producer | pass/fail, timestamp, R version, platform |
+
+Source digest는 `DESCRIPTION`, `NAMESPACE`, `R/`, 설치형 extdata, golden
+authority, JEBS generator metadata, validation harness code의 경로+SHA를
+정규화해 계산한다. 따라서 dirty worktree에서도 HEAD만 기록하는 대신 실제
+실행 source를 식별한다. Job script는 별도 SHA로 묶는다.
+
+Parameter list에는 job별 resolved 값이 들어간다.
+
+- V0/V01/V03: repetitions
+- V02: 전체 J/n/CV/sigma/seed grid
+- V04/V05: fixture 수
+- V06: sample size
+- V07: fixture 수와 seed 수
+- V08: fixture 수와 rerun 수
+- V09: repetitions와 `max_iter`
+- V10: plot contract
+- V11: M, parallel, acceptance version, source-run input SHA
+- V12: Lee seed, lme4 attempt flag, acceptance version
+
+V11의 별도 `REUSE_SOURCE_RUN_ID` 경로도 source result와 summary가 current
+sidecar 검증을 통과해야 하며, 그 source result/contract SHA가 새 run의 parameter
+digest에 포함된다.
+
+## Step 5.3 — Producer metadata 보존
+
+Fresh run manifest row는 다음처럼 기록된다.
+
+```text
+event=produced | status=pass|fail | producer_status=pass|fail
+```
+
+Compatible reuse는 producer row를 지우거나 현재 metadata로 덮지 않고 다음
+event를 append한다.
+
+```text
+event=reuse | status=reused | producer_status=<stored producer status>
+```
+
+Reuse row의 package version, script/result/summary SHA, R/platform, source digest,
+schema/RNG policy는 sidecar의 producer 값을 사용한다. 현재 verifier runtime을
+producer처럼 위장하지 않는다. 기존 24-column manifest에는 새 column을 NA로
+확장하고 row를 보존하므로 legacy migration도 비파괴적이다.
+
+## Step 5.4 — Harness regression
+
+새 `test-validation-harness-reuse.R`은 다음 상태를 temp output root에서 실행한다.
+
+| 사례 | 기대 | 결과 |
+|---|---|---|
+| artifact 없음, resume false | fresh | PASS |
+| exact sidecar, resume true | reuse | PASS |
+| parameter 변경 | refuse | PASS |
+| job script 변경 | refuse | PASS |
+| hash schema 변경 | refuse | PASS |
+| result tamper | refuse | PASS |
+| sidecar 누락 | refuse | PASS |
+| 기존 artifact + resume false | collision refuse | PASS |
+| 기존 artifact + explicit overwrite | fresh overwrite | PASS |
+| 14개 job default scan | resume false + shared state machine | PASS |
+
+`harness`, `traceability`, `validation-harness-reuse` targeted suite는 모두
+통과했다.
+
+## Step 5.5 — 실제 non-destructive smoke
+
+고유 run ID `phase5-contract-smoke-20260816`로 V0 plumbing smoke를 실행했다.
+
+```text
+mode=smoke
+reps=2
+seed_root=910001
+resume=false
+overwrite=false
+producer status=pass
+```
+
+생성된 계약의 핵심 값은 다음과 같다.
+
+| 필드 | 값 |
+|---|---|
+| contract schema | `phase5-validation-contract-v1` |
+| package | `0.2.0` |
+| git SHA | `efb7ff4c7a1938eb25094cf1cfb3c989a223d33e` |
+| dirty source digest | `e46dccbe9097c98fb04e40c11e1189792e313539a16eddfade33403ea6b775d0` |
+| parameter SHA | `0dbe0d507073f70c24de1a76570ffd33f8e763b71d32dd7a2a0f0cfa0cc3be91` |
+| hash schema | `multisiteDGP-canonical-hash-v4` |
+| RNG policy | `package-pinned` |
+
+같은 ID/parameter로 `resume=true`를 실행하자 계산을 재수행하지 않고
+`produced:pass, reuse:reused` 두 event가 남았다. 이어 reps만 3으로 바꾼 실행은
+exit code 1과 함께 다음처럼 거부되었다.
+
+```text
+Refused validation reuse ... incompatible parameter_text, parameter_sha256.
+```
+
+기존 full artifact는 덮어쓰지 않았다. `validation-run-manifest.csv`는 legacy
+80행에 smoke producer/reuse 2행을 append해 82행, 34열이 되었다.
+
+## 문서 및 정책 동기화
+
+`tools/validation/README.md`와 plan manifest의 13개 `resume_policy`를 다음
+계약으로 바꿨다.
+
+```text
+default resume false; reuse requires a compatible phase5 contract sidecar;
+collisions require explicit overwrite
+```
+
+Traceability의 `full-pass` semantic gate도 이제 current contract sidecar SHA,
+source digest, schema/RNG policy, produced event까지 확인한다. 과거 result와
+summary 파일만 남아 있는 상태로 release pass를 만들 수 없다.
+
+## Phase 5 종료 판정
+
+| Gate | 결과 |
+|---|---|
+| Resume default false, 14 jobs | PASS |
+| Complete producer sidecar | PASS |
+| Dirty-source digest | PASS |
+| Parameter/script/schema/artifact mismatch refusal | PASS |
+| Missing-sidecar legacy refusal | PASS |
+| Explicit overwrite only | PASS |
+| Reuse distinct from fresh pass | PASS |
+| Producer metadata retained | PASS |
+| Actual fresh + compatible reuse smoke | PASS |
+| Actual changed-parameter refusal | PASS |
+
+## 다음 Phase 의존성
+
+Phase 6에서는 source-changing 작업을 먼저 끝내고 release candidate digest를
+고정한 다음, `RESUME=false`, `OVERWRITE=true`, 고유 Phase 6 run ID로 V0--V12
+full jobs를 실행한다. Fresh `produced/pass` sidecar가 13개 모두 생기기 전에는
+traceability 상태를 `full-pass`로 승격하지 않는다.
+

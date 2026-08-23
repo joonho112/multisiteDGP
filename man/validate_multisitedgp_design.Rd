@@ -24,7 +24,8 @@ that has been deserialized from disk into
 \details{
 Validation enforces every constraint the constructor enforces — for
 example, the Decision-C contract (engine A1 with non-trivial
-precision dependence is rejected), the seven-shape \code{true_dist}
+precision dependence is rejected), the six-built-in-plus-\code{User}
+generated-shape \code{true_dist}
 allowlist, the \code{theta_G} per-shape required keys, and the unit-
 variance convention. Errors are emitted with full
 message + info + fix hints from the typed-error catalog (see

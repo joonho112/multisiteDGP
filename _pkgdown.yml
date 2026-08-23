@@ -110,7 +110,7 @@ articles:
 - title: Methodological Track
   desc: >
     Theory and specification — the formal data-generating process,
-    the seven-shape G-distribution catalog with unit-variance
+    the six-built-in-plus-User G-distribution catalog with unit-variance
     standardization, site-size-driven and direct-precision margin / SE
     models, three precision-dependence injection methods, custom-G
     extensibility, downstream adapters, the reproducibility apparatus,
@@ -160,11 +160,11 @@ reference:
 - title: Effect distributions
   desc: >
     Generate the latent site-level effects \eqn{\tau_j} at the heart
-    of a multisite simulation. Seven shapes — Gaussian, Student-t,
+    of a multisite simulation. Six built-ins — Gaussian, Student-t,
     skew normal, asymmetric Laplace, two-component mixture,
-    point-mass slab, and a user callback — share a unit-variance
+    and point-mass slab — plus a User callback share a unit-variance
     convention so heterogeneity targets mean the same thing across
-    shapes.
+    seven generated shapes. DPM is reserved, not generated without a bridge.
   contents:
   - gen_effects
   - gen_effects_gaussian
@@ -223,12 +223,13 @@ reference:
   - bhattacharyya_coef
   - ks_distance
   - scenario_audit
+  - error_catalog
 
 - title: Presets
   desc: >
     Defensible starting designs for common multisite and meta-analysis
-    questions. Each preset locks defensible parameter values and cites
-    its source paper so a reviewer can defend the choice.
+    questions. Preset help separates published anchors from derived and
+    package-assumed values so a reviewer can defend the choice.
   contents:
   - presets
 

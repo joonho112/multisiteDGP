@@ -1,0 +1,2 @@
+"run_id","experiment_id","mode","fixtures","attempts","completed","failed","accepted_count","class_pass_rate","rng_unchanged_rate","constructor_pass_rate","wrapper_pass_rate","rank_pass_rate","copula_pass_rate","hybrid_pass_rate","acceptance_pass","acceptance_note"
+"phase6b-v05-full-20260816","V05","full",100,200,200,0,0,1,1,1,1,1,1,1,TRUE,"V05 covers constructor and sim_multisite flat-argument paths for A1_legacy plus non-none dependence."
