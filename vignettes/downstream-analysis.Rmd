@@ -1,0 +1,134 @@
+---
+title: "Handing data to metafor and baggr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Handing data to metafor and baggr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+```{r setup}
+library(multisiteDGP)
+```
+
+Simulated data usually go on to a model. `as_metafor()` and `as_baggr()`
+return a simulated data set under the column names that metafor and baggr
+expect. The sections below show what each function returns, fit a
+random-effects model with metafor, and compare the fit with the truth.
+
+The examples use the data set from `vignette("multisiteDGP")`. Its design has
+a grand mean `tau` of 0 and a cross-site standard deviation `sigma_tau` of
+0.2.
+
+```{r data}
+dat <- sim_multisite(preset_education_modest(), seed = 1)
+print(dat, n = 4)
+```
+
+## metafor
+
+`as_metafor()` returns three columns. `yi` is the estimate, `vi` its sampling
+variance, and `sei` its standard error. Both functions only rename columns,
+so they run whether or not the other packages are installed.
+
+```{r metafor}
+mf <- as_metafor(dat)
+print(mf, n = 4)
+```
+
+Row 4 holds the estimate (0.410), the sampling variance (0.333), and the
+standard error (0.577) of site 4. `metafor::rma()` fits a random-effects model
+to the estimates and their sampling variances.
+
+```{r rma, eval = requireNamespace("metafor", quietly = TRUE)}
+fit <- metafor::rma(yi, vi, data = mf)
+fit
+```
+
+Under `Model Results`, `estimate` is the estimated grand mean, $-0.0331$. Its
+95 percent interval, from $-0.1230$ to 0.0568, contains the design value of 0.
+In metafor's output, `tau` is not the grand mean but the cross-site standard
+deviation, which multisiteDGP calls `sigma_tau`. The fit estimates it at
+0.1419. The design value is 0.2, and the 50 simulated site effects have a
+standard deviation of 0.166 (the `sigma_tau` line of the header).
+
+`as_metafor()` leaves out the true site effects. Its rows are in the order
+of `dat`, so `dat$tau_j` can be compared with whatever the model returns for
+each site. `metafor::blup()` returns empirical-Bayes estimates of the site
+effects.
+
+```{r truth, eval = requireNamespace("metafor", quietly = TRUE)}
+eb <- metafor::blup(fit)$pred
+rmse <- function(x) sqrt(mean((x - dat$tau_j)^2))
+round(c(observed = rmse(mf$yi), empirical_bayes = rmse(eb)), 3)
+```
+
+Against the true site effects, the root mean squared error is 0.277 for the
+observed estimates and 0.153 for the empirical-Bayes estimates.
+
+## baggr
+
+`as_baggr()` returns the estimate and its standard error under the names `tau`
+and `se`, which baggr expects for summary data.
+
+```{r baggr}
+bg <- as_baggr(dat)
+print(bg, n = 4)
+```
+
+As a column of baggr's input, `tau` is the estimate of a site, which
+multisiteDGP calls `tau_j_hat`. With `include_truth = TRUE`, the result has a
+third column, `tau_true`, with the true site effects, for comparison with the
+site estimates of the fitted model. The fit itself ignores that column.
+
+```{r baggr-truth}
+names(as_baggr(dat, include_truth = TRUE))
+```
+
+`baggr::baggr()` fits the same normal hierarchical model as `metafor::rma()`,
+with prior distributions on the grand mean and the cross-site standard
+deviation. In baggr this is the Rubin model. The call is shown without output
+because it draws posterior samples with Stan.
+
+```{r baggr-fit, eval = FALSE}
+fit_baggr <- baggr::baggr(bg, model = "rubin")
+fit_baggr
+```
+
+The printed fit reports a hypermean `tau` and a hyper-SD `sigma_tau`. These
+are the grand mean and the cross-site standard deviation, under the names that
+multisiteDGP uses.
+
+## The returned columns
+
+| Simulated data | `as_metafor()` | `as_baggr()` |
+|---------------|---------------|-------------------|
+| `tau_j` | | `tau_true` (optional) |
+| `tau_j_hat` | `yi` | `tau` |
+| `se_j` | `sei` | `se` |
+| `se2_j` | `vi` | |
+
+Both functions return a plain tibble with one row per site, in the order of
+the simulated data, and copy the values without change. The `design` and
+`diagnostics` attributes and the columns `site_index`, `z_j`, and `n_j` are
+not carried over. If the design has covariates, their columns follow the
+renamed ones. Data from `sim_meta()`, which have no site sizes, convert in
+the same way.
+
+## See also
+
+- `vignette("multisiteDGP")`: the columns and the printed header of the data
+  set used here.
+- `vignette("site-sizes-and-standard-errors")`: how `sim_meta()` sets standard
+  errors directly, without site sizes.
+- `vignette("diagnostics-and-presets")`: the diagnostics, including the
+  shrinkage behind the empirical-Bayes estimates.

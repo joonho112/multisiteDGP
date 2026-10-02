@@ -1,0 +1,45 @@
+Package: multisiteDGP
+Title: Simulate Summary Data for Multisite Trials
+Version: 0.3.0
+Authors@R:
+    person("JoonHo", "Lee", , "jlee296@ua.edu", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0006-4019-8703"))
+Description: Simulates the summary data of a multisite trial: one
+    estimated effect and one standard error per site. The site effects
+    come from one of six distributions (Gaussian, Student t, skew-normal,
+    asymmetric Laplace, two-component Gaussian mixture, point mass with
+    slab) or from a user-supplied function. The standard errors are
+    derived from simulated site sizes or set directly, and can be
+    correlated with the site effects. The package also provides
+    diagnostics of the simulated data, preset designs, plots, and
+    converters for 'metafor' and 'baggr'. The data-generating model
+    follows Lee et al. (2025) <doi:10.3102/10769986241254286>. Supported
+    by the Institute of Education Sciences through Grant R305D240078 to
+    the University of Alabama.
+License: MIT + file LICENSE
+URL: https://joonho112.github.io/multisiteDGP/, https://github.com/joonho112/multisiteDGP
+BugReports: https://github.com/joonho112/multisiteDGP/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    stats,
+    tibble,
+    dplyr (>= 1.0.0),
+    cli (>= 3.6.0),
+    rlang (>= 1.1.0),
+    nleqslv,
+    ggplot2 (>= 3.4.0)
+Suggests:
+    metafor,
+    baggr,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    patchwork,
+    withr
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.0

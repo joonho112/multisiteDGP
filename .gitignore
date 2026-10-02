@@ -1,0 +1,25 @@
+# R and RStudio
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# macOS
+.DS_Store
+
+# Build and check output
+*.Rcheck/
+*.tar.gz
+Rplots.pdf
+
+# Site and rendered documents
+/docs/
+*_files/
+README.html
+vignettes/*.html
+vignettes/*_files/
+
+# Quarto
+/_book/
+/.quarto/

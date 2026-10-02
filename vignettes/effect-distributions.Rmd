@@ -1,0 +1,299 @@
+---
+title: "Site-effect distributions"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Site-effect distributions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+```{r setup}
+library(multisiteDGP)
+```
+
+The distribution of the site effects is the `true_dist` argument of a design.
+Six distributions are built in. Each is standardized, so that `sigma_tau`
+means the same thing for all of them, and a distribution of your own can be
+supplied as a function. The last section adds site-level covariates.
+
+## The built-in distributions
+
+`true_dist` names the distribution, and the list `theta_G` holds the
+parameters of its shape. Both are arguments of `multisitedgp_design()`, so the
+presets, `sim_multisite()`, and `sim_meta()` take them too. The grand mean
+`tau` and the cross-site standard deviation `sigma_tau` are separate arguments
+and apply to every distribution. Every `theta_G` entry in the table is
+required, except `slab_shape`.
+
+| `true_dist` | Shape | `theta_G` entries |
+|-----------------|----------------------------------|--------------------------------------|
+| `"Gaussian"` | normal (the default) | none |
+| `"StudentT"` | Student $t$: symmetric, heavy tails | `nu` (above 2) |
+| `"SkewN"` | skew-normal: skewed, light tails | `slant` (any number) |
+| `"ALD"` | asymmetric Laplace: skewed, sharp peak | `rho` (between 0.05 and 0.95) |
+| `"Mixture"` | mixture of two normal components | `delta` (above 0), `eps` (between 0 and 1), `ups` (above 0) |
+| `"PointMassSlab"` | point mass at the grand mean with a continuous slab around it | `pi0` (between 0 and 1), `slab_shape` (`"Gaussian"` by default, or `"Laplace"`) |
+
+`gen_effects()` draws the site effects alone, which is the first step of
+`sim_multisite()` and `sim_meta()`. The code below draws 100,000 site effects
+from each distribution at the defaults, `tau = 0` and `sigma_tau = 0.2`.
+
+```{r draws}
+shapes <- list(
+  Gaussian = list(),
+  StudentT = list(nu = 5),
+  SkewN = list(slant = 5),
+  ALD = list(rho = 0.3),
+  Mixture = list(delta = 5, eps = 0.3, ups = 2),
+  PointMassSlab = list(pi0 = 0.3)
+)
+set.seed(1)
+draws <- do.call(rbind, lapply(names(shapes), function(d) {
+  x <- gen_effects(J = 1e5, true_dist = d, theta_G = shapes[[d]])
+  data.frame(true_dist = factor(d, names(shapes)), x[c("z_j", "tau_j")])
+}))
+head(draws, 3)
+```
+
+`z_j` is the standardized site effect, a draw from the distribution scaled to
+mean 0 and variance 1. `tau_j` is the site effect, `tau + sigma_tau * z_j`. In
+the first row, $0.2 \times (-0.626) = -0.125$.
+
+```{r densities, fig.cap = "Each histogram has mean 0 and standard deviation 0.2, like the normal curve drawn over it. Only the shape differs."}
+library(ggplot2)
+ggplot(draws, aes(tau_j)) +
+  geom_histogram(aes(y = after_stat(density)), binwidth = 0.04, fill = "grey") +
+  stat_function(fun = dnorm, args = list(sd = 0.2)) +
+  facet_wrap(~true_dist, scales = "free_y") +
+  coord_cartesian(xlim = c(-0.8, 0.8)) +
+  labs(x = "Site effect", y = "Density") +
+  theme_minimal()
+```
+
+The Student $t$ histogram is higher than the normal curve at the center and
+lower on the shoulders. Its heavier tails are too thin to see at this scale.
+The skew-normal and asymmetric Laplace histograms peak left of 0 and have a
+long right tail. The mixture has a second, lower mode near 0.26. In the last
+panel the bar at 0 contains the 30 percent of sites in the point mass.
+
+## Each distribution
+
+### Gaussian
+
+The normal distribution is the default and has no `theta_G` entries. Most
+multilevel and random-effects models assume it, so it serves as the reference
+when other shapes are studied.
+
+### Student t
+
+A $t$ distribution with `nu` degrees of freedom is symmetric with heavier
+tails than the normal, so a few sites lie far from the grand mean. Its
+variance is finite only for `nu` above 2. At 4 or less a simulation gives a
+warning, because the standard deviation of the simulated site effects is then
+below `sigma_tau` in most data sets and far above it in a few. The line gives
+the share of the 100,000 draws that lie more than three standard deviations
+from the grand mean.
+
+```{r tails}
+round(tapply(abs(draws$z_j) > 3, draws$true_dist, mean), 4)
+```
+
+With `nu = 5` the share is 1.2 percent, against 0.3 percent for the normal.
+Use this distribution to see how an estimator copes with outlying sites.
+
+### Skew-normal
+
+`slant` is the parameter $\alpha$ of the skew-normal density
+$2 \phi(x) \Phi(\alpha x)$ of Azzalini [-@azzalini1985class]. A positive value
+gives a longer right tail, a negative value a longer left tail, and 0 gives
+the normal distribution. Its skewness stays between $-1$ and 1, so use this
+distribution for moderate asymmetry without outlying sites.
+
+### Asymmetric Laplace
+
+The asymmetric Laplace distribution [@yu2005three] has a sharp peak and an
+exponential tail on each side. `rho` is the probability that a site effect
+lies below the peak, so the right tail is the longer one for `rho` below 0.5.
+Use it when most sites are near one typical effect and the exceptions lie far
+out on one side. In the output shown under Student t, 1.5 percent of its sites
+are beyond three standard deviations, against 0.8 percent for the skew-normal.
+
+### Two-component mixture
+
+The mixture has two normal components, and a site belongs to the second with
+probability `eps`. `delta` is the distance between the component means and
+`ups` is the standard deviation of the second component, both in units of the
+standard deviation of the first. `gen_effects()` returns the component of each
+site in the column `latent_component`, which `sim_multisite()` does not keep.
+
+```{r mixture}
+set.seed(1)
+mix <- gen_effects(
+  J = 1000, true_dist = "Mixture", theta_G = list(delta = 5, eps = 0.3, ups = 2)
+)
+print(mix, n = 4)
+table(mix$latent_component)
+round(tapply(mix$tau_j, mix$latent_component, mean), 3)
+round(tapply(mix$tau_j, mix$latent_component, sd), 3)
+```
+
+Site 4 is in the second component, which has 304 of the 1,000 sites. Its mean
+is 0.374 above that of the first, about five times the first component's
+standard deviation of 0.078, and its own standard deviation is twice as large.
+Use the mixture for two kinds of sites, or with a small `eps` for a few sites
+that stand apart. `preset_jebs_paper()` has these values, and
+`preset_twin_towers()` has two equal components.
+
+### Point mass with a slab
+
+With probability `pi0` the standardized site effect is exactly 0, so the site
+effect equals the grand mean. The other sites are spread around the same point
+by a normal distribution, or by a Laplace distribution with
+`slab_shape = "Laplace"`. With `tau = 0` this is a treatment that does nothing
+in a share `pi0` of the sites.
+
+```{r pmslab}
+dat <- sim_multisite(
+  true_dist = "PointMassSlab", theta_G = list(pi0 = 0.3), seed = 1
+)
+dat
+sum(dat$tau_j == 0)
+```
+
+Sites 1 and 5 are in the point mass. Their `z_j` and `tau_j` are exactly 0,
+and their estimates `tau_j_hat` are not, because an estimate still has
+sampling error. In all, 12 of the 50 sites have an effect of exactly 0, where
+15 are expected. `theta_G` also accepts `mu_slab` and `sigma_slab`, but the
+standardization cancels them and they do not change the data. A slab that is
+not centered on the point mass needs a user-supplied function.
+
+## Standardization
+
+Every distribution is shifted and scaled to mean 0 and variance 1 before
+`sigma_tau` is applied. A $t$ variable with 5 degrees of freedom, for example,
+has variance $5/3$. Used as it is, a design with `sigma_tau = 0.2` would
+produce site effects with a standard deviation of 0.26. `gen_effects()`
+therefore multiplies the draws by $\sqrt{3/5}$. `sigma_tau` is then the
+cross-site standard deviation under every `true_dist`, and a change of
+distribution changes the shape and nothing else.
+
+```{r standardization}
+moments <- function(z) c(mean = mean(z), variance = var(z))
+round(t(sapply(split(draws$z_j, draws$true_dist), moments)), 3)
+round(tapply(draws$tau_j, draws$true_dist, sd), 3)
+```
+
+In 100,000 draws the means of `z_j` are within 0.005 of 0 and the variances
+within 0.01 of 1. The standard deviations of `tau_j` are all 0.2 to two
+decimals. This holds for the distribution, not for each data set. In the 50
+sites of the point-mass example the header reads target 0.200, realized 0.178,
+and the heavier the tails, the more the realized value varies.
+
+## A user-supplied distribution
+
+`true_dist = "User"` takes the distribution from a function, `g_fn`. The
+function has an argument `J`, the number of sites, and returns `J` numbers.
+Entries of `theta_G` are passed to it as further arguments. `g_returns` says
+what the numbers are. With `"standardized"` (the default) they are draws of
+`z_j`, and the function must give them mean 0 and variance 1. With `"raw"`
+they are the site effects `tau_j` themselves.
+
+The example is an exponential distribution. Every site effect is positive,
+most are small, and a few are large. An exponential variable with rate 1 has
+mean 1 and variance 1, so subtracting 1 standardizes it.
+
+```{r user-standardized}
+g_std <- function(J) rexp(J) - 1
+dat <- sim_multisite(
+  true_dist = "User", g_fn = g_std, tau = 0.2, sigma_tau = 0.2, seed = 1
+)
+dat
+min(dat$tau_j)
+```
+
+The site effects are $0.2 + 0.2 z_j$ and `z_j` is never below $-1$, so no site
+effect is negative. The smallest of the 50 is 0.007. The same distribution
+with `g_returns = "raw"` is an exponential distribution with mean 0.2 for the
+site effects themselves.
+
+```{r user-raw}
+g_raw <- function(J) rexp(J, rate = 5)
+dat_raw <- sim_multisite(
+  true_dist = "User", g_fn = g_raw, g_returns = "raw",
+  tau = 0.2, sigma_tau = 0.2, seed = 1
+)
+all.equal(dat_raw$tau_j, dat$tau_j)
+```
+
+The two designs give the same site effects. With `"raw"`, `tau` and
+`sigma_tau` do not enter the site effects. They still define `z_j`, as
+`(tau_j - tau) / sigma_tau`, and enter the diagnostics, so set them to the
+mean and the standard deviation of the distribution that `g_fn` returns.
+
+With `"standardized"`, the function is called a second time with `J = 100000`.
+This check warns if the mean of those draws is more than 0.1 from 0 or their
+variance more than 0.1 from 1. It does not change the data. `gen_effects()`
+skips it with `audit_g = FALSE`, and `sim_multisite()` and `sim_meta()` always
+run it.
+
+```{r audit}
+set.seed(1)
+x <- g_raw(1e5)
+c(mean = mean(x), variance = var(x))
+```
+
+These are the two numbers the check computes. `g_raw` without
+`g_returns = "raw"` fails on both and gives the warning.
+
+## Site-level covariates
+
+A design can make the site effects depend on site-level covariates. `data` is
+a data frame with one row per site, `formula` is a one-sided formula in its
+columns, and `beta` holds the coefficients. The site effect is then
+$\tau_j = \tau + x_j'\beta + \sigma_\tau z_j$, where $x_j$ holds the covariate
+values of site $j$. The coefficient of the intercept may be left out of `beta`
+and is then 0.
+
+```{r covariate}
+sites <- data.frame(urban = rep(c(0, 1), each = 25))
+dat <- sim_multisite(
+  J = 50, formula = ~urban, beta = 0.2, data = sites, seed = 1
+)
+dat
+all.equal(dat$tau_j, 0.2 * dat$urban + 0.2 * dat$z_j)
+c(residual = sd(dat$tau_j - 0.2 * dat$urban), marginal = sd(dat$tau_j))
+```
+
+The data have an eighth column, `urban`, copied from `sites`. The
+`all.equal()` line confirms the formula, with `tau = 0`, `beta = 0.2`, and
+`sigma_tau = 0.2`. `sigma_tau` is now the standard deviation of the site
+effects around the covariate part, that is, among sites with the same
+covariate values. Its realized value, labeled residual in the output, is
+0.166, the number in the header. The marginal standard deviation, that of all
+50 site effects, is 0.187. In the population its square is $\sigma_\tau^2$
+plus the variance of $x_j'\beta$, so it is the larger of the two.
+
+In `summary()`, rows labeled residual are computed from `z_j` and rows labeled
+marginal from `tau_j`. With `g_returns = "raw"` the covariate part is not
+added, because `g_fn` then returns the complete site effects.
+
+## References
+
+<div id="refs"></div>
+
+## See also
+
+- `vignette("model")`: the complete model and its four steps.
+- `vignette("diagnostics-and-presets")`: the shape diagnostics and the presets.
+- `vignette("effect-precision-dependence")`: designs in which the standard
+  errors depend on the site effects.

@@ -1,0 +1,81 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+name: pkgdown
+
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.decide.outputs.publish }}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::pkgdown, local::.
+          needs: website
+
+      - name: Build site
+        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        shell: Rscript {0}
+
+      # The site is published only from main and only for a release version
+      # (x.y.z). A development version (x.y.z.9000) is built to check that the
+      # site still builds, and the published site stays as it is. The Pages
+      # environment accepts deployments from main, not from a tag, so a
+      # release is published by the push that sets its version on main. A
+      # private repository builds the site and does not publish it.
+      - name: Decide whether to publish
+        id: decide
+        env:
+          REPO_PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          released <- length(unclass(desc::desc_get_version())[[1]]) == 3
+          on_main <- identical(Sys.getenv("GITHUB_REF"), "refs/heads/main")
+          from_pr <- identical(Sys.getenv("GITHUB_EVENT_NAME"), "pull_request")
+          private <- identical(Sys.getenv("REPO_PRIVATE"), "true")
+          publish <- released && on_main && !from_pr && !private
+          cat(sprintf("publish=%s\n", tolower(publish)), file = Sys.getenv("GITHUB_OUTPUT"), append = TRUE)
+        shell: Rscript {0}
+
+      - name: Upload site
+        if: steps.decide.outputs.publish == 'true'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs
+
+  deploy:
+    if: needs.build.outputs.publish == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

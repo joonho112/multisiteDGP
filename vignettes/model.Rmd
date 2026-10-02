@@ -1,0 +1,228 @@
+---
+title: "The data-generating model"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{The data-generating model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+```{r setup}
+library(multisiteDGP)
+```
+
+multisiteDGP simulates the summary data of a multisite trial from a two-stage
+model: a distribution for the site effects, and a normal distribution for the
+estimate of each site around its site effect. The sections below state the
+model, show the function that carries out each of the four steps of a
+simulation, and map the symbols to the arguments.
+
+## The two-stage model
+
+A trial has $J$ sites. Site $j$ has a site effect $\tau_j$, an estimate
+$\hat\tau_j$ of it, and the standard error $\mathrm{se}_j$ of the estimate.
+The observation stage is the distribution of the estimate given the other
+two.
+
+$$
+\hat\tau_j \mid \tau_j, \mathrm{se}_j \sim N(\tau_j, \mathrm{se}_j^2)
+$$
+
+The second argument of $N$ is a variance. The estimates of different sites
+are independent, and the standard errors are treated as known. The
+site-effect stage is the distribution of the site effects.
+
+$$
+\tau_j = \tau + \mathbf{x}_j^\top \boldsymbol\beta + \sigma_\tau z_j
+$$
+
+The grand mean is $\tau$ and the cross-site standard deviation is
+$\sigma_\tau$. The standardized site effects $z_j$ are independent draws from
+a distribution $G$ with mean 0 and variance 1, normal by default. The term
+$\mathbf{x}_j^\top \boldsymbol\beta$ is a linear function of site covariates
+and is absent by default. With it, $\sigma_\tau$ is the standard deviation of
+the site effects around $\tau + \mathbf{x}_j^\top \boldsymbol\beta$.
+
+Lee et al. [-@lee2025improving] use these two stages for multisite trials.
+With normal site effects and no covariates, they are the random-effects model
+of meta-analysis. The model takes the standard errors as given. The package
+also generates them, and can make them depend on the site effects.
+
+## The four steps
+
+`sim_multisite()` simulates from the model in four steps, and each step has a
+function of its own that you can call. Each function takes the data frame
+that the one before it returns.
+
+```{r steps}
+set.seed(1)
+effects <- gen_effects(J = 10, tau = 0, sigma_tau = 0.2)
+sizes <- gen_site_sizes(effects, J = 10, nj_mean = 50, cv = 0.5)
+sizes
+aligned <- align_rank_corr(sizes, rank_corr = 0.3)
+by_hand <- gen_observations(aligned)
+by_hand
+```
+
+In the first tibble, `gen_effects()` has created `site_index`, `z_j`, and
+`tau_j`, and `gen_site_sizes()` has added `n_j`, `se2_j`, and `se_j`. In the
+second, `align_rank_corr()` has reordered those three columns across sites and
+`gen_observations()` has added `tau_j_hat`. `sim_multisite()` makes the same
+four calls with the arguments in its design, whose defaults are the values
+used above.
+
+```{r same}
+dat <- sim_multisite(J = 10, dependence = "rank", rank_corr = 0.3, seed = 1)
+identical(dat$tau_j_hat, by_hand$tau_j_hat)
+```
+
+The seeded call returns the same estimates as the four calls.
+
+### Site effects
+
+`gen_effects()` carries out the site-effect stage. It draws $z_j$ from the
+distribution named by `true_dist` and computes $\tau_j$. Site 1 has `z_j`
+equal to $-0.626$, so its `tau_j` is $0.2 \times (-0.626) = -0.125$. The
+built-in distributions are the normal, Student t, skew normal, asymmetric
+Laplace, a mixture of two normals, and a point mass at zero with a slab, each
+standardized to mean 0 and variance 1. `true_dist = "User"` takes the draws
+from the function `g_fn`. The arguments `formula`, `data`, and `beta` supply
+the covariate term, where $\mathbf{x}_j$ is row $j$ of the model matrix.
+
+### Site sizes and standard errors
+
+`gen_site_sizes()` draws a site size $n_j$ for each site and derives the
+sampling variance from it.
+
+$$
+\mathrm{se}_j^2 = \frac{\kappa}{n_j}, \qquad
+\kappa = \left( \frac{1}{p} + \frac{1}{1 - p} \right) (1 - R^2) \, \sigma_Y^2
+$$
+
+This is the variance of a difference in means between $p n_j$ treated and
+$(1 - p) n_j$ control individuals, where $p$ is the proportion treated. The
+outcome variance is $\sigma_Y^2$, and $R^2$ is the share of it that covariates
+of the individuals explain. `compute_kappa()` returns $\kappa$, which is 4
+with the defaults $p = 0.5$, $R^2 = 0$, and $\sigma_Y^2 = 1$. Site 1 in the
+first tibble has 19 individuals, so its sampling variance is $4 / 19 = 0.211$
+and its standard error is 0.459.
+
+The site sizes are draws from a gamma distribution truncated below at
+$n_{\min}$, with its two parameters chosen so that the truncated distribution
+has mean $\bar n$ and coefficient of variation CV. Each draw is then rounded
+down or up at random, which keeps the mean and adds a little variance.
+`engine = "censored"` selects the procedure of Lee et al. (2025) instead,
+which sets a gamma draw below $n_{\min}$ to $n_{\min}$.
+
+`sim_meta()` sets the standard errors directly, with `gen_se_direct()` in
+place of `gen_site_sizes()`. From a target informativeness $I$ and a
+heterogeneity ratio $R$, it computes sampling variances that are evenly
+spaced on the log scale and assigns them to the sites in random order.
+
+$$
+\mathrm{se}_j^2 = \mathrm{GM} \cdot R^{u_j - 1/2}, \qquad
+\mathrm{GM} = \sigma_\tau^2 \, \frac{1 - I}{I}, \qquad
+u_j = \frac{j - 1}{J - 1}
+$$
+
+Their geometric mean is GM and the largest is $R$ times the smallest.
+Informativeness is $\sigma_\tau^2$ divided by the sum of $\sigma_\tau^2$ and
+the geometric mean of the sampling variances, so it equals $I$ exactly. The
+column `n_j` is `NA`.
+
+### Dependence between effects and precision
+
+The site sizes and standard errors are drawn independently of the site
+effects. With `dependence = "none"`, the default, `sim_multisite()` skips this
+step. Otherwise the step replaces $(n_j, \mathrm{se}_j)$ by
+$(n_{\pi(j)}, \mathrm{se}_{\pi(j)})$ for a permutation $\pi$ of the sites. It
+chooses $\pi$ so that the correlation between $z_j$ and $\mathrm{se}_j^2$ is
+close to a target. A positive target pairs larger site effects with larger
+standard errors. The set of standard errors does not change, only which site
+has which, so $I$ and $R$ stay the same. Site 4 has the largest site effect.
+It had 79 individuals before the step and has 19 after it, with the largest
+standard error, 0.459.
+
+`align_rank_corr()` swaps pairs of sites until the Spearman correlation is
+within `tol` of `rank_corr`. `align_copula_corr()` orders the standard errors
+by a normal score that has correlation `pearson_corr` with the normal scores
+of the $z_j$. `align_hybrid_corr()` starts from the copula order and then
+swaps pairs. `vignette("effect-precision-dependence")` compares the three.
+
+### Observed estimates
+
+`gen_observations()` carries out the observation stage. It draws
+$\hat\tau_j = \tau_j + \mathrm{se}_j e_j$ with $e_j \sim N(0, 1)$,
+independently for each site, and adds the result as `tau_j_hat`. Site 1 has a
+site effect of $-0.125$ and, after the reordering, a standard error of 0.243.
+Its estimate is 0.0976. A function supplied as `obs_fn` replaces the normal
+draw.
+
+## Notation and arguments
+
+The arguments are those of `multisitedgp_design()`, and the columns are those
+of the simulated data.
+
+| Symbol | Meaning | Argument or column | Default |
+|-----------------|--------------------------------------|--------------------------------|--------------|
+| $J$ | number of sites | `J` | 50 |
+| $\tau$ | grand mean | `tau` | 0 |
+| $\sigma_\tau$ | cross-site standard deviation | `sigma_tau` | 0.2 |
+| $G$ | distribution of $z_j$ | `true_dist`, `theta_G` | `"Gaussian"` |
+| $\mathbf{x}_j$, $\boldsymbol\beta$ | site covariates and their coefficients | `formula`, `data`, `beta` | none |
+| $z_j$, $\tau_j$ | standardized site effect and site effect | columns `z_j`, `tau_j` | |
+| $\bar n$, CV, $n_{\min}$ | mean, coefficient of variation, and lower bound of the site sizes | `nj_mean`, `cv`, `nj_min` | 50, 0.5, 5 |
+| $p$ | proportion treated | `p` | 0.5 |
+| $R^2$ | share of outcome variance explained by covariates | `R2` | 0 |
+| $\sigma_Y^2$ | outcome variance | `var_outcome` | 1 |
+| $\kappa$ | sampling variance multiplied by site size | `compute_kappa()` | 4 |
+| $I$ | informativeness | `I`, in `sim_meta()` only | none |
+| $R$ | heterogeneity ratio, the largest $\mathrm{se}_j^2$ over the smallest | `R`, in `sim_meta()` only | 1 |
+| $n_j$, $\mathrm{se}_j$, $\mathrm{se}_j^2$ | site size, standard error, and sampling variance | columns `n_j`, `se_j`, `se2_j` | |
+| $\pi$ | reordering of the standard errors | `dependence`, `rank_corr`, `pearson_corr` | `"none"`, 0, 0 |
+| $\hat\tau_j$ | observed estimate | column `tau_j_hat` | |
+
+Lee et al. (2025) write the two stages in the same way, with $\sigma$ for the
+cross-site standard deviation and $\widehat{se}_j$ for the standard error. The
+hat is dropped here because a simulation sets the standard error and does not
+estimate it. In the paper $G$ is the distribution of $\tau_j$, and here it is
+its standardized form. `preset_jebs_strict()` returns a design from the
+paper's simulation study. It has no covariates, no dependence, and
+`engine = "censored"`.
+
+## Assumptions and limits
+
+- The estimate of a site is normal around its site effect. In very small
+  sites this large-sample approximation can be poor.
+- The standard errors are known. In a real trial they are estimates, and the
+  model leaves out their sampling error.
+- A design needs at least 10 sites and a positive `sigma_tau`, so a trial
+  without cross-site variation cannot be simulated.
+- Covariates enter only through $\mathbf{x}_j^\top \boldsymbol\beta$. They do
+  not change $\sigma_\tau$ or the standard errors.
+- Standard errors from site sizes assume one treatment and one control group
+  per site, and the same $p$, $R^2$, and $\sigma_Y^2$ in every site.
+  Cluster-randomized, blocked, and factorial designs are not covered.
+- The dependence step sets a correlation by reordering. It does not model why
+  site effects and site sizes would be related.
+
+## References
+
+<div id="refs"></div>
+
+## See also
+
+- `vignette("effect-distributions")`: the distributions that `true_dist` offers.
+- `vignette("site-sizes-and-standard-errors")`: both ways to get standard errors.
+- `vignette("effect-precision-dependence")`: the dependence step in detail.
+- `vignette("multisiteDGP")`: one simulation and how to read its output.

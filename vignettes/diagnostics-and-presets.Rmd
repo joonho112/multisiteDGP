@@ -1,0 +1,300 @@
+---
+title: "Diagnostics and presets"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Diagnostics and presets}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+```{r setup}
+library(multisiteDGP)
+```
+
+A simulated data set never matches its design exactly, and the diagnostics
+say how far apart the two are. This vignette explains the four blocks that
+`summary()` prints and what the `pass`, `warn`, and `fail` statuses beside
+some rows do and do not say. It then shows how `scenario_audit()` checks a
+grid of designs over many simulated data sets, and lists the nine presets
+with the source of their values.
+
+## What `summary()` reports
+
+```{r summary}
+dat <- sim_multisite(preset_education_modest(), seed = 1)
+summary(dat)
+```
+
+A row holds the realized value, then the target when the design sets one,
+then a status when a rule applies to the row. Six of the values have a
+function of their own, which takes the simulated data and returns the number
+in the summary to more digits.
+
+```{r functions}
+c(informativeness(dat), heterogeneity_ratio(dat), realized_rank_corr(dat))
+c(ks_distance(dat), bhattacharyya_coef(dat), mean_shrinkage(dat))
+```
+
+### Scale
+
+The `sigma_tau` row is the standard deviation of the 50 simulated site
+effects, 0.166 against 0.200 in the design. The geometric mean of the
+sampling variances `se2_j` (0.092) stands for the sampling variance of a
+typical site. `informativeness()` combines it with the `sigma_tau` of the
+design into $I = \sigma_\tau^2 / (\sigma_\tau^2 + \mathrm{GM}(se_j^2))$. $I$
+lies between 0 and 1 and is larger when the estimates say more about the site
+effects. `heterogeneity_ratio()` returns $R$, the largest sampling variance
+divided by the smallest. $I$ and $R$ have no target here, because
+`sim_multisite()` derives the standard errors from site sizes. With
+`sim_meta()` the design sets both, and the rows show a target and a status.
+
+### Dependence
+
+`realized_rank_corr()` returns the Spearman correlation between the
+standardized site effects `z_j` and the sampling variances `se2_j`. A
+positive value means that sites with larger effects tend to be less precise.
+The design has no dependence between effects and precision, so the target is
+0, and 0.254 is what 50 independent pairs happened to produce. The marginal
+row uses `tau_j` in place of `z_j` and differs from the residual row only
+when the design has covariates. The two Pearson rows are descriptive, with no
+target and no status. `vignette("effect-precision-dependence")` covers
+designs that ask for a correlation.
+
+### Shape
+
+The shape block compares the 50 values of `z_j` with the distribution in the
+design, here the standard normal. `ks_distance()` returns the
+Kolmogorov-Smirnov statistic, the largest gap between the empirical
+distribution function of the `z_j` and the normal distribution function. The
+`p` beside it is the p-value of the test. `bhattacharyya_coef()` returns the
+overlap, between 0 and 1, of the histogram of the `z_j` and the histogram of
+50 normal quantiles at evenly spaced probabilities, both on the same 50 bins.
+The Q-Q residual is the largest absolute difference between the sorted `z_j`
+and those quantiles. The block is printed only when `true_dist` is
+`"Gaussian"` or `"StudentT"`. For another distribution, give either function
+two numeric vectors, `z_j` and a large sample from the distribution.
+
+### Precision
+
+The precision block describes how precisely single sites can be estimated. The
+shrinkage of site $j$ is $S_j = \sigma_\tau^2 / (\sigma_\tau^2 + se_j^2)$, the
+weight of the site's own estimate in its posterior mean when effects and
+estimates are normal. For other effect distributions it is not an exact
+weight. `mean_shrinkage()` returns the average of the $S_j$. The average
+margin of error (0.617) is 1.96 times the average standard error, the
+half-width of a 95 percent interval for a typical site. Both rows use the
+standard errors and the `sigma_tau` of the design.
+
+### Statuses
+
+Five rows carry a status. The rules are stored with the diagnostics, and
+the column `warn_rule` gives the values that earn a `warn`. Values on the
+better side of that range pass and values on the worse side fail.
+
+```{r rules}
+tab <- attr(dat, "diagnostics")$target_vs_realized
+tab[!is.na(tab$status), c("diagnostic", "status", "warn_rule")]
+```
+
+In these rules `realized` is the value in the summary, `delta` is its
+difference from the target, and `J` is the number of sites. The first three
+rules compare one data set with its design and allow for the sampling error
+of `J` sites. `SE` in the `sigma_tau` rule is the standard error of the
+standard deviation of `J` draws,
+$\sigma_\tau \sqrt{(k - 1 + 2 / (J - 1)) / (4 J)}$ for a distribution with
+kurtosis $k$. For the normal distribution ($k = 3$) it is
+$\sigma_\tau / \sqrt{2 (J - 1)}$, here 0.020, so 0.166 is 1.7 standard errors
+below 0.200 and the row passes. The rule for the rank correlation uses 2 and
+3 times $1 / \sqrt{J - 1}$, the standard error of a rank correlation between
+independent variables. The KS distance is judged by its p-value. The
+Bhattacharyya coefficient has no status, because its size depends on the
+number of sites more than on the fit, and the Q-Q residual has no rule. The
+next example simulates 400 data sets and counts the statuses.
+
+```{r seeds}
+statuses <- function(seed) {
+  d <- sim_multisite(preset_education_modest(), seed = seed)
+  tab <- attr(d, "diagnostics")$target_vs_realized
+  tab[!is.na(tab$status), c("diagnostic", "status")]
+}
+runs <- do.call(rbind, lapply(1:400, statuses))
+runs$status <- factor(runs$status, levels = c("pass", "warn", "fail"))
+table(runs)
+```
+
+Three statuses compare one draw with the design and change with the seed. The
+`sigma_tau` row passes in 383 of the 400 data sets, the rank correlation in
+376, and the KS distance in 386. Each of these rules passes a data set
+simulated from its design about 95 times in 100, so a `warn` on one row is
+expected in about 1 data set in 20. The `sigma_tau` row passes less often when
+a few sites carry most of the variance, as in a mixture with a rare and
+distant component (70 times in 100 with `eps = 0.05`, `delta = 50`, 25 sites).
+
+The other two statuses describe the design. Mean shrinkage passes in all 400
+data sets, and the average margin of error warns in all 400, because it is
+more than twice `sigma_tau`. Such a status changes with the seed only when
+the design is close to the boundary of its rule.
+
+## Thresholds
+
+`scenario_audit()` checks a design over many simulated data sets and uses
+three thresholds of its own, which `default_thresholds()` returns.
+
+```{r thresholds}
+str(default_thresholds())
+```
+
+`mean_shrinkage_min` is a lower threshold for mean shrinkage and `R_max` an
+upper threshold for the heterogeneity ratio $R$. `ks_scaled_max` is an upper
+threshold for the KS distance times $\sqrt{J}$. When the site effects come
+from the distribution of the design, that product has nearly the same
+distribution for any number of sites, with a median near 0.8, and it exceeds
+1.63 in about 1 data set in 100. A design fails if the median of a diagnostic
+over its data sets is on the wrong side of a threshold. It gets a `warn` if
+every median is within the thresholds but the 5th percentile of mean shrinkage
+is below its threshold, or the 95th percentile of $R$ or of the KS distance is
+above its threshold. These thresholds belong to `scenario_audit()` only. The
+rules behind the statuses of `summary()` are fixed, and `scenario_audit()`
+asks for a mean shrinkage of 0.30 where `summary()` passes 0.10. To change a
+threshold, give `scenario_audit()` a named list as `thresholds`.
+
+## When a diagnostic fails
+
+A `warn` or a `fail` in the precision block has one of two causes. With small
+site sizes, the standard errors are large relative to `sigma_tau`, mean
+shrinkage is low, and the margin of error is wide. A larger `nj_mean` or a
+larger `R2` reduces the standard errors. The other cause is a small
+`sigma_tau`. `preset_education_small()` sets `sigma_tau = 0.05` with site
+sizes that average 40, and both precision rows fail in every data set. If
+that is the trial to be simulated, the statuses describe it and the design
+can stay.
+
+In the other blocks a single `warn` is usually chance, and a `fail` is rare:
+the table above has one among 1,200 statuses. A `warn` or a `fail` in many
+data sets from one design has one of two causes. The simulated values do not
+follow the design, as when `hybrid_polish = "none"` leaves a rank correlation
+away from its target. Or the rule does not fit the design, as for the
+`sigma_tau` row of such a mixture.
+
+## Checking a grid of designs
+
+`design_grid()` crosses the values given for design arguments and returns one
+design for each combination. `base_design` supplies the arguments that do not
+vary, and `seed_root`, which is required, gives every design its own seed.
+
+```{r grid}
+grid <- design_grid(
+  J = c(50, 200), nj_mean = c(25, 100),
+  base_design = preset_education_modest(), seed_root = 1
+)
+grid
+```
+
+`scenario_audit()` simulates each row of the grid, which it calls a scenario,
+`M` times (200 by default), starting from the seed in the row. It then
+summarizes the diagnostics over the data sets.
+
+```{r audit}
+audit <- scenario_audit(grid, M = 50)
+audit
+audit$fail_reasons
+audit[, c("J", "nj_mean", "med_mean_shrinkage", "med_ks")]
+```
+
+The two designs with an average site size of 100 pass, with 50 sites and
+with 200. `groups_evaluated` lists the blocks behind a status. Dependence is
+never among them, and shape only for a design with a shape block. Each entry
+of `fail_reasons` names a diagnostic, the statistic that was compared, and
+the threshold, and `warn_reasons` has the same form. The two designs with
+`nj_mean = 25` fail on mean shrinkage, whose median is 0.193 whatever the
+number of sites. The median KS distance is 0.114 and 0.115 with 50 sites and
+about half that with 200. Its threshold moves in the same way: 1.63 divided
+by $\sqrt{J}$ is 0.231 with 50 sites and 0.115 with 200. A study that accepts
+less shrinkage can lower the threshold for mean shrinkage.
+
+```{r audit-own}
+own <- list(mean_shrinkage_min = 0.15)
+scenario_audit(grid[1, ], M = 50, thresholds = own)$status
+```
+
+The design in row 1 now passes.
+
+## The presets
+
+Seven presets derive the standard errors from site sizes and are simulated
+with `sim_multisite()`. Two set them directly from $I$ and $R$ and are
+simulated with `sim_meta()`. All nine have grand mean `tau = 0` and no
+dependence between effects and precision.
+
+| Preset | Sites | Distribution | `sigma_tau` | Standard errors | Source of the values |
+|----------------------------|-----|---------|-------|----------------------|------------------------------|
+| `preset_education_small()` | 50 | Gaussian | 0.05 | from site sizes, `nj_mean = 40` | `sigma_tau` from published estimates [@weiss2017howmuch], rest assumed |
+| `preset_education_modest()` | 50 | Gaussian | 0.20 | from site sizes, `nj_mean = 50` | `sigma_tau` from published estimates [@weiss2017howmuch], rest assumed |
+| `preset_education_substantial()` | 100 | Gaussian | 0.30 | from site sizes, `nj_mean = 80` | `sigma_tau` from published estimates [@weiss2017howmuch], rest assumed |
+| `preset_jebs_paper()` | 50 | Mixture | 0.20 | from site sizes, `nj_mean = 40` | published simulation design [@lee2025improving] |
+| `preset_jebs_strict()` | 100 | Mixture | 0.15 | from site sizes, `nj_mean = 80` | published simulation design [@lee2025improving] |
+| `preset_walters_2024()` | 46 | Gaussian | 0.197 | from site sizes, `nj_mean = 240` | `J` and `sigma_tau` published [@walters2024empirical], rest assumed |
+| `preset_twin_towers()` | 1000 | Mixture | 2 | from site sizes, all 100 | assumed |
+| `preset_meta_modest()` | 50 | Gaussian | 0.20 | set directly, `I = 0.3`, `R = 1.5` | assumed |
+| `preset_small_area_estimation()` | 30 | Gaussian | 0.20 | set directly, `I = 0.2`, `R = 3` | assumed |
+
+Weiss et al. [-@weiss2017howmuch] report cross-site standard deviations for 16
+multisite trials of education and training programs. The education presets
+take `sigma_tau` from the small end, the middle, and the upper end of that
+range. Two presets are named after Lee et al. [-@lee2025improving], published
+in the Journal of Educational and Behavioral Statistics (JEBS). Both are cells
+of that paper's simulation grid, with its mixture and its site-size generator
+(`engine = "censored"`). For a seed, each returns the numbers of the paper's
+code once the sites are sorted by size, as that code sorts them.
+`preset_walters_2024()` also takes an average sampling variance of 0.010 from
+its source: a site of the average size, 240, has that variance under the
+assumed `R2 = 0.4`. The last three presets have no source.
+`preset_twin_towers()` has two well separated components and is meant for
+methods that recover the shape of the effect distribution.
+`preset_small_area_estimation()` has a wider spread of precision than
+`preset_meta_modest()`, as small-area estimates do.
+
+## Overriding a preset
+
+A preset passes its arguments to `multisitedgp_design()`, so any argument of
+that function replaces the value in the preset, as `vignette("multisiteDGP")`
+shows. The example gives `preset_education_substantial()` the 50 sites of
+`preset_education_small()` and plots each estimate against its site effect.
+
+```{r compare, fig.height = 3.5, fig.cap = "Estimates follow the site effects (dashed line of equality) in the right panel and are unrelated to them in the left panel."}
+library(ggplot2)
+small <- sim_multisite(preset_education_small(), seed = 1)
+large <- sim_multisite(preset_education_substantial(J = 50), seed = 1)
+c(informativeness(small), informativeness(large))
+both <- rbind(data.frame(preset = "small", small),
+              data.frame(preset = "substantial", large))
+ggplot(both, aes(tau_j, tau_j_hat)) +
+  geom_abline(linetype = "dashed") +
+  geom_point() +
+  facet_wrap(~preset)
+```
+
+In the left panel the site effects lie within about 0.1 of zero and the
+estimates range from about $-0.7$ to 0.6, so an estimate says almost nothing
+about its site. Informativeness is 0.021 for that design and 0.608 for the
+one on the right.
+
+## References
+
+<div id="refs"></div>
+
+## See also
+
+- `vignette("site-sizes-and-standard-errors")`: site sizes and standard errors.
+- `vignette("effect-distributions")`: the distributions for the site effects.
+- `vignette("calibrating-to-data")`: a design built from a completed study.

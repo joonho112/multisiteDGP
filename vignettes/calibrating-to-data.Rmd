@@ -1,0 +1,248 @@
+---
+title: "Calibrating a design to observed data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Calibrating a design to observed data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+```{r setup}
+library(multisiteDGP)
+```
+
+When the site estimates and standard errors of a completed study are at hand,
+a design can be set up to resemble that study. The steps are to compute the
+design values from the data, to build the design, and to compare simulated
+data with the observed data. The last section builds a grid of designs around
+the calibrated one.
+
+## From observed estimates to design values
+
+The example data are simulated once and from then on treated as the observed
+data of a completed trial. Only the columns that a trial reports are kept: the
+estimate, its standard error, and the site size.
+
+```{r observed}
+trial <- sim_multisite(
+  J = 30, tau = 0.1, sigma_tau = 0.2,
+  nj_mean = 100, cv = 0.5, nj_min = 20, R2 = 0.4, seed = 1
+)
+obs <- data.frame(
+  tau_j_hat = trial$tau_j_hat, se_j = trial$se_j, n_j = trial$n_j
+)
+head(obs)
+```
+
+The number of sites is the number of rows, and the grand mean is estimated by
+the mean of the estimates. The estimates vary because the site effects vary
+and because each estimate has sampling error, so their variance is, on
+average, $\sigma_\tau^2$ plus the mean sampling variance. Subtracting the mean
+sampling variance gives a moment estimate of $\sigma_\tau^2$.
+
+```{r moments}
+se2 <- obs$se_j^2
+sigma_tau_hat <- sqrt(var(obs$tau_j_hat) - mean(se2))
+round(c(J = nrow(obs), tau = mean(obs$tau_j_hat), sigma_tau = sigma_tau_hat), 3)
+```
+
+The grand mean is estimated at 0.144 and the cross-site standard deviation at
+0.189. The data were simulated with 0.1 and 0.2. Estimates from 30 sites are
+not exact, and a design calibrated to a real study carries the same
+uncertainty. A random-effects meta-analysis or a multilevel model of the same
+data estimates the same two quantities and can be used instead. A negative
+difference under the square root means that the estimates vary no more than
+their standard errors predict. A design needs a positive `sigma_tau`, so the
+value then has to come from elsewhere.
+
+Two numbers describe the standard errors. The informativeness $I$ is the share
+of $\sigma_\tau^2$ in the sum of $\sigma_\tau^2$ and the geometric mean $GM$
+of the sampling variances. The heterogeneity ratio $R$ is the largest sampling
+variance divided by the smallest.
+
+```{r standard-errors}
+GM <- exp(mean(log(se2)))
+I_hat <- sigma_tau_hat^2 / (sigma_tau_hat^2 + GM)
+R_hat <- max(se2) / min(se2)
+round(c(GM = GM, I = I_hat, R = R_hat), 3)
+round(c(compute_I(se2, sigma_tau = sigma_tau_hat), heterogeneity_ratio(se2)), 3)
+```
+
+The last line shows that `compute_I()` and `heterogeneity_ratio()` do the same
+arithmetic. $I$ is 0.561, so a little more than half of the variance of a
+typical estimate comes from the site effects, and $R$ is 5.273. Solved for the
+cross-site variance, the definition of $I$ reads
+$\sigma_\tau^2 = I \cdot GM / (1 - I)$. This supplies a value of `sigma_tau`
+for a chosen $I$ when the moment estimate is not usable.
+
+## Building the design
+
+A design describes the standard errors in one of two ways. A multisite trial
+reports site sizes, and `sim_multisite()` derives the standard errors from
+simulated site sizes. For a study that reports only standard errors, as most
+meta-analyses do, `sim_meta()` sets the standard errors directly from $I$ and
+$R$. `vignette("site-sizes-and-standard-errors")` describes both.
+
+From the site sizes the design takes the mean, the coefficient of variation,
+and the minimum. It also needs `kappa`, the constant in `se2_j = kappa / n_j`.
+
+```{r site-sizes}
+n <- obs$n_j
+round(c(nj_mean = mean(n), cv = sd(n) / mean(n), nj_min = min(n)), 2)
+median(se2 * n)
+compute_kappa(p = 0.5, R2 = 0.4)
+```
+
+The median product of sampling variance and site size is 2.4. In these
+simulated data the product is the same in every site. In real data it varies,
+which is why the median is used. The design has no `kappa` argument. It
+computes `kappa` from the proportion treated `p`, the share `R2` of outcome
+variance explained by covariates, and the outcome variance, as
+`compute_kappa()` does. With half of each site treated and an outcome variance
+of 1, `kappa` is `4 * (1 - R2)`, so `R2 = 0.4` reproduces the 2.4 of the data.
+Only `kappa` matters for the standard errors, and any values of the three
+arguments that give it will do.
+
+```{r design}
+design <- multisitedgp_design(
+  J = 30, tau = 0.14, sigma_tau = 0.19,
+  nj_mean = 94, cv = 0.4, nj_min = 33, R2 = 0.4
+)
+design
+```
+
+The design holds the values above, rounded. The arguments that are not given
+keep their defaults, among them normal site effects and no dependence between
+effects and precision. To describe the standard errors by $I$ and $R$
+instead, set `paradigm = "direct"`. This argument of `multisitedgp_design()`
+says where the standard errors come from, and its default is `"site_size"`.
+
+```{r design-direct}
+design_direct <- multisitedgp_design(
+  paradigm = "direct", J = 30, tau = 0.14, sigma_tau = 0.19,
+  I = 0.56, R = 5.3
+)
+design_direct
+```
+
+The second block now reads `I` and `R`. A preset is a third starting point.
+When a publication gives only the number of sites and the cross-site standard
+deviation, `preset_education_modest(J = 30, sigma_tau = 0.19)` takes those two
+values and keeps the site sizes of the preset. `vignette("multisiteDGP")`
+shows such overrides.
+
+## Checking the calibration
+
+One data set simulated from each design shows whether the design resembles
+the observed data.
+
+```{r check}
+# Seed 1 would repeat the random numbers that made the example data.
+sim <- sim_multisite(design, seed = 2)
+sim_direct <- sim_meta(design_direct, seed = 2)
+summary(sim)
+c(I = informativeness(sim_direct), R = heterogeneity_ratio(sim_direct))
+```
+
+The scale block holds the values to compare with the observed data: an
+informativeness of 0.579 (observed 0.561), a heterogeneity ratio of 4.692
+(5.273), and a geometric mean of the sampling variances of 0.026 (0.028). The
+statuses do not judge this match. They compare the simulated data set with its
+own design and with fixed rules, as `vignette("multisiteDGP")` explains.
+The last line belongs to `sim_direct`: `sim_meta()` reproduces the $I$ and $R$
+of its design in every data set.
+
+```{r compare, fig.height = 3.5, fig.cap = "Most standard errors lie near 0.15 in the left and middle panels and are spread evenly in the right panel."}
+library(ggplot2)
+cols <- c("tau_j_hat", "se_j")
+panels <- rbind(
+  data.frame(set = "observed", obs[cols]),
+  data.frame(set = "simulated, from site sizes", sim[cols]),
+  data.frame(set = "simulated, set directly", sim_direct[cols])
+)
+ggplot(panels, aes(tau_j_hat, se_j)) +
+  geom_point() +
+  scale_x_continuous(breaks = c(-0.5, 0, 0.5)) +
+  scale_y_reverse() +
+  facet_wrap(~set) +
+  labs(x = "Estimate", y = "Standard error")
+```
+
+The most precise sites are at the top of each panel, and the estimates scatter
+over a similar range in all three. In the observed data most sites sit in a
+band of standard errors near 0.15, with a tail of less precise sites below.
+The data simulated from site sizes have the same shape. `sim_meta()` spaces
+the sampling variances evenly on the log scale between the smallest and the
+largest, so its standard errors reproduce $I$ and $R$ and not the shape of the
+observed distribution. To simulate with the observed standard errors
+themselves, add the argument `se_fn = function(J) list(se2_j = se2)` to
+`design_direct`.
+
+## A grid of designs around the calibrated one
+
+A simulation study usually runs over several designs. The calibrated design is
+the base design, and a grid around it varies what is uncertain or what a new
+trial would change. The cross-site standard deviation was estimated from only 30
+sites, so the grid adds values of about half and one and a half times the
+estimate. It also adds a trial with twice as many sites.
+
+```{r grid}
+grid <- design_grid(
+  base_design = design,
+  J = c(30, 60),
+  sigma_tau = c(0.10, 0.19, 0.28),
+  seed_root = 1
+)
+grid
+```
+
+Each row holds one design, a copy of the base design with two values
+replaced, and a seed derived from `seed_root`. `scenario_audit()` simulates
+`M` data sets from each row and summarizes their diagnostics.
+
+```{r audit}
+audit <- scenario_audit(grid, M = 50)
+audit[, c("J", "sigma_tau", "med_I_hat", "med_R_hat", "q95_R_hat",
+          "med_mean_shrinkage")]
+```
+
+The columns starting with `med_` are medians over the 50 data sets of a row,
+and `q95_R_hat` is a 95th percentile. The second row is the base design. Its
+median informativeness is 0.567 and its median heterogeneity ratio 4.70, with
+a 95th percentile of 7.11, so the observed 0.561 and 5.273 are ordinary values
+under this design. Informativeness follows the cross-site standard deviation,
+from 0.264 at 0.10 to 0.740 at 0.28, and hardly changes with the number of
+sites. The heterogeneity ratio does change. Its median rises to 5.86 in the
+fifth row, because the two most extreme of 60 sites lie further apart than
+those of 30. `med_mean_shrinkage` is the median of the mean shrinkage, the
+average of the weights $S_j$ that a normal model puts on each site's own
+estimate. Like informativeness, it follows the cross-site standard deviation,
+from 0.27 at 0.10 to 0.73 at 0.28 with 30 sites, and hardly changes with the
+number of sites.
+
+`audit` has more columns than shown, among them a `status` that compares the
+medians with the thresholds in `default_thresholds()`. The two designs with
+`sigma_tau = 0.10` fail, because their mean shrinkage is below the threshold
+of 0.30. `vignette("diagnostics-and-presets")` describes the thresholds. The
+simulation study itself then draws its data sets from the designs in
+`grid$design`.
+
+## See also
+
+- `vignette("site-sizes-and-standard-errors")`: how site sizes and `kappa`
+  give the standard errors, and how `sim_meta()` sets them directly.
+- `vignette("diagnostics-and-presets")`: the diagnostics that `summary()` and
+  `scenario_audit()` report, their thresholds, and the nine presets.
+- `vignette("effect-distributions")`: site-effect distributions other than the
+  normal.
+- `vignette("effect-precision-dependence")`: designs in which the site effects
+  are related to the standard errors.

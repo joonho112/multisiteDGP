@@ -1,0 +1,269 @@
+---
+title: "Site sizes and standard errors"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Site sizes and standard errors}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+```{r setup}
+library(multisiteDGP)
+```
+
+The standard errors of a simulated data set come from one of two places.
+`sim_multisite()` draws a size for each site and derives the standard error
+from it. `sim_meta()` sets the standard errors directly, from a target
+informativeness and a target ratio of the largest to the smallest sampling
+variance.
+
+## Standard errors from site sizes
+
+Six arguments of `sim_multisite()` determine the standard errors. Three
+describe the site sizes. The other three set the constant that turns a site
+size into a sampling variance.
+
+| Argument | Meaning | Default |
+|---------------|------------------------------------------------------|-----|
+| `nj_mean` | mean site size | 50 |
+| `cv` | coefficient of variation of the site sizes (0 gives equal sizes) | 0.5 |
+| `nj_min` | smallest site size allowed | 5 |
+| `p` | proportion of each site assigned to treatment | 0.5 |
+| `R2` | share of the outcome variance explained by covariates | 0 |
+| `var_outcome` | variance of the outcome | 1 |
+
+The sampling variance of a site is that of a difference in means between its
+$p\,n_j$ treated and $(1 - p)\,n_j$ control individuals. It is a constant
+$\kappa$ divided by the site size $n_j$:
+
+$$
+\mathrm{se}_j^2 = \frac{\kappa}{n_j}, \qquad
+\kappa = \left(\frac{1}{p} + \frac{1}{1 - p}\right) (1 - R^2)\, \sigma_Y^2 .
+$$
+
+Here $R^2$ is `R2` and $\sigma_Y^2$ is `var_outcome`. `compute_kappa()`
+returns $\kappa$.
+
+```{r kappa}
+compute_kappa()
+compute_kappa(R2 = 0.4)
+compute_kappa(p = 0.3)
+```
+
+With the defaults $\kappa$ is 4, so a site of 100 individuals has a sampling
+variance of 0.04 and a standard error of 0.2. Covariates that explain 40
+percent of the outcome variance lower $\kappa$ to 2.4. Treating 30 percent of
+each site instead of half raises it from 4 to 4.76. The next call simulates
+50 sites with `R2 = 0.4`.
+
+```{r from-sizes}
+dat <- sim_multisite(
+  J = 50, nj_mean = 50, cv = 0.5, nj_min = 10, R2 = 0.4, seed = 1
+)
+dat
+```
+
+The `n_j` column holds the simulated sizes, and `se2_j` is 2.4 divided by
+`n_j`. Site 4 has 12 individuals, a sampling variance of 0.2, and a standard
+error of 0.447. Site 6 has 68 individuals and a standard error of 0.188.
+
+```{r sizes-check}
+summary(dat$n_j)
+range(dat$se2_j * dat$n_j)
+```
+
+The 50 sizes run from 12 to 122 and average 49.06, against an `nj_mean` of 50.
+The product of `se2_j` and `n_j` is 2.4 for every site.
+
+## The two site-size generators
+
+`sim_multisite()` passes the size arguments to `gen_site_sizes()`, which draws
+the sizes with one of two generators. The `engine` argument selects one.
+
+- `engine = "truncated_gamma"`, the default, draws from a gamma distribution
+  truncated below at `nj_min`. It solves for the two gamma parameters that
+  give the truncated distribution the mean `nj_mean` and the coefficient of
+  variation `cv`. Each draw is then rounded down or up at random, which keeps
+  the mean and adds a little variance. The site sizes therefore vary slightly
+  more than `cv`, most visibly when `cv` is small.
+- `engine = "censored"` draws from a gamma distribution with mean `nj_mean`
+  and coefficient of variation `cv`, and raises every draw below `nj_min` to
+  `nj_min`. This is the procedure of Lee et al. [-@lee2025improving], kept to
+  reproduce that paper. The presets `preset_jebs_paper()` and
+  `preset_jebs_strict()` use it.
+
+`gen_site_sizes()` can be called on its own, on the output of `gen_effects()`.
+The example draws 100,000 sizes, enough to show their distribution, and
+raises `nj_min` to 20.
+
+```{r size-step}
+set.seed(1)
+effects <- gen_effects(J = 100000)
+tg <- gen_site_sizes(effects, J = 100000, nj_mean = 50, cv = 0.5, nj_min = 20)
+print(tg, n = 3)
+```
+
+The function returns the site effects with the columns `n_j`, `se2_j`, and
+`se_j` added. The same call with `engine = "censored"` uses the other
+generator.
+
+```{r generators}
+cens <- gen_site_sizes(
+  effects, J = 100000, nj_mean = 50, cv = 0.5, nj_min = 20, engine = "censored"
+)
+describe <- function(n) round(c(mean = mean(n), cv = sd(n) / mean(n)), 3)
+rbind(truncated_gamma = describe(tg$n_j), censored = describe(cens$n_j))
+```
+
+The truncated-gamma sizes have a mean of 49.896 and a coefficient of variation
+of 0.498, the requested 50 and 0.5 up to sampling error. The censored sizes
+have a larger mean (50.345) and a smaller coefficient of variation (0.486).
+
+```{r generator-figure, fig.cap = "The censored sizes have a spike at the minimum of 20, and the truncated-gamma sizes do not."}
+library(ggplot2)
+sizes <- rbind(
+  data.frame(generator = "truncated_gamma", n_j = tg$n_j),
+  data.frame(generator = "censored", n_j = cens$n_j)
+)
+ggplot(sizes, aes(n_j)) +
+  geom_bar(aes(y = after_stat(prop)), width = 1) +
+  facet_wrap(~generator, ncol = 1) +
+  coord_cartesian(xlim = c(20, 150)) +
+  labs(x = "site size", y = "share of sites") +
+  theme_minimal()
+```
+
+The spike holds the draws that fell below 20. Its size depends on how much of
+the untruncated gamma distribution lies below `nj_min`.
+
+```{r below-minimum}
+pgamma(c(10, 20), shape = 1 / 0.5^2, rate = 1 / (0.5^2 * 50))
+```
+
+With a mean of 50 and a coefficient of variation of 0.5, 7.9 percent of the
+draws fall below 20 and 0.9 percent fall below 10. With `nj_min = 10` the two
+generators draw from almost the same distribution.
+
+For a given ratio of `nj_mean` to `nj_min`, the truncated-gamma generator
+reaches every `cv` from 0 up to a limit. The limit is about 1.43 when the mean
+is ten times the minimum, 1.11 at five times, and 0.57 at twice. Above the
+limit `sim_multisite()` stops with an error, and it warns when `nj_mean` is
+less than twice `nj_min`.
+
+## Standard errors set directly
+
+`sim_meta()` takes no site sizes. It builds the standard errors from two
+numbers. `I` is the informativeness,
+$I = \sigma_\tau^2 / (\sigma_\tau^2 + \mathrm{GM})$, where $\mathrm{GM}$ is
+the geometric mean of the sampling variances. It lies between 0 and 1, and it
+is larger when the standard errors are small relative to the cross-site
+standard deviation $\sigma_\tau$. `R` is the heterogeneity ratio, the largest
+sampling variance divided by the smallest. With `R = 1`, the default, all
+sites have the same standard error.
+
+The function solves the first definition for the geometric mean,
+$\mathrm{GM} = \sigma_\tau^2 (1 - I) / I$. It then places the $J$ sampling
+variances at equal steps on the log scale from $\mathrm{GM} / \sqrt{R}$ to
+$\mathrm{GM} \sqrt{R}$.
+
+```{r direct}
+meta <- sim_meta(J = 50, I = 0.3, R = 2, sigma_tau = 0.2, seed = 1)
+meta
+round(range(meta$se2_j), 4)
+```
+
+The last header line gives the target and the realized informativeness, both
+0.300. The geometric mean is $0.2^2 \times 0.7 / 0.3 = 0.0933$, and the
+sampling variances run from 0.066 to 0.132, a ratio of 2. The `n_j` column is
+`NA` because there are no site sizes.
+
+`gen_se_direct()` runs this step alone on the output of `gen_effects()`.
+
+```{r direct-step}
+set.seed(1)
+effects <- gen_effects(J = 10, sigma_tau = 0.2)
+gen_se_direct(effects, J = 10, I = 0.3, R = 2, sigma_tau = 0.2, shuffle = FALSE)
+```
+
+With `shuffle = FALSE` the sampling variances rise with the site index, from
+0.0660 to 0.132. With `shuffle = TRUE`, the default, the same values go to the
+sites in random order. `se_fn` takes a function of `J` that returns a list
+with the sampling variances `se2_j` and, optionally, the sizes `n_j`, which
+are then used as they are (`I` must still be given). `sim_meta()` accepts both
+arguments.
+
+## Which one to use
+
+Derive the standard errors from site sizes when the simulation stands for a
+trial. You then say how large the sites are, how unequal, what share is
+treated, and what the covariates explain, and the precision follows. The
+informativeness and the heterogeneity ratio are results, and they change from
+one data set to the next.
+
+```{r seeds}
+round(sapply(1:5, function(seed) {
+  d <- sim_multisite(
+    J = 50, nj_mean = 50, cv = 0.5, nj_min = 10, R2 = 0.4, seed = seed
+  )
+  c(I = informativeness(d), R = heterogeneity_ratio(d$se2_j))
+}), 3)
+```
+
+Over seeds 1 to 5 the informativeness stays between 0.420 and 0.434, and the
+heterogeneity ratio runs from 4.810 to 10.538.
+
+Set the standard errors directly when the precision itself is what you know
+or want to control. In a meta-analysis the studies report estimates and
+standard errors, and their sample sizes are often missing or not comparable.
+A simulation study may need the same informativeness in every data set.
+`sim_meta()` returns the same set of standard errors for every seed and
+changes only which site gets which. Each function rejects the arguments of the
+other.
+
+`I` and `R` fix the geometric mean of the sampling variances and the ratio of
+the largest to the smallest, not how the values are spread in between. The
+last example asks `sim_meta()` for the `I` and `R` of `dat`.
+
+```{r compare, fig.height = 2.5, fig.cap = "The standard errors set directly are evenly spaced on the log scale, and those from site sizes are not."}
+direct <- sim_meta(
+  J = 50, I = informativeness(dat), R = heterogeneity_ratio(dat$se2_j), seed = 1
+)
+both <- rbind(
+  data.frame(source = "from site sizes", se_j = dat$se_j),
+  data.frame(source = "set directly", se_j = direct$se_j)
+)
+ggplot(both, aes(se_j, source)) +
+  geom_point(shape = "|", size = 6) +
+  scale_x_log10() +
+  labs(x = "standard error (log scale)", y = NULL) +
+  theme_minimal()
+```
+
+Each mark is the standard error of one site, and both rows have the same
+informativeness and heterogeneity ratio. Most of the standard errors from
+site sizes lie close together below 0.3, and those of a few small sites stand
+apart above it. If that shape matters, derive the standard errors from site
+sizes or supply them through `se_fn`.
+
+## References
+
+<div id="refs"></div>
+
+## See also
+
+- `vignette("effect-precision-dependence")`: designs in which the standard
+  errors are related to the site effects.
+- `vignette("diagnostics-and-presets")`: the informativeness, the
+  heterogeneity ratio, and the presets.
+- `vignette("calibrating-to-data")`: choosing the design arguments to match
+  the estimates of a completed study.

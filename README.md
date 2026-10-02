@@ -1,0 +1,146 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file. -->
+
+# multisiteDGP <img src="man/figures/logo.png" align="right" height="139" alt="" />
+
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/joonho112/multisiteDGP/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/joonho112/multisiteDGP/actions/workflows/R-CMD-check.yaml)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<!-- badges: end -->
+
+multisiteDGP simulates the summary data of a multisite trial: one
+estimated effect and one standard error per site. You choose the number
+of sites, the distribution of the site effects, and the precision of the
+site estimates. The package returns a data frame that holds the true
+site effects next to their estimates. Such data are used to study
+estimators of site effects and of their distribution, and to plan trials
+and meta-analyses. The model follows Lee et al. (2025).
+
+## Installation
+
+Install the package from GitHub with the remotes package.
+
+``` r
+remotes::install_github("joonho112/multisiteDGP")
+```
+
+## Example
+
+A design holds the settings of a simulation, and a preset is a function
+that returns a complete design. `sim_multisite()` simulates one data set
+from a design.
+
+``` r
+library(multisiteDGP)
+
+dat <- sim_multisite(preset_education_modest(), seed = 1)
+dat
+#> # multisitedgp_data: 50 sites, standard errors from site sizes, seed 1
+#> # sigma_tau: target 0.200, realized 0.166
+#> # rank correlation (tau, se): target 0.000, realized 0.254
+#> # informativeness I: 0.303
+#> # A tibble: 50 × 7
+#>   site_index    z_j   tau_j tau_j_hat  se_j  se2_j   n_j
+#>        <int>  <dbl>   <dbl>     <dbl> <dbl>  <dbl> <int>
+#> 1          1 -0.626 -0.125    -0.329  0.329 0.108     37
+#> 2          2  0.184  0.0367    0.0481 0.270 0.0727    55
+#> 3          3 -0.836 -0.167    -0.399  0.254 0.0645    62
+#> 4          4  1.60   0.319     0.410  0.577 0.333     12
+#> 5          5  0.330  0.0659   -0.146  0.324 0.105     38
+#> 6          6 -0.820 -0.164     0.265  0.243 0.0588    68
+#> # ℹ 44 more rows
+```
+
+Each row is a site. `tau_j` is the true site effect, `tau_j_hat` is its
+estimate, and `se_j` is the standard error of the estimate. `summary()`
+prints diagnostics of the simulated data.
+
+``` r
+summary(dat)
+#> multisiteDGP simulation: 50 sites, standard errors from site sizes, seed 1
+#> 
+#> Scale
+#>   informativeness I                0.303
+#>   SE heterogeneity R              10.167
+#>   sigma_tau                        0.166   target 0.200   pass
+#>   geometric mean of se^2           0.092
+#> 
+#> Dependence
+#>   rank correlation, residual       0.254   target 0.000   pass
+#>   rank correlation, marginal       0.254
+#>   Pearson correlation, residual    0.375
+#>   Pearson correlation, marginal    0.375
+#> 
+#> Shape
+#>   KS distance                      0.135   p = 0.297      pass
+#>   Bhattacharyya coefficient        0.801
+#>   Q-Q residual                     0.731
+#> 
+#> Precision
+#>   mean shrinkage                   0.314                  pass
+#>   average margin of error          0.617                  warn
+#> 
+#> 4 pass, 1 warn, 0 fail
+```
+
+A status compares a row with its target or with a fixed rule. The rules
+of the first three blocks allow for the sampling error of 50 sites. The
+standard deviation of these 50 site effects (0.166) is within two
+standard errors of the design value (0.2), so the `sigma_tau` row
+passes. The `warn` on the average margin of error describes the design,
+in which single sites are estimated with little precision.
+`plot_effects()` draws the estimates with their 95 percent intervals and
+the true site effects.
+
+``` r
+plot_effects(dat)
+```
+
+<img src="man/figures/README-effects-1.png" alt="Estimates with 95 percent intervals and true site effects for 50 sites, ordered by estimate." width="100%" />
+
+## What is in the package
+
+- Six distributions for the site effects (normal, Student t,
+  skew-normal, asymmetric Laplace, a two-component mixture, a point mass
+  with a slab) and user-supplied distributions.
+- Standard errors derived from simulated site sizes with
+  `sim_multisite()`, or set directly from a target informativeness with
+  `sim_meta()`.
+- Dependence between the site effects and their precision, set through a
+  rank correlation.
+- Site-level covariates in the site effects.
+- Diagnostics of each simulated data set, and `scenario_audit()` for a
+  grid of designs built with `design_grid()`.
+- Nine presets, plots of the simulated data, and converters to the
+  column names that metafor and baggr expect.
+
+## Learn more
+
+- [Get started with
+  multisiteDGP](https://joonho112.github.io/multisiteDGP/articles/multisiteDGP.html)
+  runs one simulation and explains the output.
+- [The data-generating
+  model](https://joonho112.github.io/multisiteDGP/articles/model.html)
+  states the model and maps its symbols to the arguments.
+- [Diagnostics and
+  presets](https://joonho112.github.io/multisiteDGP/articles/diagnostics-and-presets.html)
+  explains the diagnostics, their thresholds, and the nine presets.
+
+## Citation
+
+`citation("multisiteDGP")` gives the reference for the package. The
+model is described in this paper.
+
+Lee, J., Che, J., Rabe-Hesketh, S., Feller, A., & Miratrix, L. (2025).
+Improving the estimation of site-specific effects and their distribution
+in multisite trials. *Journal of Educational and Behavioral Statistics*,
+50(5), 731-764. <https://doi.org/10.3102/10769986241254286>
+
+## Funding
+
+This research was supported by the Institute of Education Sciences, U.S.
+Department of Education, through Grant R305D240078 to the University of
+Alabama. The opinions expressed are those of the authors and do not
+represent views of the Institute or the U.S. Department of Education.

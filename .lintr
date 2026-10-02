@@ -1,0 +1,33 @@
+linters: linters_with_defaults(
+  line_length_linter = line_length_linter(120),
+  # The validators of a design are long lists of independent checks. Each
+  # check counts as a branch, but the functions are not hard to follow.
+  cyclocomp_linter = cyclocomp_linter(25),
+  # Names keep the notation of the model: J sites, M replications, R2, varY,
+  # informativeness I, heterogeneity ratio R, geometric mean GM, theta_G.
+  # Constants are in upper case, and .Random.seed is R's own name.
+  object_name_linter = object_name_linter(
+    styles = c("snake_case", "dotted.case"),
+    regexes = c(
+      "^(J|M|R2|varY)$",
+      "(^|_)(I|R|GM|G)(_|$)",
+      "^\\.[A-Z][A-Z0-9_]+$",
+      "^\\.Random\\.seed$"
+    )
+  ),
+  # Internal helpers are named after what they check, with the class name
+  # where there is one (.validate_multisitedgp_data_columns), so a name may
+  # have up to 40 characters.
+  object_length_linter = object_length_linter(40),
+  T_and_F_symbol_linter = T_and_F_symbol_linter(),
+  object_usage_linter = NULL
+  )
+exclusions: list(
+  "tests/testthat.R",
+  # A markdown table in a roxygen comment cannot be wrapped.
+  "R/gen_effects.R" = list(line_length_linter = Inf),
+  "R/presets.R" = list(line_length_linter = Inf),
+  # The tests use the notation of the model (M, S_j, J_grid) and R's own
+  # .Random.seed, which the object-name rule does not allow.
+  "tests/testthat/*.R" = list(object_name_linter = Inf)
+  )

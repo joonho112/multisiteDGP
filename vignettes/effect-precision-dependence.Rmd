@@ -1,0 +1,275 @@
+---
+title: "Dependence between effects and precision"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Dependence between effects and precision}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+```{r setup}
+library(multisiteDGP)
+```
+
+In multisite trials the size of a site's effect is often related to the
+precision of its estimate, for example when small sites show larger effects.
+`sim_multisite()` generates site effects and standard errors independently
+unless the design sets the `dependence` argument. The argument offers three
+methods. The sections below compare them, show how to check the correlation
+in the simulated data, and cover designs with a site-level covariate and a
+user-supplied dependence function.
+
+## Three methods
+
+The dependence step runs after the site effects and the standard errors have
+been generated and before the estimates are drawn. It keeps every value and
+changes only which site has which standard error. The standard errors,
+together with their site sizes, are reassigned among the sites until effects
+and standard errors are related as the design asks. A positive target gives
+the larger standard errors to the sites with the larger effects, and a
+negative target gives them the smaller ones. `sim_meta()` takes the same
+arguments.
+
+| `dependence` | Target argument | Meaning of the target |
+|--------------|-----------------|--------------------------------------------|
+| `"rank"` | `rank_corr` | Spearman correlation between site effects and standard errors in the simulated data |
+| `"copula"` | `pearson_corr` | correlation between the normal scores of the site effects and the latent scores that order the standard errors |
+| `"hybrid"` | `rank_corr` | as for `"rank"` |
+
+The examples use 100 sites and the defaults for all other design arguments.
+The first data set has no dependence and serves as the comparison.
+
+```{r none}
+dat_none <- sim_multisite(J = 100, seed = 1)
+dat_none
+```
+
+`vignette("multisiteDGP")` explains the header and the columns. The third
+header line sets the target of 0.000 against the rank correlation in these 100
+sites, which is 0.093 by chance.
+
+### The rank method
+
+`dependence = "rank"` starts from the standard errors as generated, or from
+standard errors sorted by effect if that order is closer to the target. It
+then exchanges the standard errors of two sites at a time, each time the pair
+that brings the Spearman correlation closest to `rank_corr`. It stops within
+`tol` of the target (0.02 by default) and uses no random numbers.
+
+```{r rank}
+dat_rank <- sim_multisite(
+  J = 100, dependence = "rank", rank_corr = 0.4, seed = 1
+)
+print(dat_rank, n = 3)
+```
+
+The header shows a realized rank correlation of 0.400. The three rows printed
+are identical to the first three of `dat_none`, because the method stopped
+after a few exchanges.
+
+### The copula method
+
+`dependence = "copula"` draws for each site a latent score that has
+correlation `pearson_corr` with the normal score of its effect (the standard
+normal quantile that corresponds to the effect's rank). The site with the
+lowest score receives the smallest standard error, the next lowest the next
+smallest, and so on. This pairing of effects and standard errors is a draw
+from a Gaussian copula. When neither the effects nor the standard errors have
+tied values, the rank correlation in the data varies around a value close to
+`pearson_corr` (0.385 for 0.4).
+
+```{r copula}
+dat_copula <- sim_multisite(
+  J = 100, dependence = "copula", pearson_corr = 0.4, seed = 1
+)
+print(dat_copula, n = 3)
+```
+
+The rank correlation line shows no target, because the copula method sets the
+correlation of the latent scores and not the rank correlation of the data. The
+realized value is 0.328. The standard errors in all three rows differ from
+those in `dat_none`.
+
+### The hybrid method
+
+`dependence = "hybrid"` combines the two. It draws a copula pairing with the
+latent correlation that corresponds to `rank_corr`. It then exchanges standard
+errors as the rank method does until the rank correlation is within `tol` of
+the target.
+
+```{r hybrid}
+dat_hybrid <- sim_multisite(
+  J = 100, dependence = "hybrid", rank_corr = 0.4, seed = 1
+)
+print(dat_hybrid, n = 3)
+```
+
+The realized rank correlation is 0.400, as with the rank method, and the
+standard errors are reassigned throughout, as with the copula method.
+
+### Comparison of the methods
+
+The three data sets can be compared with `dat_none` site by site.
+
+```{r comparison}
+dats <- list(rank = dat_rank, copula = dat_copula, hybrid = dat_hybrid)
+sapply(dats, function(x) sum(x$se_j != dat_none$se_j))
+sapply(dats, function(x) identical(sort(x$se_j), sort(dat_none$se_j)))
+sapply(dats, function(x) identical(x$tau_j, dat_none$tau_j))
+```
+
+The first result counts the sites whose standard error differs from
+`dat_none`: 10 under the rank method, 100 and 99 under the other two. The
+second and third results show what no method changes. The sorted standard
+errors equal those of `dat_none`, and so do the site effects, site by site.
+Only the pairing differs, which is why all four headers show the same
+`sigma_tau` and the same informativeness.
+
+```{r methods, fig.height = 3.6, fig.cap = "Filled points are the sites whose standard error differs from the data without dependence: 10 under the rank method, nearly all under the other two."}
+library(ggplot2)
+panels <- do.call(rbind, lapply(dats, as.data.frame))
+panels$method <- factor(rep(names(dats), each = 100), levels = names(dats))
+panels$reassigned <- panels$se_j != rep(dat_none$se_j, 3)
+ggplot(panels, aes(tau_j, se_j, shape = reassigned)) +
+  geom_point() +
+  scale_shape_manual(values = c(1, 16)) +
+  facet_wrap(~method) +
+  labs(x = "Site effect", y = "Standard error", shape = "Reassigned") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+Each panel shows a loose upward cloud, as a rank correlation near 0.4 implies.
+The ten filled points in the left panel are sites with lower effects that
+received smaller standard errors and sites with higher effects that received
+larger ones. Exchanges among these ten sites were enough to reach the target.
+In the other two panels the dependence runs through all sites.
+
+One data set per method does not show how the realized correlation behaves
+over repeated simulations. The next example simulates 100 data sets with the
+copula method and 100 with the hybrid method.
+
+```{r repeated}
+realized <- function(seed, ...) {
+  realized_rank_corr(sim_multisite(J = 100, ..., seed = seed))
+}
+r_copula <- sapply(1:100, realized, dependence = "copula", pearson_corr = 0.4)
+r_hybrid <- sapply(1:100, realized, dependence = "hybrid", rank_corr = 0.4)
+round(rbind(copula = summary(r_copula), hybrid = summary(r_hybrid)), 3)
+```
+
+`realized_rank_corr()` returns the rank correlation of one data set. Under the
+copula method it ranges from 0.137 to 0.569 over the 100 seeds, with a mean of
+0.394. Under the hybrid method it stays between 0.383 and 0.418, within `tol`
+of the target. The rank method stops by the same rule and behaves like the
+hybrid method in this respect. Both warn when a search ends further than `tol`
+from the target.
+
+## Choosing a method
+
+Use `"hybrid"` unless there is a reason to prefer another method. With a
+target other than 0 it returns a rank correlation within `tol` of the target,
+or warns that it could not, and the dependence runs through all sites.
+`"rank"` reaches the same correlation by changing few sites, so a few sites
+with low or high effects carry the dependence. With a target above about 0.5
+in absolute value it starts from the sorted order, and the result is an almost
+exact ordering in which a few sites at the two ends are reversed. Its search
+is also the slowest. With 1,000 sites one data set takes many seconds with
+`"rank"` and about one second with `"hybrid"`. `"copula"` suits a study in
+which the correlation should vary between data sets, as it does between
+samples from one population. A relation that is limited to one tail of the
+effects, or one that changes direction, is outside what the three methods
+model and needs a user-supplied function.
+
+Two settings of the hybrid method leave the rank correlation to chance. With
+`rank_corr = 0` it keeps the order of the standard errors, and with
+`hybrid_polish = "none"` it stops after the copula draw.
+`realized_rank_corr()` shows where a data set ended up.
+
+## Residual and marginal correlation
+
+With site-level covariates (see `vignette("effect-distributions")`) the site
+effect is $\tau_j = \tau + x_j'\beta + \sigma_\tau z_j$, and the dependence
+step pairs the standard errors with the residual part $z_j$. The target
+applies to the residual correlation, between `z_j` and the standard errors.
+The marginal correlation, between `tau_j` and the standard errors, is not set
+by the design. In the next example the last 50 of 100 sites are urban, and the
+effects of urban sites are larger by 0.3 on average.
+
+```{r covariate}
+sites <- data.frame(urban = rep(0:1, each = 50))
+dat_cov <- sim_multisite(
+  J = 100, formula = ~urban, beta = 0.3, data = sites,
+  dependence = "hybrid", rank_corr = 0.4, seed = 1
+)
+realized_rank_corr(dat_cov, on = "residual")
+realized_rank_corr(dat_cov, on = "marginal")
+```
+
+The residual correlation is 0.400, on target, and the marginal correlation is
+0.249. The covariate part of the effect is generated without regard to the
+standard errors, which tends to weaken the correlation. In one data set the
+marginal correlation also depends on how the covariate happens to line up with
+the standard errors. It is the correlation that matters for an analysis that
+leaves the covariate out. Without a covariate the two correlations are equal.
+The rank correlation in the header is the residual one, and `summary()` prints
+both. `plot_dependence()` draws the residual relation, and the marginal one
+with `by_residual = FALSE`.
+
+## A user-supplied dependence function
+
+`dependence_fn` replaces the pairing rule of the method named in `dependence`
+with a function of your own. With `dependence = "none"` the function is not
+used. It is called with three arguments.
+
+- `z_j`: the standardized site effects.
+- `se2_j`: the sampling variances, in the order in which they were generated.
+- `target`: the value of `rank_corr`, or of `pearson_corr` when
+  `dependence = "copula"`.
+
+It must return a list with two elements. `perm` is a permutation of `1:J`, in
+which `perm[i]` is the position of the sampling variance that site `i`
+receives. `se2_j` is the input `se2_j[perm]`. The package applies `perm` to the
+standard errors and the site sizes as well, and stops with an error if the
+returned values are not a reordering of the input. The function below ignores
+`target`. It gives the largest sampling variances to the sites whose effects
+are furthest from the mean in either direction.
+
+```{r custom, fig.cap = "The sampling variances rise with the distance of the site effect from the mean, in both directions."}
+by_abs_effect <- function(z_j, se2_j, target) {
+  perm <- integer(length(z_j))
+  perm[order(abs(z_j))] <- order(se2_j)
+  list(se2_j = se2_j[perm], perm = perm)
+}
+dat_fn <- sim_multisite(
+  J = 100, dependence = "rank", dependence_fn = by_abs_effect, seed = 1
+)
+plot_dependence(dat_fn)
+```
+
+`plot_dependence()` draws the sampling variances against the standardized site
+effects, with a smooth curve and its bootstrap band. The subtitle gives the
+rank correlation, 0.151, and no target. A rank correlation does not describe a
+relation of this form. The package does not know what a user-supplied function
+aims at, so the header and `summary()` still compare the realized rank
+correlation with `rank_corr`.
+
+## See also
+
+- `vignette("model")`: the four steps of a simulation and the place of the
+  dependence step among them.
+- `vignette("site-sizes-and-standard-errors")`: how the standard errors that
+  the dependence step reassigns are generated.
+- `vignette("diagnostics-and-presets")`: the dependence block of `summary()`
+  and its statuses.
+- `align_rank_corr()`, `align_copula_corr()`, `align_hybrid_corr()`: the three
+  methods as separate functions.

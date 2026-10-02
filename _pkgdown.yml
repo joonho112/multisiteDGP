@@ -1,0 +1,122 @@
+url: https://joonho112.github.io/multisiteDGP/
+
+development:
+  mode: auto
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#1B4965"
+  opengraph:
+    image:
+      src: man/figures/logo.png
+      alt: "multisiteDGP hex sticker"
+
+authors:
+  JoonHo Lee:
+    href: https://github.com/joonho112
+
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - effect-distributions
+  - site-sizes-and-standard-errors
+  - effect-precision-dependence
+  - diagnostics-and-presets
+  - calibrating-to-data
+  - model
+  - downstream-analysis
+
+reference:
+- title: Simulate
+  desc: Simulate the site-level summary data of a multisite trial.
+  contents:
+  - sim_multisite
+  - sim_meta
+  - design_grid
+  - multisitedgp_data
+
+- title: Designs
+  contents:
+  - multisitedgp_design
+  - update_multisitedgp_design
+
+- title: Site effects
+  contents:
+  - gen_effects
+  - gen_effects_gaussian
+  - gen_effects_studentt
+  - gen_effects_skewn
+  - gen_effects_ald
+  - gen_effects_mixture
+  - gen_effects_pmslab
+  - gen_effects_user
+
+- title: Site sizes and standard errors
+  contents:
+  - gen_site_sizes
+  - gen_se_direct
+
+- title: Dependence
+  desc: Relate the site effects to their precision.
+  contents:
+  - align_rank_corr
+  - align_copula_corr
+  - align_hybrid_corr
+
+- title: Observations
+  contents:
+  - gen_observations
+
+- title: Diagnostics
+  contents:
+  - informativeness
+  - heterogeneity_ratio
+  - compute_kappa
+  - compute_shrinkage
+  - realized_rank_corr
+  - ks_distance
+  - bhattacharyya_coef
+  - default_thresholds
+  - scenario_audit
+
+- title: Presets
+  contents:
+  - presets
+
+- title: Plots
+  contents:
+  - plots
+
+- title: Converters
+  desc: Hand simulated data to other packages.
+  contents:
+  - adapters
+
+redirects:
+  - ["articles/v1-getting-started.html", "articles/multisiteDGP.html"]
+  - ["articles/v2-choosing-a-preset.html", "articles/diagnostics-and-presets.html"]
+  - ["articles/v3-diagnostics-in-practice.html", "articles/diagnostics-and-presets.html"]
+  - ["articles/v4-covariates-precision-dependence.html", "articles/effect-precision-dependence.html"]
+  - ["articles/v5-custom-g-distributions.html", "articles/effect-distributions.html"]
+  - ["articles/v6-adapters-downstream.html", "articles/downstream-analysis.html"]
+  - ["articles/v7-calibrating-real-data.html", "articles/calibrating-to-data.html"]
+  - ["articles/cookbook.html", "articles/multisiteDGP.html"]
+  - ["articles/migration-from-siteBayes2.html", "articles/multisiteDGP.html"]
+  - ["articles/a1-getting-started.html", "articles/multisiteDGP.html"]
+  - ["articles/a2-choosing-a-preset.html", "articles/diagnostics-and-presets.html"]
+  - ["articles/a3-diagnostics-in-practice.html", "articles/diagnostics-and-presets.html"]
+  - ["articles/a4-covariates-precision-dependence.html", "articles/effect-precision-dependence.html"]
+  - ["articles/a5-calibrating-real-data.html", "articles/calibrating-to-data.html"]
+  - ["articles/a6-case-study-multisite.html", "articles/calibrating-to-data.html"]
+  - ["articles/a7-case-study-meta-analysis.html", "articles/calibrating-to-data.html"]
+  - ["articles/a8-cookbook.html", "articles/multisiteDGP.html"]
+  - ["articles/m1-statistical-dgp.html", "articles/model.html"]
+  - ["articles/m2-g-distribution-catalog.html", "articles/effect-distributions.html"]
+  - ["articles/m3-margin-se-models.html", "articles/site-sizes-and-standard-errors.html"]
+  - ["articles/m4-precision-dependence-theory.html", "articles/effect-precision-dependence.html"]
+  - ["articles/m5-custom-g-distributions.html", "articles/effect-distributions.html"]
+  - ["articles/m6-adapters-downstream.html", "articles/downstream-analysis.html"]
+  - ["articles/m7-reproducibility-provenance.html", "articles/multisiteDGP.html"]
+  - ["articles/m8-migration-from-siteBayes2.html", "articles/multisiteDGP.html"]

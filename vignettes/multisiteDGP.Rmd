@@ -1,0 +1,202 @@
+---
+title: "Get started with multisiteDGP"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with multisiteDGP}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5
+)
+```
+
+```{r setup}
+library(multisiteDGP)
+```
+
+multisiteDGP simulates the summary data of a multisite trial: for each site, a
+true effect, an estimate of that effect, and the standard error of the
+estimate. This vignette runs one simulation from a preset and explains the
+result: the columns, the printed header, the diagnostics, and two plots. It
+then shows how to change the design and what a seed does.
+
+## Installation
+
+Install the package from GitHub with the remotes package.
+
+```{r install, eval = FALSE}
+remotes::install_github("joonho112/multisiteDGP")
+```
+
+## One simulation
+
+A design is an object that holds the settings of a simulation, such as the
+number of sites, the distribution of the site effects, and the site sizes. A
+preset is a function that returns a complete design.
+`preset_education_modest()` returns a design with 50 sites, normal site
+effects with mean 0 and cross-site standard deviation 0.2, and site sizes that
+average 50. The outcome has variance 1, so effects are in standard deviation
+units. `sim_multisite()` simulates one data set from a design.
+
+```{r simulate}
+dat <- sim_multisite(preset_education_modest(), seed = 1)
+dat
+```
+
+The first four lines are a header written by the package. Below them is a
+tibble with one row per site.
+
+## The simulated data
+
+The tibble has seven columns.
+
+| Column | Content |
+|--------------|--------------------------------------------------------------|
+| `site_index` | site number |
+| `z_j` | standardized site effect, with mean 0 and variance 1 in the population |
+| `tau_j` | site effect, $\tau_j = \tau + \sigma_\tau z_j$, with grand mean $\tau$ and cross-site standard deviation $\sigma_\tau$ |
+| `tau_j_hat` | observed estimate, drawn from a normal distribution with mean `tau_j` and variance `se2_j` |
+| `se_j` | standard error of the estimate |
+| `se2_j` | sampling variance, the square of `se_j` |
+| `n_j` | site size, the number of individuals in the site |
+
+A real trial provides only `tau_j_hat`, `se_j`, and `n_j`. The columns `z_j`
+and `tau_j` are the truth that a simulation study compares its estimates with.
+The standard errors come from the site sizes. Site 4, with 12 individuals, has
+a standard error of 0.577, and site 6, with 68, has 0.243.
+
+The first header line gives the number of sites, the source of the standard
+errors, and the seed. The `sigma_tau` line sets the cross-site standard
+deviation in the design (0.200) against the standard deviation of the 50
+simulated site effects (0.166). The next line does the same for the rank
+correlation between site effects and standard errors. The design asks for
+none, and these 50 sites happen to have 0.254. The last line is the
+informativeness $I$, the share of the variance of a typical site's estimate
+that comes from the site effects and not from sampling error.
+
+`summary()` prints the diagnostics stored in `attr(dat, "diagnostics")`, in
+four blocks.
+
+```{r summary}
+summary(dat)
+```
+
+Each row gives the value realized in this data set, the target if the design
+sets one, and a status if a rule applies to the row. The blocks describe the
+scale of the site effects and the sampling variances, the dependence between
+them, the shape of the effect distribution, and how well single sites can be
+estimated. `vignette("diagnostics-and-presets")` explains every row.
+
+In the first three blocks a status compares this one data set with its
+design, and the rule allows for the sampling error of 50 sites. The
+`sigma_tau` row passes although the realized 0.166 is 17 percent below the
+target of 0.200, because the standard deviation of 50 draws has a standard
+error of about 10 percent of its value. A data set simulated from this design
+passes each of the three rows about 95 times in 100, so a `warn` on one of
+them is usually chance. In the precision block a status describes the design.
+The average margin of error, 1.96 times the average standard error, is 0.617.
+That is three times the cross-site standard deviation, so single sites are
+estimated with little precision, and the row is marked `warn`.
+
+## Plots
+
+`plot_effects()` draws the estimates in increasing order with their 95 percent
+intervals, and adds the site effects as a second set of points.
+
+```{r effects, fig.height = 6, fig.cap = "The estimates with their 95 percent intervals (green) spread far more widely than the site effects (orange)."}
+plot_effects(dat)
+```
+
+From bottom to top the green points move from about $-0.7$ to 0.6, and the
+orange points rise much less. Site 41, at the bottom, has the lowest estimate,
+and its site effect is close to zero. Most of the spread in the estimates is
+sampling error, which is what an informativeness of 0.303 means. The subtitle
+repeats four numbers from `summary()`: the number of sites, the
+informativeness, the heterogeneity ratio, and the rank correlation.
+
+`plot_funnel()` plots the standard error of each site against its estimate,
+with the most precise sites at the top.
+
+```{r funnel, fig.cap = "Nearly all estimates lie between the dotted lines, which are 1.96 standard errors either side of zero."}
+plot_funnel(dat)
+```
+
+The estimates scatter on both sides of the dashed line at every standard
+error, as expected from a design without dependence between effects and
+precision. Both functions return a ggplot object, so layers and labels can be
+added with `+`.
+
+## Changing the design
+
+Arguments given to a preset replace the preset's values.
+
+```{r override}
+design <- preset_education_modest(J = 100, nj_mean = 200)
+design
+```
+
+The `J` line now reads 100 sites and the `nj_mean` line reads 200. All other
+values are those of the preset.
+
+```{r override-sim}
+sim_multisite(design, seed = 1)
+```
+
+The header shows 100 sites and an informativeness of 0.659, up from 0.303.
+Sites that are four times as large have sampling variances about a quarter the
+size.
+
+`multisitedgp_design()` builds a design without a preset. Every argument has a
+default, so only the values that differ need to be given. `sim_multisite()`
+also takes the same arguments directly.
+
+```{r direct}
+design <- multisitedgp_design(J = 30, sigma_tau = 0.15, nj_mean = 80)
+identical(
+  sim_multisite(design, seed = 1),
+  sim_multisite(J = 30, sigma_tau = 0.15, nj_mean = 80, seed = 1)
+)
+```
+
+The two calls return the same data. A call takes either a design or design
+arguments, not both. `update_multisitedgp_design()` returns a changed copy of
+an existing design. `sim_meta()` sets the standard errors directly, from a
+target informativeness `I` and a heterogeneity ratio `R`, instead of deriving
+them from site sizes.
+
+## Seeds
+
+With a seed, the same call returns the same data in any R session. The
+function seeds the random number generator for the simulation and, on exit,
+restores the generator of your session to the state it was in. The seed is
+stored with the data, in `attr(dat, "design")$seed`.
+
+```{r seeds}
+set.seed(1)
+state <- .Random.seed
+again <- sim_multisite(preset_education_modest(), seed = 1)
+identical(again, dat)
+identical(.Random.seed, state)
+unseeded <- sim_multisite(preset_education_modest())
+identical(.Random.seed, state)
+```
+
+The first two results are `TRUE`. The seeded call reproduces `dat`, and the
+generator of your session is where `set.seed(1)` left it. Without a seed,
+`sim_multisite()` draws from that generator, as `rnorm()` does. The third
+result is `FALSE` because the unseeded call moved the generator forward, and
+its data depend on the state the session was in.
+
+## See also
+
+- `vignette("model")`: the model that generates the data, step by step.
+- `vignette("diagnostics-and-presets")`: the diagnostics that `summary()`
+  prints, in detail, and the nine presets.
+- `vignette("site-sizes-and-standard-errors")`: how site sizes become standard
+  errors, and how `sim_meta()` sets them directly.
